@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["vite/client"],
+    "lib": ["ES2023", "DOM"],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "src/features/auth/schema.ts",
+    "src/features/auth/types.ts",
+    "src/features/auth/services.ts",
+    "src/features/auth/pages/RegisterPage.tsx"
+  ]
+}
