@@ -5,6 +5,7 @@ import {
   Clock3,
   IdCard,
   LayoutDashboard,
+  Menu,
   Sparkles,
   Store,
   UserCheck,
@@ -12,6 +13,7 @@ import {
 
 import { UserAccountMenu } from "@/shared/components";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/shared/components/ModeToggle";
 import { useStaffApplications } from "../hooks/useApplications";
 
 export type StaffNavItemKey =
@@ -121,58 +123,34 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
   const pageTitle = staffPageTitles[activeItem];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] text-slate-950">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
-
-      <div className="relative grid min-h-screen lg:grid-cols-[288px_minmax(0,1fr)]">
-        <aside className="border-b border-white/70 bg-white/72 px-4 py-4 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:px-5 lg:py-5">
-          <div className="flex h-full min-h-0 flex-col">
-            <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/70 p-5 shadow-lg shadow-cyan-950/5">
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-300/30 blur-2xl" />
-              <div className="absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-amber-300/30 blur-2xl" />
-
-              <div className="relative flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-600 text-white shadow-lg shadow-cyan-700/25">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.22em] text-cyan-700">
-                    UGem Staff
-                  </p>
-                  <h2 className="mt-1 truncate text-xl font-black tracking-tight text-slate-950">
-                    Review Center
-                  </h2>
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                    Điều phối hồ sơ, merchant và reviewer.
-                  </p>
-                </div>
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-100 transition-colors duration-300">
+      <div className="relative grid min-h-screen lg:grid-cols-[280px_minmax(0,1fr)]">
+        {/* Desktop Sidebar */}
+        <aside className="sticky top-0 hidden h-dvh bg-slate-950 px-4 py-5 text-white shadow-2xl shadow-slate-950/20 lg:flex lg:flex-col justify-between">
+          <div className="flex h-full min-h-0 flex-col gap-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-600 text-white shadow-md">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">UGem Staff</p>
+                <p className="truncate text-base font-black text-white">Review Center</p>
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="min-w-0 rounded-2xl bg-cyan-50 px-3 py-2 ring-1 ring-cyan-100">
-                <p className="truncate text-[11px] font-bold text-cyan-700">
-                  Chờ duyệt
-                </p>
-                <p className="mt-0.5 truncate text-xl font-black tabular-nums text-slate-950">
-                  {pendingCount}
-                </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="min-w-0 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+                <p className="truncate text-[10px] font-bold text-amber-400">Chờ duyệt</p>
+                <p className="mt-0.5 truncate text-lg font-black text-amber-300">{pendingCount}</p>
               </div>
 
-              <div className="min-w-0 rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-100">
-                <p className="truncate text-[11px] font-bold text-emerald-700">
-                  Đã duyệt
-                </p>
-                <p className="mt-0.5 truncate text-xl font-black tabular-nums text-slate-950">
-                  {approvedCount}
-                </p>
+              <div className="min-w-0 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+                <p className="truncate text-[10px] font-bold text-emerald-400">Đã duyệt</p>
+                <p className="mt-0.5 truncate text-lg font-black text-emerald-300">{approvedCount}</p>
               </div>
             </div>
 
-            <nav className="mt-4 grid min-w-0 gap-1.5">
+            <nav aria-label="Điều hướng Staff" className="grid gap-1.5 mt-2">
               {staffNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeItem === item.key;
@@ -188,41 +166,24 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                     key={item.key}
                     to={item.to}
                     className={cn(
-                      "group relative flex min-h-16 min-w-0 items-center gap-3 overflow-hidden rounded-2xl px-3.5 py-3 text-sm transition-all duration-200",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2",
+                      "group flex min-h-12 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
                       isActive
-                        ? "bg-slate-950 text-white shadow-xl shadow-slate-950/15"
-                        : "text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-950 hover:shadow-lg hover:shadow-cyan-950/5",
+                        ? "bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    {isActive ? (
-                      <>
-                        <span className="absolute inset-y-2 left-1 w-1 rounded-full bg-cyan-300" />
-                        <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.22),transparent_40%)]" />
-                      </>
-                    ) : null}
-
                     <span
                       className={cn(
-                        "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition",
-                        isActive
-                          ? "bg-white/15 text-cyan-200"
-                          : "bg-slate-100 text-slate-500 group-hover:bg-cyan-50 group-hover:text-cyan-700",
+                        "grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors",
+                        isActive ? "bg-slate-950/20 text-slate-950" : "bg-white/8 text-slate-300 group-hover:bg-white/12"
                       )}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className="h-4.5 w-4.5" />
                     </span>
 
-                    <span className="relative min-w-0 flex-1">
-                      <span className="block truncate whitespace-nowrap font-black">
-                        {item.label}
-                      </span>
-                      <span
-                        className={cn(
-                          "mt-0.5 block truncate whitespace-nowrap text-xs font-medium",
-                          isActive ? "text-white/60" : "text-slate-400",
-                        )}
-                      >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold">{item.label}</span>
+                      <span className={cn("block truncate text-[11px] font-medium opacity-80", isActive ? "text-slate-950/80" : "text-slate-400")}>
                         {item.description}
                       </span>
                     </span>
@@ -230,10 +191,8 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                     {typeof count === "number" ? (
                       <span
                         className={cn(
-                          "relative ml-auto shrink-0 rounded-full px-2.5 py-1 text-xs font-black tabular-nums",
-                          isActive
-                            ? "bg-white text-slate-950"
-                            : "bg-slate-100 text-slate-500 group-hover:bg-cyan-100 group-hover:text-cyan-800",
+                          "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black",
+                          isActive ? "bg-slate-950 text-cyan-300" : "bg-white/10 text-slate-300"
                         )}
                       >
                         {count}
@@ -246,26 +205,48 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
           </div>
         </aside>
 
-        <main className="min-w-0">
-          <header className="sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-white/70 bg-white/72 px-4 py-3 shadow-lg shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl sm:px-6 lg:px-8">
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-700">
-                {pageTitle.eyebrow}
-              </p>
-              <h1 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">
-                {pageTitle.title}
-              </h1>
+        {/* Main Content Area */}
+        <div className="flex min-w-0 flex-col">
+          {/* Top Header Bar */}
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 sm:px-6 backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <details className="group relative shrink-0 lg:hidden">
+                <summary className="grid h-10 w-10 list-none place-items-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs marker:content-none" aria-label="Mở menu Staff">
+                  <Menu className="h-5 w-5" />
+                </summary>
+                <nav className="absolute left-0 top-12 z-50 grid w-[min(82vw,18rem)] gap-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-2 shadow-2xl" aria-label="Điều hướng Staff">
+                  {staffNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeItem === item.key;
+                    return (
+                      <Link key={item.key} to={item.to} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold", isActive ? "bg-cyan-500 text-slate-950" : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800")}>
+                        <Icon className="h-4 w-4" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </details>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                  {pageTitle.eyebrow}
+                </p>
+                <h1 className="truncate text-sm font-black text-slate-900 dark:text-white">
+                  {pageTitle.title}
+                </h1>
+              </div>
             </div>
 
-            <UserAccountMenu fallbackName="Staff" />
+            <div className="flex items-center gap-3">
+              <ModeToggle />
+              <UserAccountMenu fallbackName="Staff" />
+            </div>
           </header>
 
-          <div className="p-4 sm:p-5 lg:p-7">
-            <div className="rounded-3xl border border-white/70 bg-white/55 p-3 shadow-2xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-xl sm:p-4">
-              {children}
-            </div>
-          </div>
-        </main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

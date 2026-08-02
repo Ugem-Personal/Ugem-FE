@@ -7,16 +7,15 @@ type ApiResponse<T> = {
 };
 
 export type ReviewDetail = {
-  id?: string;
-  reviewId?: string;
-  orderDetailId?: string;
-  detailContent?: string;
+  reviewDetailId: string;
+  orderDetailId: string;
+  content?: string | null;
   rating?: number;
   createdAt?: string;
 };
 
 export type Review = {
-  id?: string;
+  reviewId: string;
   userId?: string;
   orderId?: string;
   merchantId?: string;
@@ -28,7 +27,7 @@ export type Review = {
   createdAt?: string;
   customerName?: string | null;
   customerAvatarUrl?: string | null;
-  reviewDetails?: ReviewDetail[];
+  details: ReviewDetail[];
 };
 
 export type CreateMerchantReviewPayload = {
@@ -37,9 +36,9 @@ export type CreateMerchantReviewPayload = {
   rating: number;
   content?: string;
   imageUrl?: string;
-  reviewDetails?: {
+  details?: {
     orderDetailId: string;
-    detailContent?: string;
+    content?: string;
     rating: number;
   }[];
 };
@@ -49,9 +48,9 @@ export type UpdateMerchantReviewPayload = {
   rating?: number;
   content?: string;
   imageUrl?: string;
-  reviewDetails?: {
+  details?: {
     reviewDetailId: string;
-    detailContent?: string;
+    content?: string;
     rating?: number;
   }[];
 };

@@ -192,7 +192,7 @@ export default function AffiliateLinkPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#edfafa_0%,#f7fbfc_34%,#ffffff_100%)] text-slate-950">
+    <div className="app-page">
       <header className="border-b border-white/80 bg-white/75 shadow-sm shadow-cyan-950/5 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>

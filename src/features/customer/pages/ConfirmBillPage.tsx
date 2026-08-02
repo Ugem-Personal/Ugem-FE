@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, CheckCircle2, CreditCard } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getCurrentUser } from "@/features/auth";
 import {
@@ -11,6 +11,8 @@ import {
   requestCashPayment,
 } from "@/features/customer/services/orderService";
 import { verifyCheckIn } from "@/shared/services/checkInService";
+import { ModeToggle } from "@/shared/components";
+import type { CustomerOrderSummary } from "@/shared/types";
 
 type BillItem = {
   name?: string;
@@ -183,9 +185,13 @@ export default function ConfirmBillPage() {
 
     let active = true;
 
-    Promise.all([getBill(orderId), getCustomerOrders().catch(() => [])])
-      .then(async ([billData, orders]) => {
+    Promise.all([
+      getBill(orderId),
+      getCustomerOrders().catch(() => ({ data: [] })),
+    ])
+      .then(async ([billData, ordersRes]) => {
         if (!active) return;
+        const orders = ordersRes.data ?? [];
 
         setError(null);
         setBillConfirmed(billConfirmedFromQr);
@@ -194,7 +200,7 @@ export default function ConfirmBillPage() {
         setSelectedPaymentMethod(getBillPaymentMethod(nextBill));
 
         const currentOrder = orders.find(
-          (order) => getCustomerOrderId(order) === orderId,
+          (order: CustomerOrderSummary) => getCustomerOrderId(order) === orderId,
         );
         const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
         const persistedCashRequest = getPersistedCashRequest(orderId);
@@ -268,12 +274,13 @@ export default function ConfirmBillPage() {
     }, 4000);
 
     async function syncCashPaymentStatus() {
-      const orders = await getCustomerOrders().catch(() => []);
+      const ordersRes = await getCustomerOrders().catch(() => ({ data: [] }));
+      const orders = ordersRes.data ?? [];
 
       if (!active) return;
 
       const currentOrder = orders.find(
-        (order) => getCustomerOrderId(order) === orderId,
+        (order: CustomerOrderSummary) => getCustomerOrderId(order) === orderId,
       );
       const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
 
@@ -409,47 +416,66 @@ export default function ConfirmBillPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] px-4 py-8 text-slate-950">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+    <main className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
+      {/* Glow Effects */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
 
-      <div className="relative mx-auto max-w-xl overflow-hidden rounded-[36px] border border-white/50 bg-white/60 p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-        <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl mix-blend-multiply" />
-        <div className="absolute -bottom-12 -left-10 h-40 w-40 rounded-full bg-amber-300/30 blur-3xl mix-blend-multiply" />
+      <div className="relative mx-auto max-w-xl">
+        {/* Top Navbar */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => navigate(`/customer/orders/${orderId || ""}`)}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Quay lại
+          </button>
 
-        <div className="relative">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
-            Payment & Check-in
+          <ModeToggle />
+        </div>
+
+        {/* Digital Receipt Container */}
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
+            <Receipt className="h-3.5 w-3.5" /> Digital Bill & Payment Confirmation
           </div>
-          <h1 className="mb-6 text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
+
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
             Xác nhận hóa đơn
           </h1>
 
           {loading && (
-            <p className="text-slate-500 font-medium">Đang tải hóa đơn...</p>
+            <p className="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
+              Đang tải thông tin hóa đơn...
+            </p>
           )}
 
           {error && (
-            <div className="mb-6 rounded-2xl border border-rose-200/60 bg-rose-50/80 p-4 text-sm font-semibold text-rose-700 shadow-sm backdrop-blur">
+            <div className="mt-4 rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 p-4 text-xs font-bold text-rose-800 dark:text-rose-300">
               {error}
             </div>
           )}
 
           {!loading && bill && (
-            <section className="space-y-6">
-              <div className="rounded-2xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur">
-                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
-                  Mã đơn
+            <section className="mt-6 space-y-6">
+              {/* Receipt Header Card */}
+              <div className="rounded-2xl border border-slate-900 dark:border-white/10 bg-slate-950 dark:bg-slate-900 p-5 text-white shadow-lg relative overflow-hidden">
+                <div className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
+                  Mã đơn hàng
                 </div>
-                <div className="mt-1 break-all font-mono text-[15px] font-black text-cyan-800">
-                  {billOrderId}
+                <div className="mt-1 break-all font-mono text-sm sm:text-base font-black tracking-wide text-cyan-200">
+                  #{billOrderId}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur">
-                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
-                  Món đã gọi
+              {/* Order Items List */}
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/50 p-5">
+                <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                  Danh sách món ăn ({items.length})
                 </div>
                 <ul className="space-y-3">
                   {items.map((item, idx) => {
@@ -462,24 +488,21 @@ export default function ConfirmBillPage() {
                     return (
                       <li
                         key={`${name}-${idx}`}
-                        className="flex items-center justify-between gap-3 border-b border-slate-200/50 pb-3 last:border-0 last:pb-0"
+                        className="flex items-start justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800/60 pb-3 last:border-0 last:pb-0"
                       >
                         <div className="min-w-0">
-                          <div className="text-[15px] font-bold text-slate-800">
+                          <div className="text-sm font-black text-slate-950 dark:text-white">
                             {name}
                           </div>
-                          <div className="text-[13px] font-medium text-slate-500 mt-0.5">
-                            Số lượng:{" "}
-                            <span className="font-bold text-slate-700">
-                              {quantity}
-                            </span>
+                          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                            Số lượng: <span className="font-black text-slate-800 dark:text-slate-200">{quantity}</span>
                           </div>
                           {toppings.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
+                            <div className="mt-1.5 flex flex-wrap gap-1">
                               {toppings.map((topping) => (
                                 <span
                                   key={topping.id ?? topping.name}
-                                  className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
+                                  className="rounded-md border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300"
                                 >
                                   +{topping.name}
                                 </span>
@@ -487,12 +510,12 @@ export default function ConfirmBillPage() {
                             </div>
                           )}
                           {note ? (
-                            <div className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-800 ring-1 ring-amber-100">
+                            <div className="mt-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-700/40 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:text-amber-200">
                               Ghi chú: {note}
                             </div>
                           ) : null}
                         </div>
-                        <div className="shrink-0 text-[15px] font-black text-slate-900">
+                        <div className="shrink-0 text-sm font-black text-cyan-600 dark:text-cyan-400 font-mono">
                           {formatCurrency(subTotal)}
                         </div>
                       </li>
@@ -501,187 +524,168 @@ export default function ConfirmBillPage() {
                 </ul>
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 p-5 shadow-sm">
-                <div className="text-[13px] font-black uppercase tracking-[0.18em] text-cyan-800">
-                  Tổng thanh toán
+              {/* Total Amount Box */}
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 p-5 shadow-xs">
+                <div className="text-xs font-black uppercase tracking-widest text-cyan-900 dark:text-cyan-200">
+                  Tổng cần thanh toán
                 </div>
-                <div className="text-2xl font-black text-cyan-700">
+                <div className="text-2xl font-black text-cyan-600 dark:text-cyan-400 font-mono">
                   {formatCurrency(finalPrice)}
                 </div>
               </div>
 
+              {/* Actions Before Confirmation */}
               {!billConfirmed && (
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <button
                     type="button"
                     disabled={submitting}
                     onClick={handleConfirmBill}
-                    className="flex-1 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-5 py-3.5 text-[15px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+                    className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
                   >
-                    {submitting ? "Đang gửi..." : "Xác nhận hóa đơn"}
+                    {submitting ? "Đang xử lý..." : "Xác nhận hóa đơn"}
                   </button>
                   <button
                     type="button"
                     disabled={submitting}
                     onClick={() => handleReject("Khác")}
-                    className="rounded-xl border border-rose-200/60 bg-white/70 px-6 py-3.5 text-[15px] font-bold text-rose-600 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-rose-50 hover:shadow-md hover:border-rose-300 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+                    className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 px-6 py-3.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition disabled:opacity-50"
                   >
                     Từ chối
                   </button>
                 </div>
               )}
 
+              {/* Bill Confirmed View & Payment Selection */}
               {billConfirmed && (
                 <>
-                  <div className="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/80 p-4 shadow-sm backdrop-blur">
-                    <div className="flex items-center gap-2.5 font-bold text-emerald-700">
-                      <CheckCircle2 className="h-5 w-5" />
-                      Hóa đơn đã được xác nhận
+                  <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 p-4 shadow-2xs">
+                    <div className="flex items-center gap-2.5 font-bold text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm">
+                      <CheckCircle2 className="h-5 w-5 shrink-0" />
+                      Hóa đơn đã được xác nhận thành công
                     </div>
                   </div>
 
-                  <div className="mb-6 rounded-2xl border border-slate-200/60 bg-white/70 p-4 shadow-sm backdrop-blur">
-                    <div className="mb-3 text-[12px] font-black uppercase tracking-[0.18em] text-slate-500">
-                      Phương thức thanh toán
+                  <div className="space-y-3">
+                    <div className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Chọn phương thức thanh toán
                     </div>
+
                     <div className="grid gap-3 sm:grid-cols-2">
                       <button
                         type="button"
                         onClick={() => handleSelectPaymentMethod("Cash")}
                         disabled={cashRequested}
-                        className={`rounded-2xl border p-4 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70 ${
+                        className={`rounded-2xl border p-4 text-left transition ${
                           selectedPaymentMethod === "Cash"
-                            ? "border-amber-300 bg-amber-50 text-amber-900 shadow-sm"
-                            : "border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5 hover:bg-slate-50"
+                            ? "border-amber-400 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/50 text-slate-700 dark:text-slate-300"
                         }`}
                       >
-                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-amber-700 ring-1 ring-amber-100">
+                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
                           <Banknote className="h-5 w-5" />
                         </div>
-                        <div className="font-black">Tiền mặt</div>
-                        <div className="mt-1 text-[12px] font-medium opacity-75">
+                        <div className="text-xs font-black">Tiền mặt</div>
+                        <div className="mt-1 text-[11px] font-medium opacity-80">
                           Thanh toán trực tiếp tại quán
                         </div>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() =>
-                          handleSelectPaymentMethod("BankTransfer")
-                        }
+                        onClick={() => handleSelectPaymentMethod("BankTransfer")}
                         disabled={cashRequested}
-                        className={`rounded-2xl border p-4 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70 ${
+                        className={`rounded-2xl border p-4 text-left transition ${
                           selectedPaymentMethod === "BankTransfer"
-                            ? "border-cyan-300 bg-cyan-50 text-cyan-900 shadow-sm"
-                            : "border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5 hover:bg-slate-50"
+                            ? "border-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-900 dark:text-cyan-200"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/50 text-slate-700 dark:text-slate-300"
                         }`}
                       >
-                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-cyan-700 ring-1 ring-cyan-100">
+                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 dark:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300">
                           <CreditCard className="h-5 w-5" />
                         </div>
-                        <div className="font-black">Chuyển khoản</div>
-                        <div className="mt-1 text-[12px] font-medium opacity-75">
-                          Quét QR ngân hàng để thanh toán
+                        <div className="text-xs font-black">Chuyển khoản</div>
+                        <div className="mt-1 text-[11px] font-medium opacity-80">
+                          Quét mã QR Ngân hàng (SePay)
                         </div>
                       </button>
                     </div>
                   </div>
 
+                  {/* Payment Details Card */}
                   {selectedPaymentMethod === "Cash" ? (
-                    <div className="mb-6 rounded-2xl border border-amber-200/60 bg-amber-50/80 p-4 shadow-sm backdrop-blur">
-                      <div className="mb-2 font-bold text-amber-800">
+                    <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 p-4 text-xs">
+                      <div className="font-bold text-amber-900 dark:text-amber-200 mb-1">
                         Thanh toán tiền mặt
                       </div>
-                      <div className="text-[13px] font-medium leading-relaxed text-amber-700/80">
-                        Vui lòng thanh toán trực tiếp tại quán. Sau khi đã thanh
-                        toán, bấm Đã thanh toán tiền mặt để hoàn tất check-in.
-                      </div>
+                      <p className="font-medium text-amber-800 dark:text-amber-300/80 leading-relaxed">
+                        Vui lòng gửi tiền mặt trực tiếp cho nhân viên quán. Sau khi đã thanh toán, bấm nút Đã thanh toán tiền mặt bên dưới.
+                      </p>
                     </div>
                   ) : (
-                    <div className="mb-6 rounded-2xl border border-cyan-200/60 bg-cyan-50/80 p-4 shadow-sm backdrop-blur">
-                      <div className="mb-3 font-bold text-cyan-900">
-                        Thanh toán chuyển khoản
+                    <div className="rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/80 dark:bg-cyan-950/40 p-4 text-xs space-y-4">
+                      <div className="font-bold text-cyan-900 dark:text-cyan-200">
+                        Thanh toán qua mã QR Ngân hàng
                       </div>
-                      <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
-                        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-cyan-100">
+
+                      <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="h-36 w-36 shrink-0 overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
                           <img
                             src={bankTransferInfo.qrCode ?? ""}
-                            alt="QR chuyển khoản"
-                            className="aspect-square w-full rounded-xl object-contain"
+                            alt="Mã QR chuyển khoản"
+                            className="h-full w-full object-contain"
                           />
                         </div>
-                        <div className="space-y-2 text-[13px] font-semibold text-cyan-900">
-                          <div className="flex justify-between gap-3">
-                            <span className="text-cyan-700/70">Ngân hàng</span>
-                            <span className="text-right">
-                              {bankTransferInfo.bankName}
-                            </span>
+
+                        <div className="space-y-2 text-xs font-semibold text-cyan-950 dark:text-cyan-100 flex-1 w-full">
+                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                            <span className="text-slate-500 dark:text-slate-400">Ngân hàng</span>
+                            <span className="font-bold">{bankTransferInfo.bankName}</span>
                           </div>
-                          <div className="flex justify-between gap-3">
-                            <span className="text-cyan-700/70">Tài khoản</span>
-                            <span className="text-right font-black">
-                              {bankTransferInfo.bankAccount}
-                            </span>
+                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                            <span className="text-slate-500 dark:text-slate-400">Số tài khoản</span>
+                            <span className="font-mono font-black">{bankTransferInfo.bankAccount}</span>
                           </div>
-                          <div className="flex justify-between gap-3">
-                            <span className="text-cyan-700/70">Số tiền</span>
-                            <span className="text-right font-black">
+                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                            <span className="text-slate-500 dark:text-slate-400">Số tiền</span>
+                            <span className="font-mono font-black text-cyan-600 dark:text-cyan-400">
                               {formatCurrency(bankTransferInfo.amount)}
                             </span>
                           </div>
-                          <div className="rounded-xl bg-white/80 p-3 ring-1 ring-cyan-100">
-                            <div className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700/70">
-                              Nội dung
-                            </div>
-                            <div className="mt-1 break-all font-mono text-[13px] font-black text-cyan-900">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400">Nội dung</span>
+                            <span className="font-mono font-black text-slate-900 dark:text-white">
                               {bankTransferInfo.description}
-                            </div>
+                            </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-3 text-[13px] font-medium leading-relaxed text-cyan-800/80">
-                        Sau khi chuyển khoản đúng số tiền và nội dung, hệ thống
-                        sẽ tự xác nhận thanh toán để hoàn tất check-in.
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  {/* Payment Submission Button */}
+                  <div className="flex flex-col sm:flex-row gap-3">
                     {selectedPaymentMethod === "Cash" ? (
                       <button
                         type="button"
                         onClick={handleStartPayment}
                         disabled={submitting || cashRequested}
-                        className="flex-1 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-5 py-3.5 text-[15px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+                        className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
                       >
                         {cashRequested
-                          ? "Đang chờ merchant xác nhận"
+                          ? "Đang chờ merchant xác nhận tiền mặt"
                           : "Đã thanh toán tiền mặt"}
                       </button>
                     ) : (
                       <button
                         type="button"
                         disabled
-                        className="flex-1 rounded-xl border border-cyan-200 bg-cyan-50 px-5 py-3.5 text-[15px] font-black text-cyan-800 shadow-sm disabled:opacity-80"
+                        className="flex-1 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3.5 text-xs font-black text-cyan-700 dark:text-cyan-300"
                       >
-                        Đang chờ xác nhận chuyển khoản
+                        Đang chờ hệ thống tự động xác nhận chuyển khoản
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/customer/orders/${orderId}`)}
-                      className="rounded-xl border border-slate-200/60 bg-white/70 px-6 py-3.5 text-[15px] font-bold text-slate-600 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md hover:border-slate-300"
-                    >
-                      Quay lại
-                    </button>
                   </div>
-
-                  {cashRequested && (
-                    <div className="mt-8 rounded-2xl border border-cyan-200/60 bg-cyan-50/80 p-4 text-[14px] font-semibold text-cyan-800 shadow-sm backdrop-blur">
-                      Đã ghi nhận thanh toán tiền mặt. Đang chờ merchant xác
-                      nhận để hoàn tất check-in.
-                    </div>
-                  )}
                 </>
               )}
             </section>

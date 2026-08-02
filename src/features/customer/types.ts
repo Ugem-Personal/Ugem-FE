@@ -2,6 +2,8 @@ export type Merchant = {
   id: string;
   name?: string;
   description?: string;
+  restaurantType?: string;
+  mainDishType?: string;
   priceRange?: string;
   email?: string;
   phone?: string;
@@ -10,6 +12,7 @@ export type Merchant = {
   logoUrl?: string;
   rating?: number;
   reviewCount?: number;
+  totalViews?: number;
   underratedScore?: number;
   distance?: number;
   latitude?: number;

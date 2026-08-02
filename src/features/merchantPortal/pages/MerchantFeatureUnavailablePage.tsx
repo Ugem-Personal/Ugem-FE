@@ -2,13 +2,11 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ComponentType,
   type FormEvent,
 } from "react";
 
 import {
   AlertCircle,
-  CalendarClock,
   Eye,
   Megaphone,
   Pencil,
@@ -19,8 +17,16 @@ import {
   Sparkles,
   Store,
   Trash2,
-  TicketPercent,
+  TrendingUp,
+  ShoppingBag,
+  DollarSign,
+  Receipt,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  ChevronLeft,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -38,7 +44,12 @@ import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
 
-import { getCurrentMerchantId } from "../services";
+import {
+  getCurrentMerchantId,
+  getMyMerchantStatistics,
+  getMyMerchantViews,
+  type MerchantStatistics,
+} from "../services";
 import {
   createCampaign,
   deleteCampaign,
@@ -50,46 +61,56 @@ import {
 } from "../services/campaignService";
 
 type MerchantFeatureUnavailablePageProps = {
-  title: string;
-  description: string;
-  missingApis: string[];
+  title?: string;
+  description?: string;
+  missingApis?: string[];
 };
 
-function MerchantFeatureUnavailablePage({
-  title,
-  description,
-  missingApis,
-}: MerchantFeatureUnavailablePageProps) {
+export function MerchantFeatureUnavailablePage({
+  title = "Tính năng chưa khả dụng",
+  description = "Tính năng này hiện đang được hoàn thiện hệ thống.",
+  missingApis = [],
+}: MerchantFeatureUnavailablePageProps = {}) {
+  const navigate = useNavigate();
+
   return (
-    <main className="merchant-portal-layout">
+    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
       <MerchantSidebar />
 
-      <section className="merchant-main">
+      <section className="merchant-main relative z-10">
         <MerchantHeader />
 
-        <div className="merchant-content">
-          <section className="rounded-2xl border border-amber-200 bg-white/90 p-6 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600">
-                <AlertCircle size={22} />
+        <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition hover:border-cyan-400"
+          >
+            <ChevronLeft size={16} /> Quay lại
+          </button>
+
+          <section className="rounded-3xl border border-amber-200/80 bg-white/90 dark:border-amber-900/50 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+            <div className="flex items-start gap-4">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                <AlertCircle size={26} />
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
                   Chưa có API backend
-                </p>
-                <h1 className="mt-2 text-2xl font-bold text-slate-950">
+                </span>
+                <h1 className="mt-1 text-2xl font-black text-slate-900 dark:text-white">
                   {title}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                <p className="mt-2 max-w-2xl text-xs sm:text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-300">
                   {description}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-semibold">BE hiện chưa public các endpoint:</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
+            <div className="mt-6 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 p-4 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300">
+              <p className="font-bold">Hệ thống đang đợi các endpoint Backend sau:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 font-mono text-[11px]">
                 {missingApis.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -172,6 +193,11 @@ function isCampaignEditable(campaign: Campaign, merchantId: string | null) {
   return !campaign.isGlobal && campaign.merchantId === merchantId;
 }
 
+function isCampaignExpired(campaign: Campaign) {
+  if (!campaign.endDate) return false;
+  return new Date(campaign.endDate).getTime() < Date.now();
+}
+
 function getCampaignDiscountLabel(campaign: Campaign) {
   if (campaign.isPercentage) {
     return `${campaign.discountValue.toLocaleString("vi-VN")} %`;
@@ -250,17 +276,20 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
     endDate: fromDateTimeLocalValue(form.endDate),
   };
 }
+
+// MODULE 1: Merchant Campaign Management
 export function MerchantCampaignPage() {
+  const navigate = useNavigate();
   const merchantId = getCurrentMerchantId();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
-    null,
-  );
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired" | "inactive">("all");
   const [form, setForm] = useState<CampaignFormState>(() =>
     createEmptyCampaignForm(),
   );
@@ -293,35 +322,36 @@ export function MerchantCampaignPage() {
     return campaigns
       .filter((campaign) => {
         if (!merchantId) return true;
-
         return campaign.isGlobal || campaign.merchantId === merchantId;
       })
       .filter((campaign) => {
         if (!term) return true;
-
-        const haystack = [
-          campaign.code,
-          campaign.title,
-          campaign.description ?? "",
-        ]
+        const haystack = [campaign.code, campaign.title, campaign.description ?? ""]
           .join(" ")
           .toLowerCase();
-
         return haystack.includes(term);
+      })
+      .filter((campaign) => {
+        const expired = isCampaignExpired(campaign);
+        if (statusFilter === "active") return campaign.isActive && !expired;
+        if (statusFilter === "expired") return expired;
+        if (statusFilter === "inactive") return !campaign.isActive && !expired;
+        return true;
       });
-  }, [campaigns, merchantId, searchTerm]);
+  }, [campaigns, merchantId, searchTerm, statusFilter]);
 
-  const stats = useMemo(
-    () => ({
-      total: visibleCampaigns.length,
-      active: visibleCampaigns.filter((campaign) => campaign.isActive).length,
-      global: visibleCampaigns.filter((campaign) => campaign.isGlobal).length,
-      mine: visibleCampaigns.filter(
-        (campaign) => campaign.merchantId === merchantId,
-      ).length,
-    }),
-    [merchantId, visibleCampaigns],
-  );
+  const stats = useMemo(() => {
+    const total = campaigns.length;
+    const active = campaigns.filter(
+      (c) => c.isActive && !isCampaignExpired(c),
+    ).length;
+    const expired = campaigns.filter((c) => isCampaignExpired(c)).length;
+    const global = campaigns.filter((c) => c.isGlobal).length;
+    const mine = campaigns.filter(
+      (c) => c.merchantId === merchantId,
+    ).length;
+    return { total, active, expired, global, mine };
+  }, [campaigns, merchantId]);
 
   function resetForm() {
     setForm(createEmptyCampaignForm());
@@ -337,26 +367,25 @@ export function MerchantCampaignPage() {
     setDetailOpen(true);
   }
 
-  async function handleDelete(campaign: Campaign) {
-    if (!window.confirm(`Xóa campaign ${campaign.code}?`)) {
-      return;
-    }
+  async function confirmDelete() {
+    if (!campaignToDelete) return;
 
-    setDeletingId(campaign.id);
+    setDeletingId(campaignToDelete.id);
 
     try {
-      await deleteCampaign(campaign.id);
-      notify.success("Đã xóa campaign.");
+      await deleteCampaign(campaignToDelete.id);
+      notify.success(`Đã xóa campaign ${campaignToDelete.code}.`);
 
-      if (selectedCampaign?.id === campaign.id) {
+      if (selectedCampaign?.id === campaignToDelete.id) {
         setDetailOpen(false);
         setSelectedCampaign(null);
       }
 
-      if (form.id === campaign.id) {
+      if (form.id === campaignToDelete.id) {
         resetForm();
       }
 
+      setCampaignToDelete(null);
       await loadCampaigns();
     } catch (error) {
       console.error(error);
@@ -426,483 +455,486 @@ export function MerchantCampaignPage() {
     : false;
 
   return (
-    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.16),transparent_32%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.14),transparent_28%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_48%,#fff7ed_100%)]">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
-
+    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
       <MerchantSidebar />
 
       <section className="merchant-main relative z-10">
         <MerchantHeader />
 
-        <div className="merchant-content space-y-6">
-          <section className="overflow-hidden rounded-4xl border border-white/60 bg-white/75 p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] backdrop-blur-2xl">
-            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="max-w-3xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
-                  <Megaphone className="h-3.5 w-3.5" />
-                  Campaign workspace
-                </div>
+        <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-md transition hover:border-cyan-400"
+              >
+                <ChevronLeft size={16} /> Quay lại
+              </button>
 
-                <h1 className="text-[30px] font-black tracking-tight text-slate-950 sm:text-[34px]">
-                  Quản lý campaign cho quán
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-                  Tạo, chỉnh sửa và theo dõi các campaign đang mở. FE hiện đã
-                  nối với backend campaign CRUD nên bạn có thể quản lý trực tiếp
-                  ngay tại đây.
-                </p>
+              <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-50 dark:border-cyan-900/50 dark:bg-cyan-950/40 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+                <Megaphone className="h-3.5 w-3.5" />
+                Campaign Management
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:w-140">
-                <CampaignStat
-                  label="Tổng"
-                  value={stats.total}
-                  icon={Sparkles}
-                />
-                <CampaignStat
-                  label="Đang active"
-                  value={stats.active}
-                  icon={CalendarClock}
-                />
-                <CampaignStat
-                  label="Global"
-                  value={stats.global}
-                  icon={Store}
-                />
-                <CampaignStat
-                  label="Của tôi"
-                  value={stats.mine}
-                  icon={TicketPercent}
-                />
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                Quản lý chương trình khuyến mãi
+                <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
+              </h1>
             </div>
 
-            {merchantId ? null : (
-              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-                Tài khoản hiện tại chưa có MerchantId trong session. Bạn vẫn có
-                thể xem danh sách, nhưng thao tác tạo/sửa/xóa sẽ bị chặn cho đến
-                khi token có MerchantId.
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3.5 py-2 shadow-xs">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Tổng số:</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{stats.total}</span>
               </div>
-            )}
-          </section>
+              <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 px-3.5 py-2 shadow-xs">
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Đang chạy:</span>
+                <span className="text-sm font-black text-emerald-800 dark:text-emerald-300">{stats.active}</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40 px-3.5 py-2 shadow-xs">
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-400">Hết hạn:</span>
+                <span className="text-sm font-black text-rose-800 dark:text-rose-300">{stats.expired}</span>
+              </div>
+            </div>
+          </div>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <article className="rounded-4xl border border-white/60 bg-white/75 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] backdrop-blur-2xl">
-              <div className="flex items-start justify-between gap-3">
+            {/* Form Create / Edit Campaign */}
+            <article className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4 mb-6">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
-                    Campaign form
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-950">
-                    {form.id ? "Chỉnh sửa campaign" : "Tạo campaign mới"}
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                    {form.id ? "Chỉnh sửa Campaign" : "Tạo Campaign mới"}
                   </h2>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {form.id
+                      ? "Cập nhật các thông số chương trình khuyến mãi hiện tại."
+                      : "Thiết lập mã giảm giá, mức giảm và thời hạn áp dụng."}
+                  </p>
                 </div>
 
-                {form.id ? (
-                  <Badge className="rounded-full bg-cyan-50 px-3 py-1 text-cyan-700 hover:bg-cyan-50">
+                {form.id && (
+                  <Badge variant="outline" className="border-cyan-500 text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50">
                     Đang sửa
                   </Badge>
-                ) : null}
+                )}
               </div>
 
-              <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Code
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Mã Code <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       value={form.code}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          code: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, code: e.target.value }))
                       }
                       placeholder="SUMMER20"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-bold uppercase"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Tiêu đề
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Tiêu đề <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       value={form.title}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          title: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, title: e.target.value }))
                       }
                       placeholder="Giảm giá cuối tuần"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Giá trị giảm
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Giá trị giảm <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       type="number"
                       step="0.01"
+                      min="0"
                       value={form.discountValue}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          discountValue: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, discountValue: e.target.value }))
                       }
                       placeholder="10"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Điều kiện
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Loại giảm giá
                     </label>
-                    <div className="flex h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600">
+                    <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.isPercentage}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            isPercentage: event.target.checked,
-                          }))
+                        onChange={(e) =>
+                          setForm((c) => ({ ...c, isPercentage: e.target.checked }))
                         }
                         className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                       />
-                      <span>Giảm theo phần trăm</span>
-                    </div>
+                      <span>Giảm theo phần trăm (%)</span>
+                    </label>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Đơn tối thiểu
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Đơn tối thiểu (VNĐ)
                     </label>
                     <Input
                       type="number"
-                      step="0.01"
+                      step="5000"
+                      min="0"
                       value={form.minOrderAmount}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          minOrderAmount: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, minOrderAmount: e.target.value }))
                       }
                       placeholder="100000"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Giảm tối đa
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Giảm tối đa (VNĐ)
                     </label>
                     <Input
                       type="number"
-                      step="0.01"
+                      step="5000"
+                      min="0"
                       value={form.maxDiscountAmount}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          maxDiscountAmount: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, maxDiscountAmount: e.target.value }))
                       }
                       placeholder="50000"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Số lượng
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Tổng số lượng
                     </label>
                     <Input
                       type="number"
                       min="0"
                       value={form.quantity}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          quantity: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, quantity: e.target.value }))
                       }
                       placeholder="100"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Số lần / user
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Số lần / Khách
                     </label>
                     <Input
                       type="number"
-                      min="0"
+                      min="1"
                       value={form.maxUsagePerUser}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          maxUsagePerUser: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, maxUsagePerUser: e.target.value }))
                       }
                       placeholder="1"
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Bắt đầu
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Thời gian bắt đầu <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       type="datetime-local"
                       value={form.startDate}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          startDate: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, startDate: e.target.value }))
                       }
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      Kết thúc
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Thời gian kết thúc <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       type="datetime-local"
                       value={form.endDate}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          endDate: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, endDate: e.target.value }))
                       }
-                      className="h-11 rounded-2xl border-slate-200 bg-white"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                    Mô tả
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Mô tả chương trình
                   </label>
                   <Textarea
+                    rows={2}
                     value={form.description}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
+                    onChange={(e) =>
+                      setForm((c) => ({ ...c, description: e.target.value }))
                     }
-                    placeholder="Mô tả ngắn về campaign..."
-                    className="min-h-28 rounded-2xl border-slate-200 bg-white"
+                    placeholder="Mô tả điều kiện và lợi ích chương trình..."
+                    className="rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium resize-none"
                   />
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+                <div className="flex flex-wrap gap-4 pt-1">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.isNewUserOnly}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          isNewUserOnly: event.target.checked,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, isNewUserOnly: e.target.checked }))
                       }
                       className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                     />
-                    Chỉ user mới
+                    Chỉ dành cho Khách hàng mới
                   </label>
 
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.isActive}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          isActive: event.target.checked,
-                        }))
+                      onChange={(e) =>
+                        setForm((c) => ({ ...c, isActive: e.target.checked }))
                       }
                       className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                     />
                     Đang hoạt động
                   </label>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 sm:col-span-2 lg:col-span-1">
-                    Global campaign hiện chưa mở trên FE này. Backend sẽ từ chối
-                    nếu merchant tạo campaign toàn hệ thống.
-                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="h-11 rounded-2xl bg-slate-950 px-5 font-black text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-700"
-                  >
-                    {saving ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : form.id ? (
-                      <Save className="h-4 w-4" />
-                    ) : (
-                      <Plus className="h-4 w-4" />
-                    )}
-                    {form.id ? "Cập nhật campaign" : "Tạo campaign"}
-                  </Button>
-
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200/60 dark:border-slate-800">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={resetForm}
-                    className="h-11 rounded-2xl border-slate-200 px-5 font-bold text-slate-600"
+                    className="h-10 rounded-xl text-xs font-bold"
                   >
-                    Reset form
+                    Reset
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="h-10 rounded-xl bg-cyan-600 text-white font-extrabold text-xs shadow-md hover:bg-cyan-700 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    ) : form.id ? (
+                      <Save className="h-3.5 w-3.5" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                    {saving ? "Đang lưu..." : form.id ? "Lưu thay đổi" : "Tạo Campaign"}
                   </Button>
                 </div>
               </form>
             </article>
 
-            <article className="rounded-4xl border border-white/60 bg-white/75 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] backdrop-blur-2xl">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* List & Filters */}
+            <article className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-200/60 dark:border-slate-800">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
-                    Campaign list
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-950">
-                    Danh sách campaign
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                    Danh sách Campaign
                   </h2>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Theo dõi các chương trình đang mở và lịch sử khuyến mãi.
+                  </p>
                 </div>
 
                 <Button
                   type="button"
                   onClick={() => void loadCampaigns()}
                   disabled={loading}
-                  className="h-10 rounded-2xl bg-cyan-600 px-4 font-black text-white shadow-lg shadow-cyan-900/15 hover:bg-cyan-700"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl text-xs font-bold"
                 >
-                  <RefreshCw
-                    className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                  />
+                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
                   Làm mới
                 </Button>
               </div>
 
-              <div className="relative mt-5">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Tìm theo code, tiêu đề hoặc mô tả..."
-                  className="h-11 rounded-2xl border-slate-200 bg-white pl-10"
-                />
+              {/* Search & Status Filter */}
+              <div className="space-y-3 mb-5">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Tìm theo mã code, tiêu đề hoặc mô tả..."
+                    className="h-10 rounded-xl bg-white dark:bg-slate-800 pl-10 text-xs font-medium border-slate-200 dark:border-slate-700"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+                  {(["all", "active", "expired", "inactive"] as const).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setStatusFilter(st)}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition capitalize ${
+                        statusFilter === st
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                      }`}
+                    >
+                      {st === "all"
+                        ? "Tất cả"
+                        : st === "active"
+                        ? "Đang chạy"
+                        : st === "expired"
+                        ? "Hết hạn"
+                        : "Tạm dừng"}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="mt-5 space-y-4">
+              {/* Campaign Cards List */}
+              <div className="space-y-3.5">
                 {loading ? (
-                  <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
                       <div
-                        key={index}
-                        className="h-32 animate-pulse rounded-4xl border border-slate-200 bg-slate-100"
+                        key={i}
+                        className="h-28 animate-pulse rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50"
                       />
                     ))}
                   </div>
                 ) : visibleCampaigns.length > 0 ? (
-                  visibleCampaigns.map((campaign) => (
-                    <section
-                      key={campaign.id}
-                      className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge className="rounded-full bg-cyan-50 px-3 py-1 text-cyan-700 hover:bg-cyan-50">
-                              {campaign.code}
-                            </Badge>
-                            {campaign.isGlobal ? (
-                              <Badge className="rounded-full bg-amber-50 px-3 py-1 text-amber-700 hover:bg-amber-50">
-                                Global
+                  visibleCampaigns.map((campaign) => {
+                    const expired = isCampaignExpired(campaign);
+                    const canEdit = isCampaignEditable(campaign, merchantId);
+
+                    return (
+                      <div
+                        key={campaign.id}
+                        className={`rounded-2xl border p-4 shadow-2xs transition hover:shadow-md ${
+                          expired
+                            ? "border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10 opacity-75"
+                            : campaign.isActive
+                            ? "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 opacity-75"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Badge className="bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 font-extrabold uppercase text-[10px]">
+                                {campaign.code}
                               </Badge>
-                            ) : (
-                              <Badge className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 hover:bg-emerald-50">
-                                Merchant
-                              </Badge>
+
+                              {campaign.isGlobal ? (
+                                <Badge className="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px]">
+                                  Global
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px]">
+                                  Merchant
+                                </Badge>
+                              )}
+
+                              {expired ? (
+                                <Badge className="bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px]">
+                                  Hết hạn
+                                </Badge>
+                              ) : campaign.isActive ? (
+                                <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                                  Đang chạy
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px]">
+                                  Tạm dừng
+                                </Badge>
+                              )}
+                            </div>
+
+                            <h3 className="mt-2 text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                              {campaign.title}
+                            </h3>
+
+                            {campaign.description && (
+                              <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                {campaign.description}
+                              </p>
                             )}
-                            <Badge
-                              className={`rounded-full px-3 py-1 hover:bg-transparent ${
-                                campaign.isActive
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              {campaign.isActive ? "Active" : "Inactive"}
-                            </Badge>
+
+                            <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
+                              <span className="inline-flex items-center gap-1">
+                                <Clock size={11} /> {formatDateTime(campaign.startDate)} → {formatDateTime(campaign.endDate)}
+                              </span>
+                              <span>•</span>
+                              <span>Đã dùng: {campaign.usedCount}/{campaign.quantity}</span>
+                            </div>
                           </div>
 
-                          <h3 className="mt-3 text-xl font-black text-slate-950">
-                            {campaign.title}
-                          </h3>
-
-                          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                            {campaign.description || "Chưa có mô tả campaign."}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
-                            <span className="rounded-full bg-slate-50 px-3 py-1">
-                              {formatDateTime(campaign.startDate)} →{" "}
-                              {formatDateTime(campaign.endDate)}
-                            </span>
-                            <span className="rounded-full bg-slate-50 px-3 py-1">
-                              {campaign.usedCount}/{campaign.quantity} lượt
-                            </span>
-                            <span className="rounded-full bg-slate-50 px-3 py-1">
-                              {campaign.maxUsagePerUser} lần/user
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex shrink-0 flex-col items-end gap-3">
-                          <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-right">
-                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-700">
-                              Discount
-                            </p>
-                            <p className="mt-1 text-2xl font-black text-slate-950">
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            <span className="text-sm font-black text-cyan-600 dark:text-cyan-400">
                               {getCampaignDiscountLabel(campaign)}
-                            </p>
-                          </div>
+                            </span>
 
-                          <Button
-                            type="button"
-                            onClick={() => openCampaignDetail(campaign)}
-                            className="h-10 rounded-2xl bg-slate-950 px-4 font-black text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-700"
-                          >
-                            <Eye className="h-4 w-4" />
-                            Xem chi tiết
-                          </Button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openCampaignDetail(campaign)}
+                                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                aria-label="Xem chi tiết"
+                              >
+                                <Eye size={14} />
+                              </button>
+
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEdit(campaign)}
+                                  className="p-1.5 rounded-lg border border-cyan-200 dark:border-cyan-900 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50"
+                                  aria-label="Sửa campaign"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                              )}
+
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCampaignToDelete(campaign)}
+                                  className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50"
+                                  aria-label="Xóa campaign"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </section>
-                  ))
+                    );
+                  })
                 ) : (
-                  <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-6 py-14 text-center text-slate-500">
-                    <Sparkles className="mx-auto h-10 w-10 text-slate-300" />
-                    <h3 className="mt-4 text-lg font-black text-slate-950">
-                      Chưa có campaign phù hợp
-                    </h3>
-                    <p className="mt-2 text-sm leading-6">
-                      Tạo campaign mới hoặc thử đổi bộ lọc tìm kiếm.
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
+                    <Sparkles className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                      Không tìm thấy campaign phù hợp.
                     </p>
                   </div>
                 )}
@@ -911,162 +943,122 @@ export function MerchantCampaignPage() {
           </section>
         </div>
 
-        <Dialog
-          open={detailOpen}
-          onOpenChange={(open) => {
-            setDetailOpen(open);
-            if (!open) {
-              setSelectedCampaign(null);
-            }
-          }}
-        >
-          <DialogContent className="max-h-[92vh] max-w-3xl overflow-hidden border-white/80 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/25 backdrop-blur-xl">
-            {selectedCampaign ? (
+        {/* Dialog Confirm Delete */}
+        <Dialog open={Boolean(campaignToDelete)} onOpenChange={(o) => !o && setCampaignToDelete(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-rose-600">
+                <AlertTriangle size={18} />
+                Xác nhận xóa Campaign
+              </DialogTitle>
+              <DialogDescription className="text-xs font-medium text-slate-600 dark:text-slate-400 pt-2">
+                Bạn có chắc chắn muốn xóa mã khuyến mãi <span className="font-extrabold text-slate-900 dark:text-white">"{campaignToDelete?.code}"</span> ({campaignToDelete?.title})?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="pt-3">
+              <Button variant="outline" size="sm" onClick={() => setCampaignToDelete(null)}>
+                Hủy
+              </Button>
+              <Button
+                size="sm"
+                disabled={Boolean(deletingId)}
+                onClick={() => void confirmDelete()}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+              >
+                {deletingId ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 size={14} />}
+                Xóa
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Detail */}
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent className="max-w-xl">
+            {selectedCampaign && (
               <>
-                <DialogHeader className="border-b border-cyan-100 bg-white/90 px-6 py-5 text-left">
-                  <DialogTitle className="text-2xl font-black text-slate-950">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-extrabold text-slate-900 dark:text-white">
                     {selectedCampaign.title}
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-sm leading-6 text-slate-500">
-                    Xem thông tin đầy đủ, sau đó bấm sửa nếu cần chỉnh campaign.
+                  <DialogDescription className="text-xs font-medium text-slate-500">
+                    Chi tiết chương trình khuyến mãi mã: <span className="font-bold text-cyan-600">{selectedCampaign.code}</span>
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="max-h-[calc(92vh-104px)] space-y-5 overflow-y-auto px-6 py-5">
-                  <div className="grid gap-3 rounded-3xl border border-white/80 bg-white p-4 text-sm text-slate-700 shadow-sm ring-1 ring-slate-950/5 sm:grid-cols-2">
+                <div className="space-y-4 py-2 text-xs">
+                  <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-900">
                     <div>
-                      <div className="text-slate-500">Code</div>
-                      <div className="mt-1 font-black text-slate-950">
-                        {selectedCampaign.code}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-slate-500">Trạng thái</div>
-                      <div
-                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-black ${
-                          selectedCampaign.isActive
-                            ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                            : "border-slate-200 bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        {selectedCampaign.isActive ? "Active" : "Inactive"}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-slate-500">Loại campaign</div>
-                      <div className="mt-1 font-semibold text-slate-900">
-                        {selectedCampaign.isGlobal ? "Global" : "Merchant"}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-slate-500">Discount</div>
-                      <div className="mt-1 font-semibold text-slate-900">
+                      <span className="text-slate-400 font-medium block">Mức giảm:</span>
+                      <span className="text-sm font-black text-cyan-600 dark:text-cyan-400">
                         {getCampaignDiscountLabel(selectedCampaign)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Đơn tối thiểu:</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        {formatOptionalCurrency(selectedCampaign.minOrderAmount)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Giảm tối đa:</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        {formatOptionalCurrency(selectedCampaign.maxDiscountAmount)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Lượt sử dụng:</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        {selectedCampaign.usedCount} / {selectedCampaign.quantity} lượt
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Thời gian bắt đầu:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{formatDateTime(selectedCampaign.startDate)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Thời gian kết thúc:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{formatDateTime(selectedCampaign.endDate)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Đối tượng:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {selectedCampaign.isNewUserOnly ? "Chỉ Khách mới" : "Tất cả Khách hàng"}
+                      </span>
+                    </div>
+                    {selectedCampaign.description && (
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-500 block">Mô tả:</span>
+                        <p className="mt-1 text-slate-700 dark:text-slate-300 leading-relaxed">
+                          {selectedCampaign.description}
+                        </p>
                       </div>
-                    </div>
+                    )}
                   </div>
-
-                  <div className="grid gap-3 rounded-3xl border border-white/80 bg-white p-4 shadow-sm ring-1 ring-slate-950/5 sm:grid-cols-2 xl:grid-cols-4">
-                    <CampaignDetail
-                      label="Đơn tối thiểu"
-                      value={formatOptionalCurrency(
-                        selectedCampaign.minOrderAmount,
-                      )}
-                    />
-                    <CampaignDetail
-                      label="Giảm tối đa"
-                      value={formatOptionalCurrency(
-                        selectedCampaign.maxDiscountAmount,
-                      )}
-                    />
-                    <CampaignDetail
-                      label="Số lượng"
-                      value={`${selectedCampaign.usedCount} / ${selectedCampaign.quantity}`}
-                    />
-                    <CampaignDetail
-                      label="Lượt / user"
-                      value={String(selectedCampaign.maxUsagePerUser)}
-                    />
-                  </div>
-
-                  <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
-                        Thời gian
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-700">
-                        {formatDateTime(selectedCampaign.startDate)} →{" "}
-                        {formatDateTime(selectedCampaign.endDate)}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
-                        Ownership
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-700">
-                        {selectedCampaign.isGlobal
-                          ? "Áp dụng toàn hệ thống"
-                          : selectedCampaign.merchantId || "Merchant campaign"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-950/5">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
-                      Mô tả
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">
-                      {selectedCampaign.description ||
-                        "Chưa có mô tả campaign."}
-                    </p>
-                  </div>
-
-                  <DialogFooter className="border-t border-slate-100 pt-4 gap-3 sm:justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          handleEdit(selectedCampaign);
-                          setDetailOpen(false);
-                          setSelectedCampaign(null);
-                        }}
-                        disabled={!selectedCanManage}
-                        className="h-10 rounded-2xl bg-slate-950 px-4 font-black text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Sửa
-                      </Button>
-
-                      <Button
-                        type="button"
-                        onClick={() => void handleDelete(selectedCampaign)}
-                        disabled={
-                          !selectedCanManage ||
-                          deletingId === selectedCampaign.id
-                        }
-                        variant="outline"
-                        className="h-10 rounded-2xl border-rose-200 px-4 font-black text-rose-600 hover:bg-rose-50"
-                      >
-                        {deletingId === selectedCampaign.id ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                        Xóa
-                      </Button>
-                    </div>
-
-                    {!selectedCanManage ? (
-                      <div className="self-center text-xs font-semibold text-slate-400">
-                        Campaign global chỉ hiển thị, không sửa từ merchant
-                        portal.
-                      </div>
-                    ) : null}
-                  </DialogFooter>
                 </div>
+
+                <DialogFooter className="gap-2 sm:gap-0">
+                  {selectedCanManage && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        handleEdit(selectedCampaign);
+                        setDetailOpen(false);
+                      }}
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                    >
+                      <Pencil size={14} /> Chỉnh sửa
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setDetailOpen(false)}>
+                    Đóng
+                  </Button>
+                </DialogFooter>
               </>
-            ) : null}
+            )}
           </DialogContent>
         </Dialog>
       </section>
@@ -1074,49 +1066,229 @@ export function MerchantCampaignPage() {
   );
 }
 
-function CampaignStat({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  icon: ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="flex min-h-32 flex-col rounded-2xl border border-white/70 bg-white/85 px-4 py-3 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-h-9 text-[11px] font-black uppercase leading-5 tracking-[0.14em] text-slate-400">
-          {label}
-        </p>
-        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" />
-      </div>
-      <p className="mt-auto text-2xl font-black text-slate-950">{value}</p>
-    </div>
-  );
-}
-
-function CampaignDetail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3">
-      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-bold text-slate-800">{value}</p>
-    </div>
-  );
-}
-
+// MODULE 2: Merchant Statistics
 export function MerchantViewStatisticsPage() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<MerchantStatistics | null>(null);
+  const [views, setViews] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadData() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [statsData, viewsData] = await Promise.all([
+        getMyMerchantStatistics().catch(() => null),
+        getMyMerchantViews().catch(() => null),
+      ]);
+
+      if (statsData) {
+        setStats(statsData);
+      }
+      if (viewsData && typeof viewsData.totalViews === "number") {
+        setViews(viewsData.totalViews);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Không thể tải thông tin thống kê Merchant.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
-    <MerchantFeatureUnavailablePage
-      title="Thống kê lượt xem"
-      description="Trong backend hiện tại chưa có API ghi nhận hoặc đọc lượt xem nhà hàng. Khi BE bổ sung contract, FE sẽ nối biểu đồ và số liệu tại trang này."
-      missingApis={[
-        "GET /api/v1/merchants/me/views",
-        "GET /api/v1/merchants/me/statistics",
-        "POST /api/v1/merchants/{id}/views",
-      ]}
-    />
+    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
+      <MerchantSidebar />
+
+      <section className="merchant-main relative z-10">
+        <MerchantHeader />
+
+        <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8 space-y-6">
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-md transition hover:border-cyan-400"
+              >
+                <ChevronLeft size={16} /> Quay lại
+              </button>
+
+              <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-50 dark:border-cyan-900/50 dark:bg-cyan-950/40 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Merchant Analytics
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                Báo cáo & Thống kê kinh doanh
+              </h1>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => void loadData()}
+              disabled={loading}
+              variant="outline"
+              className="rounded-xl text-xs font-bold"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Cập nhật dữ liệu
+            </Button>
+          </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="flex items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40 p-4 text-xs font-bold text-rose-800 dark:text-rose-300">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-rose-600" />
+                <span>{error}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => void loadData()}>
+                Thử lại
+              </Button>
+            </div>
+          )}
+
+          {/* Loading Skeletons */}
+          {loading && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-32 animate-pulse rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state if stats are null */}
+          {!loading && !stats && (
+            <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 text-center">
+              <Store className="mx-auto h-12 w-12 text-slate-400 mb-3" />
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Chưa có dữ liệu thống kê
+              </h3>
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                Thống kê sẽ hiển thị tự động khi gian hàng của bạn có lượt truy cập và đơn hàng đầu tiên.
+              </p>
+            </div>
+          )}
+
+          {/* Real Statistics Metrics */}
+          {!loading && stats && (
+            <div className="space-y-6">
+              {/* Top KPI Cards */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Total Revenue */}
+                <div className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider">Tổng doanh thu</span>
+                    <div className="h-9 w-9 grid place-items-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600">
+                      <DollarSign size={18} />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+                    {formatCurrency(stats.totalRevenue)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    Tổng giá trị các đơn hàng bán ra
+                  </p>
+                </div>
+
+                {/* Merchant Receive */}
+                <div className="rounded-3xl border border-emerald-200/80 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-5 shadow-xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+                    <span className="text-xs font-bold uppercase tracking-wider">Thực nhận</span>
+                    <div className="h-9 w-9 grid place-items-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700">
+                      <CheckCircle2 size={18} />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-2xl font-black text-emerald-800 dark:text-emerald-300">
+                    {formatCurrency(stats.merchantReceive ?? stats.totalRevenue)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-emerald-600/80">
+                    Sau khi khấu trừ các phí dịch vụ
+                  </p>
+                </div>
+
+                {/* Total Orders */}
+                <div className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider">Tổng đơn hàng</span>
+                    <div className="h-9 w-9 grid place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600">
+                      <ShoppingBag size={18} />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+                    {stats.totalOrders} <span className="text-sm font-bold text-slate-400">đơn</span>
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    Trung bình {formatCurrency(stats.avgOrderValue)}/đơn
+                  </p>
+                </div>
+
+                {/* Views */}
+                <div className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider">Lượt xem gian hàng</span>
+                    <div className="h-9 w-9 grid place-items-center rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600">
+                      <Eye size={18} />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+                    {views ?? stats.totalViews ?? 0} <span className="text-sm font-bold text-slate-400">lượt</span>
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    Lượt xem từ ứng dụng Khách hàng
+                  </p>
+                </div>
+              </div>
+
+              {/* Fee Breakdown Breakdown Card */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-xl">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Receipt size={18} className="text-cyan-600" />
+                  Chi tiết phân bổ phí dịch vụ
+                </h3>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-900/50">
+                    <span className="text-xs font-bold text-slate-500 block">Phí nền tảng ({stats.platformFeePercent ?? 0}%)</span>
+                    <span className="mt-1 text-lg font-black text-slate-900 dark:text-white block">
+                      {formatCurrency(stats.platformFee)}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-900/50">
+                    <span className="text-xs font-bold text-slate-500 block">Phí Reviewer / Giới thiệu</span>
+                    <span className="mt-1 text-lg font-black text-slate-900 dark:text-white block">
+                      {formatCurrency(stats.reviewerFee)}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-900/50">
+                    <span className="text-xs font-bold text-slate-500 block">Giá trị đơn trung bình (AOV)</span>
+                    <span className="mt-1 text-lg font-black text-slate-900 dark:text-white block">
+                      {formatCurrency(stats.avgOrderValue)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }

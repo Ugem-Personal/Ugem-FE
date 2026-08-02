@@ -123,7 +123,7 @@ export default function NotificationsPage() {
   }, [activeFilter, notifications]);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] px-4 py-6 text-slate-950">
+    <div className="app-page px-4 py-6">
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] [background-size:32px_32px]" />
 
       <main className="relative mx-auto max-w-6xl space-y-5">

@@ -40,7 +40,7 @@ export default function ReviewsPage() {
             {reviews.length > 0 ? (
               reviews.map((review: Review, idx: number) => (
                 <div
-                  key={review.id || idx}
+                  key={review.reviewId || idx}
                   className="rounded-lg border border-white/70 bg-white/90 p-5 shadow-lg shadow-slate-950/5 backdrop-blur transition hover:-translate-y-px hover:shadow-xl"
                 >
                   <div className="flex items-start justify-between gap-4">

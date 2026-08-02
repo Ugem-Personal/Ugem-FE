@@ -1,21 +1,18 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Compass, Store, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import HeroCarousel from "../components/HeroCarousel";
+import { AuthLayout } from "../components/AuthLayout";
 import { LoginForm } from "../components/LoginForm";
 import { getRouteByRole } from "../hooks/useLogin";
 import { googleLoginApi } from "../services";
 import { saveAuthToken } from "../store";
-import { Logo } from "./Logo";
 import { getGoogleLoginErrorMessage } from "../errorMessages";
 
 import { notify } from "@/shared/lib/notify";
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID?.toString().trim() ?? "";
-
-const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
 type GoogleCredentialResponse = {
   credential?: string;
@@ -41,20 +38,10 @@ declare global {
   }
 }
 
-const HERO_IMAGES = [
-  "https://mia.vn/media/uploads/blog-du-lich/pho-ganh-ha-noi-01-1702697225.jpg",
-  "https://static.vinwonders.com/production/bun-bo-hue-1.jpg",
-  "https://bandembanhom.com/wp-content/uploads/2025/01/Com-Tam-3-Ghien-1.webp",
-  "https://adormusic.s3.us-east-2.amazonaws.com/wp-content/uploads/2023/07/22045644/mi-quang-ba-mua-5-1024x1024.jpeg",
-];
-
 export function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
-
   const [showGooglePurposeDialog, setShowGooglePurposeDialog] = useState(false);
-
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
-
   const navigate = useNavigate();
 
   function handleGooglePurpose(path: string) {
@@ -143,38 +130,28 @@ export function LoginPage() {
         size: "large",
         shape: "pill",
         text: "continue_with",
-        width: 360,
+        width: 380,
       });
     }
 
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      `script[src="${GOOGLE_SCRIPT_SRC}"]`,
-    );
-
-    if (existingScript) {
+    if (window.google?.accounts?.id) {
       renderGoogleButton();
+    } else {
+      const existingScript = document.querySelector<HTMLScriptElement>(
+        'script[src="https://accounts.google.com/gsi/client"]',
+      );
 
-      existingScript.addEventListener("load", renderGoogleButton, {
-        once: true,
-      });
-
-      return () => {
-        cancelled = true;
-        existingScript.removeEventListener("load", renderGoogleButton);
-      };
+      if (existingScript) {
+        existingScript.addEventListener("load", renderGoogleButton);
+      } else {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = renderGoogleButton;
+        document.body.appendChild(script);
+      }
     }
-
-    const script = document.createElement("script");
-
-    script.src = GOOGLE_SCRIPT_SRC;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = renderGoogleButton;
-
-    script.onerror = () => notify.error("Không tải được Google Sign-In.");
-
-    document.head.appendChild(script);
 
     return () => {
       cancelled = true;
@@ -182,200 +159,100 @@ export function LoginPage() {
   }, [navigate]);
 
   return (
-    <main className="relative grid min-h-screen grid-cols-1 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] lg:grid-cols-[1.18fr_0.82fr]">
-      {/* grid background */}
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
+    <AuthLayout
+      eyebrow="Đăng nhập an toàn"
+      title="Chào mừng trở lại"
+      subtitle="Tiếp tục hành trình khám phá và quản lý trải nghiệm của bạn trên UGem."
+    >
+      <div className="space-y-6">
+        {GOOGLE_CLIENT_ID ? (
+          <div>
+            <div className="flex justify-center">
+              <div ref={googleButtonRef} className="min-h-11 w-full max-w-[380px]" />
+            </div>
 
-      {/* glow */}
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
+            {googleLoading && (
+              <p className="mt-2 text-center text-xs font-bold text-cyan-600 dark:text-cyan-400 animate-pulse">
+                Đang đăng nhập bằng Google...
+              </p>
+            )}
 
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
-
-      {/* left */}
-      <section className="relative hidden min-h-[52vh] p-3 lg:block lg:h-screen lg:p-4">
-        <HeroCarousel images={HERO_IMAGES} />
-
-        {/* floating caption */}
-      </section>
-
-      {/* right */}
-      <section className="relative flex items-center justify-center overflow-hidden px-4 py-3">
-        <div className="w-full max-w-md">
-          <div className="relative overflow-hidden rounded-4xl border border-white/50 bg-white/60 p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-            {/* glow */}
-            <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl" />
-
-            <div className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-amber-300/30 blur-3xl" />
-
-            <div className="relative">
-              <Logo />
-
-              <div className="mt-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-cyan-700 shadow-sm ring-1 ring-cyan-500/10">
-                  UGem Platform
-                </div>
-
-                <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 leading-[1.12]">
-                  Khám phá quán ăn đang bị{" "}
-                  <span className="bg-linear-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                    FLOP
-                  </span>
-                </h1>
-
-                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
-                  Những quán ngon địa phương chưa nhiều người biết đến. Tìm
-                  hidden gems, mở merchant và quản lý hồ sơ trong một nền tảng
-                  hiện đại.
-                </p>
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-white/10" />
               </div>
-
-              {/* google */}
-              <div className="mt-4 space-y-2">
-                {GOOGLE_CLIENT_ID ? (
-                  <>
-                    <div
-                      className={`flex min-h-12 justify-center rounded-2xl border border-white/60 bg-white/70 px-3 py-2 shadow-sm backdrop-blur transition-all duration-300 hover:bg-white/90 hover:shadow-md ${
-                        googleLoading ? "pointer-events-none opacity-60" : ""
-                      }`}
-                    >
-                      <div ref={googleButtonRef} />
-                    </div>
-                    <p className="rounded-2xl border border-amber-200/80 bg-amber-50/80 px-3 py-1.5 text-center text-[11px] font-bold leading-5 text-amber-800 shadow-sm">
-                      Google chỉ dùng cho tài khoản Customer.
-                    </p>
-                    <p className="rounded-2xl border border-cyan-100 bg-cyan-50/70 px-3 py-1.5 text-center text-[11px] font-bold leading-5 text-cyan-900 shadow-sm">
-                      Email và mật khẩu dùng cho Customer, Reviewer, Merchant,
-                      Staff và Admin.
-                    </p>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200/60 bg-slate-50/50 font-semibold text-slate-400 shadow-sm backdrop-blur"
-                  >
-                    Chưa cấu hình Google Client ID
-                  </button>
-                )}
-              </div>
-
-              {/* divider */}
-              <div className="my-2.5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
-                <div className="h-px flex-1 bg-slate-200" />
-                Hoặc
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-
-              <LoginForm />
-
-              {/* footer links */}
-              <div className="mt-2.5 space-y-1 text-center">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-semibold text-cyan-700 transition hover:text-cyan-800 hover:underline"
-                >
-                  Quên mật khẩu?
-                </Link>
-
-                <div>
-                  <Link
-                    to="/register"
-                    className="group inline-flex items-center gap-1 text-xs font-black text-amber-700 transition hover:text-amber-800"
-                  >
-                    Chưa có tài khoản? Đăng ký
-                    <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
-                  </Link>
-                </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-900 px-3 font-bold text-slate-500 dark:text-slate-400">
+                  HOẶC EMAIL
+                </span>
               </div>
             </div>
           </div>
+        ) : null}
 
-          <p className="mt-2 text-center text-[10px] font-medium leading-4 text-slate-500">
-            Bằng cách tiếp tục, bạn đồng ý với điều khoản sử dụng và chính sách
-            quyền riêng tư của UGem.
-          </p>
-        </div>
-      </section>
+        <LoginForm />
 
-      {/* purpose dialog */}
-      {showGooglePurposeDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-md transition-all duration-300">
-          <section
-            aria-modal="true"
-            role="dialog"
-            className="relative w-full max-w-md overflow-hidden rounded-4xl border border-white/50 bg-white/70 p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] backdrop-blur-2xl transition-transform duration-300 scale-100"
+        <div className="flex items-center justify-between border-t border-slate-200/80 dark:border-white/10 pt-5 text-xs">
+          <Link
+            to="/forgot-password"
+            className="font-bold text-cyan-600 dark:text-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded"
           >
-            <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl" />
+            Quên mật khẩu?
+          </Link>
 
-            <div className="absolute -bottom-14 -left-14 h-40 w-40 rounded-full bg-amber-300/30 blur-3xl" />
+          <div className="text-slate-600 dark:text-slate-400">
+            Chưa có tài khoản?{" "}
+            <Link
+              to="/register"
+              className="font-black text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded"
+            >
+              Đăng ký ngay
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
 
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
-                Welcome to UGem
-              </div>
+      {showGooglePurposeDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl dark:bg-slate-900">
+            <h3 className="text-lg font-black text-foreground">Bạn muốn làm gì tiếp theo?</h3>
+            <p className="mt-2 text-xs font-medium text-muted-foreground">
+              Chào mừng bạn đến với UGem! Hãy chọn mục đích sử dụng để chúng tôi đưa bạn đến đúng giao diện.
+            </p>
 
-              <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
-                Bạn muốn bắt đầu như thế nào?
-              </h2>
+            <div className="mt-5 grid gap-3">
+              <button
+                type="button"
+                onClick={() => handleGooglePurpose("/customer")}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left font-bold transition hover:border-cyan-500 hover:bg-cyan-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+              >
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-foreground">Khám Phá & Đặt Món</p>
+                  <p className="text-xs font-medium text-muted-foreground">Tìm kiếm các quán ăn chất lượng gần bạn</p>
+                </div>
+              </button>
 
-              <p className="mt-3.5 text-sm font-medium leading-relaxed text-slate-500">
-                Tài khoản Google mới đã được tạo dưới vai trò Customer. Bạn có
-                thể khám phá món ngon hoặc mở quán trên UGem.
-              </p>
-
-              <div className="mt-8 grid gap-4">
-                <button
-                  type="button"
-                  onClick={() => handleGooglePurpose("/customer")}
-                  className="group flex w-full items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-5 py-4 text-left shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-white/90 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <span className="grid h-12 w-12 place-items-center rounded-xl bg-linear-to-br from-slate-100 to-slate-200 text-slate-700 shadow-sm">
-                      <Compass size={20} />
-                    </span>
-
-                    <div>
-                      <p className="font-black text-slate-900 group-hover:text-cyan-700 transition-colors">
-                        Khám phá món ngon
-                      </p>
-
-                      <p className="text-[13px] font-medium text-slate-500">
-                        Tìm hidden gems quanh bạn
-                      </p>
-                    </div>
-                  </div>
-
-                  <ArrowRight className="h-5 w-5 text-slate-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-cyan-600" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleGooglePurpose("/merchant/application/create")
-                  }
-                  className="group flex w-full items-center justify-between rounded-2xl bg-linear-to-br from-cyan-600 to-blue-600 px-5 py-4 text-left text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-900/30"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <span className="grid h-12 w-12 place-items-center rounded-xl bg-white/20 shadow-inner">
-                      <Store size={20} />
-                    </span>
-
-                    <div>
-                      <p className="font-black">Mở quán trên UGem</p>
-
-                      <p className="text-[13px] font-medium text-cyan-100">
-                        Gửi hồ sơ merchant để xét duyệt
-                      </p>
-                    </div>
-                  </div>
-
-                  <ArrowRight className="h-5 w-5 transition-all duration-300 group-hover:translate-x-1" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleGooglePurpose("/merchant/application/create")}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-left font-bold transition hover:border-cyan-500 hover:bg-cyan-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+              >
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
+                  <Store className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-foreground">Đăng Ký Mở Quán Ăn</p>
+                  <p className="text-xs font-medium text-muted-foreground">Đưa thương hiệu ẩm thực lên UGem</p>
+                </div>
+              </button>
             </div>
-          </section>
+          </div>
         </div>
       )}
-    </main>
+    </AuthLayout>
   );
 }

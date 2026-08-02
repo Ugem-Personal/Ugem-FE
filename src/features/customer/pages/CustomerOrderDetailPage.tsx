@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Check, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Star,
+  RefreshCw,
+  MapPin,
+  FileText,
+  Clock,
+  Receipt,
+} from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   confirmReceived,
@@ -13,53 +22,44 @@ import type {
 } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
 import {
+  getCustomerOrderProgressMessage,
+  isCustomerConfirmationReady,
+} from "@/shared/lib/order-status";
+import {
   createReview,
   getReviewsByMerchantId,
   type Review,
 } from "@/features/review/services";
 import { findMerchantByFoodId } from "../services/merchantService";
+import { ImageWithFallback, ModeToggle } from "@/shared/components";
+import { OrderStatusBadge } from "../components/OrderStatusBadge";
+import { OrderStatusTimeline } from "../components/OrderStatusTimeline";
 
 type OrderDetailLocationState = {
   order?: CustomerOrderSummary;
   fallbackOrderNumber?: number;
 };
 
-type FoodReviewDraft = {
-  rating: number;
-  content: string;
-};
+
 
 const orderIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function getCustomerConfirmMessage(status?: string | null) {
+function getCustomerConfirmMessage(
+  status?: string | null,
+  orderType?: string | null,
+) {
   const normalizedStatus = status?.toLowerCase();
-
-  if (!normalizedStatus || normalizedStatus === "pending") {
-    return "Đơn đang chờ Merchant xác nhận. Sau khi quán chấp nhận đơn, bạn mới có thể xác nhận nhận hàng.";
-  }
-
-  if (normalizedStatus === "rejected") {
-    return "Đơn đã bị Merchant từ chối nên không thể xác nhận nhận hàng.";
-  }
-
-  if (normalizedStatus === "completed") {
-    return "Bạn đã xác nhận nhận hàng cho đơn này.";
-  }
 
   if (normalizedStatus === "cashpending") {
     return "Bạn đã thanh toán tiền mặt. Đang chờ Merchant xác nhận để hoàn tất check-in.";
   }
 
-  if (normalizedStatus === "notreceived") {
-    return "Bạn đã báo chưa nhận hàng cho đơn này.";
-  }
+  return getCustomerOrderProgressMessage(status, orderType);
+}
 
-  if (normalizedStatus === "accepted") {
-    return "Đơn đã được Merchant xác nhận và đang giao. Khi nhận được hàng, bấm xác nhận để hoàn tất check-in.";
-  }
-
-  return "Bạn chỉ có thể xác nhận đơn sau khi Merchant chấp nhận đơn hàng.";
+function formatPrice(value: number) {
+  return `${value.toLocaleString("vi-VN")}đ`;
 }
 
 export default function CustomerOrderDetailPage() {
@@ -75,18 +75,14 @@ export default function CustomerOrderDetailPage() {
   const [loading, setLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState<string | null>(null);
   const [merchantId, setMerchantId] = useState<string | null>(null);
-  const [merchantName, setMerchantName] = useState("");
+  const [, setMerchantName] = useState<string>("");
   const [hasReviewed, setHasReviewed] = useState(false);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewContent, setReviewContent] = useState("");
-  const [foodReviewDrafts, setFoodReviewDrafts] = useState<
-    Record<string, FoodReviewDraft>
-  >({});
-  const [activeFoodReviewId, setActiveFoodReviewId] = useState<string | null>(
-    null,
-  );
   const [submittingReview, setSubmittingReview] = useState(false);
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewContent, setReviewContent] = useState<string>("");
+  const [foodReviewDrafts, setFoodReviewDrafts] = useState<Record<string, { rating: number; content: string }>>({});
+  const [, setActiveFoodReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -102,9 +98,10 @@ export default function CustomerOrderDetailPage() {
         let matchingSummaryOrder = summaryOrder;
 
         if (!hasRealOrderId) {
-          const orders = await getCustomerOrders().catch(() => []);
+          const ordersRes = await getCustomerOrders().catch(() => ({ data: [] }));
+          const orders = ordersRes.data ?? [];
           const refreshedSummaryOrder = summaryOrder
-            ? orders.find((order) => matchesSummaryOrder(order, summaryOrder))
+            ? orders.find((order: CustomerOrderSummary) => matchesSummaryOrder(order, summaryOrder))
             : orders[0];
 
           matchingSummaryOrder =
@@ -118,13 +115,11 @@ export default function CustomerOrderDetailPage() {
               setMerchantId(null);
               setMerchantName(matchingSummaryOrder?.name || "");
             }
-
             return;
           }
 
           if (active) {
             setResolvedOrderId(effectiveOrderId);
-
             navigate(`/customer/orders/${effectiveOrderId}${location.hash}`, {
               replace: true,
               state: {
@@ -135,16 +130,17 @@ export default function CustomerOrderDetailPage() {
           }
         }
 
-        const [data, orders] = await Promise.all([
+        const [data, ordersRes] = await Promise.all([
           getCustomerOrderDetail(effectiveOrderId),
-          getCustomerOrders().catch(() => []),
+          getCustomerOrders().catch(() => ({ data: [] })),
         ]);
+        const orders = ordersRes.data ?? [];
 
         if (active) {
           setItems(data ?? []);
           setOrderStatus(
             orders.find(
-              (order) => getCustomerOrderId(order) === effectiveOrderId,
+              (order: CustomerOrderSummary) => getCustomerOrderId(order) === effectiveOrderId,
             )?.status ??
               matchingSummaryOrder?.status ??
               null,
@@ -175,7 +171,6 @@ export default function CustomerOrderDetailPage() {
             if (active) {
               const existingReview = merchantReviews.find((review: Review) => {
                 const reviewOrderId = review.orderId;
-
                 return (
                   normalizeReviewOrderId(reviewOrderId) === effectiveOrderId
                 );
@@ -215,7 +210,6 @@ export default function CustomerOrderDetailPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     if (window.location.hash !== "#review-section") return;
 
     const timer = window.setTimeout(() => {
@@ -258,7 +252,7 @@ export default function CustomerOrderDetailPage() {
         return {
           orderDetailId,
           rating: draft.rating,
-          detailContent: draft.content.trim(),
+          content: draft.content.trim(),
         };
       })
       .filter(
@@ -267,7 +261,7 @@ export default function CustomerOrderDetailPage() {
         ): item is {
           orderDetailId: string;
           rating: number;
-          detailContent: string;
+          content: string;
         } => item !== null,
       );
 
@@ -279,10 +273,10 @@ export default function CustomerOrderDetailPage() {
         orderId,
         rating: reviewRating,
         content: reviewContent.trim(),
-        reviewDetails: reviewDetails.length > 0 ? reviewDetails : undefined,
+        details: reviewDetails.length > 0 ? reviewDetails : undefined,
       });
 
-      notify.success("Đã gửi đánh giá.");
+      notify.success("Đã gửi đánh giá thành công.");
       setReviewContent("");
       setReviewRating(5);
       setFoodReviewDrafts({});
@@ -323,7 +317,7 @@ export default function CustomerOrderDetailPage() {
 
     try {
       await confirmReceived(orderId);
-      notify.success("Đã xác nhận nhận hàng và check-in.");
+      notify.success("Đã xác nhận nhận hàng và hoàn tất.");
       navigate("/check-in?success=1", { replace: true });
     } catch (error) {
       console.error(error);
@@ -333,28 +327,7 @@ export default function CustomerOrderDetailPage() {
     }
   }
 
-  function updateFoodReviewDraft(
-    orderDetailId: string,
-    patch: Partial<FoodReviewDraft>,
-  ) {
-    setFoodReviewDrafts((current) => {
-      const previous = current[orderDetailId] ?? { rating: 0, content: "" };
 
-      return {
-        ...current,
-        [orderDetailId]: {
-          ...previous,
-          ...patch,
-        },
-      };
-    });
-  }
-
-  function toggleFoodReview(orderDetailId: string) {
-    setActiveFoodReviewId((current) =>
-      current === orderDetailId ? null : orderDetailId,
-    );
-  }
 
   const itemsTotal = items.reduce((sum, item) => {
     return sum + Number(item.unitPrice || 0) * Number(item.quantity || 0);
@@ -365,402 +338,318 @@ export default function CustomerOrderDetailPage() {
   const effectiveOrderId = hasRealOrderId ? id : resolvedOrderId;
   const displayOrderStatus = orderStatus ?? summaryOrder?.status ?? null;
   const normalizedOrderStatus = displayOrderStatus?.trim().toLowerCase();
-  const isAccepted = normalizedOrderStatus === "accepted";
   const isCompleted = normalizedOrderStatus === "completed";
   const isOfflineOrder =
+    summaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
     normalizeString(summaryOrder?.deliveryAddress) === "tai quan" ||
     normalizeString(summaryOrder?.notes).includes("offline");
+  const isConfirmationReady = isCustomerConfirmationReady(
+    displayOrderStatus,
+    isOfflineOrder ? "Offline" : "Online",
+  );
   const reviewLocked = hasReviewed || submittingReview;
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] p-5 text-center text-slate-500 font-medium">
-        Đang tải chi tiết đơn hàng...
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-950 p-5 text-slate-500 dark:text-slate-400">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-cyan-500 border-t-transparent" />
+        <p className="text-xs font-extrabold">Đang tải chi tiết đơn hàng...</p>
       </div>
     );
+  }
 
   return (
-    <div className="relative min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] px-4 py-8 text-slate-950">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
+      {/* Background glow effects */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
 
-      <div className="relative mx-auto max-w-3xl">
-        <div className="flex flex-wrap gap-3 mb-6">
+      <div className="relative mx-auto max-w-4xl space-y-6">
+        {/* Navbar */}
+        <div className="flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/60 bg-white/60 px-4 text-[13px] font-black text-slate-700 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/80 hover:text-cyan-800 hover:shadow-md"
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            Back
+            <ArrowLeft className="h-4 w-4" />
+            Quay lại
           </button>
 
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-4 text-[13px] font-black text-white shadow-lg shadow-cyan-900/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98]"
-          >
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Làm mới
+            </button>
+            <ModeToggle />
+          </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-4xl border border-white/50 bg-white/60 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl mix-blend-multiply" />
-
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
-            Order Summary
-          </div>
-
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
-            {title}
-          </h1>
-
-          <p className="mt-3 text-[22px] font-black text-cyan-700">
-            {total.toLocaleString("vi-VN")}đ
-          </p>
-
-          {summaryOrder && (
-            <div className="mt-5 space-y-2 text-[14px] text-slate-500 font-medium">
-              <p className="flex items-center gap-2">
-                <span className="font-bold text-slate-700">Trạng thái:</span>{" "}
-                <span className="inline-flex rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-0.5 text-xs font-black text-cyan-700 shadow-sm">
-                  {displayOrderStatus ?? summaryOrder.status}
+        {/* Order Header Card */}
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xl backdrop-blur-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-white/10">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
+                  <Receipt className="h-3.5 w-3.5" /> Order Detail
                 </span>
-              </p>
-              <p>
-                <span className="font-bold text-slate-700">Ngày đặt:</span>{" "}
-                {new Date(summaryOrder.orderedAt).toLocaleString("vi-VN")}
-              </p>
-              {summaryOrder.deliveryAddress && (
-                <p>
-                  <span className="font-bold text-slate-700">Địa chỉ:</span>{" "}
-                  {summaryOrder.deliveryAddress}
+                <span className="rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {isOfflineOrder ? "Tại quán" : "Giao hàng"}
+                </span>
+              </div>
+
+              <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
+                {title}
+              </h1>
+
+              {summaryOrder && (
+                <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
+                  <Clock className="h-3.5 w-3.5" />
+                  {new Date(summaryOrder.orderedAt).toLocaleString("vi-VN")}
+                  {effectiveOrderId && (
+                    <span className="font-mono">#{effectiveOrderId.slice(0, 8)}</span>
+                  )}
                 </p>
               )}
+            </div>
+
+            <div className="flex flex-col items-start sm:items-end gap-2">
+              <OrderStatusBadge status={displayOrderStatus} />
+              <p className="text-2xl font-black tracking-tight text-cyan-600 dark:text-cyan-400 font-mono">
+                {formatPrice(total)}
+              </p>
+            </div>
+          </div>
+
+          {/* Delivery & Notes Info */}
+          {summaryOrder && (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              {summaryOrder.deliveryAddress && !isOfflineOrder && (
+                <div className="flex items-start gap-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-950/50 p-3.5">
+                  <MapPin className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white">Địa chỉ giao hàng</p>
+                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">{summaryOrder.deliveryAddress}</p>
+                  </div>
+                </div>
+              )}
+
               {summaryOrder.notes && (
-                <p>
-                  <span className="font-bold text-slate-700">Ghi chú:</span>{" "}
-                  {summaryOrder.notes}
-                </p>
+                <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200/50 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-950/40 p-3.5 text-amber-900 dark:text-amber-200">
+                  <FileText className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div>
+                    <p className="font-bold">Ghi chú của đơn</p>
+                    <p className="mt-0.5">{summaryOrder.notes}</p>
+                  </div>
+                </div>
               )}
             </div>
           )}
 
-          {effectiveOrderId && isAccepted ? (
-            <div className="mt-6 rounded-2xl border border-cyan-200/60 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-5 py-4 text-[14px] text-cyan-900 shadow-sm backdrop-blur">
-              <div className="font-black text-cyan-800 text-lg">
-                Đơn đã được chấp nhận
+          {/* Ready / Confirmation Action Box */}
+          {effectiveOrderId && isConfirmationReady ? (
+            <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
+              <div className="font-black text-slate-950 dark:text-white text-sm">
+                {isOfflineOrder ? "Món đã sẵn sàng tại bàn" : "Đơn đang được giao tới bạn"}
               </div>
-              <p className="mt-2 text-cyan-800/90 font-medium">
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
                 {isOfflineOrder
-                  ? "Đơn tại quán đã được merchant xác nhận. Sau khi ăn xong, mở bill để kiểm tra món, tổng tiền rồi thanh toán."
-                  : "Đơn online đã được Merchant xác nhận. Khi bên giao hàng đưa đơn tới nơi, bấm đã nhận hàng để hệ thống hoàn tất check-in."}
+                  ? "Vui lòng mở hóa đơn kiểm tra và hoàn tất xác nhận check-in."
+                  : "Chỉ bấm xác nhận sau khi bạn đã kiểm tra và nhận đầy đủ món."}
               </p>
               <button
                 type="button"
                 onClick={() => void handleOpenCheckIn()}
                 disabled={confirmingDelivery}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-5 py-2.5 text-[14px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98]"
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-950 dark:bg-cyan-500 px-5 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
               >
-                <Check size={18} />
+                <Check className="h-4 w-4" />
                 {isOfflineOrder ? "Xác nhận bill" : "Đã nhận hàng"}
               </button>
             </div>
           ) : effectiveOrderId ? (
-            <div className="mt-6 rounded-2xl border border-amber-200/60 bg-amber-50/80 px-5 py-4 text-[14px] font-bold text-amber-800 shadow-sm backdrop-blur">
-              {getCustomerConfirmMessage(displayOrderStatus)}
+            <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 px-5 py-4 text-xs font-bold text-amber-900 dark:text-amber-200">
+              {getCustomerConfirmMessage(
+                displayOrderStatus,
+                isOfflineOrder ? "Offline" : "Online",
+              )}
             </div>
           ) : null}
         </div>
 
-        <div
-          id="review-section"
-          className="mt-6 relative overflow-hidden rounded-4xl border border-white/50 bg-white/60 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]"
-        >
-          <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-amber-300/20 blur-3xl mix-blend-multiply" />
-          <div className="relative flex flex-wrap items-start justify-between gap-3 mb-6">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-200/50 bg-linear-to-r from-amber-50/80 to-orange-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-amber-800 ring-1 ring-amber-500/10">
-                Feedback
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-900">
-                Đánh giá quán
-              </h2>
-              <p className="mt-1.5 text-[14px] font-medium text-slate-500">
-                {merchantId
-                  ? `Gửi nhận xét cho ${merchantName || "merchant này"}.`
-                  : "Chưa xác định được merchant từ đơn hàng này."}
-              </p>
-            </div>
+        {/* Order Status Timeline Stepper */}
+        <OrderStatusTimeline
+          status={displayOrderStatus}
+          orderType={isOfflineOrder ? "Offline" : "Online"}
+          orderedAt={summaryOrder?.orderedAt}
+        />
 
-            <span
-              className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-[12px] font-black shadow-sm ${
-                isCompleted
-                  ? "border border-emerald-200/60 bg-emerald-50 text-emerald-700"
-                  : "border border-amber-200/60 bg-amber-50 text-amber-700"
-              }`}
-            >
-              Trạng thái: {displayOrderStatus || "Đang tải"}
-            </span>
-          </div>
+        {/* Ordered Food Items List */}
+        <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xs backdrop-blur-2xl">
+          <h2 className="mb-5 text-xl font-black tracking-tight text-slate-950 dark:text-white">
+            Danh sách món đã đặt ({items.length})
+          </h2>
 
-          <div className="relative">
-            {!effectiveOrderId ? (
-              <p className="mt-4 rounded-2xl border border-dashed border-slate-200/60 bg-slate-50/80 px-5 py-4 text-[14px] font-medium text-slate-500 backdrop-blur">
-                Chưa ghép được mã đơn thật từ dữ liệu danh sách, nên trang này
-                chỉ hiển thị thông tin tóm tắt.
-              </p>
-            ) : !isCompleted ? (
-              <p className="mt-4 rounded-2xl border border-dashed border-amber-200/60 bg-amber-50/80 px-5 py-4 text-[14px] font-bold text-amber-800 backdrop-blur">
-                Bạn chỉ có thể gửi đánh giá sau khi đơn hàng đã được xác nhận
-                hoàn tất.
-              </p>
-            ) : hasReviewed ? (
-              <p className="mt-4 rounded-2xl border border-dashed border-emerald-200/60 bg-emerald-50/80 px-5 py-4 text-[14px] font-bold text-emerald-800 backdrop-blur">
-                Đơn hàng này đã được đánh giá rồi, mỗi đơn chỉ đánh giá một lần.
-              </p>
-            ) : merchantId ? (
-              <div className="mt-6 space-y-6">
-                <div>
-                  <p className="mb-3 text-[14px] font-black uppercase tracking-wider text-slate-800">
-                    Chọn số sao
-                  </p>
-                  <div className="flex flex-wrap gap-2.5">
-                    {Array.from({ length: 5 }).map((_, index) => {
-                      const value = index + 1;
-                      const active = value <= reviewRating;
-
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setReviewRating(value)}
-                          disabled={reviewLocked}
-                          className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ${
-                            active
-                              ? "border-amber-300 bg-linear-to-br from-amber-50 to-orange-50 text-amber-500 shadow-sm"
-                              : "border-slate-200/60 bg-white/60 text-slate-300 hover:border-amber-200 hover:text-amber-400"
-                          }`}
-                          aria-label={`Chọn ${value} sao`}
-                        >
-                          <Star
-                            size={20}
-                            className={active ? "fill-amber-400" : ""}
-                          />
-                        </button>
-                      );
-                    })}
+          <div className="space-y-3">
+            {items.map((item, idx) => (
+              <div
+                key={item.foodId || idx}
+                className="flex items-center justify-between rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-slate-950/60 p-4 shadow-xs"
+              >
+                <div className="flex items-center gap-4 min-w-0 pr-4">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800">
+                    <ImageWithFallback
+                      src={item.imageUrl}
+                      alt={item.name || "Món ăn"}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <label
-                    htmlFor="review-content"
-                    className="mb-3 block text-[14px] font-black uppercase tracking-wider text-slate-800"
-                  >
-                    Nội dung đánh giá
-                    <span className="ml-1.5 text-[11px] font-bold lowercase text-slate-400">
-                      (không bắt buộc)
-                    </span>
-                  </label>
-                  <textarea
-                    id="review-content"
-                    value={reviewContent}
-                    onChange={(e) => setReviewContent(e.target.value)}
-                    placeholder="Chia sẻ cảm nhận của bạn về quán nếu muốn..."
-                    disabled={reviewLocked}
-                    className="min-h-32 w-full rounded-2xl border border-white/60 bg-white/70 px-5 py-4 text-[15px] font-medium outline-none shadow-sm backdrop-blur transition-all placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
-                  />
-                </div>
-
-                {items.length > 0 && (
-                  <div>
-                    <div className="mb-4">
-                      <h3 className="text-[14px] font-black uppercase tracking-wider text-slate-800">
-                        Đánh giá từng món
-                      </h3>
-                      <p className="mt-1.5 text-[13px] font-medium text-slate-500">
-                        Không bắt buộc. Món nào không chọn sao sẽ không gửi
-                        review riêng.
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {items.map((item) => {
-                        const orderDetailId = getOrderDetailId(item);
-                        if (!orderDetailId) return null;
-
-                        const draft = foodReviewDrafts[orderDetailId] ?? {
-                          rating: 0,
-                          content: "",
-                        };
-                        const isOpen = activeFoodReviewId === orderDetailId;
-
-                        return (
-                          <div
-                            key={`food-review-${orderDetailId}`}
-                            className="rounded-3xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md"
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-black text-slate-950 dark:text-white">
+                      {item.name || "Món ăn"}
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      Số lượng: <span className="font-black text-slate-800 dark:text-slate-200">{item.quantity}</span>
+                    </p>
+                    {item.toppings && item.toppings.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {item.toppings.map((topping) => (
+                          <span
+                            key={topping.foodToppingId || topping.name}
+                            className="rounded-md border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300"
                           >
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <p className="text-[16px] font-bold text-slate-900">
-                                  {item.name || "Món ăn"}
-                                </p>
-                                <p className="mt-1 text-[13px] font-bold text-slate-500">
-                                  Số lượng:{" "}
-                                  <span className="text-slate-700">
-                                    {item.quantity || 0}
-                                  </span>
-                                </p>
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={() => toggleFoodReview(orderDetailId)}
-                                disabled={reviewLocked}
-                                className="rounded-xl border border-cyan-200/60 bg-white/70 px-4 py-2 text-[13px] font-black text-cyan-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-cyan-50 hover:shadow-md disabled:opacity-60"
-                              >
-                                {isOpen ? "Ẩn món" : "Xem món"}
-                              </button>
-                            </div>
-
-                            {draft.rating > 0 && !isOpen ? (
-                              <p className="mt-3 text-[13px] font-bold text-amber-700 bg-amber-50/80 px-3 py-1.5 rounded-lg w-fit border border-amber-100/50">
-                                Đã chọn {draft.rating}/5 sao cho món này.
-                              </p>
-                            ) : null}
-
-                            {isOpen ? (
-                              <div className="mt-5 space-y-4 border-t border-slate-200/50 pt-5">
-                                <div className="flex flex-wrap gap-2">
-                                  {Array.from({ length: 5 }).map((_, index) => {
-                                    const value = index + 1;
-                                    const active = value <= draft.rating;
-
-                                    return (
-                                      <button
-                                        key={value}
-                                        type="button"
-                                        onClick={() =>
-                                          updateFoodReviewDraft(orderDetailId, {
-                                            rating:
-                                              draft.rating === value
-                                                ? 0
-                                                : value,
-                                          })
-                                        }
-                                        disabled={reviewLocked}
-                                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 hover:-translate-y-0.5 ${
-                                          active
-                                            ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-500 shadow-sm"
-                                            : "border-slate-200/60 bg-white/60 text-slate-300 hover:border-amber-200 hover:text-amber-400"
-                                        }`}
-                                        aria-label={`Chọn ${value} sao cho ${item.name || "món ăn"}`}
-                                      >
-                                        <Star
-                                          size={16}
-                                          className={
-                                            active ? "fill-amber-400" : ""
-                                          }
-                                        />
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-
-                                <textarea
-                                  value={draft.content}
-                                  onChange={(event) =>
-                                    updateFoodReviewDraft(orderDetailId, {
-                                      content: event.target.value,
-                                    })
-                                  }
-                                  placeholder="Nhận xét riêng cho món này nếu muốn..."
-                                  disabled={reviewLocked}
-                                  className="min-h-24 w-full rounded-2xl border border-white/60 bg-white/70 px-4 py-3 text-[14px] font-medium outline-none shadow-sm backdrop-blur transition-all placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
-                                />
-                              </div>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            +{topping.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {item.notes && (
+                      <p className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-md w-fit border border-amber-200/50 dark:border-amber-700/40">
+                        {item.notes}
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => void handleSubmitReview()}
-                  disabled={reviewLocked}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 px-6 py-3.5 text-[15px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-                >
-                  <Star size={18} className="fill-white" />
-                  {hasReviewed
-                    ? "Đã đánh giá"
-                    : submittingReview
-                      ? "Đang gửi..."
-                      : "Gửi đánh giá"}
-                </button>
+                <p className="shrink-0 text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">
+                  {formatPrice(Number(item.unitPrice || 0) * Number(item.quantity || 1))}
+                </p>
               </div>
-            ) : (
-              <p className="mt-4 rounded-2xl border border-dashed border-slate-200/60 bg-slate-50/80 px-5 py-4 text-[14px] font-medium text-slate-500 backdrop-blur">
-                Không lấy được merchant của đơn này, nên chưa thể tạo đánh giá.
+            ))}
+
+            {items.length === 0 && (
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center py-8">
+                {effectiveOrderId
+                  ? "Không có dữ liệu món trong đơn."
+                  : "Đang tải dữ liệu thực đơn..."}
               </p>
             )}
           </div>
         </div>
 
-        <div className="mt-6 relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl mix-blend-multiply" />
-          <h2 className="mb-4 text-xl font-black tracking-tight text-slate-900">
-            Món đã đặt
-          </h2>
+        {/* Customer Review Section (Active when order Completed) */}
+        <div
+          id="review-section"
+          className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xs backdrop-blur-2xl"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                Customer Rating
+              </span>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                Đánh giá chất lượng quán
+              </h2>
+            </div>
 
-          <div className="space-y-3">
-            {items.map((item) => (
-              <div
-                key={`${item.foodId}-${item.orderId}`}
-                className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/50 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:bg-white/70"
-              >
-                <div className="min-w-0 pr-4">
-                  <p className="text-[16px] font-bold text-slate-900 truncate">
-                    {item.name || "Món ăn"}
-                  </p>
-                  <p className="mt-1 text-[13px] font-bold text-slate-500">
-                    Số lượng:{" "}
-                    <span className="text-slate-700">{item.quantity}</span>
-                  </p>
-                  {getOrderItemToppings(item).length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap gap-2">
-                      {getOrderItemToppings(item).map((topping) => (
-                        <span
-                          key={topping.id ?? topping.name}
-                          className="rounded-full border border-emerald-200/60 bg-linear-to-r from-emerald-50 to-teal-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-800 shadow-sm"
-                        >
-                          +{topping.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {getOrderItemNotes(item) ? (
-                    <p className="mt-2.5 text-[13px] font-medium leading-relaxed text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100/50 w-fit">
-                      {getOrderItemNotes(item)}
-                    </p>
-                  ) : null}
-                </div>
-
-                <p className="shrink-0 text-[16px] font-black text-cyan-700">
-                  {Number(item.unitPrice || 0).toLocaleString("vi-VN")}đ
-                </p>
-              </div>
-            ))}
+            <OrderStatusBadge status={displayOrderStatus} />
           </div>
 
-          {items.length === 0 && (
-            <p className="text-[14px] font-medium text-slate-500 text-center py-6 bg-white/40 rounded-2xl border border-white/50 backdrop-blur">
-              {effectiveOrderId
-                ? "Không có món nào trong đơn."
-                : "Backend chưa trả mã đơn nên chưa tải được danh sách món."}
+          {!effectiveOrderId ? (
+            <p className="rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-5 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Đang tải mã đơn thực tế để gửi đánh giá.
+            </p>
+          ) : !isCompleted ? (
+            <p className="rounded-2xl border border-dashed border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-5 text-xs font-bold text-amber-800 dark:text-amber-300">
+              Bạn có thể gửi đánh giá sau khi đơn hàng đã hoàn tất thành công.
+            </p>
+          ) : hasReviewed ? (
+            <p className="rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              Đơn hàng này đã được gửi đánh giá. Cảm ơn phản hồi của bạn!
+            </p>
+          ) : merchantId ? (
+            <div className="space-y-6">
+              <div>
+                <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Chọn số sao đánh giá
+                </p>
+                <div className="flex gap-2">
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const value = index + 1;
+                    const active = value <= reviewRating;
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setReviewRating(value)}
+                        disabled={reviewLocked}
+                        className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                          active
+                            ? "border-amber-400 bg-amber-50 text-amber-500 dark:bg-amber-950/80"
+                            : "border-slate-200 dark:border-white/10 text-slate-300 dark:text-slate-700"
+                        }`}
+                      >
+                        <Star
+                          className={`h-5 w-5 ${active ? "fill-amber-400" : ""}`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="review-content"
+                  className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
+                >
+                  Nội dung nhận xét (Không bắt buộc)
+                </label>
+                <textarea
+                  id="review-content"
+                  value={reviewContent}
+                  onChange={(e) => setReviewContent(e.target.value)}
+                  placeholder="Chia sẻ trải nghiệm của bạn về món ăn & dịch vụ..."
+                  disabled={reviewLocked}
+                  className="min-h-28 w-full rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-950/50 p-4 text-xs font-medium outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handleSubmitReview()}
+                disabled={reviewLocked}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-6 py-3 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
+              >
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                {hasReviewed
+                  ? "Đã đánh giá"
+                  : submittingReview
+                    ? "Đang gửi..."
+                    : "Gửi đánh giá"}
+              </button>
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-5 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Không lấy được thông tin quán từ đơn hàng này.
             </p>
           )}
         </div>
@@ -774,7 +663,7 @@ function normalizeReviewOrderId(value?: string | null) {
 }
 
 function getOrderDetailId(item: CustomerOrderDetailItem) {
-  return item.orderDetailId || item.id || "";
+  return item.orderDetailId;
 }
 
 function matchesSummaryOrder(
@@ -806,16 +695,7 @@ function normalizeNumber(value?: number | null) {
 
 function normalizeDateString(value?: string | null) {
   const timestamp = value ? Date.parse(value) : Number.NaN;
-
   return Number.isNaN(timestamp) ? "" : new Date(timestamp).toISOString();
-}
-
-function getOrderItemNotes(item: CustomerOrderDetailItem) {
-  return item.notes ?? item.note ?? "";
-}
-
-function getOrderItemToppings(item: CustomerOrderDetailItem) {
-  return item.toppings ?? [];
 }
 
 async function resolveOrderMerchant(item?: CustomerOrderDetailItem | null) {
@@ -829,7 +709,6 @@ async function resolveOrderMerchant(item?: CustomerOrderDetailItem | null) {
   }
 
   const merchant = await findMerchantByFoodId(item.foodId);
-
   if (!merchant?.id) return null;
 
   return {

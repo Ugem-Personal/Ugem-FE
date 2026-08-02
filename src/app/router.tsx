@@ -12,6 +12,7 @@ const lazyNamed = <T extends ComponentType<Record<string, unknown>>>(
 
 const AdminStaffPage = lazy(() => import("@/features/admin/pages/AdminStaffPage"));
 const AdminDashboardPage = lazy(() => import("@/features/admin/pages/AdminDashboardPage"));
+const AdminAuditLogsPage = lazy(() => import("@/features/admin/pages/AdminAuditLogsPage"));
 const AdminApplicationsPage = lazy(() => import("@/features/admin/pages/AdminApplicationsPage"));
 const AdminApplicationDetailPage = lazy(() => import("@/features/admin/pages/AdminApplicationDetailPage"));
 const StaffReviewerApplicationsPage = lazy(() => import("@/features/admin/pages/StaffReviewerApplicationsPage"));
@@ -28,6 +29,7 @@ const ForgotPasswordPage = lazyNamed(() => import("@/features/auth/pages/ForgotP
 const ResetPasswordPage = lazyNamed(() => import("@/features/auth/pages/ResetPasswordPage"), "ResetPasswordPage");
 const CheckInPage = lazy(() => import("@/shared/pages/CheckInPage"));
 const CustomerHomePage = lazy(() => import("@/features/customer/pages/CustomerHomePage"));
+const GuestExplorePage = lazy(() => import("@/features/customer/pages/GuestExplorePage"));
 const CustomerOrderDetailPage = lazy(() => import("@/features/customer/pages/CustomerOrderDetailPage"));
 const CustomerOrdersPage = lazy(() => import("@/features/customer/pages/CustomerOrdersPage"));
 const CustomerProfilePage = lazy(() => import("@/features/customer/pages/CustomerProfilePage"));
@@ -63,6 +65,10 @@ const routers = createBrowserRouter([
       {
         path: "/login",
         element: <LoginPage />,
+      },
+      {
+        path: "/explore",
+        element: <GuestExplorePage />,
       },
       {
         path: "/register",
@@ -300,7 +306,9 @@ const routers = createBrowserRouter([
         path: "/admin/dashboard",
         element: (
           <ProtectedRoute allowedRoles={["Admin"]}>
-            <AdminDashboardPage />
+            <AdminShell>
+              <AdminDashboardPage />
+            </AdminShell>
           </ProtectedRoute>
         ),
       },
@@ -354,6 +362,16 @@ const routers = createBrowserRouter([
                 fallbackName="Admin"
                 canReview={false}
               />
+            </AdminShell>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/admin/audit-logs",
+        element: (
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminShell>
+              <AdminAuditLogsPage />
             </AdminShell>
           </ProtectedRoute>
         ),

@@ -11,6 +11,13 @@ import {
   Star,
   Store,
   X,
+  ImagePlus,
+  Loader2,
+  Mail,
+  UtensilsCrossed,
+  Tag,
+  DollarSign,
+  Compass,
 } from "lucide-react";
 
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
@@ -25,83 +32,39 @@ import {
 } from "../services";
 import { useMyApplications } from "../hooks/useMyApplications";
 import type { MerchantApplication } from "../types";
+import { MerchantStatusBadge, ImageWithFallback } from "@/shared/components";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  uploadImage,
+  validateImageFile,
+} from "@/shared/services/mediaService";
 
 type MerchantEditForm = {
   merchantName: string;
   merchantDescription: string;
+  restaurantType: string;
+  mainDishType: string;
+  priceRange: string;
   email: string;
   phone: string;
   address: string;
   openingHours: string;
+  logoUrl: string;
 };
 
 function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
   return {
     merchantName: merchant?.name ?? "",
     merchantDescription: merchant?.description ?? "",
+    restaurantType: merchant?.restaurantType ?? "",
+    mainDishType: merchant?.mainDishType ?? "",
+    priceRange: merchant?.priceRange ?? "",
     email: merchant?.email ?? "",
     phone: merchant?.phone ?? "",
     address: merchant?.address ?? "",
     openingHours: merchant?.openingHours ?? "",
+    logoUrl: merchant?.logoUrl ?? "",
   };
-}
-
-const DESCRIPTION_META_LABELS = [
-  "Địa chỉ",
-  "Loại hình quán",
-  "Loại món chính",
-  "Khoảng giá trung bình",
-];
-
-const DESCRIPTION_CHIP_LABELS = DESCRIPTION_META_LABELS.slice(1);
-
-function cleanDescriptionText(description?: string | null) {
-  return (description ?? "")
-    .replace(/\s*---\s*Thông tin UI bổ sung\s*---\s*/i, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function findFirstLabelIndex(value: string, labels: string[]) {
-  const normalizedValue = value.toLocaleLowerCase("vi-VN");
-  const indexes = labels
-    .map((label) => normalizedValue.indexOf(label.toLocaleLowerCase("vi-VN")))
-    .filter((index) => index >= 0);
-
-  return indexes.length ? Math.min(...indexes) : -1;
-}
-
-function getDisplayDescription(description?: string | null) {
-  const cleaned = cleanDescriptionText(description);
-  if (!cleaned) return "";
-
-  const firstMetaIndex = findFirstLabelIndex(cleaned, DESCRIPTION_META_LABELS);
-  const displayText =
-    firstMetaIndex >= 0 ? cleaned.slice(0, firstMetaIndex) : cleaned;
-
-  return displayText.replace(/\s*---\s*$/, "").trim();
-}
-
-function readDescriptionMeta(description: string, label: string) {
-  const cleaned = cleanDescriptionText(description);
-  const labelIndex = findFirstLabelIndex(cleaned, [label]);
-
-  if (labelIndex < 0) return "";
-
-  const valueStart = labelIndex + label.length;
-  const valueText = cleaned.slice(valueStart).replace(/^:?\s*/, "");
-  const nextLabelIndex = findFirstLabelIndex(
-    valueText,
-    DESCRIPTION_CHIP_LABELS.filter((item) => item !== label),
-  );
-
-  return (nextLabelIndex >= 0 ? valueText.slice(0, nextLabelIndex) : valueText)
-    .replace(/\s*---\s*$/, "")
-    .trim();
-}
-
-function normalizeText(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
 }
 
 function isApprovedStatus(status?: string) {
@@ -152,19 +115,19 @@ async function resolveMerchantFromApprovedApplication(
     ZoomLevel: 20,
   });
 
-  const normalizedName = normalizeText(application.name);
-  const normalizedAddress = normalizeText(application.address);
+  const normalizedName = (application.name || "").trim().toLowerCase();
+  const normalizedAddress = (application.address || "").trim().toLowerCase();
 
-  const matchedMerchant = merchants.find((merchant) => {
-    const merchantName = normalizeText(merchant.name);
-    const merchantAddress = normalizeText(merchant.address);
+  const matchedMerchant = merchants.find((m) => {
+    const mName = (m.name || "").trim().toLowerCase();
+    const mAddress = (m.address || "").trim().toLowerCase();
 
     if (!normalizedName) return false;
 
     return (
-      merchantName === normalizedName ||
-      merchantName.includes(normalizedName) ||
-      (normalizedAddress && merchantAddress === normalizedAddress)
+      mName === normalizedName ||
+      mName.includes(normalizedName) ||
+      (normalizedAddress && mAddress === normalizedAddress)
     );
   });
 
@@ -183,6 +146,7 @@ export function MerchantRestaurantPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<MerchantEditForm>(() => toEditForm(null));
   const merchantId = getCurrentMerchantId();
@@ -193,8 +157,7 @@ export function MerchantRestaurantPage() {
     () =>
       [...applications].find((application) =>
         isApprovedStatus(application.status),
-      ) ??
-      null,
+      ) ?? null,
     [applications],
   );
 
@@ -229,9 +192,7 @@ export function MerchantRestaurantPage() {
       }
     };
 
-    queueMicrotask(() => {
-      void load();
-    });
+    void load();
 
     return () => {
       active = false;
@@ -239,39 +200,63 @@ export function MerchantRestaurantPage() {
   }, [latestApprovedApplication, merchantId]);
 
   const menu = merchant?.menu ?? merchant?.foods ?? [];
-  const displayDescription = getDisplayDescription(merchant?.description);
-  const descriptionMeta = merchant?.description
-    ? [
-        {
-          label: "Loại hình",
-          value: readDescriptionMeta(merchant.description, "Loại hình quán"),
-        },
-        {
-          label: "Món chính",
-          value: readDescriptionMeta(merchant.description, "Loại món chính"),
-        },
-        {
-          label: "Khoảng giá",
-          value: readDescriptionMeta(
-            merchant.description,
-            "Khoảng giá trung bình",
-          ),
-        },
-      ].filter((item) => item.value)
-    : [];
+
+  async function handleLogoUpload(file?: File) {
+    if (!file) return;
+
+    setIsUploadingLogo(true);
+
+    try {
+      validateImageFile(file);
+      const imageUrl = await uploadImage(file);
+      setForm((prev) => ({ ...prev, logoUrl: imageUrl }));
+      notify.success("Đã tải logo quán lên thành công.");
+    } catch (error) {
+      console.error("Không thể tải logo lên:", error);
+      notify.error("Tải logo thất bại.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
 
   async function handleUpdateMerchant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!form.merchantName.trim()) {
+      notify.error("Tên nhà hàng không được để trống.");
+      return;
+    }
+
+    if (form.merchantName.trim().length < 2 || form.merchantName.trim().length > 200) {
+      notify.error("Tên nhà hàng phải từ 2 đến 200 ký tự.");
+      return;
+    }
+
+    if (form.phone.trim() && !/^[0-9+()\-\s]{8,20}$/.test(form.phone.trim())) {
+      notify.error("Số điện thoại không hợp lệ (8 - 20 ký tự số).");
+      return;
+    }
+
+    if (form.address.trim() && form.address.trim().length < 5) {
+      notify.error("Địa chỉ nhà hàng phải có ít nhất 5 ký tự.");
+      return;
+    }
+
     setSaving(true);
+    const toastId = notify.loading("Đang cập nhật thông tin nhà hàng...");
 
     try {
       await updateMerchant({
         name: form.merchantName.trim(),
-        description: form.merchantDescription.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        address: form.address.trim(),
-        openingHours: form.openingHours.trim(),
+        description: form.merchantDescription.trim() || undefined,
+        restaurantType: form.restaurantType.trim() || undefined,
+        mainDishType: form.mainDishType.trim() || undefined,
+        priceRange: form.priceRange.trim() || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        address: form.address.trim() || undefined,
+        openingHours: form.openingHours.trim() || undefined,
+        logoUrl: form.logoUrl.trim() || undefined,
       });
 
       const nextMerchant = merchantId
@@ -285,269 +270,327 @@ export function MerchantRestaurantPage() {
       setMerchant(nextMerchant);
       setForm(toEditForm(nextMerchant));
       setIsEditing(false);
-      notify.success("Đã cập nhật hồ sơ nhà hàng.");
+      notify.success("Đã cập nhật hồ sơ nhà hàng thành công.", { id: toastId });
     } catch (error) {
       console.error(error);
-      notify.error("Cập nhật hồ sơ nhà hàng thất bại.");
+      notify.error("Cập nhật hồ sơ nhà hàng thất bại.", { id: toastId });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <main className="merchant-portal-layout bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] relative">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+    <main className="merchant-portal-layout min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
+      {/* Background Glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/10 dark:bg-indigo-600/15 blur-[140px]" />
+      </div>
 
       <MerchantSidebar />
 
       <section className="merchant-main relative z-10">
         <MerchantHeader />
 
-        <div className="merchant-content">
-          <section className="relative overflow-hidden rounded-4xl border border-white/50 bg-white/60 p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-            <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl opacity-0 transition-opacity duration-500 hover:opacity-100 mix-blend-multiply" />
-            
-            <div className="mb-8 flex flex-wrap items-start justify-between gap-6 relative">
+        <div className="merchant-content p-4 sm:p-6 lg:p-8 space-y-6">
+          {/* Main Card */}
+          <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-2xl transition-colors duration-300">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-6">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
-                  Nhà hàng của bạn
+                <div className="mb-2 flex items-center gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
+                    <Store className="h-3.5 w-3.5" /> Quản lý Nhà hàng
+                  </span>
+                  {merchant?.status && (
+                    <MerchantStatusBadge status={merchant.status} />
+                  )}
                 </div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
                   {merchant?.name || "Thông tin nhà hàng"}
                 </h1>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {merchant ? (
+                {merchant && (
                   <button
                     type="button"
                     onClick={() => {
                       setForm(toEditForm(merchant));
                       setIsEditing((value) => !value);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-white/80 border border-slate-200/60 px-5 py-2.5 text-[13px] font-black text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 shadow-sm transition"
                   >
-                    {isEditing ? <X size={16} /> : <Pencil size={16} />}
-                    {isEditing ? "Hủy sửa" : "Chỉnh sửa"}
+                    {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                    {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa hồ sơ"}
                   </button>
-                ) : null}
+                )}
                 <Link
                   to="/merchant/foods"
-                  className="inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-5 py-2.5 text-[13px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98]"
+                  className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 px-5 text-xs font-black text-slate-950 hover:bg-cyan-400 shadow-md transition"
                 >
-                  Quản lý món
-                </Link>
-                <Link
-                  to="/merchant/orders"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/80 border border-cyan-200/60 px-5 py-2.5 text-[13px] font-black text-cyan-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-cyan-50 hover:shadow-md"
-                >
-                  Đơn hàng
+                  <UtensilsCrossed className="h-4 w-4" /> Quản lý món
                 </Link>
               </div>
             </div>
 
             {loading || isLoadingApplications ? (
-              <p className="text-[14px] font-medium text-slate-500">Đang tải nhà hàng...</p>
+              <div className="py-12 text-center text-slate-400 space-y-3">
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-cyan-500" />
+                <p className="text-xs font-bold">Đang tải dữ liệu nhà hàng...</p>
+              </div>
             ) : !merchant ? (
-              <div className="relative overflow-hidden rounded-2xl border border-amber-200/60 bg-linear-to-br from-amber-50/90 to-orange-50/90 p-5 shadow-sm">
-                <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-amber-300/30 blur-2xl" />
-                <p className="relative text-[14px] font-bold text-amber-800 leading-relaxed">
-                  Chưa đồng bộ được hồ sơ nhà hàng. Trang sẽ tự lấy dữ liệu từ
-                  hồ sơ đã duyệt và merchant public ngay khi staff phê duyệt.
-                  {merchantId
-                    ? " Token hiện tại đã có MerchantId nhưng BE chưa trả dữ liệu."
-                    : " Hồ sơ có thể đang chờ đồng bộ sau khi được duyệt."}
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-5">
+                <p className="text-xs font-bold text-amber-800 dark:text-amber-300 leading-relaxed">
+                  Chưa tìm thấy dữ liệu nhà hàng. Hồ sơ có thể đang chờ Staff duyệt hoặc cấp quyền Merchant.
                 </p>
               </div>
             ) : isEditing ? (
-              <form
-                onSubmit={handleUpdateMerchant}
-                className="grid gap-5 md:grid-cols-2 relative"
-              >
-                <EditField
-                  label="Tên nhà hàng"
-                  value={form.merchantName}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, merchantName: value }))
-                  }
-                  disabled={saving}
-                />
-                <EditField
-                  label="Giờ mở cửa"
-                  value={form.openingHours}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, openingHours: value }))
-                  }
-                  disabled={saving}
-                />
-                <EditField
-                  label="Email"
-                  value={form.email}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, email: value }))
-                  }
-                  disabled={saving}
-                />
-                <EditField
-                  label="Số điện thoại"
-                  value={form.phone}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, phone: value }))
-                  }
-                  disabled={saving}
-                />
-                <EditField
-                  label="Địa chỉ"
-                  value={form.address}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, address: value }))
-                  }
-                  disabled={saving}
-                  className="md:col-span-2"
-                />
-                <label className="block md:col-span-2 space-y-1.5">
-                  <span className="text-[13px] font-bold uppercase tracking-wider text-slate-700">
-                    Mô tả
-                  </span>
-                  <textarea
-                    value={form.merchantDescription}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        merchantDescription: event.target.value,
-                      }))
-                    }
+              /* Edit Form */
+              <form onSubmit={handleUpdateMerchant} className="space-y-6">
+                {/* Logo Upload Section */}
+                <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 flex flex-col sm:flex-row items-center gap-4">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800">
+                    <ImageWithFallback
+                      src={form.logoUrl}
+                      alt="Logo preview"
+                      fallbackIcon={<Store className="h-8 w-8 text-cyan-500" />}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 text-center sm:text-left">
+                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                      Logo Đại Diện Nhà Hàng
+                    </label>
+                    <div className="flex items-center justify-center sm:justify-start gap-3">
+                      <input
+                        id="merchant-logo-upload"
+                        type="file"
+                        accept={IMAGE_UPLOAD_ACCEPT}
+                        className="sr-only"
+                        disabled={saving || isUploadingLogo}
+                        onChange={(e) => {
+                          void handleLogoUpload(e.target.files?.[0]);
+                          e.currentTarget.value = "";
+                        }}
+                      />
+                      <label
+                        htmlFor="merchant-logo-upload"
+                        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-slate-950 dark:bg-cyan-500 px-4 text-xs font-black text-white dark:text-slate-950 transition hover:bg-cyan-600 dark:hover:bg-cyan-400 active:scale-95 shadow-sm"
+                      >
+                        {isUploadingLogo ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <ImagePlus className="h-3.5 w-3.5" />
+                        )}
+                        {isUploadingLogo ? "Tải lên..." : "Chọn ảnh Logo mới"}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EditField
+                    label="Tên nhà hàng *"
+                    value={form.merchantName}
+                    onChange={(v) => setForm((p) => ({ ...p, merchantName: v }))}
                     disabled={saving}
-                    className="w-full min-h-32 rounded-xl border border-white/60 bg-white/70 px-4 py-3 text-[14px] font-medium outline-none shadow-sm backdrop-blur transition-all placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20 disabled:opacity-60"
                   />
-                </label>
-                <div className="flex justify-end md:col-span-2 pt-2">
+                  <EditField
+                    label="Giờ mở cửa"
+                    value={form.openingHours}
+                    onChange={(v) => setForm((p) => ({ ...p, openingHours: v }))}
+                    disabled={saving}
+                    placeholder="VD: 08:00 - 22:00"
+                  />
+                  <EditField
+                    label="Loại hình nhà hàng"
+                    value={form.restaurantType}
+                    onChange={(v) => setForm((p) => ({ ...p, restaurantType: v }))}
+                    disabled={saving}
+                    placeholder="VD: Quán ăn gia đình, Fast food..."
+                  />
+                  <EditField
+                    label="Loại món ăn chính"
+                    value={form.mainDishType}
+                    onChange={(v) => setForm((p) => ({ ...p, mainDishType: v }))}
+                    disabled={saving}
+                    placeholder="VD: Cơm tấm, Bún bò, Trà sữa..."
+                  />
+                  <EditField
+                    label="Khoảng giá trung bình"
+                    value={form.priceRange}
+                    onChange={(v) => setForm((p) => ({ ...p, priceRange: v }))}
+                    disabled={saving}
+                    placeholder="VD: 30.000đ - 100.000đ"
+                  />
+                  <EditField
+                    label="Email liên hệ nhà hàng"
+                    value={form.email}
+                    onChange={(v) => setForm((p) => ({ ...p, email: v }))}
+                    disabled={saving}
+                  />
+                  <EditField
+                    label="Số điện thoại nhà hàng"
+                    value={form.phone}
+                    onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
+                    disabled={saving}
+                  />
+                  <EditField
+                    label="Địa chỉ nhà hàng"
+                    value={form.address}
+                    onChange={(v) => setForm((p) => ({ ...p, address: v }))}
+                    disabled={saving}
+                  />
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Mô tả giới thiệu nhà hàng
+                    </label>
+                    <textarea
+                      value={form.merchantDescription}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          merchantDescription: e.target.value,
+                        }))
+                      }
+                      disabled={saving}
+                      rows={4}
+                      className="w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                      placeholder="Mô tả phong cách ẩm thực, cam kết vệ sinh và điểm nổi bật của nhà hàng..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    disabled={saving}
+                    className="h-12 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10"
+                  >
+                    Hủy
+                  </button>
                   <button
                     type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-6 py-3.5 text-[14px] font-black tracking-wide text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:translate-y-0 disabled:opacity-60"
+                    disabled={saving || isUploadingLogo}
+                    className="h-12 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-8 text-xs font-black text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-indigo-500 active:scale-95 disabled:opacity-50"
                   >
-                    <Save size={18} />
-                    {saving ? "Đang lưu..." : "Lưu hồ sơ"}
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Lưu thông tin nhà hàng
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="grid gap-6 lg:grid-cols-[260px_1fr] relative">
-                <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/50 shadow-md">
-                  {merchant.logoUrl ? (
-                    <img
+              /* View Mode */
+              <div className="grid gap-6 lg:grid-cols-12">
+                {/* Logo & Rating Box (4 cols) */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800 h-64 shadow-lg">
+                    <ImageWithFallback
                       src={merchant.logoUrl}
-                      alt={merchant.name}
-                      className="h-64 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-64 place-items-center text-cyan-700 bg-linear-to-br from-cyan-50 to-blue-50">
-                      <Store size={56} className="opacity-50" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <InfoLine
-                      icon={<MapPin size={16} />}
-                      label="Địa chỉ"
-                      value={cleanAddress(merchant.address)}
-                    />
-                    <InfoLine
-                      icon={<Phone size={16} />}
-                      label="Liên hệ"
-                      value={merchant.phone || merchant.email}
-                    />
-                    <InfoLine
-                      icon={<Clock3 size={16} />}
-                      label="Giờ mở cửa"
-                      value={merchant.openingHours}
-                    />
-                    <InfoLine
-                      icon={<Star size={16} />}
-                      label="Đánh giá"
-                      value={
-                        typeof merchant.rating === "number"
-                          ? `${merchant.rating}/5`
-                          : undefined
-                      }
+                      alt={merchant.name || "Restaurant"}
+                      fallbackIcon={<Store className="h-16 w-16 text-cyan-500" />}
+                      className="h-full w-full object-cover"
                     />
                   </div>
 
-                  {displayDescription ? (
-                    <div className="rounded-2xl border border-white/60 bg-white/50 p-6 shadow-sm">
-                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
-                        Mô tả
-                      </p>
-                      <p className="mt-3 text-[14px] font-medium leading-relaxed text-slate-700">
-                        {displayDescription}
-                      </p>
-                      {descriptionMeta.length > 0 ? (
-                        <div className="mt-5 flex flex-wrap gap-2.5">
-                          {descriptionMeta.map((item) => (
-                            <span
-                              key={item.label}
-                              className="rounded-full border border-cyan-200/60 bg-white/70 px-4 py-1.5 text-[12px] font-black tracking-wide text-cyan-800 shadow-sm"
-                            >
-                              {item.label}: {item.value}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
+                  <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-5 shadow-lg backdrop-blur-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Đánh giá thực khách
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 text-xs font-black text-amber-800 dark:text-amber-300">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        {merchant.rating || 0} / 5 ({merchant.reviewCount || 0} đánh giá)
+                      </span>
                     </div>
-                  ) : null}
+                  </div>
+                </div>
+
+                {/* Details Grid (8 cols) */}
+                <div className="lg:col-span-8 space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <InfoLine icon={<MapPin className="h-4 w-4" />} label="Địa chỉ" value={cleanAddress(merchant.address)} />
+                    <InfoLine icon={<Phone className="h-4 w-4" />} label="Số điện thoại" value={merchant.phone} />
+                    <InfoLine icon={<Mail className="h-4 w-4" />} label="Email nhà hàng" value={merchant.email} />
+                    <InfoLine icon={<Clock3 className="h-4 w-4" />} label="Giờ mở cửa" value={merchant.openingHours} />
+                    <InfoLine icon={<Tag className="h-4 w-4" />} label="Loại hình quán" value={merchant.restaurantType} />
+                    <InfoLine icon={<Compass className="h-4 w-4" />} label="Món chính" value={merchant.mainDishType} />
+                    <InfoLine icon={<DollarSign className="h-4 w-4" />} label="Khoảng giá" value={merchant.priceRange} />
+                  </div>
+
+                  {merchant.description && (
+                    <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-6 shadow-lg backdrop-blur-2xl">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        Mô tả nhà hàng
+                      </p>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                        {merchant.description}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </section>
 
-          {merchant ? (
-            <section className="mt-8 relative overflow-hidden rounded-4xl border border-white/50 bg-white/60 p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-              <div className="absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-amber-300/20 blur-3xl opacity-0 transition-opacity duration-500 hover:opacity-100 mix-blend-multiply" />
-              <h2 className="mb-6 text-[18px] font-black tracking-tight text-slate-900 relative">
-                Menu hiện tại
-              </h2>
+          {/* Menu Section */}
+          {merchant && (
+            <section className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-2xl transition-colors duration-300 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white">Thực đơn nhà hàng ({menu.length} món)</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Danh sách món ăn đang bán hiển thị cho thực khách</p>
+                </div>
+                <Link
+                  to="/merchant/foods"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Quản lý Menu
+                </Link>
+              </div>
 
               {menu.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 relative">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {menu.map((item) => (
-                    <article
+                    <div
                       key={item.id}
-                      className="group flex items-center gap-4 rounded-[20px] border border-white/60 bg-white/50 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-md hover:border-white/80"
+                      className="group flex items-center gap-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-4 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md"
                     >
-                      {item.imageUrl ? (
-                        <img
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10">
+                        <ImageWithFallback
                           src={item.imageUrl}
                           alt={item.name}
-                          className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-sm transition-transform duration-300 group-hover:scale-105"
+                          fallbackIcon={<UtensilsCrossed className="h-6 w-6 text-cyan-500" />}
+                          className="h-full w-full object-cover"
                         />
-                      ) : (
-                        <div className="h-20 w-20 shrink-0 rounded-2xl bg-linear-to-br from-cyan-50 to-blue-50 shadow-sm" />
-                      )}
+                      </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-[16px] font-black text-slate-900 group-hover:text-cyan-800 transition-colors">
+                        <h3 className="truncate text-sm font-black text-slate-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                           {item.name}
                         </h3>
-                        <p className="mt-1.5 text-[15px] font-black text-cyan-700">
-                          {item.price.toLocaleString("vi-VN")}đ
+                        <p className="mt-1 text-xs font-black text-cyan-600 dark:text-cyan-400">
+                          {(item.price || 0).toLocaleString("vi-VN")}đ
                         </p>
                       </div>
-                    </article>
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 p-12 text-center shadow-sm backdrop-blur">
-                  <p className="text-[15px] font-bold text-slate-500">
-                    Chưa có món nào trong menu.
-                  </p>
+                <div className="rounded-2xl border border-dashed border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-8 text-center">
+                  <UtensilsCrossed className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Chưa có món nào trong thực đơn.</p>
+                  <Link
+                    to="/merchant/foods"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-cyan-400 transition shadow-sm"
+                  >
+                    + Thêm món ăn mới
+                  </Link>
                 </div>
               )}
             </section>
-          ) : null}
+          )}
         </div>
       </section>
     </main>
@@ -564,13 +607,13 @@ function InfoLine({
   value?: string | null;
 }) {
   return (
-    <div className="rounded-[20px] border border-white/60 bg-white/50 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:bg-white/80 hover:shadow-md">
-      <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
-        <span className="text-cyan-700">{icon}</span>
+    <div className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-4">
+      <div className="mb-1 flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span className="text-cyan-600 dark:text-cyan-400">{icon}</span>
         {label}
       </div>
-      <p className="text-[14px] font-black text-slate-900">
-        {value || "Chưa có"}
+      <p className="text-xs font-black text-slate-950 dark:text-white truncate">
+        {value || "Chưa cập nhật"}
       </p>
     </div>
   );
@@ -581,23 +624,27 @@ function EditField({
   value,
   onChange,
   disabled,
-  className = "",
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  className?: string;
+  placeholder?: string;
 }) {
   return (
-    <label className={className}>
-      <span className="text-[13px] font-bold uppercase tracking-wider text-slate-700 mb-1.5 block">{label}</span>
+    <div>
+      <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+        {label}
+      </label>
       <input
+        type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
-        className="h-12 w-full rounded-xl border border-white/60 bg-white/70 px-4 text-[14px] font-medium text-slate-900 outline-none shadow-sm backdrop-blur transition-all focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20 disabled:opacity-60"
+        placeholder={placeholder || label}
+        className="h-12 w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 placeholder:text-slate-400"
       />
-    </label>
+    </div>
   );
 }

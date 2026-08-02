@@ -1,0 +1,37 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.example.com
+          VITE_GOOGLE_CLIENT_ID: ci-google-client-id
+          VITE_VIETMAP_TILE_KEY: ci-vietmap-tile-key
+          VITE_VIETMAP_API_KEY: ci-vietmap-api-key
+          VITE_VIETMAP_SERVICE_KEY: ci-vietmap-service-key
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Build production image
+        run: docker build -t ugem-frontend:ci .
+

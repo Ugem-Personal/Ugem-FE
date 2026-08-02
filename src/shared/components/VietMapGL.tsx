@@ -73,9 +73,16 @@ const MARKER_COLORS: Record<string, string> = {
 };
 
 const MARKER_ICONS: Record<string, string> = {
-  restaurant: "&#127858;",
-  charging: "&#9889;",
-  custom: "&#128205;",
+  restaurant: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16M6 10a6 6 0 0 1 12 0M5 14h14M7 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M11 4h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  charging: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z" fill="currentColor"/></svg>',
+  custom: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>',
+};
+
+const MARKER_LABELS: Record<string, string> = {
+  restaurant: "Địa điểm ăn uống",
+  charging: "Trạm sạc",
+  user: "Vị trí của bạn",
+  custom: "Địa điểm trên bản đồ",
 };
 
 function createMarkerElement(
@@ -129,10 +136,13 @@ function createMarkerElement(
           0%,100%{box-shadow:0 0 0 4px ${bg}55}
           50%{box-shadow:0 0 0 10px ${bg}22}
         }
+        @media (prefers-reduced-motion: reduce) {
+          [data-vietmap-marker] * { animation: none !important; transition: none !important; }
+        }
       </style>
     `;
   } else {
-    const icon = MARKER_ICONS[type ?? "custom"] ?? "&#128205;";
+    const icon = MARKER_ICONS[type ?? "custom"] ?? MARKER_ICONS.custom;
     el.innerHTML = `
       <div style="
         position:relative;
@@ -238,7 +248,7 @@ function createMarkerElement(
           display:flex;align-items:center;justify-content:center;
           transition:transform 0.15s ease;
         ">
-          <span style="transform:rotate(45deg);font-size:15px;line-height:1">
+          <span style="display:grid;width:18px;height:18px;place-items:center;transform:rotate(45deg);color:white">
             ${icon}
           </span>
         </div>
@@ -255,6 +265,10 @@ function createMarkerElement(
       </div>
     `;
   }
+  el.dataset.vietmapMarker = type ?? "custom";
+  el.setAttribute("role", "button");
+  el.setAttribute("tabindex", "0");
+  el.setAttribute("aria-label", MARKER_LABELS[type ?? "custom"] ?? MARKER_LABELS.custom);
   el.style.cursor = "pointer";
   return el;
 }
@@ -465,10 +479,24 @@ export default function VietMapGL({
           });
         }
 
-        el.addEventListener("click", (event) => {
-          event.stopPropagation();
+        const activateMarker = () => {
           popup.addTo(map);
           onMarkerClick?.(m.id);
+        };
+
+        el.setAttribute(
+          "aria-label",
+          `${MARKER_LABELS[m.type ?? "custom"] ?? MARKER_LABELS.custom}: ${m.id}`,
+        );
+        el.addEventListener("click", (event) => {
+          event.stopPropagation();
+          activateMarker();
+        });
+        el.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          event.stopPropagation();
+          activateMarker();
         });
 
         markerMapRef.current.set(m.id, { marker, popup });

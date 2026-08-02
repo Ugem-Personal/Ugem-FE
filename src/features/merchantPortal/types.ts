@@ -104,23 +104,27 @@ export type MerchantApplication = {
 
 export type Food = {
   id: string;
+  foodId?: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  imageUrl?: string | null;
+  merchantId?: string;
+  isAvailable?: boolean;
+  categoryIds?: string[];
+  categories?: { id: string; name: string; description?: string | null }[];
+  toppings?: { id: string; foodId: string; name: string; price: number; isActive?: boolean }[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CreateFoodPayload = {
   name: string;
   description?: string;
   price: number;
   imageUrl?: string;
   merchantId?: string;
   isAvailable?: boolean;
-  categoryIds?: string[];
-  categoryDetail?: string[];
-};
-
-export type CreateFoodPayload = {
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  merchantId?: string;
-  isAvailable: boolean;
   categoryIds: string[];
 };
 
