@@ -53,7 +53,7 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" noValidate>
         <FormField
           control={form.control}
           name="email"
@@ -61,13 +61,13 @@ export function LoginForm() {
             <FormItem>
               <label
                 htmlFor="login-email"
-                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
               >
                 Email
               </label>
               <FormControl>
                 <div className="group relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500 transition group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400" />
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500 transition group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400" />
 
                   <Input
                     id="login-email"
@@ -77,8 +77,8 @@ export function LoginForm() {
                     disabled={loginMutation.isPending}
                     aria-invalid={Boolean(form.formState.errors.email)}
                     className="
-                      h-12 rounded-xl border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/70
-                      pl-12 text-base font-semibold text-slate-950 dark:text-white
+                      h-10.5 rounded-xl border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/70
+                      pl-10 text-sm font-semibold text-slate-950 dark:text-white
                       shadow-xs transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500
                       focus-visible:border-cyan-500 focus-visible:ring-4 focus-visible:ring-cyan-500/15
                     "
@@ -99,7 +99,7 @@ export function LoginForm() {
             <FormItem>
               <label
                 htmlFor="login-password"
-                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
               >
                 Mật khẩu
               </label>
@@ -110,6 +110,7 @@ export function LoginForm() {
                   autoComplete="current-password"
                   disabled={loginMutation.isPending}
                   aria-invalid={Boolean(form.formState.errors.password)}
+                  className="h-10.5 text-sm"
                   {...field}
                 />
               </FormControl>
@@ -119,7 +120,7 @@ export function LoginForm() {
           )}
         />
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-0.5">
           <label
             htmlFor="remember-account"
             className="group flex cursor-pointer items-center gap-2 select-none"
@@ -151,7 +152,7 @@ export function LoginForm() {
         {loginMutation.isError && (
           <div
             role="alert"
-            className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/50 px-4 py-3 text-xs font-bold text-rose-700 dark:text-rose-300"
+            className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/50 px-3.5 py-2.5 text-xs font-bold text-rose-700 dark:text-rose-300"
           >
             {apiError}
           </div>
@@ -163,7 +164,7 @@ export function LoginForm() {
           size="lg"
           disabled={loginMutation.isPending}
           aria-disabled={loginMutation.isPending}
-          className="w-full font-black text-sm"
+          className="w-full font-black text-sm h-11 mt-1"
         >
           {loginMutation.isPending ? (
             <>
