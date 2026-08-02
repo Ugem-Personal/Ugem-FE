@@ -5,6 +5,7 @@ import { Link2, LogOut, UserRound } from "lucide-react";
 import { clearAuth, getCurrentUser } from "@/features/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/ui/button";
+import { ModeToggle } from "@/shared/components/ModeToggle";
 import { NotificationBellMenu } from "@/shared/components/NotificationBellMenu";
 import { notify } from "@/shared/lib/notify";
 import { getUserProfile, type UserProfile } from "@/shared/services";
@@ -92,13 +93,14 @@ export function UserAccountMenu({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2.5 rounded-2xl border border-cyan-100/80 bg-white/90 px-3 py-2 shadow-lg shadow-cyan-950/5 ring-1 ring-cyan-950/5 backdrop-blur-xl",
+        "flex min-w-0 items-center gap-2.5 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-2.5 py-1.5 shadow-xs backdrop-blur-md transition duration-200 hover:border-cyan-300 dark:hover:border-cyan-500/50 sm:px-3.5",
         className,
       )}
     >
       <NotificationBellMenu />
+      <ModeToggle />
 
-      <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 text-sm font-bold text-cyan-800">
+      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-black text-white shadow-md ring-2 ring-cyan-400/30">
         {avatarUrl ? (
           <img
             src={avatarUrl}
@@ -110,14 +112,14 @@ export function UserAccountMenu({
         )}
       </div>
 
-      <div className="min-w-0">
-        <p className="max-w-[190px] truncate text-sm font-black leading-5 text-slate-950 sm:max-w-[220px]">
+      <div className="hidden min-w-0 xl:block">
+        <p className="max-w-[190px] truncate text-sm font-black leading-snug text-slate-950 dark:text-white sm:max-w-[220px]">
           {displayName}
         </p>
 
         <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5">
           {email ? (
-            <span className="max-w-[150px] truncate text-xs font-medium leading-4 text-slate-500 sm:max-w-[190px]">
+            <span className="max-w-[150px] truncate text-xs font-semibold leading-none text-slate-500 dark:text-slate-400 sm:max-w-[190px]">
               {email}
             </span>
           ) : null}
@@ -126,10 +128,10 @@ export function UserAccountMenu({
             <span
               key={chip.label}
               className={cn(
-                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black leading-3 ring-1",
+                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black leading-none border",
                 chip.tone === "reviewer"
-                  ? "bg-violet-50 text-violet-700 ring-violet-100"
-                  : "bg-cyan-50 text-cyan-700 ring-cyan-100",
+                  ? "bg-violet-50 text-violet-700 border-violet-200"
+                  : "bg-cyan-50 text-cyan-800 border-cyan-200",
               )}
             >
               {chip.label}
@@ -144,10 +146,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
         >
           <Link to="/staff/profile">
-            <UserRound className="h-3.5 w-3.5" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
             Profile
           </Link>
         </Button>
@@ -159,10 +161,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
         >
           <Link to="/merchant/profile">
-            <UserRound className="h-3.5 w-3.5" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
             Profile
           </Link>
         </Button>
@@ -174,10 +176,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
         >
           <Link to="/admin/dashboard">
-            <UserRound className="h-3.5 w-3.5" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
             Profile
           </Link>
         </Button>
@@ -189,10 +191,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
         >
           <Link to="/customer/profile">
-            <UserRound className="h-3.5 w-3.5" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
             Profile
           </Link>
         </Button>
@@ -204,10 +206,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
         >
           <Link to="/affiliate-links">
-            <Link2 className="h-3.5 w-3.5" />
+            <Link2 className="h-3.5 w-3.5 text-cyan-600" />
             Affiliate
           </Link>
         </Button>
@@ -218,10 +220,11 @@ export function UserAccountMenu({
         variant="outline"
         size="sm"
         onClick={handleLogout}
-        className="h-8 shrink-0 gap-1.5 rounded-xl text-xs font-bold"
+        className="h-10 w-10 shrink-0 gap-1.5 rounded-xl border-slate-200 p-0 text-xs font-black text-rose-600 hover:bg-rose-50 hover:border-rose-200 2xl:w-auto 2xl:px-3.5"
+        aria-label="Đăng xuất"
       >
         <LogOut className="h-3.5 w-3.5" />
-        Logout
+        <span className="hidden 2xl:inline">Đăng xuất</span>
       </Button>
     </div>
   );

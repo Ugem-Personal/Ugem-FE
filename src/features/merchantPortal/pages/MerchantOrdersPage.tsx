@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Eye, QrCode, RefreshCw, X } from "lucide-react";
+import {
+  Bike,
+  Check,
+  ChefHat,
+  Eye,
+  PackageCheck,
+  QrCode,
+  RefreshCw,
+  X,
+} from "lucide-react";
 import {
   acceptOrder,
   confirmCashPayment,
@@ -8,12 +17,18 @@ import {
   getMerchantOrders,
   rejectOrder,
   updateBill,
+  updateMerchantOrderStatus,
 } from "../services";
 import type {
   CustomerOrderDetailItem,
   MerchantOrderSummary,
 } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
+import {
+  getMerchantOrderAction,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+} from "@/shared/lib/order-status";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import {
@@ -65,7 +80,7 @@ function formatDateTime(value?: string | null) {
 }
 
 function getOrderStatusKey(status?: string | null) {
-  return status?.trim().toLowerCase() ?? "";
+  return normalizeOrderStatus(status);
 }
 
 function getOrderStatusChipClass(status?: string | null) {
@@ -77,6 +92,18 @@ function getOrderStatusChipClass(status?: string | null) {
 
   if (statusKey === "accepted" || statusKey === "billconfirmed") {
     return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  }
+
+  if (statusKey === "preparing") {
+    return "border-violet-200 bg-violet-50 text-violet-700";
+  }
+
+  if (statusKey === "ready") {
+    return "border-teal-200 bg-teal-50 text-teal-700";
+  }
+
+  if (statusKey === "delivering") {
+    return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
   if (statusKey === "pending" || statusKey === "cashpending") {
@@ -111,7 +138,7 @@ function canGenerateCheckInQr(
   }
 
   return (
-    statusKey === "accepted" ||
+    statusKey === "ready" ||
     statusKey === "billupdated" ||
     statusKey === "billconfirmed"
   );
@@ -125,7 +152,21 @@ function getOrderActionMessage(
   const orderTypeKey = orderType?.trim().toLowerCase();
 
   if (statusKey === "accepted") {
-    return "Đơn đã được chấp nhận.";
+    return "Đơn đã được nhận. Bắt đầu chuẩn bị khi bếp sẵn sàng.";
+  }
+
+  if (statusKey === "preparing") {
+    return "Bếp đang chuẩn bị món. Cập nhật khi toàn bộ đơn đã sẵn sàng.";
+  }
+
+  if (statusKey === "ready") {
+    return orderTypeKey === "offline"
+      ? "Đơn đã sẵn sàng tại quán, chờ khách check-in và xác nhận."
+      : "Đơn đã đóng gói xong, sẵn sàng bàn giao để giao hàng.";
+  }
+
+  if (statusKey === "delivering") {
+    return "Đơn đang được giao, chờ khách xác nhận đã nhận hàng.";
   }
 
   if (statusKey === "billconfirmed") {
@@ -361,6 +402,28 @@ export default function MerchantOrdersPage() {
     } catch (error) {
       console.error(error);
       notify.error("Từ chối đơn thất bại.");
+    } finally {
+      setActionOrderId(null);
+    }
+  }
+
+  async function handleAdvanceOrder(order: MerchantOrderSummary) {
+    const action = getMerchantOrderAction(order.status, order.orderType);
+
+    if (!action) {
+      notify.error("Đơn hiện không có bước vận hành tiếp theo dành cho quán.");
+      return;
+    }
+
+    setActionOrderId(order.orderId);
+
+    try {
+      await updateMerchantOrderStatus(order.orderId, action.nextStatus);
+      notify.success(action.successMessage);
+      await loadOrders();
+    } catch (error) {
+      console.error(error);
+      notify.error("Không thể cập nhật tiến độ đơn. Vui lòng thử lại.");
     } finally {
       setActionOrderId(null);
     }
@@ -673,7 +736,7 @@ export default function MerchantOrdersPage() {
                           </span>
                         </div>
                         <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-50/90 to-blue-50/90 px-3.5 py-1 text-[13px] font-black text-cyan-800 shadow-sm">
-                          Trạng thái: {order.status}
+                          Trạng thái: {getOrderStatusLabel(order.status)}
                         </p>
                         <p className="mt-2.5 text-[14px] font-medium text-slate-600">
                           <span className="font-bold text-slate-700">
@@ -752,7 +815,7 @@ export default function MerchantOrdersPage() {
                           selectedOrder.status,
                         )}`}
                       >
-                        {selectedOrder.status}
+                        {getOrderStatusLabel(selectedOrder.status)}
                       </div>
                     </div>
                     <div>
@@ -912,6 +975,34 @@ export default function MerchantOrdersPage() {
                             Từ chối đơn
                           </button>
                         </>
+                      ) : null}
+
+                      {getMerchantOrderAction(
+                        selectedOrder.status,
+                        selectedOrder.orderType,
+                      ) ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleAdvanceOrder(selectedOrder)}
+                          disabled={actionOrderId === selectedOrder.orderId}
+                          className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-cyan-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {getOrderStatusKey(selectedOrder.status) ===
+                          "accepted" ? (
+                            <ChefHat size={17} />
+                          ) : getOrderStatusKey(selectedOrder.status) ===
+                            "preparing" ? (
+                            <PackageCheck size={17} />
+                          ) : (
+                            <Bike size={17} />
+                          )}
+                          {
+                            getMerchantOrderAction(
+                              selectedOrder.status,
+                              selectedOrder.orderType,
+                            )?.label
+                          }
+                        </button>
                       ) : null}
 
                       {getOrderStatusKey(selectedOrder.status) ===

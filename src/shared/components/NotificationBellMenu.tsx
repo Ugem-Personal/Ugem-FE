@@ -123,7 +123,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
           variant="outline"
           size="sm"
           className={cn(
-            "relative h-10 w-10 rounded-full border-cyan-100 bg-white/90 p-0 text-cyan-700 shadow-sm hover:bg-cyan-50",
+            "relative h-10 w-10 rounded-xl border-slate-200 bg-white p-0 text-cyan-700 shadow-sm hover:bg-cyan-50",
             className,
           )}
           aria-label="Xem thông báo"
@@ -137,7 +137,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-104 rounded-2xl p-0">
+      <DropdownMenuContent align="end" className="w-[min(26rem,calc(100vw-2rem))] rounded-2xl p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <DropdownMenuLabel className="p-0 text-sm font-semibold text-slate-900">
@@ -150,7 +150,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <Button
               type="button"
               variant="ghost"

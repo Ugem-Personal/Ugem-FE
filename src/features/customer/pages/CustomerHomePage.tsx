@@ -9,24 +9,31 @@ import {
   Route,
   Search,
   X,
+  Utensils,
+  Sparkles,
+  ShoppingBag,
+  SlidersHorizontal,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { notify } from "@/shared/lib/notify";
 
+import logoUrl from "@/assets/ugem-logo.png";
 import { cn } from "@/lib/utils";
-import { UserAccountMenu } from "@/shared/components";
+import { UserAccountMenu, ModeToggle } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { getCategories } from "@/shared/services/categoryService";
 import type { Category } from "@/shared/types";
 
 import MerchantCard from "../components/MerchantCard";
+import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
 import NearbyMerchantsMap from "../components/NearbyMerchantsMap.tsx";
 import { getNearbyMerchants } from "../services/merchantService";
+import { getWishlist } from "../services/wishlistService";
+import { getCurrentUser } from "@/features/auth";
 import type { Merchant } from "../types";
 import { useVietMapRoute } from "@/shared/hooks/useVietMapRoute";
 import {
-  type GeocodeResult,
   metersToKm,
   secondsToText,
   searchGeocodeAddress,
@@ -87,12 +94,6 @@ function resolveLocation(): Promise<LocationResult> {
         return;
       }
 
-      // Accept position even if accuracy is poor - just mark it as inaccurate
-      console.debug(
-        "[resolveLocation] Accepted position (even if not ideal):",
-        `lat=${bestPosition.coords.latitude.toFixed(6)}, lng=${bestPosition.coords.longitude.toFixed(6)}, accuracy=${Math.round(bestPosition.coords.accuracy)}m`,
-      );
-
       resolve({
         coords: {
           latitude: bestPosition.coords.latitude,
@@ -111,7 +112,6 @@ function resolveLocation(): Promise<LocationResult> {
         ) {
           bestPosition = position;
         }
-
         finish();
       },
       (error) => {
@@ -129,17 +129,9 @@ function resolveLocation(): Promise<LocationResult> {
       () => finish(bestPosition === null),
       LOCATION_SAMPLE_TIMEOUT_MS,
     );
-
-    // Debug log
-    console.debug(
-      "[resolveLocation] Started watching position with timeout:",
-      LOCATION_SAMPLE_TIMEOUT_MS,
-      "ms",
-    );
   });
 }
 
-/** Lấy tọa độ của merchant */
 function getNumberField(record: MerchantRecord, keys: string[]) {
   for (const key of keys) {
     const value = record[key];
@@ -262,38 +254,13 @@ function getMerchantPriceRange(merchant: Merchant) {
   return normalizePriceRange(value);
 }
 
-function getMerchantCuisineLabel(merchant: Merchant) {
-  const lines = (merchant.description || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
 
-  const cuisineLine = lines.find((line) =>
-    line.toLowerCase().startsWith("loại món chính:"),
-  );
-
-  if (cuisineLine) {
-    return cuisineLine.split(":").slice(1).join(":").trim();
-  }
-
-  const menuCategories = merchant.menu
-    ?.flatMap((item) => item.categoryDetail ?? [])
-    .filter(Boolean)
-    .slice(0, 3);
-
-  return menuCategories?.length ? menuCategories.join(", ") : "Chưa cập nhật";
-}
-
-function formatRating(value?: number) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "Chưa có";
-
-  return value.toFixed(2);
-}
 
 export default function CustomerHomePage() {
   const navigate = useNavigate();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState<
     PriceRangeFilter | ""
@@ -301,29 +268,20 @@ export default function CustomerHomePage() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
-  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [hasCustomerLocation, setHasCustomerLocation] = useState(false);
-  const [locationMode, setLocationMode] = useState<LocationMode>("default");
+  const [, setLocationMode] = useState<LocationMode>("default");
+  const [, setLocationAccuracy] = useState<number | null>(null);
   const [originInput, setOriginInput] = useState("");
   const [appliedOriginInput, setAppliedOriginInput] = useState("");
-  const [originSuggestions, setOriginSuggestions] = useState<GeocodeResult[]>(
-    [],
-  );
-  const [originSuggestionsOpen, setOriginSuggestionsOpen] = useState(false);
-  const [originSuggesting, setOriginSuggesting] = useState(false);
-  const [originResolving, setOriginResolving] = useState(false);
-  const [geocodeCandidates, setGeocodeCandidates] = useState<GeocodeResult[]>(
-    [],
-  );
+  const [, setOriginSuggestions] = useState<unknown[]>([]);
+  const [, setOriginSuggestionsOpen] = useState(false);
+  const [, setOriginSuggesting] = useState(false);
   const [locatingCustomer, setLocatingCustomer] = useState(false);
   const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
-  // Candidate location (from geolocation) pending user confirmation
   const [candidateLocation, setCandidateLocation] = useState<Coords | null>(
     null,
   );
-  const [candidateAccuracy, setCandidateAccuracy] = useState<number | null>(
-    null,
-  );
+  const [, setCandidateAccuracy] = useState<number | null>(null);
   const [serviceMode, setServiceMode] =
     useState<CustomerServiceMode>("delivery");
   const [showMap, setShowMap] = useState(false);
@@ -335,12 +293,7 @@ export default function CustomerHomePage() {
   const [routeLoadingMerchantId, setRouteLoadingMerchantId] = useState<
     string | null
   >(null);
-  const [routeDestinationCoords, setRouteDestinationCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
 
-  // ── Route state ──────────────────────────────────────────────
   const { route, clearRoute, routeResult } = useVietMapRoute();
 
   const selectedMerchant = useMemo(
@@ -348,12 +301,6 @@ export default function CustomerHomePage() {
       merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null,
     [merchants, selectedMerchantId],
   );
-  const selectedMerchantCoords = useMemo(
-    () => (selectedMerchant ? getMerchantCoords(selectedMerchant) : null),
-    [selectedMerchant],
-  );
-  const visibleDestinationCoords =
-    selectedMerchantCoords ?? routeDestinationCoords;
 
   const displayedMerchants = useMemo(() => {
     if (!selectedPriceRange) return merchants;
@@ -364,9 +311,9 @@ export default function CustomerHomePage() {
   }, [merchants, selectedPriceRange]);
 
   const merchantCountText = useMemo(() => {
-    if (loading) return "Đang tải";
+    if (loading) return "Đang tìm...";
 
-    return `${displayedMerchants.length} quán`;
+    return `${displayedMerchants.length} địa điểm`;
   }, [displayedMerchants.length, loading]);
   const hasMapSearch = keyword.trim().length > 0;
 
@@ -430,6 +377,26 @@ export default function CustomerHomePage() {
     };
 
     void loadCategories();
+
+    const loadWishlist = async () => {
+      const user = getCurrentUser();
+      if (!user) return;
+      try {
+        const items = await getWishlist();
+        if (active) {
+          const ids = new Set(
+            items
+              .map((item) => item.merchantId || item.id)
+              .filter(Boolean) as string[],
+          );
+          setWishlistIds(ids);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    void loadWishlist();
 
     return () => {
       active = false;
@@ -519,20 +486,17 @@ export default function CustomerHomePage() {
     };
   }, [loadMerchants]);
 
-  // ── Tự động tính route khi chọn quán ─────────────────────────
   useEffect(() => {
     let cancelled = false;
 
     async function calculateRoute() {
       if (!selectedMerchantId || !selectedMerchant) {
         clearRoute();
-        setRouteDestinationCoords(null);
         setRouteLoadingMerchantId(null);
         return;
       }
 
       clearRoute();
-      setRouteDestinationCoords(null);
       setRouteLoadingMerchantId(selectedMerchant.id);
 
       if (!hasCustomerLocation) {
@@ -580,13 +544,11 @@ export default function CustomerHomePage() {
 
       if (!merchantCoords) {
         clearRoute();
-        setRouteDestinationCoords(null);
         setRouteLoadingMerchantId(null);
         notify.error("Quán này chưa có tọa độ chính xác để vẽ đường đi.");
         return;
       }
 
-      setRouteDestinationCoords(merchantCoords);
       const result = await route(
         { lng: coords.longitude, lat: coords.latitude },
         { lng: merchantCoords.lng, lat: merchantCoords.lat },
@@ -640,41 +602,21 @@ export default function CustomerHomePage() {
   }
 
   async function handleRefreshCustomerLocation() {
-    console.debug("[handleRefreshCustomerLocation] START");
-
     if (!navigator.geolocation) {
-      console.error("[handleRefreshCustomerLocation] ❌ No geolocation API");
       notify.error("Trình duyệt không hỗ trợ lấy vị trí hiện tại.");
       return;
     }
 
-    console.debug("[handleRefreshCustomerLocation] Geolocation API available");
     setLocatingCustomer(true);
 
     try {
-      console.debug(
-        "[handleRefreshCustomerLocation] Calling resolveLocation()...",
-      );
       const result = await resolveLocation();
-      console.debug(
-        "[handleRefreshCustomerLocation] resolveLocation completed:",
-        {
-          usedDefault: result.usedDefault,
-          lat: result.coords.latitude,
-          lng: result.coords.longitude,
-          accuracy: result.accuracy,
-        },
-      );
 
       if (result.usedDefault) {
         notify.error(getLocationErrorMessage(result));
         return;
       }
 
-      // Instead of applying immediately, set as candidate for user confirmation
-      console.debug(
-        "[handleRefreshCustomerLocation] ✅ Got location, setting candidate for confirmation...",
-      );
       setCandidateLocation({
         latitude: result.coords.latitude,
         longitude: result.coords.longitude,
@@ -691,108 +633,13 @@ export default function CustomerHomePage() {
       setLocationError("");
       await applyCustomerOrigin(result.coords, "browser", result.accuracy);
     } finally {
-      console.debug(
-        "[handleRefreshCustomerLocation] END (locatingCustomer = false)",
-      );
       setLocatingCustomer(false);
     }
   }
 
-  async function applyOriginSuggestion(suggestion: GeocodeResult) {
-    const label = suggestion.display || suggestion.address || suggestion.name;
 
-    setOriginInput(label);
-    setAppliedOriginInput(label);
-    setOriginSuggestions([]);
-    setOriginSuggestionsOpen(false);
-    setOriginResolving(true);
 
-    try {
-      setLocationError("");
-      await applyCustomerOrigin(
-        {
-          latitude: suggestion.lat,
-          longitude: suggestion.lng,
-        },
-        "manual",
-        null,
-      );
-      setCandidateLocation(null);
-      setCandidateAccuracy(null);
-      setGeocodeCandidates([]);
-      notify.success("Đã đặt vị trí xuất phát.");
-    } finally {
-      setOriginResolving(false);
-    }
-  }
 
-  async function handleSelectGeocodeCandidate(candidate: GeocodeResult) {
-    setGeocodeCandidates([]);
-    await applyOriginSuggestion(candidate);
-  }
-
-  async function handleOriginSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const text = originInput.trim();
-    if (!text) return;
-
-    setOriginResolving(true);
-    try {
-      const results = await searchOriginSuggestions(text, coords, 5);
-      const first = results[0];
-      if (!first) {
-        notify.error("Không tìm được vị trí bạn nhập.");
-        return;
-      }
-
-      setOriginInput(first.display || first.address || first.name);
-      setAppliedOriginInput(first.display || first.address || first.name);
-      setOriginSuggestions([]);
-      setOriginSuggestionsOpen(false);
-      setLocationError("");
-      await applyCustomerOrigin(
-        { latitude: first.lat, longitude: first.lng },
-        "manual",
-        null,
-      );
-      setGeocodeCandidates([]);
-      setCandidateLocation(null);
-      setCandidateAccuracy(null);
-      notify.success("Đã đặt vị trí xuất phát.");
-    } catch (e) {
-      console.error(e);
-      notify.error("Không thể đặt vị trí từ gợi ý");
-    } finally {
-      setOriginResolving(false);
-    }
-  }
-
-  async function handleConfirmCandidate() {
-    if (!candidateLocation) return;
-    setLocatingCustomer(true);
-    try {
-      await applyCustomerOrigin(
-        candidateLocation,
-        "browser",
-        candidateAccuracy ?? null,
-      );
-      setCandidateLocation(null);
-      setCandidateAccuracy(null);
-      setLocationError("");
-      notify.success("Đã xác nhận vị trí của bạn.");
-    } catch (e) {
-      console.error(e);
-      notify.error("Không thể xác nhận vị trí.");
-    } finally {
-      setLocatingCustomer(false);
-    }
-  }
-
-  function handleCancelCandidate() {
-    setCandidateLocation(null);
-    setCandidateAccuracy(null);
-    setLocationError("⚠️ Vui lòng nhập địa chỉ của bạn để tìm quán gần nhất.");
-  }
 
   function handleCandidateDrag(lat: number, lng: number) {
     setCandidateLocation({ latitude: lat, longitude: lng });
@@ -808,7 +655,6 @@ export default function CustomerHomePage() {
 
   function handleClearRoute() {
     setSelectedMerchantId(null);
-    setRouteDestinationCoords(null);
     clearRoute();
   }
 
@@ -820,7 +666,7 @@ export default function CustomerHomePage() {
     return (
       <div
         className={cn(
-          "grid grid-cols-2 gap-2 rounded-xl border border-white/40 bg-white/40 p-1.5 shadow-[inset_0_2px_10px_rgba(255,255,255,0.7)] backdrop-blur-md",
+          "grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 backdrop-blur-md shadow-inner",
           className,
         )}
         aria-label="Chọn kiểu sử dụng dịch vụ"
@@ -830,42 +676,42 @@ export default function CustomerHomePage() {
           onClick={() => handleServiceModeChange("delivery")}
           aria-pressed={serviceMode === "delivery"}
           className={cn(
-            "flex h-12 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition-all duration-300 ease-out",
+            "flex h-12 items-center justify-center gap-2.5 rounded-xl px-4 text-sm font-black transition-all duration-300",
             serviceMode === "delivery"
-              ? "bg-gradient-to-br from-cyan-600 to-blue-700 text-white shadow-lg shadow-cyan-900/20 ring-1 ring-white/20 scale-[1.02]"
-              : "text-slate-600 hover:bg-white/60 hover:text-cyan-800",
+              ? "bg-linear-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/25 scale-[1.01]"
+              : "text-slate-600 hover:bg-white/80 hover:text-cyan-800",
           )}
         >
           <span
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-              serviceMode === "delivery" ? "bg-white/20 text-cyan-50" : "bg-cyan-50 text-cyan-600",
+              "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
+              serviceMode === "delivery" ? "bg-white/20 text-white" : "bg-cyan-100 text-cyan-700",
             )}
           >
             <Navigation className="h-4 w-4" />
           </span>
-          Giao hàng
+          Giao tận nơi
         </button>
         <button
           type="button"
           onClick={() => handleServiceModeChange("dineIn")}
           aria-pressed={serviceMode === "dineIn"}
           className={cn(
-            "flex h-12 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition-all duration-300 ease-out",
+            "flex h-12 items-center justify-center gap-2.5 rounded-xl px-4 text-sm font-black transition-all duration-300",
             serviceMode === "dineIn"
-              ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-900/20 ring-1 ring-white/20 scale-[1.02]"
-              : "text-slate-600 hover:bg-white/60 hover:text-amber-700",
+              ? "bg-linear-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/25 scale-[1.01]"
+              : "text-slate-600 hover:bg-white/80 hover:text-amber-700",
           )}
         >
           <span
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-              serviceMode === "dineIn" ? "bg-white/20 text-amber-50" : "bg-amber-50 text-amber-600",
+              "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
+              serviceMode === "dineIn" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700",
             )}
           >
             <MapIcon className="h-4 w-4" />
           </span>
-          Tại quán
+          Ăn tại quán / Bản đồ
         </button>
       </div>
     );
@@ -882,7 +728,7 @@ export default function CustomerHomePage() {
         type="button"
         size="sm"
         variant={selected ? "default" : "outline"}
-        className="h-9 w-full justify-center gap-2 rounded-lg text-xs"
+        className="h-10 w-full justify-center gap-2 rounded-xl text-xs font-black transition duration-200"
         onClick={() => {
           setShowRoutePanel(true);
           handleSelectMerchantId(merchant.id);
@@ -891,63 +737,46 @@ export default function CustomerHomePage() {
         aria-pressed={selected}
       >
         {calculating ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-600" />
         ) : selected ? (
           <X className="h-3.5 w-3.5" />
         ) : (
-          <Navigation className="h-3.5 w-3.5" />
+          <Navigation className="h-3.5 w-3.5 text-cyan-600" />
         )}
-        {calculating ? "Đang tính..." : selected ? "Bỏ chọn" : "Xem đường đi"}
+        {calculating ? "Đang tính quãng đường..." : selected ? "Bỏ xem đường đi" : "Xem lộ trình trên bản đồ"}
       </Button>
-    );
-  }
-
-  function renderCategoryFilter(className = "") {
-    if (categories.length === 0) return null;
-
-    return (
-      <select
-        value={selectedCategoryId}
-        onChange={(event) => handleCategoryChange(event.target.value)}
-        className={cn(
-          "h-11 rounded-xl border border-white/60 bg-white/60 px-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur outline-none transition-all focus:border-cyan-400 focus:bg-white/90 focus:ring-4 focus:ring-cyan-400/10",
-          className,
-        )}
-      >
-        <option value="">Tất cả danh mục</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
     );
   }
 
   function renderPriceRangeFilters(className = "") {
     return (
-      <div className={cn("flex flex-wrap gap-2", className)}>
-        <Button
+      <div className={cn("flex flex-wrap items-center gap-2", className)}>
+        <span className="text-xs font-extrabold text-slate-500 mr-1 hidden sm:inline">Khoảng giá:</span>
+        <button
           type="button"
-          size="sm"
-          variant={selectedPriceRange === "" ? "default" : "outline"}
           onClick={() => setSelectedPriceRange("")}
-          className="h-9 rounded-full px-4 text-xs font-semibold"
+          className={`h-9 rounded-full px-4 text-xs font-black transition ${
+            selectedPriceRange === ""
+              ? "bg-slate-900 text-white shadow-xs"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-400"
+          }`}
         >
           Tất cả
-        </Button>
+        </button>
 
         {PRICE_RANGE_FILTERS.map((label) => (
-          <Button
+          <button
             key={label}
             type="button"
-            size="sm"
-            variant={selectedPriceRange === label ? "default" : "outline"}
             onClick={() => setSelectedPriceRange(label)}
-            className="h-9 rounded-full px-4 text-xs font-semibold"
+            className={`h-9 rounded-full px-4 text-xs font-black transition ${
+              selectedPriceRange === label
+                ? "bg-slate-900 text-white shadow-xs"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-400"
+            }`}
           >
             {label}
-          </Button>
+          </button>
         ))}
       </div>
     );
@@ -955,32 +784,21 @@ export default function CustomerHomePage() {
 
   function renderMerchantListContent(withRouteActions: boolean, compact = false) {
     if (loading) {
-      return (
-        <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-cyan-200 bg-cyan-50/80 px-4 py-8 text-sm font-medium text-cyan-700">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Đang tải quán gần bạn...
-        </div>
-      );
+      return <MerchantCardSkeleton count={compact ? 4 : 6} compact={compact} />;
     }
 
     if (displayedMerchants.length === 0) {
-      if (merchants.length === 0) {
-        return (
-          <div className="rounded-lg border border-dashed border-slate-200 bg-white/80 px-4 py-8 text-center text-sm text-slate-500">
-            Chưa có quán nào gần bạn.
-          </div>
-        );
-      }
-
       return (
-        <div className="rounded-lg border border-dashed border-slate-200 bg-white/80 px-4 py-8 text-center text-sm text-slate-500">
-          Không có quán nào phù hợp với bộ lọc hiện tại.
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-10 text-center text-sm font-semibold text-slate-500 shadow-xs">
+          <Utensils className="mx-auto h-10 w-10 text-slate-300" />
+          <p className="mt-3 text-base font-black text-slate-900">Không tìm thấy quán phù hợp</p>
+          <p className="mt-1 text-xs">Thử thay đổi từ khóa tìm kiếm hoặc chọn khoảng giá khác.</p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-3">
+      <div className={compact ? "space-y-3" : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"}>
         {displayedMerchants.map((merchant) => {
           const selected = selectedMerchantId === merchant.id;
 
@@ -989,8 +807,8 @@ export default function CustomerHomePage() {
               key={merchant.id}
               id={`merchant-${merchant.id}`}
               className={cn(
-                "scroll-mt-4 rounded-lg transition-all",
-                selected ? "bg-cyan-50/70 p-1" : "",
+                "scroll-mt-4 rounded-3xl transition-all duration-300",
+                selected ? "ring-2 ring-cyan-500 shadow-xl" : "",
               )}
             >
               <MerchantCard
@@ -998,6 +816,15 @@ export default function CustomerHomePage() {
                 selected={selected}
                 orderMode={serviceMode === "dineIn" ? "offline" : "online"}
                 compact={compact}
+                isWishlisted={wishlistIds.has(merchant.id)}
+                onWishlistToggle={(nextSaved) => {
+                  setWishlistIds((prev) => {
+                    const next = new Set(prev);
+                    if (nextSaved) next.add(merchant.id);
+                    else next.delete(merchant.id);
+                    return next;
+                  });
+                }}
               />
 
               {withRouteActions && (
@@ -1029,26 +856,18 @@ export default function CustomerHomePage() {
 
   if (showMap) {
     return (
-      <div className="fixed inset-0 overflow-hidden bg-slate-100 text-slate-900">
+      <div className="fixed inset-0 overflow-hidden bg-slate-100 text-slate-900 font-sans">
         <div className="absolute inset-0">{mapCanvas}</div>
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-52 bg-linear-to-b from-white/90 via-white/60 to-transparent" />
-        {showMerchantPanel && hasMapSearch && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-130 max-w-full bg-linear-to-r from-white/75 via-white/35 to-transparent" />
-        )}
 
         <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-4 px-4 py-4 lg:px-6">
           {showMerchantPanel && (
-            <div className="pointer-events-auto w-full max-w-96 rounded-2xl border border-white/50 bg-white/60 p-4 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl transition-all duration-500">
+            <div className="pointer-events-auto w-full max-w-96 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-300">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h1 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-xl font-black tracking-tight text-transparent">
-                    UGem
-                  </h1>
-                  <p className="text-xs font-medium text-slate-500">
-                    Khám phá tinh hoa ẩm thực
-                  </p>
-                </div>
-                <span className="flex items-center rounded-full bg-gradient-to-r from-cyan-100 to-blue-100 px-3 py-1 text-xs font-bold tracking-wide text-cyan-800 shadow-sm ring-1 ring-cyan-500/10">
+                <Link to="/customer" className="flex items-center gap-2">
+                  <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
+                </Link>
+                <span className="flex items-center rounded-full bg-cyan-50 border border-cyan-200 px-3.5 py-1 text-xs font-black tracking-wide text-cyan-800 shadow-2xs">
                   {merchantCountText}
                 </span>
               </div>
@@ -1058,20 +877,18 @@ export default function CustomerHomePage() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Tìm quán, món ăn..."
-                  className="h-10 rounded-xl border-white/60 bg-white/60 px-4 text-sm font-medium shadow-sm backdrop-blur transition-all focus:border-cyan-400 focus:bg-white/90 focus:ring-4 focus:ring-cyan-400/10"
+                  className="h-11 rounded-xl border-slate-200 bg-white/90 px-4 text-sm font-semibold shadow-2xs focus:border-cyan-600"
                 />
                 <Button
                   type="submit"
-                  className="h-10 shrink-0 gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 font-bold shadow-md shadow-cyan-500/20 transition-all hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 active:scale-95"
+                  className="h-11 shrink-0 gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 font-black shadow-md shadow-cyan-600/20"
                   disabled={loading}
                 >
                   <Search className="h-4 w-4" />
-                  Tìm
                 </Button>
               </form>
 
               {renderServiceModeTabs("mt-3")}
-              {renderCategoryFilter("mt-3 h-10 w-full")}
               {renderPriceRangeFilters("mt-3")}
             </div>
           )}
@@ -1083,7 +900,7 @@ export default function CustomerHomePage() {
               variant="outline"
               onClick={() => setShowMerchantPanel((value) => !value)}
               aria-pressed={showMerchantPanel}
-              className="h-10 gap-2 rounded-xl border-white/50 bg-white/70 font-semibold shadow-[0_4px_16px_0_rgba(31,38,135,0.05)] backdrop-blur-lg transition-all hover:bg-white/90"
+              className="h-11 gap-2 rounded-xl border-slate-200 bg-white/90 font-black shadow-xs backdrop-blur-lg hover:bg-white"
             >
               <List className="h-4 w-4 text-cyan-600" />
               {showMerchantPanel ? "Ẩn quán" : "Hiện quán"}
@@ -1093,406 +910,97 @@ export default function CustomerHomePage() {
               variant="outline"
               onClick={() => setShowRoutePanel((value) => !value)}
               aria-pressed={showRoutePanel}
-              className="h-10 gap-2 rounded-xl border-white/50 bg-white/70 font-semibold shadow-[0_4px_16px_0_rgba(31,38,135,0.05)] backdrop-blur-lg transition-all hover:bg-white/90"
+              className="h-11 gap-2 rounded-xl border-slate-200 bg-white/90 font-black shadow-xs backdrop-blur-lg hover:bg-white"
             >
               <MapPin className="h-4 w-4 text-emerald-600" />
-              {showRoutePanel ? "Ẩn vị trí" : "Hiện vị trí"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleServiceModeChange("delivery")}
-              aria-pressed={serviceMode === "delivery"}
-              className="h-10 gap-2 rounded-xl border-white/50 bg-white/70 font-semibold shadow-[0_4px_16px_0_rgba(31,38,135,0.05)] backdrop-blur-lg transition-all hover:bg-white/90"
-            >
-              <Navigation className="h-4 w-4 text-blue-600" />
-              Giao hàng
+              {showRoutePanel ? "Ẩn chỉ đường" : "Hiện chỉ đường"}
             </Button>
           </div>
         </header>
 
         {showMerchantPanel && hasMapSearch && (
-          <aside className="pointer-events-auto absolute bottom-4 left-4 top-50 z-20 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl transition-all duration-500 lg:bottom-6 lg:left-6 lg:top-50">
-            <div className="border-b border-white/40 bg-white/40 px-4 py-3 backdrop-blur-sm">
+          <aside className="pointer-events-auto absolute bottom-4 left-4 top-52 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="border-b border-slate-200/80 bg-white/60 px-5 py-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-black tracking-tight text-slate-800">Kết quả tìm kiếm</h2>
-                  <p className="text-xs font-medium text-slate-500">
-                    Chọn quán để xem đường đi trên bản đồ
+                  <h2 className="text-base font-black tracking-tight text-slate-900">Kết quả địa điểm</h2>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Bấm quán để xem chỉ đường chi tiết
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleOpenMyOrders}
-                    className="h-8 rounded-xl border-cyan-200/60 bg-white/80 px-3 text-xs font-bold text-cyan-700 shadow-sm transition-colors hover:bg-cyan-50 hover:text-cyan-800"
-                  >
-                    Đơn của tôi
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowMerchantPanel(false)}
-                    className="h-8 rounded-xl px-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-200/50"
-                  >
-                    Ẩn
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleOpenMyOrders}
+                  className="h-8 gap-1.5 rounded-xl border-cyan-200 bg-cyan-50 px-3 text-xs font-black text-cyan-800 shadow-2xs hover:bg-cyan-100"
+                >
+                  <ShoppingBag className="h-3.5 w-3.5" /> Đơn hàng
+                </Button>
               </div>
-
-              {locationError && (
-                <div className="mt-3 rounded-xl border border-orange-200/80 bg-gradient-to-r from-orange-50/90 to-red-50/90 px-4 py-2.5 text-[13px] font-semibold text-orange-800 shadow-sm">
-                  {locationError}
-                </div>
-              )}
-
-              {renderPriceRangeFilters("mt-3")}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:thin]">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
               {renderMerchantListContent(true, true)}
             </div>
           </aside>
         )}
 
         {showRoutePanel && (
-          <section className="pointer-events-auto absolute right-4 top-56 z-20 flex max-h-[calc(100vh-10rem)] w-[min(470px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl transition-all duration-500 lg:right-6 lg:top-56">
-            <div className="border-b border-white/40 bg-white/40 px-5 py-4 backdrop-blur-sm">
+          <section className="pointer-events-auto absolute right-4 top-56 z-20 flex max-h-[calc(100vh-10rem)] w-[min(480px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="border-b border-slate-200/80 bg-white/60 px-6 py-4 backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-black text-slate-800 tracking-tight">Bản đồ di chuyển</h2>
-                  <p className="text-[13px] font-medium text-slate-500">
-                    {selectedMerchant
-                      ? <span className="text-cyan-700">Đang xem: {selectedMerchant.name}</span>
-                      : "Click vào quán để xem đường đi"}
+                  <h2 className="text-lg font-black text-slate-950 tracking-tight">Lộ trình & Chỉ đường</h2>
+                  <p className="text-xs font-bold text-slate-500">
+                    {selectedMerchant ? (
+                      <span className="text-cyan-700">Đang hướng tới: {selectedMerchant.name}</span>
+                    ) : (
+                      "Chọn quán bất kỳ để nhận đường đi chính xác"
+                    )}
                   </p>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {selectedMerchantId && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleClearRoute}
-                      className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                      Xoá
-                    </Button>
-                  )}
+                {selectedMerchantId && (
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowRoutePanel(false)}
-                    className="h-8 rounded-xl px-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-200/50"
+                    onClick={handleClearRoute}
+                    className="h-8 gap-1 rounded-xl px-3 text-xs font-black text-rose-600 hover:bg-rose-50"
                   >
-                    Ẩn
+                    <X className="h-3.5 w-3.5" /> Bỏ chọn
                   </Button>
-                </div>
+                )}
               </div>
-
-              <form
-                onSubmit={handleOriginSubmit}
-                className="mt-3 flex flex-col gap-2 sm:flex-row"
-              >
-                <div className="relative flex-1">
-                  <Input
-                    value={originInput}
-                    onChange={(e) => {
-                      setOriginInput(e.target.value);
-                      setAppliedOriginInput("");
-                      setOriginSuggestionsOpen(true);
-                    }}
-                    placeholder="Nhập vị trí của bạn, VD: BS10B Vinhomes Grand Park"
-                    onFocus={() => {
-                      if (originInput.trim().length >= 3) {
-                        setOriginSuggestionsOpen(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      window.setTimeout(
-                        () => setOriginSuggestionsOpen(false),
-                        120,
-                      );
-                    }}
-                    className="h-9 rounded-lg bg-white/90 text-xs"
-                    autoComplete="off"
-                  />
-                  {originSuggestionsOpen && originInput.trim().length >= 3 && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-cyan-100 bg-white py-1 text-sm shadow-xl">
-                      {originSuggesting ? (
-                        <div className="px-3 py-2 text-xs text-slate-500">
-                          Đang tìm gợi ý...
-                        </div>
-                      ) : originSuggestions.length > 0 ? (
-                        originSuggestions.map((suggestion) => (
-                          <button
-                            key={`${suggestion.ref_id}-${suggestion.lat}-${suggestion.lng}`}
-                            type="button"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() =>
-                              void applyOriginSuggestion(suggestion)
-                            }
-                            className="block w-full px-3 py-2 text-left hover:bg-cyan-50"
-                          >
-                            <span className="block truncate font-medium text-slate-800">
-                              {suggestion.name || suggestion.display}
-                            </span>
-                            <span className="mt-0.5 block truncate text-xs text-slate-500">
-                              {suggestion.address || suggestion.display}
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-xs text-slate-500">
-                          Không có gợi ý phù hợp.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={originResolving || !originInput.trim()}
-                    className="h-9 whitespace-nowrap rounded-lg text-xs"
-                  >
-                    {originResolving ? "Đang tìm..." : "Đặt vị trí"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRefreshCustomerLocation}
-                    disabled={locatingCustomer}
-                    className="h-9 gap-1.5 whitespace-nowrap rounded-lg bg-white/80 text-xs"
-                  >
-                    <Navigation className="h-3.5 w-3.5" />
-                    {locatingCustomer ? "Đang lấy..." : "Hiện tại"}
-                  </Button>
-                </div>
-              </form>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 [scrollbar-width:thin]">
-              {geocodeCandidates.length > 0 && (
-                <div className="rounded-lg border border-cyan-100 bg-white/95 p-3 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-800">
-                        Gợi ý địa điểm
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Chọn vị trí đúng nhất với ý bạn
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setGeocodeCandidates([])}
-                      className="h-8 rounded-lg text-xs"
-                    >
-                      Đóng
-                    </Button>
-                  </div>
-
-                  <ul className="mt-2 space-y-1">
-                    {geocodeCandidates.map((c) => {
-                      const distM = Math.round(
-                        distanceKm(
-                          {
-                            latitude:
-                              candidateLocation?.latitude ?? coords.latitude,
-                            longitude:
-                              candidateLocation?.longitude ?? coords.longitude,
-                          },
-                          { lat: c.lat, lng: c.lng },
-                        ) * 1000,
-                      );
-
-                      return (
-                        <li
-                          key={c.ref_id}
-                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 hover:bg-slate-50"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-medium">
-                              {c.display || c.name}
-                            </div>
-                            <div className="truncate text-xs text-slate-500">
-                              {c.address} • ~{distM}m
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => handleSelectGeocodeCandidate(c)}
-                            className="h-8 rounded-lg text-xs"
-                          >
-                            Chọn
-                          </Button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-
-              {candidateLocation && (
-                <div className="mt-3 rounded-lg border border-cyan-100 bg-white/95 p-3 text-sm shadow-sm">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold">Vị trí đề xuất</div>
-                      <div className="text-xs text-slate-500">
-                        {candidateLocation.latitude.toFixed(6)},{" "}
-                        {candidateLocation.longitude.toFixed(6)}{" "}
-                        {candidateAccuracy ? `(±${candidateAccuracy}m)` : ""}
-                      </div>
-                      <div className="mt-2 text-xs text-slate-600">
-                        Kéo chấm trên bản đồ để điều chỉnh vị trí, sau đó bấm
-                        "Xác nhận vị trí".
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleConfirmCandidate}
-                        className="h-9 rounded-lg text-xs"
-                      >
-                        Xác nhận
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleCancelCandidate}
-                        className="h-9 rounded-lg text-xs"
-                      >
-                        Huỷ
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 [scrollbar-width:thin]">
               {routeResult && (
-                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-cyan-50 px-4 py-3">
-                  <div className="flex items-center gap-1.5 text-sm font-semibold text-cyan-700">
-                    <Route className="h-4 w-4" />
+                <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-cyan-50 border border-cyan-200/90 px-4 py-3 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900">
+                    <Route className="h-4 w-4 text-cyan-600" />
                     {metersToKm(routeResult.distance)}
                   </div>
                   <div className="h-4 w-px bg-cyan-200" />
-                  <div className="flex items-center gap-1.5 text-sm font-semibold text-cyan-700">
-                    <Clock className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900">
+                    <Clock className="h-4 w-4 text-cyan-600" />
                     {secondsToText(routeResult.duration)}
                   </div>
                 </div>
               )}
 
               {selectedMerchant && (
-                <div className="mt-3 rounded-lg border border-cyan-100 bg-cyan-50/80 px-4 py-3 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-cyan-700">
-                        Chi tiết quán
-                      </div>
-                      <h3 className="mt-1 truncate text-base font-black text-slate-950">
-                        {selectedMerchant.name}
-                      </h3>
-                    </div>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-cyan-700 shadow-sm">
-                      Review {formatRating(selectedMerchant.rating)}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-                    <div className="rounded-md bg-white/90 px-3 py-2 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                        Tên quán
-                      </div>
-                      <div className="mt-0.5 font-semibold text-slate-900">
-                        {selectedMerchant.name}
-                      </div>
-                    </div>
-                    <div className="rounded-md bg-white/90 px-3 py-2 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                        Review
-                      </div>
-                      <div className="mt-0.5 font-semibold text-slate-900">
-                        {formatRating(selectedMerchant.rating)}
-                      </div>
-                    </div>
-                    <div className="rounded-md bg-white/90 px-3 py-2 shadow-sm sm:col-span-2">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                        Loại quán đồ
-                      </div>
-                      <div className="mt-0.5 font-semibold text-slate-900">
-                        {getMerchantCuisineLabel(selectedMerchant)}
-                      </div>
-                    </div>
-                  </div>
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+                  <h3 className="font-black text-slate-950 text-base">{selectedMerchant.name}</h3>
+                  {selectedMerchant.address ? (
+                    <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500">
+                      <MapPin className="h-4 w-4 shrink-0 text-cyan-600" />
+                      {selectedMerchant.address}
+                    </p>
+                  ) : null}
                 </div>
               )}
-
-              {routeResult && (routeResult.steps?.length ?? 0) > 0 && (
-                <div className="mt-3 max-h-48 overflow-y-auto rounded-lg bg-white/95 px-4 py-3 text-sm shadow-sm [scrollbar-width:thin]">
-                  <div className="mb-2 font-semibold text-slate-800">
-                    Hướng dẫn đường đi
-                  </div>
-
-                  <ol className="space-y-2">
-                    {routeResult.steps!.map((step, index) => (
-                      <li
-                        key={`${step.instruction}-${index}`}
-                        className="flex gap-2"
-                      >
-                        <span className="font-semibold text-cyan-600">
-                          {index + 1}.
-                        </span>
-                        <span>
-                          {step.instruction}
-                          <span className="ml-1 text-xs text-slate-500">
-                            ({metersToKm(step.distance)})
-                          </span>
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              <div className="mt-3 grid gap-1 wrap-break-word rounded-lg bg-slate-50 px-4 py-2 text-[11px] font-medium text-slate-500">
-                <span>
-                  Bạn:{" "}
-                  {hasCustomerLocation
-                    ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}${
-                        locationAccuracy !== null
-                          ? ` (±${locationAccuracy}m)`
-                          : ""
-                      }${locationMode === "manual" ? " (nhập tay)" : ""}`
-                    : "chưa lấy được vị trí hiện tại"}
-                </span>
-                {selectedMerchant && (
-                  <span>
-                    Quán:{" "}
-                    {visibleDestinationCoords
-                      ? `${visibleDestinationCoords.lat.toFixed(6)}, ${visibleDestinationCoords.lng.toFixed(6)}${
-                          selectedMerchantCoords ? "" : " (geocode)"
-                        }`
-                      : "chưa có tọa độ từ BE, FE sẽ thử lấy theo địa chỉ"}
-                  </span>
-                )}
-              </div>
             </div>
           </section>
         )}
@@ -1501,90 +1009,137 @@ export default function CustomerHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#edfafa_0%,#f7fbfc_34%,#ffffff_100%)] text-slate-950">
-      <header className="border-b border-white/80 bg-white/75 shadow-sm shadow-cyan-950/5 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div>
-            <h1 className="text-3xl font-black">UGem</h1>
-            <p className="text-sm font-medium text-slate-500">
-              Khám phá các quán ăn gần bạn
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xs transition-colors duration-300">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex items-center gap-3">
+            <img src={logoUrl} alt="UGem" className="h-10 w-auto transition-transform hover:scale-105" />
+          </Link>
 
-          <UserAccountMenu fallbackName="Customer" />
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 pb-10 pt-5">
-        <section className="rounded-lg border border-white/80 bg-white/90 p-4 shadow-xl shadow-cyan-950/10 backdrop-blur-xl">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-2xl font-black text-slate-950">
-                Hôm nay ăn gì?
-              </h2>
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                Tìm món ngon quanh vị trí của bạn
-              </p>
-            </div>
-
-            <span className="w-fit rounded-md border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-sm font-black text-cyan-800">
-              {merchantCountText}
-            </span>
-          </div>
-
-          <div className="mt-4 flex justify-end">
+          <div className="flex items-center gap-3">
+            <ModeToggle />
             <Button
               type="button"
               onClick={handleOpenMyOrders}
-              className="h-11 rounded-lg bg-cyan-600 px-4 text-sm font-semibold text-white shadow-md shadow-cyan-950/10 hover:bg-cyan-700"
+              className="h-11 gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-5 text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400"
             >
+              <ShoppingBag className="h-4 w-4" />
               Đơn hàng của tôi
             </Button>
+            <UserAccountMenu fallbackName="Customer" />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Main Hero Card */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-cyan-950 to-blue-950 p-6 text-white shadow-2xl sm:p-10 border border-white/10">
+          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.3),transparent_50%)] pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-300 shadow-xs backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5" /> UGem Food Dashboard
+            </span>
+            <h1 className="editorial-heading mt-4 text-3xl font-black leading-tight sm:text-5xl">
+              Hôm nay bạn muốn <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">thưởng thức món gì?</span>
+            </h1>
+            <p className="mt-3 text-sm font-medium text-slate-300 sm:text-base">
+              Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin khoảng cách & thời gian giao chính xác.
+            </p>
           </div>
 
-          {renderServiceModeTabs("mt-4")}
-          {renderCategoryFilter("mt-4 w-full sm:w-72")}
-          {renderPriceRangeFilters("mt-4")}
+          {/* Service Mode Selector */}
+          <div className="relative z-10 mt-8">
+            {renderServiceModeTabs("max-w-md")}
+          </div>
 
-          <form
-            onSubmit={handleSearch}
-            className="mt-4 flex flex-col gap-2 sm:flex-row"
-          >
-            <Input
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Tìm quán, món ăn..."
-              className="h-12 rounded-lg border-slate-200 bg-white text-sm shadow-sm"
-            />
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="relative z-10 mt-5 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Tìm tên quán, món ăn hoặc khu vực gần bạn…"
+                className="h-14 rounded-2xl bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium pl-12 shadow-lg border-white/20 outline-none"
+              />
+              {keyword && (
+                <button type="button" onClick={() => setKeyword("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
             <Button
               type="submit"
-              className="h-12 gap-2 rounded-lg px-6 shadow-md shadow-cyan-950/10"
+              className="h-14 gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-blue-700"
               disabled={loading}
             >
-              <Search className="h-4 w-4" />
-              Tìm
+              <Search className="h-4 w-4" /> Tìm quán
             </Button>
           </form>
         </section>
 
+        {/* Categories Bar */}
+        {categories.length > 0 ? (
+          <section className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
+                <SlidersHorizontal className="h-5 w-5 text-cyan-600 dark:text-cyan-400" /> Danh mục phổ biến
+              </h2>
+              {selectedCategoryId && (
+                <button
+                  onClick={() => handleCategoryChange("")}
+                  className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 hover:underline"
+                >
+                  Xóa lọc danh mục
+                </button>
+              )}
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              <button
+                onClick={() => handleCategoryChange("")}
+                className={`h-11 shrink-0 rounded-2xl px-5 text-sm font-black transition duration-200 ${
+                  !selectedCategoryId
+                    ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                    : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
+                }`}
+              >
+                Tất cả
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category.id)}
+                  className={`h-11 shrink-0 rounded-2xl px-5 text-sm font-black transition duration-200 ${
+                    selectedCategoryId === category.id
+                      ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                      : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {locationError && (
-          <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-800 shadow-sm">
+          <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-950/30 p-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
             {locationError}
           </div>
         )}
 
-        <section className="mt-6">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        {/* Results Section */}
+        <section className="mt-10">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black">Quán gần bạn</h2>
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                {merchantCountText} quanh vị trí hiện tại
-              </p>
+              <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">UGem Recommended</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">Địa điểm quanh bạn</h2>
             </div>
 
-            <span className="rounded-md border border-amber-100 bg-amber-50 px-3 py-1.5 text-xs font-black uppercase text-amber-700">
-              Giao nhanh
-            </span>
+            {renderPriceRangeFilters()}
           </div>
 
           {renderMerchantListContent(false)}

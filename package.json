@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "smoke:local": "node scripts/smoke-local.mjs",
+    "verify": "npm run lint && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -33,7 +35,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
-    "react-router-dom": "^7.18.2",
+    "react-router-dom": "7.18.2",
     "shadcn": "^4.6.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
@@ -41,6 +43,9 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@emnapi/core": "^1.8.1",
+    "@emnapi/runtime": "^1.8.1",
+    "@emnapi/wasi-threads": "^1.1.0",
     "@eslint/js": "^9.39.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "^24.12.2",

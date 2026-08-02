@@ -685,7 +685,7 @@
   font-style: italic;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1023px) {
   .merchant-portal-layout {
     grid-template-columns: 1fr;
   }
@@ -1645,13 +1645,8 @@
 .merchant-onboarding-layout,
 .merchant-status-page {
   background:
-    linear-gradient(
-      135deg,
-      rgba(248, 251, 255, 0.98),
-      rgba(241, 249, 250, 0.98) 48%,
-      rgba(255, 248, 237, 0.96)
-    ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent);
+    radial-gradient(circle at 8% 0%, rgba(34, 211, 238, 0.08), transparent 28rem),
+    linear-gradient(180deg, #ffffff 0%, #f6f8fa 34%, #f8fafc 100%);
   color: var(--ugem-ink);
 }
 
@@ -1679,12 +1674,12 @@
 .status-empty-card,
 .onboarding-card,
 .partner-benefit-card {
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: var(--ugem-shadow);
 }
 
 .merchant-portal-layout {
-  grid-template-columns: 272px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
 }
 
 .merchant-sidebar,
@@ -1810,7 +1805,7 @@
 }
 
 .merchant-submit-card {
-  border-radius: 8px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(8, 145, 178, 0.98), rgba(15, 118, 110, 0.98)),
     linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent);
@@ -1832,7 +1827,7 @@
 .resubmit-button,
 .status-empty-card button,
 .next-button {
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 12px 28px rgba(8, 145, 178, 0.16);
 }
 
@@ -1842,7 +1837,7 @@
 .application-summary-card,
 .support-card,
 .status-empty-card {
-  border-radius: 8px;
+  border-radius: 20px;
   background: var(--ugem-panel-strong);
 }
 
@@ -1873,10 +1868,10 @@
 }
 
 .merchant-banner {
-  border-radius: 8px;
+  border-radius: 20px;
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.44)),
-    url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80")
+    url("./assets/auth/ugem-login-hero.jpg")
       center/cover;
 }
 
@@ -1909,7 +1904,7 @@
 
 .onboarding-card,
 .partner-benefit-card {
-  border-radius: 8px;
+  border-radius: 20px;
   background: var(--ugem-panel-strong);
 }
 
@@ -1919,7 +1914,7 @@
 .price-options button,
 .file-upload-button {
   border-color: rgba(148, 163, 184, 0.28);
-  border-radius: 8px;
+  border-radius: 12px;
   background: rgba(248, 250, 252, 0.92);
   color: var(--ugem-ink);
   transition:
@@ -1949,7 +1944,7 @@
 }
 
 .review-timeline-card {
-  border-radius: 8px;
+  border-radius: 20px;
   background: linear-gradient(
     135deg,
     rgba(236, 254, 255, 0.98),
@@ -1973,13 +1968,13 @@
 }
 
 .support-card button {
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ecfeff;
   color: #0e7490;
 }
 
 .mobile-status-nav {
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--ugem-line);
 }
 
@@ -1993,10 +1988,4 @@
   .onboarding-content {
     padding: 24px 18px;
   }
-}
-
-.rounded-xl,
-.rounded-2xl,
-.rounded-3xl {
-  border-radius: 0.5rem;
 }

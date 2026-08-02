@@ -1,20 +1,15 @@
 import { useEffect, useState, type ComponentType } from "react";
-import { Link } from "react-router-dom";
 import {
   Activity,
   ArrowDownRight,
   ArrowUpRight,
   Banknote,
   BarChart3,
-  BellRing,
   Building2,
   CalendarPlus,
-  ChevronRight,
-  ClipboardList,
   Clock3,
   FileCheck2,
   HandCoins,
-  LayoutDashboard,
   RefreshCw,
   Search,
   ShoppingBag,
@@ -23,11 +18,13 @@ import {
   Users,
   WalletCards,
   X,
+  Sparkles,
+  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
-import ugemLogo from "@/assets/ugem-logo.png";
 import { cn } from "@/lib/utils";
-import { UserAccountMenu } from "@/shared/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -61,46 +58,6 @@ const DEFAULT_DASHBOARD: AdminDashboard = {
   pendingApplications: 0,
   pendingReviewerApplications: 0,
 };
-
-const adminNavItems = [
-  {
-    label: "Dashboard",
-    description: "Revenue console",
-    to: "/admin/dashboard",
-    icon: LayoutDashboard,
-    active: true,
-  },
-  {
-    label: "Staff",
-    description: "Quản trị đội vận hành",
-    to: "/admin/staff",
-    icon: Users,
-  },
-  {
-    label: "Merchant hồ sơ",
-    description: "Duyệt onboarding",
-    to: "/admin/applications",
-    icon: ClipboardList,
-  },
-  {
-    label: "Reviewer",
-    description: "Đơn đăng ký reviewer",
-    to: "/admin/reviewer-applications",
-    icon: FileCheck2,
-  },
-  {
-    label: "Notifications",
-    description: "Thông báo hệ thống",
-    to: "/admin/notifications",
-    icon: BellRing,
-  },
-] satisfies {
-  label: string;
-  description: string;
-  to: string;
-  icon: ComponentType<{ className?: string }>;
-  active?: boolean;
-}[];
 
 function toNumber(value?: number | null) {
   const numeric = Number(value);
@@ -232,225 +189,194 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-slate-950">
-      <div className="min-h-screen bg-[linear-gradient(90deg,rgba(14,165,233,0.10)_0%,rgba(255,255,255,0)_34%),linear-gradient(180deg,#ffffff_0%,#f5f7fb_38%,#f8fafc_100%)]">
-        <div className="grid min-h-screen lg:grid-cols-[304px_minmax(0,1fr)]">
-          <AdminSidebar />
-
-          <main className="min-w-0 px-4 py-4 sm:px-5 lg:px-7 lg:py-6">
-            <div className="mx-auto max-w-420 space-y-5">
-              <header className="-mx-4 border-b border-white/70 bg-[#f5f7fb]/88 px-4 py-3 backdrop-blur-xl sm:-mx-5 sm:px-5 lg:-mx-7 lg:px-7">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
-                      <span>Admin</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                      <span className="text-cyan-700">Revenue dashboard</span>
-                    </div>
-                    <h1 className="mt-1 text-3xl font-black text-slate-950">
-                      Tổng quan doanh thu
-                    </h1>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Doanh thu đơn hoàn tất, phí nền tảng, phí
-                      reviewer/affiliate và hiệu quả theo từng merchant.
-                    </p>
-                  </div>
-
-                  <div className="fixed right-5 top-4 z-50 flex min-w-0 flex-wrap items-center justify-end gap-2 lg:right-7">
-                    <Button
-                      type="button"
-                      onClick={refreshAll}
-                      disabled={isRefreshing}
-                      className="h-11 rounded-2xl bg-slate-950 px-4 font-black text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-700"
-                    >
-                      <RefreshCw
-                        className={cn(
-                          "h-4 w-4",
-                          isRefreshing && "animate-spin",
-                        )}
-                      />
-                      {isRefreshing ? "Đang tải" : "Làm mới"}
-                    </Button>
-
-                    <UserAccountMenu
-                      fallbackName="Admin"
-                      className="max-w-full"
-                    />
-                  </div>
-                </div>
-              </header>
-
-              {dashboardQuery.isError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700 shadow-sm">
-                  Không tải được dashboard Admin.{" "}
-                  {getErrorMessage(dashboardQuery.error)}
-                </div>
-              ) : null}
-
-              <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
-                <RevenueHeroCard
-                  isLoading={dashboardQuery.isLoading}
-                  totalRevenue={dashboard.totalRevenue}
-                  topMerchant={topMerchant}
-                />
-
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                  <InsightCard
-                    icon={WalletCards}
-                    label="Net merchant"
-                    value={formatCurrency(merchantNetRevenue)}
-                    description="Gross revenue trừ platform fee và reviewer fee"
-                    tone="emerald"
-                  />
-                  <InsightCard
-                    icon={Activity}
-                    label="Fee mix"
-                    value={`${formatFeeMixRate(platformRate)} / ${formatFeeMixRate(reviewerRate)}`}
-                    description="Platform fee / reviewer fee trên tổng doanh thu"
-                    tone="amber"
-                  />
-                </div>
-              </section>
-
-              <section className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
-                {dashboardQuery.isLoading ? (
-                  Array.from({ length: 4 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white"
-                    />
-                  ))
-                ) : (
-                  <>
-                    <KpiCard
-                      title="Doanh thu nền tảng"
-                      value={formatCurrency(dashboard.totalPlatformFee)}
-                      icon={Banknote}
-                      tone="slate"
-                      hint="Sum PlatformFee"
-                    />
-                    <KpiCard
-                      title="Phí reviewer/affiliate"
-                      value={formatCurrency(dashboard.totalReviewerFee)}
-                      icon={HandCoins}
-                      tone="emerald"
-                      hint="Sum ReviewerFee"
-                    />
-                    <KpiCard
-                      title="Đơn completed"
-                      value={formatNumber(completedOrders)}
-                      icon={ShoppingBag}
-                      tone="amber"
-                      hint="Số đơn đã hoàn tất"
-                    />
-                    <KpiCard
-                      title="Giá trị đơn TB"
-                      value={formatCurrency(dashboard.averageOrderValue)}
-                      icon={WalletCards}
-                      tone="rose"
-                      hint="Revenue / completed orders"
-                    />
-                  </>
-                )}
-              </section>
-
-              <section className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_380px]">
-                <MerchantRevenuePanel
-                  clearSearch={clearSearch}
-                  hasNextPage={hasNextPage}
-                  merchantRevenueQuery={merchantRevenueQuery}
-                  merchantRevenues={merchantRevenues}
-                  pageIndex={pageIndex}
-                  pageSize={pageSize}
-                  searchInput={searchInput}
-                  setPageIndex={setPageIndex}
-                  setSearchInput={setSearchInput}
-                />
-
-                <OperationsPanel dashboard={dashboard} />
-              </section>
+    <main className="app-page min-w-0 space-y-6">
+      {/* 1. Page Header & Welcome Section */}
+      <header className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xs dark:bg-slate-900/90 sm:p-8">
+        <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 dark:border-cyan-800/50 bg-cyan-50 dark:bg-cyan-950/60 px-3 py-1 text-xs font-bold text-cyan-800 dark:text-cyan-300">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Admin Control Center</span>
             </div>
-          </main>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AdminSidebar() {
-  return (
-    <aside className="border-b border-white/80 bg-slate-950 px-4 py-4 text-white shadow-2xl shadow-slate-950/20 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:px-5 lg:py-6">
-      <div className="flex h-full min-h-0 flex-col gap-5">
-        <div className="flex items-center gap-3 rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
-          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white">
-            <img src={ugemLogo} alt="UGem" className="h-9 w-9 object-contain" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase text-cyan-200">
-              UGem Admin
+            <h1 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              Tổng Quan Doanh Thu & Hệ Thống
+            </h1>
+            <p className="mt-1.5 text-sm font-medium text-muted-foreground max-w-2xl">
+              Theo dõi doanh thu đơn hàng, phí nền tảng, hoa hồng reviewer và hiệu năng vận hành real-time từ API.
             </p>
-            <h2 className="truncate text-lg font-black">Revenue Console</h2>
           </div>
-        </div>
 
-        <nav className="grid gap-1.5">
-          {adminNavItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              onClick={refreshAll}
+              disabled={isRefreshing}
+              variant="outline"
+              className="h-11 rounded-xl font-bold"
+            >
+              <RefreshCw
                 className={cn(
-                  "group flex min-h-16 min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition",
-                  item.active
-                    ? "bg-white text-slate-950 shadow-xl shadow-cyan-950/20"
-                    : "text-slate-300 hover:bg-white/10 hover:text-white",
+                  "h-4 w-4 mr-2",
+                  isRefreshing && "animate-spin",
                 )}
-              >
-                <span
-                  className={cn(
-                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl transition",
-                    item.active
-                      ? "bg-cyan-50 text-cyan-700"
-                      : "bg-white/8 text-slate-300 group-hover:bg-white/12",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-black">
-                    {item.label}
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-0.5 block truncate text-xs font-medium",
-                      item.active ? "text-slate-500" : "text-slate-500",
-                    )}
-                  >
-                    {item.description}
-                  </span>
-                </span>
-                {item.active ? (
-                  <span className="h-2 w-2 rounded-full bg-cyan-500" />
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="grid gap-3 lg:mt-auto">
-          <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-            <p className="text-xs font-black uppercase text-cyan-200">
-              Workspace
-            </p>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Revenue, merchant và workflow admin trong một console.
-            </p>
+              />
+              {isRefreshing ? "Đang cập nhật..." : "Làm mới"}
+            </Button>
           </div>
         </div>
-      </div>
-    </aside>
+      </header>
+
+      {dashboardQuery.isError ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-bold text-destructive flex items-center gap-3">
+          <ShieldAlert className="h-5 w-5 shrink-0" />
+          <span>Không tải được dashboard Admin. {getErrorMessage(dashboardQuery.error)}</span>
+        </div>
+      ) : null}
+
+      {/* 2. Hero & Insights Section */}
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
+        <RevenueHeroCard
+          isLoading={dashboardQuery.isLoading}
+          totalRevenue={dashboard.totalRevenue}
+          topMerchant={topMerchant}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <InsightCard
+            icon={WalletCards}
+            label="Net Merchant"
+            value={formatCurrency(merchantNetRevenue)}
+            description="Gross revenue sau khi trừ phí nền tảng & reviewer fee"
+            tone="emerald"
+          />
+          <InsightCard
+            icon={Activity}
+            label="Tỷ lệ Fee Mix"
+            value={`${formatFeeMixRate(platformRate)} / ${formatFeeMixRate(reviewerRate)}`}
+            description="Tỷ lệ Platform Fee / Reviewer Fee trên tổng doanh thu"
+            tone="amber"
+          />
+        </div>
+      </section>
+
+      {/* 3. KPI Summary Grid */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {dashboardQuery.isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-32 animate-pulse rounded-2xl border border-border bg-card"
+            />
+          ))
+        ) : (
+          <>
+            <KpiCard
+              title="Phí nền tảng"
+              value={formatCurrency(dashboard.totalPlatformFee)}
+              icon={Banknote}
+              tone="slate"
+              hint="Sum PlatformFee"
+            />
+            <KpiCard
+              title="Phí Reviewer / Affiliate"
+              value={formatCurrency(dashboard.totalReviewerFee)}
+              icon={HandCoins}
+              tone="emerald"
+              hint="Sum ReviewerFee"
+            />
+            <KpiCard
+              title="Đơn hoàn tất"
+              value={formatNumber(completedOrders)}
+              icon={ShoppingBag}
+              tone="amber"
+              hint="Số đơn hàng Completed"
+            />
+            <KpiCard
+              title="Giá trị đơn trung bình (AOV)"
+              value={formatCurrency(dashboard.averageOrderValue)}
+              icon={WalletCards}
+              tone="rose"
+              hint="Doanh thu / Đơn completed"
+            />
+          </>
+        )}
+      </section>
+
+      {/* 4. Quick Actions for Admin Role */}
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-xs dark:bg-slate-900/90">
+        <h2 className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Thao tác nhanh (Admin Actions)</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            to="/admin/staff"
+            className="flex items-center justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-cyan-500 hover:bg-accent dark:hover:bg-slate-800"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
+                <Users className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">Quản trị Staff</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+
+          <Link
+            to="/admin/applications"
+            className="flex items-center justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-cyan-500 hover:bg-accent dark:hover:bg-slate-800"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                <CalendarPlus className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">Duyệt Merchant</span>
+            </div>
+            <Badge variant="warning" className="text-[10px]">{dashboard.pendingApplications}</Badge>
+          </Link>
+
+          <Link
+            to="/admin/reviewer-applications"
+            className="flex items-center justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-cyan-500 hover:bg-accent dark:hover:bg-slate-800"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                <FileCheck2 className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">Duyệt Reviewer</span>
+            </div>
+            <Badge variant="success" className="text-[10px]">{dashboard.pendingReviewerApplications}</Badge>
+          </Link>
+
+          <Link
+            to="/admin/audit-logs"
+            className="flex items-center justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-cyan-500 hover:bg-accent dark:hover:bg-slate-800"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <Clock3 className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">Audit Logs</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </div>
+      </section>
+
+      {/* 5. Main Merchant Revenue Table & Operations Panel */}
+      <section className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <MerchantRevenuePanel
+          clearSearch={clearSearch}
+          hasNextPage={hasNextPage}
+          merchantRevenueQuery={merchantRevenueQuery}
+          merchantRevenues={merchantRevenues}
+          pageIndex={pageIndex}
+          searchInput={searchInput}
+          setPageIndex={setPageIndex}
+          setSearchInput={setSearchInput}
+        />
+
+        <OperationsPanel dashboard={dashboard} />
+      </section>
+    </main>
   );
 }
 
@@ -465,44 +391,43 @@ function RevenueHeroCard({
 }) {
   if (isLoading) {
     return (
-      <div className="h-72 animate-pulse rounded-3xl border border-slate-200 bg-white" />
+      <div className="h-72 animate-pulse rounded-3xl border border-border bg-card" />
     );
   }
 
   return (
-    <article className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/20 ring-1 ring-slate-900/10">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(14,165,233,0.34),rgba(16,185,129,0.16)_42%,rgba(245,158,11,0.18)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-cyan-300/60 to-transparent" />
+    <article className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-2xl ring-1 ring-white/10 sm:p-8">
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-slate-950 to-emerald-600/20 pointer-events-none" />
 
-      <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase text-cyan-100 ring-1 ring-white/15">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase text-cyan-200 ring-1 ring-white/15">
             <BarChart3 className="h-3.5 w-3.5" />
-            Revenue command center
+            <span>Revenue Command Center</span>
           </div>
-          <p className="mt-5 text-sm font-semibold text-cyan-100">
-            Tổng doanh thu completed
+          <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cyan-300">
+            Tổng doanh thu Completed
           </p>
-          <p className="mt-2 wrap-break-word text-5xl font-black leading-tight text-white">
+          <p className="mt-1 break-words text-4xl sm:text-5xl font-black leading-tight text-white">
             {formatCurrency(totalRevenue)}
           </p>
-          <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-300">
-            Giá trị gross từ các đơn Completed trên toàn hệ thống.
+          <p className="mt-3 text-xs font-medium text-slate-300 max-w-lg leading-relaxed">
+            Tổng giá trị giao dịch các đơn hàng đã hoàn thành trên toàn hệ thống UGem.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-black text-white">Top merchant</p>
-            <Badge className="border-0 bg-cyan-300 text-slate-950">
+            <p className="text-xs font-bold text-white">Top Merchant</p>
+            <Badge className="border-0 bg-cyan-400 text-slate-950 font-bold text-[10px]">
               Live API
             </Badge>
           </div>
 
           {topMerchant ? (
-            <div className="mt-5">
+            <div className="mt-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white text-sm font-black text-slate-950">
+                <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-xs font-bold text-slate-950 shadow-sm">
                   {topMerchant.logoUrl ? (
                     <img
                       src={topMerchant.logoUrl}
@@ -514,24 +439,24 @@ function RevenueHeroCard({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-black text-white">
+                  <p className="truncate text-sm font-bold text-white">
                     {topMerchant.merchantName}
                   </p>
-                  <p className="mt-0.5 text-xs font-semibold text-slate-300">
-                    {formatNumber(topMerchant.completedOrders)} completed
+                  <p className="text-xs font-medium text-slate-400">
+                    {formatNumber(topMerchant.completedOrders)} đơn completed
                   </p>
                 </div>
               </div>
-              <p className="mt-5 text-3xl font-black">
+              <p className="mt-3 text-2xl font-black text-cyan-300">
                 {formatCurrency(topMerchant.totalRevenue)}
               </p>
-              <p className="mt-1 text-xs font-semibold text-cyan-100">
+              <p className="mt-0.5 text-[11px] font-medium text-slate-300">
                 AOV {formatCurrency(topMerchant.averageOrderValue)}
               </p>
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl border border-dashed border-white/15 p-4 text-sm font-semibold text-slate-300">
-              Chưa có merchant phát sinh doanh thu trên trang hiện tại.
+            <div className="mt-4 rounded-xl border border-dashed border-white/15 p-4 text-xs font-medium text-slate-400">
+              Chưa có merchant phát sinh doanh thu.
             </div>
           )}
         </div>
@@ -554,23 +479,23 @@ function InsightCard({
   value: string;
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/5">
+    <article className="rounded-2xl border border-border bg-card p-5 shadow-xs dark:bg-slate-900/90">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-1.5 text-2xl font-black text-foreground">{value}</p>
         </div>
         <span
           className={cn(
-            "grid h-11 w-11 shrink-0 place-items-center rounded-2xl",
-            tone === "emerald" && "bg-emerald-50 text-emerald-700",
-            tone === "amber" && "bg-amber-50 text-amber-700",
+            "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+            tone === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+            tone === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
           )}
         >
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-4 text-sm leading-6 text-slate-500">{description}</p>
+      <p className="mt-3 text-xs font-medium text-muted-foreground leading-relaxed">{description}</p>
     </article>
   );
 }
@@ -589,30 +514,30 @@ function KpiCard({
   hint: string;
 }) {
   return (
-    <div className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-950/5 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-950/8">
+    <div className="group rounded-2xl border border-border bg-card p-5 shadow-xs transition-all duration-200 hover:shadow-md dark:bg-slate-900/90">
       <div className="flex items-start justify-between gap-3">
         <span
           className={cn(
             "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-            tone === "cyan" && "bg-cyan-50 text-cyan-700",
-            tone === "slate" && "bg-slate-100 text-slate-900",
-            tone === "emerald" && "bg-emerald-50 text-emerald-700",
-            tone === "amber" && "bg-amber-50 text-amber-700",
-            tone === "rose" && "bg-rose-50 text-rose-700",
+            tone === "cyan" && "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300",
+            tone === "slate" && "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",
+            tone === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+            tone === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
+            tone === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
           )}
         >
           <Icon className="h-4 w-4" />
         </span>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-500">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
           KPI
         </span>
       </div>
 
-      <p className="mt-4 text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-2 wrap-break-word text-2xl font-black text-slate-950">
+      <p className="mt-4 text-xs font-bold text-muted-foreground">{title}</p>
+      <p className="mt-1 break-words text-2xl font-black text-foreground">
         {value}
       </p>
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">
+      <p className="mt-1 text-[11px] font-medium text-muted-foreground/80">
         {hint}
       </p>
     </div>
@@ -625,7 +550,6 @@ function MerchantRevenuePanel({
   merchantRevenueQuery,
   merchantRevenues,
   pageIndex,
-  pageSize,
   searchInput,
   setPageIndex,
   setSearchInput,
@@ -635,57 +559,48 @@ function MerchantRevenuePanel({
   merchantRevenueQuery: ReturnType<typeof useAdminMerchantRevenues>;
   merchantRevenues: AdminMerchantRevenue[];
   pageIndex: number;
-  pageSize: number;
   searchInput: string;
   setPageIndex: React.Dispatch<React.SetStateAction<number>>;
   setSearchInput: React.Dispatch<React.SetStateAction<string>>;
 }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/7">
-      <div className="border-b border-slate-100 p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-black uppercase text-cyan-700 ring-1 ring-cyan-100">
-              <Store className="h-3.5 w-3.5" />
-              Merchant revenue
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs dark:bg-slate-900/90">
+      <div className="border-b border-border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 px-2.5 py-0.5 text-[11px] font-bold text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50">
+              <Store className="h-3 w-3" />
+              <span>Merchant Revenue</span>
             </div>
-            <h2 className="text-xl font-black text-slate-950">
-              Bảng doanh thu theo merchant
+            <h2 className="text-lg font-black text-foreground">
+              Bảng Doanh Thu Theo Merchant
             </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Gross revenue, platform fee, reviewer fee, net merchant và
-              tăng/giảm theo tháng hiện tại.
-            </p>
           </div>
 
-          <Badge
-            variant="secondary"
-            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600"
-          >
-            10 quán / trang
+          <Badge variant="outline" className="text-xs">
+            10 merchant / trang
           </Badge>
         </div>
 
         <div className="mt-4">
-          <div className="relative max-w-2xl flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Tìm merchant theo tên..."
-              className="h-12 rounded-2xl border-slate-200 bg-slate-50 pl-11 pr-12 text-base shadow-none focus-visible:border-cyan-500 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-cyan-500/15"
+              className="h-10 pl-10 pr-10 text-xs"
             />
             {searchInput ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                title="Xóa bộ lọc"
-                aria-label="Xóa bộ lọc"
+                title="Xóa tìm kiếm"
                 onClick={clearSearch}
-                className="absolute right-1.5 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl text-slate-500 hover:bg-slate-100"
+                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             ) : null}
           </div>
@@ -693,143 +608,91 @@ function MerchantRevenuePanel({
       </div>
 
       {merchantRevenueQuery.isError ? (
-        <div className="m-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
-          Không tải được bảng doanh thu merchant.{" "}
-          {getErrorMessage(merchantRevenueQuery.error)}
+        <div className="m-5 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs font-bold text-destructive">
+          Không tải được bảng doanh thu merchant. {getErrorMessage(merchantRevenueQuery.error)}
         </div>
       ) : null}
 
       {merchantRevenueQuery.isLoading ? (
-        <div className="space-y-3 p-5">
-          {Array.from({ length: pageSize }).map((_, index) => (
+        <div className="space-y-2 p-5">
+          {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="h-16 animate-pulse rounded-2xl bg-slate-100"
+              className="h-12 animate-pulse rounded-xl bg-muted"
             />
           ))}
         </div>
       ) : merchantRevenues.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow className="border-slate-100 bg-slate-50 hover:bg-slate-50">
-              <TableHead className="min-w-72 font-black text-slate-600">
-                Merchant
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Completed
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Gross revenue
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Platform fee
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Reviewer fee
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Net merchant
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                AOV
-              </TableHead>
-              <TableHead className="whitespace-nowrap font-black text-slate-600">
-                Đơn gần nhất
-              </TableHead>
-              <TableHead className="whitespace-nowrap text-right font-black text-slate-600">
-                Tăng/giảm
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {merchantRevenues.map((merchant) => (
-              <MerchantRevenueRow
-                key={merchant.merchantId}
-                merchant={merchant}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="min-w-[200px] font-bold">Merchant</TableHead>
+                <TableHead className="text-right font-bold">Completed</TableHead>
+                <TableHead className="text-right font-bold">Gross Revenue</TableHead>
+                <TableHead className="text-right font-bold">Platform Fee</TableHead>
+                <TableHead className="text-right font-bold">Reviewer Fee</TableHead>
+                <TableHead className="text-right font-bold">Net Merchant</TableHead>
+                <TableHead className="text-right font-bold">AOV</TableHead>
+                <TableHead className="font-bold">Đơn gần nhất</TableHead>
+                <TableHead className="text-right font-bold">Tăng/Giảm</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {merchantRevenues.map((merchant) => (
+                <MerchantRevenueRow
+                  key={merchant.merchantId}
+                  merchant={merchant}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
-        <div className="p-5">
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-            <p className="text-sm font-bold text-slate-500">
-              Chưa có merchant nào khớp bộ lọc hiện tại.
-            </p>
-          </div>
+        <div className="p-8 text-center">
+          <p className="text-xs font-bold text-muted-foreground">
+            Chưa có dữ liệu merchant phù hợp với tìm kiếm.
+          </p>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-5">
-        <p className="text-sm text-slate-500">
-          Hiển thị {formatNumber(merchantRevenues.length)} merchant trên trang{" "}
-          {pageIndex}
-          {!hasNextPage && merchantRevenues.length > 0
-            ? " - đã tới cuối danh sách"
-            : ""}
-          .
+      {/* Pagination Footer */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
+        <p className="text-xs font-medium text-muted-foreground">
+          Trang {pageIndex} {merchantRevenues.length > 0 ? `(${merchantRevenues.length} merchant)` : ""}
         </p>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
+            size="sm"
             disabled={pageIndex === 1 || merchantRevenueQuery.isFetching}
             onClick={() => setPageIndex((value) => Math.max(1, value - 1))}
-            className="h-10 rounded-2xl bg-white px-4 font-black"
           >
             Trước
           </Button>
 
-          {pageIndex > 1 ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={merchantRevenueQuery.isFetching}
-              onClick={() => setPageIndex(pageIndex - 1)}
-              className="h-10 min-w-10 rounded-2xl bg-white px-3 font-black"
-            >
-              {pageIndex - 1}
-            </Button>
-          ) : null}
-
           <Button
             type="button"
+            variant="default"
+            size="sm"
             disabled
-            className="h-10 min-w-10 rounded-2xl bg-slate-950 px-3 font-black text-white opacity-100"
+            className="h-9 min-w-[36px] font-bold"
           >
             {pageIndex}
           </Button>
 
-          {hasNextPage ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={merchantRevenueQuery.isFetching}
-              onClick={() => setPageIndex(pageIndex + 1)}
-              className="h-10 min-w-10 rounded-2xl bg-white px-3 font-black"
-            >
-              {pageIndex + 1}
-            </Button>
-          ) : null}
-
           <Button
             type="button"
             variant="outline"
+            size="sm"
             disabled={!hasNextPage || merchantRevenueQuery.isFetching}
             onClick={() => setPageIndex((value) => value + 1)}
-            className="h-10 rounded-2xl bg-white px-4 font-black"
           >
             Sau
           </Button>
         </div>
-
-        {merchantRevenueQuery.isFetching && !merchantRevenueQuery.isLoading ? (
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            Đang cập nhật bảng...
-          </span>
-        ) : null}
       </div>
     </section>
   );
@@ -837,10 +700,10 @@ function MerchantRevenuePanel({
 
 function MerchantRevenueRow({ merchant }: { merchant: AdminMerchantRevenue }) {
   return (
-    <TableRow className="border-slate-100 hover:bg-cyan-50/55">
-      <TableCell className="min-w-72">
+    <TableRow className="border-border hover:bg-accent/50">
+      <TableCell className="min-w-[200px]">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-cyan-600 to-emerald-500 text-sm font-black text-white shadow-sm shadow-slate-950/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-cyan-600 to-emerald-600 text-xs font-black text-white shadow-xs">
             {merchant.logoUrl ? (
               <img
                 src={merchant.logoUrl}
@@ -852,37 +715,37 @@ function MerchantRevenueRow({ merchant }: { merchant: AdminMerchantRevenue }) {
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate font-black text-slate-950">
+            <p className="truncate font-bold text-foreground text-xs">
               {merchant.merchantName || "N/A"}
             </p>
-            <p className="mt-0.5 truncate text-xs text-slate-500">
+            <p className="truncate text-[10px] font-mono text-muted-foreground">
               {merchant.merchantId}
             </p>
           </div>
         </div>
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right font-bold tabular-nums">
+      <TableCell className="text-right font-bold text-xs tabular-nums">
         {formatNumber(merchant.completedOrders)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right font-bold tabular-nums text-slate-950">
+      <TableCell className="text-right font-bold text-xs tabular-nums text-foreground">
         {formatCurrency(merchant.totalRevenue)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right tabular-nums text-slate-600">
+      <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
         {formatCurrency(merchant.platformFee)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right tabular-nums text-slate-600">
+      <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
         {formatCurrency(merchant.reviewerFee)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right font-black tabular-nums text-emerald-700">
+      <TableCell className="text-right font-bold text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
         {formatCurrency(merchant.merchantReceive)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right tabular-nums text-slate-600">
+      <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
         {formatCurrency(merchant.averageOrderValue)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-sm text-slate-600">
+      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
         {formatDateTime(merchant.lastOrderAt)}
       </TableCell>
-      <TableCell className="whitespace-nowrap text-right">
+      <TableCell className="text-right whitespace-nowrap">
         <GrowthBadge value={merchant.revenueGrowth} />
       </TableCell>
     </TableRow>
@@ -898,13 +761,13 @@ function GrowthBadge({ value }: { value?: number | null }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-end gap-1 rounded-full px-2.5 py-1 text-xs font-black tabular-nums",
-        isPositive && "bg-emerald-50 text-emerald-700",
-        isNegative && "bg-rose-50 text-rose-700",
-        !isPositive && !isNegative && "bg-slate-100 text-slate-500",
+        "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums",
+        isPositive && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+        isNegative && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
+        !isPositive && !isNegative && "bg-muted text-muted-foreground",
       )}
     >
-      <Icon className="h-3.5 w-3.5" />
+      <Icon className="h-3 w-3" />
       {formatPercent(numeric)}
     </span>
   );
@@ -912,52 +775,52 @@ function GrowthBadge({ value }: { value?: number | null }) {
 
 function OperationsPanel({ dashboard }: { dashboard: AdminDashboard }) {
   return (
-    <aside className="space-y-5">
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/5">
+    <aside className="space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-xs dark:bg-slate-900/90">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase text-cyan-700">
-              Operations
+            <p className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Operations KPI
             </p>
-            <h2 className="mt-1 text-xl font-black text-slate-950">
-              Chỉ số vận hành
+            <h2 className="mt-1 text-lg font-black text-foreground">
+              Chỉ Số Vận Hành
             </h2>
           </div>
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
             <Clock3 className="h-5 w-5" />
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3">
+        <div className="mt-4 grid gap-2.5">
           <MetricCard
             icon={Users}
             label="Tổng người dùng"
             value={formatNumber(dashboard.totalUsers)}
-            description="Tất cả tài khoản trong hệ thống"
+            description="Tài khoản trong hệ thống"
           />
           <MetricCard
             icon={Building2}
             label="Tổng merchant"
             value={formatNumber(dashboard.totalMerchants)}
-            description="Merchant đã có hồ sơ hoạt động"
+            description="Merchant đã kích hoạt"
           />
           <MetricCard
             icon={UserRoundPlus}
-            label="Người dùng mới hôm nay"
+            label="Mới hôm nay"
             value={formatNumber(dashboard.newUsersToday)}
-            description="Tài khoản mới trong ngày"
+            description="Đăng ký trong ngày"
           />
           <MetricCard
             icon={CalendarPlus}
-            label="Hồ sơ merchant chờ duyệt"
+            label="Hồ sơ merchant chờ"
             value={formatNumber(dashboard.pendingApplications)}
-            description="Chờ Staff xử lý"
+            description="Đơn Merchant đang pending"
           />
           <MetricCard
             icon={FileCheck2}
-            label="Reviewer application"
+            label="Đơn Reviewer chờ"
             value={formatNumber(dashboard.pendingReviewerApplications)}
-            description="Chờ Staff xử lý"
+            description="Đơn Reviewer đang pending"
           />
         </div>
       </section>
@@ -977,15 +840,15 @@ function MetricCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+    <div className="rounded-xl border border-border bg-background p-3.5">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-cyan-700 shadow-sm ring-1 ring-slate-100">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
-          <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-0.5 text-xl font-black text-foreground">{value}</p>
+          <p className="text-[11px] font-medium text-muted-foreground">{description}</p>
         </div>
       </div>
     </div>

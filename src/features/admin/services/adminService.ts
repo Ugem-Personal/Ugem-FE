@@ -109,6 +109,31 @@ export type AdminMerchantRevenueDetail = {
   topFoods: AdminTopFood[];
 };
 
+export type AuditLog = {
+  id: string;
+  actorRole?: string | null;
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  metadata?: unknown;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt: string;
+  actor?: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
+};
+
+export type AuditLogPage = {
+  items: AuditLog[];
+  totalItems: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 const EMPTY_ADMIN_DASHBOARD: AdminDashboard = {
   totalUsers: 0,
   totalMerchants: 0,
@@ -161,6 +186,25 @@ export async function getAdminMerchantRevenueDetail(
   const { data } = await api.get<
     ApiResponse<AdminMerchantRevenueDetail> | AdminMerchantRevenueDetail
   >(`/admin/merchant-revenues/${merchantId}`, requestConfig);
+
+  return unwrapData(data);
+}
+
+export async function getAdminAuditLogs(params?: {
+  search?: string;
+  pageIndex?: number;
+  pageSize?: number;
+}) {
+  const { data } = await api.get<ApiResponse<AuditLogPage> | AuditLogPage>(
+    "/admin/audit-logs",
+    {
+      params: {
+        search: params?.search || undefined,
+        pageIndex: params?.pageIndex ?? 1,
+        pageSize: params?.pageSize ?? 20,
+      },
+    },
+  );
 
   return unwrapData(data);
 }

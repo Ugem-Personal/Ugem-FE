@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  ClipboardList,
-  Heart,
-  Minus,
-  ShoppingCart,
   Star,
   MapPin,
   Phone,
   Mail,
   Flame,
-  Plus,
-  Trash2,
-  X,
+  Search,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -32,21 +26,17 @@ import type {
   MerchantMenuItem,
 } from "../types";
 
-import { addWishlist } from "../services/wishlistService";
+import { getWishlist } from "../services/wishlistService";
 import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
 import { clearAuth, getCurrentUser } from "@/features/auth";
+import { ModeToggle } from "@/shared/components";
+import { WishlistButton } from "../components/WishlistButton";
+import { FoodCard } from "../components/FoodCard";
+import { FoodOptionModal } from "../components/FoodOptionModal";
+import { CartDrawer, type CartItem } from "../components/CartDrawer";
 
-type OnlinePaymentMethod = "COD" | "BankTransfer";
 
-type CartItem = {
-  food: MerchantMenuItem;
-  quantity: number;
-  notes?: string;
-  toppings?: MerchantFoodTopping[];
-};
-
-const NOTE_PRESETS = ["Không hành", "Ít cay", "Không ớt", "Ít đường", "Ít mỡ"];
 
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
@@ -222,27 +212,24 @@ export default function MerchantDetailPage() {
   const reviewSectionRef = useRef<HTMLElement | null>(null);
 
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
-
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const [cart, setCart] = useState<CartItem[]>([]);
-
   const [pendingFood, setPendingFood] = useState<MerchantMenuItem | null>(null);
-
   const [pendingQuantity, setPendingQuantity] = useState(1);
   const [pendingNotes, setPendingNotes] = useState("");
   const [pendingToppingIds, setPendingToppingIds] = useState<string[]>([]);
   const [pendingMode, setPendingMode] = useState<"add" | "edit">("add");
 
+  const [foodSearchKeyword, setFoodSearchKeyword] = useState("");
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState("");
+
   const [showReviews, setShowReviews] = useState(false);
-
   const [cartOpen, setCartOpen] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [ordering, setOrdering] = useState(false);
-  const [onlinePaymentMethod, setOnlinePaymentMethod] =
-    useState<OnlinePaymentMethod>("COD");
+
 
   const total = useMemo(() => {
     return cart.reduce((sum, item) => {
@@ -257,6 +244,34 @@ export default function MerchantDetailPage() {
   const cartItemCount = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
+
+  const menuItems = useMemo(
+    () => merchant?.menu || merchant?.foods || [],
+    [merchant],
+  );
+
+  const foodCategories = useMemo(() => {
+    const categoriesSet = new Set<string>();
+    menuItems.forEach((item) => {
+      item.categoryDetail?.forEach((cat) => categoriesSet.add(cat));
+    });
+    return Array.from(categoriesSet);
+  }, [menuItems]);
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((food) => {
+      const matchesKeyword =
+        !foodSearchKeyword.trim() ||
+        food.name.toLowerCase().includes(foodSearchKeyword.trim().toLowerCase()) ||
+        (food.description ?? "").toLowerCase().includes(foodSearchKeyword.trim().toLowerCase());
+
+      const matchesCategory =
+        !selectedFoodCategory ||
+        food.categoryDetail?.includes(selectedFoodCategory);
+
+      return matchesKeyword && matchesCategory;
+    });
+  }, [menuItems, foodSearchKeyword, selectedFoodCategory]);
 
   useEffect(() => {
     if (!id) return;
@@ -283,6 +298,18 @@ export default function MerchantDetailPage() {
 
     void load();
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !currentUser) return;
+    getWishlist()
+      .then((items) => {
+        const exists = items.some(
+          (item) => (item.merchantId || item.id) === id,
+        );
+        setIsWishlisted(exists);
+      })
+      .catch(() => undefined);
+  }, [id, currentUser]);
 
   useEffect(() => {
     if (!isOfflineOrder) return;
@@ -342,7 +369,7 @@ export default function MerchantDetailPage() {
         name: `Order from ${merchant.name || "Unnamed merchant"}`,
         deliveryAddress: merchant.address || "No address",
         orderType: "Online",
-        paymentMethod: onlinePaymentMethod,
+        paymentMethod: "COD",
         notes: "",
         finalPrice: total,
         affiliateLinkCode: affiliateRef || getStoredAffiliateRef(merchant.id),
@@ -419,37 +446,6 @@ export default function MerchantDetailPage() {
     );
   }
 
-  function updateCartQuantity(foodId: string, quantity: number) {
-    const nextQuantity = Math.max(1, Math.min(99, Math.floor(quantity || 1)));
-
-    setCart((prev) =>
-      prev.map((item) =>
-        item.food.id === foodId ? { ...item, quantity: nextQuantity } : item,
-      ),
-    );
-  }
-
-  function updateCartNotes(foodId: string, notes: string) {
-    setCart((prev) =>
-      prev.map((item) => (item.food.id === foodId ? { ...item, notes } : item)),
-    );
-  }
-
-  function removeCartTopping(foodId: string, toppingId: string) {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.food.id === foodId
-          ? {
-              ...item,
-              toppings: (item.toppings ?? []).filter(
-                (topping) => topping.id !== toppingId,
-              ),
-            }
-          : item,
-      ),
-    );
-  }
-
   function incrementCartItem(foodId: string) {
     setCart((prev) =>
       prev.map((item) =>
@@ -462,34 +458,19 @@ export default function MerchantDetailPage() {
 
   function decrementCartItem(foodId: string) {
     setCart((prev) =>
-      prev.map((item) =>
-        item.food.id === foodId
-          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-          : item,
-      ),
+      prev
+        .map((item) =>
+          item.food.id === foodId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item,
+        )
+        .filter((item) => item.quantity > 0),
     );
-  }
-
-  function removeCartItem(foodId: string) {
-    setCart((prev) => prev.filter((item) => item.food.id !== foodId));
   }
 
   function clearCart() {
     setCart([]);
     setCartOpen(false);
-  }
-
-  async function handleAddWishlist() {
-    if (!merchant?.id) return;
-
-    try {
-      await addWishlist(merchant.id);
-
-      notify.success("Đã thêm vào yêu thích.");
-    } catch (error) {
-      console.error(error);
-      notify.error("Thêm wishlist thất bại.");
-    }
   }
 
   function handleBack() {
@@ -518,15 +499,6 @@ export default function MerchantDetailPage() {
     setPendingMode("add");
   }
 
-  function openEditFoodModal(item: CartItem) {
-    setPendingFood(item.food);
-    setPendingQuantity(item.quantity);
-    setPendingNotes(item.notes ?? "");
-    setPendingToppingIds((item.toppings ?? []).map((topping) => topping.id));
-    setPendingMode("edit");
-    setCartOpen(false);
-  }
-
   function closeAddFoodModal() {
     setPendingFood(null);
     setPendingQuantity(1);
@@ -537,15 +509,14 @@ export default function MerchantDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.14),transparent_34%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] p-6">
-        <div className="mx-auto max-w-6xl space-y-5">
-          <div className="h-72 animate-pulse rounded-4xl bg-white/70 shadow-2xl" />
-
-          <div className="grid gap-4 lg:grid-cols-2">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <div className="h-72 animate-pulse rounded-3xl bg-slate-200 dark:bg-slate-800 shadow-xl" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-36 animate-pulse rounded-3xl bg-white/70 shadow-xl"
+                className="h-36 animate-pulse rounded-3xl bg-slate-200 dark:bg-slate-800 shadow-lg"
               />
             ))}
           </div>
@@ -556,23 +527,28 @@ export default function MerchantDetailPage() {
 
   if (!merchant) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] px-6 text-center">
-        <div className="rounded-4xl border border-white/70 bg-white/80 p-10 shadow-2xl shadow-slate-950/10 backdrop-blur-2xl">
-          <h2 className="text-2xl font-black text-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-6 text-center transition-colors duration-300">
+        <div className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-10 shadow-2xl">
+          <h2 className="text-2xl font-black text-slate-950 dark:text-white">
             Không tìm thấy quán
           </h2>
 
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
             Merchant này có thể đã bị xoá hoặc không tồn tại.
           </p>
+
+          <button
+            onClick={handleBack}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-2.5 text-xs font-black text-slate-950 shadow-md hover:bg-cyan-400"
+          >
+            <ArrowLeft className="h-4 w-4" /> Quay lại
+          </button>
         </div>
       </div>
     );
   }
 
   const name = merchant.name || "Unnamed merchant";
-
-  const menuItems = merchant.menu || merchant.foods || [];
   const descriptionInfo = parseMerchantDescription(merchant.description);
   const visibleFacts = descriptionInfo.facts.filter(
     (item) => item.label.toLowerCase() !== "địa chỉ",
@@ -592,91 +568,98 @@ export default function MerchantDetailPage() {
 
   return (
     <div
-      className={`relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] px-4 pt-6 text-slate-950 ${
-        cart.length > 0 ? "pb-28" : "pb-6"
+      className={`relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300 px-4 pt-6 ${
+        cart.length > 0 ? "pb-28" : "pb-12"
       }`}
     >
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-size-[32px_32px]" />
+      {/* Background glow effects */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-amber-500/10 dark:bg-amber-600/15 blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
 
       <div className="relative mx-auto max-w-6xl">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="mb-5 inline-flex h-11 items-center gap-2 rounded-xl border border-white/60 bg-white/60 px-4 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/80 hover:text-cyan-800 hover:shadow-md"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+        {/* Top Header Bar */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Quay lại
+          </button>
 
-        {/* hero */}
-        <section className="relative overflow-hidden rounded-[36px] border border-white/50 bg-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
-          <div className="absolute inset-0 bg-linear-to-br from-cyan-300/10 via-transparent to-amber-300/10 opacity-50" />
+          <ModeToggle />
+        </div>
 
-          <div className="absolute -left-20 -top-20 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl mix-blend-multiply" />
-          <div className="absolute -right-20 -bottom-20 h-56 w-56 rounded-full bg-amber-400/20 blur-3xl mix-blend-multiply" />
+        {/* Merchant Hero Banner */}
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950 text-white shadow-2xl p-6 sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.25),transparent_50%)] pointer-events-none" />
 
-          <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
+          <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
-                Featured Merchant
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-300 backdrop-blur-md shadow-2xs">
+                <Flame className="h-3.5 w-3.5 text-cyan-400" /> Premium Merchant
               </div>
 
-              <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900 leading-[1.15]">
+              <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl leading-tight text-white">
                 {name}
               </h1>
 
               {merchant.address && (
-                <p className="mt-3 flex items-center gap-2 text-[15px] font-semibold text-slate-600">
-                  <MapPin className="h-4.5 w-4.5 text-cyan-700" />
+                <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
+                  <MapPin className="h-4.5 w-4.5 shrink-0 text-cyan-400" />
                   {merchant.address}
                 </p>
               )}
 
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowReviews(true)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/60 bg-linear-to-r from-amber-50/90 to-orange-50/90 px-3.5 py-1.5 text-[13px] font-black text-amber-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-300 backdrop-blur-md transition hover:bg-amber-400/20"
                 >
                   <Star
                     className={
                       displayRating
-                        ? "h-4 w-4 fill-amber-400 text-amber-500"
-                        : "h-4 w-4 text-amber-400"
+                        ? "h-4 w-4 fill-amber-400 text-amber-400"
+                        : "h-4 w-4 text-amber-400/50"
                     }
                   />
                   {displayRating
-                    ? `Đánh giá ${formatRating(displayRating)} sao${reviewCount > 0 ? ` (${reviewCount} đánh giá)` : ""}`
+                    ? `Đánh giá ${formatRating(displayRating)} ★${reviewCount > 0 ? ` (${reviewCount} đánh giá)` : ""}`
                     : "Chưa có đánh giá"}
                 </button>
 
                 {merchant.phone && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/70 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-sm backdrop-blur transition-all duration-300 hover:bg-white/90">
-                    <Phone className="h-4 w-4 text-cyan-700" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold text-slate-300 backdrop-blur-md">
+                    <Phone className="h-4 w-4 text-cyan-400" />
                     {merchant.phone}
                   </span>
                 )}
 
                 {merchant.email && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/70 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-sm backdrop-blur transition-all duration-300 hover:bg-white/90">
-                    <Mail className="h-4 w-4 text-cyan-700" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold text-slate-300 backdrop-blur-md">
+                    <Mail className="h-4 w-4 text-cyan-400" />
                     {merchant.email}
                   </span>
                 )}
               </div>
 
               {descriptionInfo.summary && (
-                <p className="mt-6 max-w-3xl text-[15px] leading-relaxed text-slate-600 font-medium">
+                <p className="mt-6 max-w-3xl text-sm leading-relaxed text-slate-300 font-medium">
                   {descriptionInfo.summary}
                 </p>
               )}
 
               {visibleFacts.length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2.5">
+                <div className="mt-5 flex flex-wrap gap-2">
                   {visibleFacts.map((item) => (
                     <span
                       key={`${item.label}-${item.value}`}
-                      className="inline-flex items-center rounded-full border border-cyan-200/50 bg-cyan-50/80 px-3.5 py-1.5 text-[13px] font-bold text-cyan-800 shadow-sm"
+                      className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3.5 py-1 text-xs font-bold text-cyan-200"
                     >
                       {item.value}
                     </span>
@@ -686,142 +669,116 @@ export default function MerchantDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-start justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => void handleAddWishlist()}
-                className="group inline-flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-3.5 text-[15px] font-black text-cyan-700 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-linear-to-r hover:from-cyan-50 hover:to-blue-50 hover:shadow-md"
-              >
-                <Heart className="h-5 w-5 transition-transform duration-300 group-hover:scale-125 group-hover:fill-rose-400 group-hover:text-rose-500" />
-                Thêm yêu thích
-              </button>
+              <WishlistButton
+                merchantId={merchant.id}
+                initialSaved={isWishlisted}
+                variant="full"
+                size="lg"
+                onToggleSuccess={(nextSaved) => setIsWishlisted(nextSaved)}
+              />
             </div>
           </div>
         </section>
 
-        {/* menu */}
-        <section className="mt-8">
-          <div className="mb-5 flex items-center justify-between">
+        {/* Menu Section */}
+        <section className="mt-10">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-amber-700">
-                Signature Menu
-              </div>
-
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">
-                Menu nổi bật
+              <span className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                Recommended Menu
+              </span>
+              <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
+                Thực đơn món ăn
               </h2>
+            </div>
+
+            {/* Food Search & Category Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={foodSearchKeyword}
+                  onChange={(e) => setFoodSearchKeyword(e.target.value)}
+                  placeholder="Tìm món trong thực đơn..."
+                  className="h-10 w-full sm:w-64 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 pl-10 pr-4 text-xs font-bold text-slate-950 dark:text-white placeholder:text-slate-400 outline-none focus:border-cyan-500"
+                />
+              </div>
             </div>
           </div>
 
-          {isOfflineOrder && (
-            <div className="mb-5 rounded-2xl border border-cyan-200/70 bg-cyan-50/80 px-5 py-4 text-sm font-bold text-cyan-900 shadow-sm backdrop-blur">
-              Bạn đang xem menu tại quán.
+          {foodCategories.length > 0 && (
+            <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+              <button
+                onClick={() => setSelectedFoodCategory("")}
+                className={`h-9 shrink-0 rounded-xl px-4 text-xs font-black transition ${
+                  !selectedFoodCategory
+                    ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                    : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
+                }`}
+              >
+                Tất cả ({menuItems.length})
+              </button>
+              {foodCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedFoodCategory(cat)}
+                  className={`h-9 shrink-0 rounded-xl px-4 text-xs font-black transition ${
+                    selectedFoodCategory === cat
+                      ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                      : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           )}
 
-          {menuItems.length > 0 ? (
-            <div
-              className={
-                menuItems.length === 1
-                  ? "grid gap-4"
-                  : "grid gap-4 lg:grid-cols-2"
-              }
-            >
-              {menuItems.map((food) => (
-                <div
+          {isOfflineOrder && (
+            <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
+              Đang ở chế độ xem menu tại quán. Gọi món trực tiếp với nhân viên hoặc qua QR bàn.
+            </div>
+          )}
+
+          {filteredMenuItems.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+              {filteredMenuItems.map((food) => (
+                <FoodCard
                   key={food.id}
-                  className="group relative overflow-hidden rounded-[28px] border border-white/50 bg-white/60 p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)] hover:border-white/80"
-                >
-                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full transition-transform duration-1000 group-hover:translate-x-full" />
-                  <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                  <div className="relative flex gap-5">
-                    {food.imageUrl ? (
-                      <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl shadow-sm">
-                        <img
-                          src={food.imageUrl}
-                          alt={food.name}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                      </div>
-                    ) : (
-                      <div className="grid h-28 w-28 shrink-0 place-items-center rounded-2xl bg-linear-to-br from-cyan-50 to-blue-50 text-cyan-700 shadow-sm transition-transform duration-500 group-hover:scale-105">
-                        <Flame className="h-8 w-8" />
-                      </div>
-                    )}
-
-                    <div className="min-w-0 flex-1 flex flex-col">
-                      <h3 className="line-clamp-1 text-[17px] font-black text-slate-900 group-hover:text-cyan-800 transition-colors">
-                        {food.name}
-                      </h3>
-
-                      {food.description && (
-                        <p className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-relaxed text-slate-500">
-                          {food.description}
-                        </p>
-                      )}
-
-                      {food.categoryDetail?.length ? (
-                        <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                          {food.categoryDetail.join(" • ")}
-                        </p>
-                      ) : null}
-
-                      <div className="mt-auto pt-4 flex items-end justify-between gap-3">
-                        <div>
-                          <p className="text-[17px] font-black tracking-tight text-cyan-700">
-                            {formatPrice(food.price)}
-                          </p>
-                          {getCartQuantity(cart, food.id) > 0 && (
-                            <p className="mt-1 flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
-                              <ShoppingCart className="h-3 w-3" />
-                              {getCartQuantity(cart, food.id)} trong đơn
-                            </p>
-                          )}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => openAddFoodModal(food)}
-                          disabled={isOfflineOrder}
-                          className="inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-cyan-600 to-blue-600 px-4 py-2 text-sm font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {isOfflineOrder ? "Gọi tại quán" : "Thêm"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  food={food}
+                  cartQuantity={getCartQuantity(cart, food.id)}
+                  isOfflineOrder={isOfflineOrder}
+                  onOpenModal={openAddFoodModal}
+                />
               ))}
             </div>
           ) : (
-            <div className="rounded-[28px] border border-dashed border-amber-200 bg-white/75 p-8 text-center shadow-xl shadow-slate-950/5">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-amber-600">
-                <Flame className="h-7 w-7" />
-              </div>
-              <h3 className="mt-4 text-lg font-black text-slate-950">
-                Quán chưa cập nhật menu
+            <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/40 p-10 text-center shadow-2xs">
+              <Flame className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700" />
+              <h3 className="mt-3 text-lg font-black text-slate-950 dark:text-white">
+                Không tìm thấy món ăn
               </h3>
-              <p className="mt-2 text-sm font-medium text-slate-500">
-                Khi merchant bổ sung món ăn, menu sẽ hiển thị tại đây.
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Thử thay đổi từ khóa tìm kiếm món ăn hoặc chọn danh mục khác.
               </p>
             </div>
           )}
         </section>
 
+        {/* Reviews Section */}
         {showReviews && (
           <section
             ref={reviewSectionRef}
             id="review-section"
-            className="mt-8 overflow-hidden rounded-4xl border border-white/70 bg-white/80 p-6 shadow-2xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl"
+            className="mt-10 overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xs"
           >
-            <div className="mb-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
-                Community Reviews
-              </div>
-
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">
-                Đánh giá khách hàng
+            <div className="mb-6">
+              <span className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                Customer Reviews
+              </span>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                Đánh giá từ khách hàng
               </h2>
             </div>
 
@@ -829,11 +786,11 @@ export default function MerchantDetailPage() {
               <div className="space-y-4">
                 {reviews.map((review, index) => (
                   <div
-                    key={review.id || `${review.createdAt}-${index}`}
-                    className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-sm ring-1 ring-slate-950/5"
+                    key={review.reviewId || `${review.createdAt}-${index}`}
+                    className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-slate-950/60 p-5"
                   >
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 text-xs font-black text-cyan-800 ring-1 ring-cyan-200">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 dark:bg-cyan-950 text-xs font-black text-cyan-800 dark:text-cyan-300">
                         {getReviewAuthorAvatarUrl(review) ? (
                           <img
                             src={getReviewAuthorAvatarUrl(review)}
@@ -846,7 +803,7 @@ export default function MerchantDetailPage() {
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-950">
+                        <p className="truncate text-sm font-black text-slate-950 dark:text-white">
                           {getReviewAuthorName(review)}
                         </p>
                         {review.createdAt ? (
@@ -858,559 +815,102 @@ export default function MerchantDetailPage() {
                     </div>
 
                     {review.rating && review.rating > 0 ? (
-                      <div className="mb-3 flex items-center gap-1 text-amber-500">
-                        {Array.from({
-                          length: review.rating,
-                        }).map((_, i) => (
-                          <Star
-                            key={i}
-                            size={16}
-                            className="fill-amber-400 text-amber-400"
-                          />
+                      <div className="mb-2 flex items-center gap-1 text-amber-500">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
                         ))}
                       </div>
-                    ) : (
-                      <div className="mb-3 text-xs font-black uppercase text-slate-400">
-                        Chưa chấm sao
-                      </div>
-                    )}
+                    ) : null}
 
-                    <p className="text-sm leading-7 text-slate-700">
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium">
                       {getReviewContent(review) || "Không có nội dung."}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center">
-                <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white text-amber-500 shadow-sm">
-                  <Star className="h-6 w-6" />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-slate-500">
-                  Chưa có đánh giá khách hàng.
-                </p>
+              <div className="rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-8 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Chưa có đánh giá nào cho quán này.
               </div>
             )}
           </section>
         )}
 
+        {/* Modal Topping Options */}
         {pendingFood && (
-          <div
-            className="fixed inset-0 z-50 flex items-end bg-slate-950/35 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Chọn số lượng ${pendingFood.name}`}
-            onClick={closeAddFoodModal}
-          >
-            <div
-              className="w-full max-w-md overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl shadow-slate-950/20"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-                    Thêm món
-                  </p>
-                  <h2 className="mt-1 text-xl font-black text-slate-950">
-                    {pendingFood.name}
-                  </h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={closeAddFoodModal}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-                  aria-label="Đóng chọn số lượng"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="px-5 py-5">
-                <div className="flex items-center justify-between gap-4 rounded-3xl bg-slate-50 px-4 py-4">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-500">
-                      Số lượng muốn thêm
-                    </p>
-                    <p className="mt-1 text-lg font-black text-cyan-700">
-                      {formatPrice(pendingFood.price)} / món
-                    </p>
-                  </div>
-
-                  <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPendingQuantity((current) =>
-                          Math.max(1, current - 1),
-                        )
-                      }
-                      className="grid h-12 w-12 place-items-center text-slate-600 transition hover:bg-slate-50"
-                      aria-label="Giảm số lượng"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-
-                    <input
-                      value={pendingQuantity}
-                      onChange={(event) => {
-                        const nextValue = Number(event.target.value);
-
-                        setPendingQuantity(
-                          Number.isFinite(nextValue)
-                            ? Math.max(
-                                1,
-                                Math.min(99, Math.floor(nextValue || 1)),
-                              )
-                            : 1,
-                        );
-                      }}
-                      className="h-12 w-16 border-x border-slate-200 text-center text-sm font-black text-slate-950 outline-none"
-                      inputMode="numeric"
-                      aria-label="Số lượng món muốn thêm"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPendingQuantity((current) =>
-                          Math.min(99, current + 1),
-                        )
-                      }
-                      className="grid h-12 w-12 place-items-center text-slate-600 transition hover:bg-slate-50"
-                      aria-label="Tăng số lượng"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {pendingFood.toppings && pendingFood.toppings.length > 0 && (
-                  <div className="mt-5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-black text-slate-900">
-                        Topping
-                      </h3>
-                      <span className="text-xs font-semibold text-slate-400">
-                        Chọn nhiều tùy ý
-                      </span>
-                    </div>
-
-                    <div className="mt-3 space-y-2">
-                      {pendingFood.toppings.map((topping) => {
-                        const checked = pendingToppingIds.includes(topping.id);
-                        return (
-                          <label
-                            key={topping.id}
-                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-3 py-2 text-sm shadow-sm"
-                          >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(event) => {
-                                  const nextChecked = event.target.checked;
-                                  setPendingToppingIds((prev) => {
-                                    if (nextChecked) {
-                                      return Array.from(
-                                        new Set([...prev, topping.id]),
-                                      );
-                                    }
-                                    return prev.filter(
-                                      (id) => id !== topping.id,
-                                    );
-                                  });
-                                }}
-                                className="h-4 w-4 rounded border-slate-300 text-cyan-600"
-                              />
-                              <span className="font-semibold text-slate-700">
-                                {topping.name}
-                              </span>
-                            </div>
-                            <span className="text-xs font-semibold text-slate-500">
-                              +{formatPrice(topping.price)}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-5">
-                  <h3 className="text-sm font-black text-slate-900">
-                    Ghi chú món
-                  </h3>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {NOTE_PRESETS.map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => {
-                          setPendingNotes((prev) => {
-                            const exists = prev
-                              .toLowerCase()
-                              .includes(preset.toLowerCase());
-                            if (exists) return prev;
-                            const nextValue = [prev.trim(), preset]
-                              .filter(Boolean)
-                              .join(", ");
-                            return nextValue;
-                          });
-                        }}
-                        className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700 transition hover:-translate-y-0.5 hover:bg-cyan-100"
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-
-                  <input
-                    value={pendingNotes}
-                    onChange={(event) => setPendingNotes(event.target.value)}
-                    placeholder="Ví dụ: bỏ hành, ít đá"
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none"
-                  />
-                </div>
-
-                <div className="mt-5 flex flex-wrap justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={closeAddFoodModal}
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-50"
-                  >
-                    Hủy
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const selectedToppings = (
-                        pendingFood.toppings ?? []
-                      ).filter((topping) =>
-                        pendingToppingIds.includes(topping.id),
-                      );
-                      if (pendingMode === "edit") {
-                        updateCartItem(
-                          pendingFood.id,
-                          pendingQuantity,
-                          pendingNotes,
-                          selectedToppings,
-                        );
-                      } else {
-                        addToCart(
-                          pendingFood,
-                          pendingQuantity,
-                          pendingNotes,
-                          selectedToppings,
-                        );
-                      }
-                      closeAddFoodModal();
-                    }}
-                    className="rounded-2xl bg-cyan-600 px-5 py-2.5 text-sm font-black text-white shadow-xl shadow-cyan-900/20 transition hover:-translate-y-0.5 hover:bg-cyan-700"
-                  >
-                    {pendingMode === "edit" ? "Cập nhật" : "Thêm vào đơn"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <FoodOptionModal
+            food={pendingFood}
+            quantity={pendingQuantity}
+            notes={pendingNotes}
+            toppingIds={pendingToppingIds}
+            mode={pendingMode}
+            onQuantityChange={setPendingQuantity}
+            onNotesChange={setPendingNotes}
+            onToppingToggle={(toppingId, checked) => {
+              setPendingToppingIds((prev) =>
+                checked
+                  ? Array.from(new Set([...prev, toppingId]))
+                  : prev.filter((id) => id !== toppingId),
+              );
+            }}
+            onConfirm={() => {
+              const selectedToppings = (pendingFood.toppings ?? []).filter((topping) =>
+                pendingToppingIds.includes(topping.id),
+              );
+              if (pendingMode === "edit") {
+                updateCartItem(pendingFood.id, pendingQuantity, pendingNotes, selectedToppings);
+              } else {
+                addToCart(pendingFood, pendingQuantity, pendingNotes, selectedToppings);
+              }
+              closeAddFoodModal();
+            }}
+            onClose={closeAddFoodModal}
+          />
         )}
 
-        {cartOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-end bg-slate-950/35 px-4 py-4 backdrop-blur-sm sm:items-stretch sm:justify-end sm:p-0"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Đơn đang đặt"
-            onClick={() => setCartOpen(false)}
-          >
-            <div
-              className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl shadow-slate-950/20 sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-[28px]"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
-                    Order draft
-                  </p>
-                  <h2 className="mt-1 text-xl font-black text-slate-950">
-                    Đơn đang đặt
-                  </h2>
-                </div>
+        {/* Cart Drawer */}
+        <CartDrawer
+          isOpen={cartOpen}
+          cart={cart}
+          total={total}
+          cartItemCount={cartItemCount}
+          ordering={ordering}
+          onClose={() => setCartOpen(false)}
+          onIncrement={incrementCartItem}
+          onDecrement={decrementCartItem}
+          onClearCart={clearCart}
+          onCreateOrder={() => void handleCreateOrder()}
+        />
 
+        {/* Floating Bottom Cart Bar */}
+        {cart.length > 0 && !cartOpen && (
+          <div className="fixed inset-x-0 bottom-4 z-40 px-4">
+            <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur-xl flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 font-mono">
+                  {cartItemCount} món đã chọn
+                </span>
+                <p className="text-xl font-black text-cyan-400 font-mono">
+                  {formatPrice(total)}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setCartOpen(false)}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-                  aria-label="Đóng đơn đang đặt"
+                  onClick={() => setCartOpen(true)}
+                  className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white hover:bg-white/20 transition"
                 >
-                  <X className="h-5 w-5" />
+                  Xem đơn
                 </button>
-              </div>
-
-              <div className="max-h-[52vh] overflow-y-auto px-5 py-4 sm:max-h-none sm:flex-1">
-                {cart.length > 0 ? (
-                  <div className="space-y-3">
-                    {cart.map((item) => (
-                      <div
-                        key={item.food.id}
-                        className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
-                      >
-                        {item.food.imageUrl ? (
-                          <img
-                            src={item.food.imageUrl}
-                            alt={item.food.name}
-                            className="h-16 w-16 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="grid h-16 w-16 place-items-center rounded-xl bg-cyan-50 text-cyan-700">
-                            <Flame className="h-6 w-6" />
-                          </div>
-                        )}
-
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-slate-950">
-                            {item.food.name}
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-cyan-700">
-                            {formatPrice(item.food.price)}
-                          </p>
-                          {item.food.description && (
-                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                              {item.food.description}
-                            </p>
-                          )}
-
-                          {(() => {
-                            const toppingTotal = (item.toppings ?? []).reduce(
-                              (sum, topping) => sum + (topping.price || 0),
-                              0,
-                            );
-                            if (!toppingTotal) return null;
-                            return (
-                              <p className="mt-1 text-xs font-semibold text-slate-500">
-                                Topping +{formatPrice(toppingTotal)}
-                              </p>
-                            );
-                          })()}
-
-                          {(item.toppings ?? []).length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {item.toppings?.map((topping) => (
-                                <span
-                                  key={topping.id}
-                                  className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
-                                >
-                                  +{topping.name}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      removeCartTopping(
-                                        item.food.id,
-                                        topping.id,
-                                      )
-                                    }
-                                    className="grid h-4 w-4 place-items-center rounded-full text-emerald-700 transition hover:bg-emerald-100"
-                                    aria-label={`Xóa ${topping.name}`}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="mt-2">
-                            <input
-                              placeholder="Ghi chú cho món (ví dụ: bỏ hành)"
-                              value={item.notes ?? ""}
-                              onChange={(e) =>
-                                updateCartNotes(item.food.id, e.target.value)
-                              }
-                              className="w-full rounded-md border border-slate-200 px-3 py-1 text-sm outline-none"
-                            />
-                            {item.food.toppings &&
-                              item.food.toppings.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => openEditFoodModal(item)}
-                                  className="mt-2 inline-flex items-center gap-2 rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700 transition hover:-translate-y-0.5 hover:bg-cyan-100"
-                                >
-                                  Chỉnh topping
-                                </button>
-                              )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                          <div className="flex h-10 items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
-                            <button
-                              type="button"
-                              onClick={() => decrementCartItem(item.food.id)}
-                              className="grid h-10 w-10 place-items-center text-slate-600 transition hover:bg-slate-50"
-                              aria-label={`Giảm ${item.food.name}`}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-
-                            <input
-                              value={item.quantity}
-                              onChange={(event) =>
-                                updateCartQuantity(
-                                  item.food.id,
-                                  Number(event.target.value),
-                                )
-                              }
-                              className="h-10 w-14 border-x border-slate-200 text-center text-sm font-black text-slate-950 outline-none"
-                              inputMode="numeric"
-                              aria-label={`Số lượng ${item.food.name}`}
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => incrementCartItem(item.food.id)}
-                              className="grid h-10 w-10 place-items-center text-slate-600 transition hover:bg-slate-50"
-                              aria-label={`Tăng ${item.food.name}`}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => removeCartItem(item.food.id)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-rose-100 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Xóa
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-                    <ShoppingCart className="mx-auto h-8 w-8 text-slate-400" />
-                    <p className="mt-3 text-sm font-bold text-slate-500">
-                      Chưa có món nào trong đơn.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-slate-100 px-5 py-4">
-                {!isOfflineOrder && (
-                  <div className="mb-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
-                    <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                      Phương thức thanh toán
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setOnlinePaymentMethod("COD")}
-                        className={`rounded-xl border px-3 py-2.5 text-left text-sm font-bold transition ${
-                          onlinePaymentMethod === "COD"
-                            ? "border-cyan-300 bg-cyan-50 text-cyan-800"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        Thanh toán khi nhận hàng
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOnlinePaymentMethod("BankTransfer")}
-                        className={`rounded-xl border px-3 py-2.5 text-left text-sm font-bold transition ${
-                          onlinePaymentMethod === "BankTransfer"
-                            ? "border-cyan-300 bg-cyan-50 text-cyan-800"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        Chuyển khoản
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold text-slate-500">
-                      {cartItemCount} món đã chọn
-                    </p>
-                    <p className="text-2xl font-black text-cyan-700">
-                      {formatPrice(total)}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {cart.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={clearCart}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-50"
-                      >
-                        Xóa hết
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => void handleCreateOrder()}
-                      disabled={ordering || cart.length === 0}
-                      className="rounded-2xl bg-cyan-600 px-5 py-2.5 text-sm font-black text-white shadow-xl shadow-cyan-900/20 transition hover:-translate-y-0.5 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {ordering
-                        ? "Đang đặt..."
-                        : isOfflineOrder
-                          ? "Gọi tại quán"
-                          : "Đặt món"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* cart */}
-        {cart.length > 0 && (
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
-            <div className="pointer-events-auto mx-auto max-w-3xl overflow-hidden rounded-2xl border border-white/80 bg-white/95 p-3 shadow-2xl shadow-cyan-950/15 ring-1 ring-slate-950/5 backdrop-blur-2xl sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    {cartItemCount} món trong giỏ
-                  </p>
-
-                  <p className="mt-1 text-2xl font-black tracking-tight text-cyan-700">
-                    {formatPrice(total)}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 flex-wrap justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCartOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cyan-200 bg-white px-5 py-3 text-sm font-black text-cyan-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50"
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    Xem đơn
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCartOpen(true)}
-                    disabled={ordering || cart.length === 0}
-                    className="rounded-2xl bg-cyan-600 px-6 py-3 text-sm font-black text-white shadow-xl shadow-cyan-900/20 transition hover:-translate-y-0.5 hover:bg-cyan-700 disabled:opacity-50"
-                  >
-                    {ordering
-                      ? "Đang đặt..."
-                      : isOfflineOrder
-                        ? "Gọi tại quán"
-                        : "Đặt món ngay"}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleCreateOrder()}
+                  disabled={ordering}
+                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md hover:from-cyan-600 hover:to-blue-700 transition disabled:opacity-50"
+                >
+                  {ordering ? "Đang đặt..." : "Đặt món"}
+                </button>
               </div>
             </div>
           </div>

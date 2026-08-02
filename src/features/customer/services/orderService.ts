@@ -46,42 +46,30 @@ export async function createOrder(payload: {
   return res.data;
 }
 
-export async function getCustomerOrders() {
-  const res = await api.get<
-    ApiResponse<CustomerOrderSummary[]> | CustomerOrderSummary[]
-  >("/orders/mine");
-  const orders = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+export async function getCustomerOrders(params?: {
+  status?: string;
+  pageIndex?: number;
+  pageSize?: number;
+}) {
+  const res = await api.get<ApiResponse<CustomerOrderSummary[]>>(
+    "/orders/mine",
+    { params },
+  );
 
-  return orders.map(normalizeCustomerOrder);
+  return {
+    data: (res.data.data ?? []).map(normalizeCustomerOrder),
+    meta: res.data.meta ?? null,
+  };
 }
-
-function unwrapApiResponse<T>(payload: T | ApiResponse<T>): T {
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "success" in payload &&
-    "data" in payload
-  ) {
-    return payload.data;
-  }
-
-  return payload as T;
-}
-
-type RawCustomerOrderSummary = CustomerOrderSummary & {
-  id?: string | number;
-};
 
 export function getCustomerOrderId(
-  order?: Partial<RawCustomerOrderSummary> | null,
+  order?: Partial<CustomerOrderSummary> | null,
 ) {
-  return normalizeOrderId(
-    order?.orderId ?? order?.id,
-  );
+  return normalizeOrderId(order?.orderId);
 }
 
 function normalizeCustomerOrder(
-  order: RawCustomerOrderSummary,
+  order: CustomerOrderSummary,
 ): CustomerOrderSummary {
   const orderId = getCustomerOrderId(order);
   const status = normalizeOrderStatus(order.status);
@@ -95,8 +83,7 @@ function normalizeCustomerOrder(
 
   return {
     ...order,
-    id: orderId,
-    orderId,
+    orderId: orderId ?? order.orderId,
     status,
   };
 }
@@ -119,23 +106,10 @@ function normalizeOrderId(value: unknown) {
 
 export async function getCustomerOrderDetail(orderId: string) {
   const res = await api.get<
-    | ApiResponse<
-        | CustomerOrderDetailItem[]
-        | { foods?: CustomerOrderDetailItem[] }
-      >
-    | CustomerOrderDetailItem[]
-    | { foods?: CustomerOrderDetailItem[] }
+    ApiResponse<{ foods: CustomerOrderDetailItem[] }>
   >(`/orders/${orderId}`);
 
-  const payload = unwrapApiResponse(res.data) as
-    | CustomerOrderDetailItem[]
-    | { foods?: CustomerOrderDetailItem[] };
-
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-
-  return payload.foods ?? [];
+  return res.data.data.foods;
 }
 
 export async function confirmReceived(orderId: string) {

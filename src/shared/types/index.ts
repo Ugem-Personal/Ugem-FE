@@ -4,6 +4,12 @@ export type ApiResponse<T> = {
   success: boolean;
   message: string;
   data: T;
+  meta?: {
+    pageIndex: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  } | null;
   errors?: unknown;
   traceId?: string;
   timestampUtc?: string;
@@ -82,8 +88,7 @@ export type MerchantOrderSummary = {
 };
 
 export type CustomerOrderSummary = {
-  id?: string;
-  orderId?: string;
+  orderId: string;
   name: string;
   discount?: number;
   finalPrice: number;
@@ -91,23 +96,24 @@ export type CustomerOrderSummary = {
   orderedAt: string;
   notes?: string;
   deliveryAddress: string;
+  orderType?: string;
 };
 
 export type CustomerOrderDetailItem = {
-  id?: string;
-  orderDetailId?: string;
-  orderId?: string;
+  orderDetailId: string;
+  orderId: string;
   foodId: string;
   merchantId?: string;
   merchantName?: string;
   name?: string;
+  imageUrl?: string;
   unitPrice?: number;
   lineTotal?: number;
   quantity?: number;
   notes?: string;
   note?: string;
   toppings?: {
-    id?: string;
+    foodToppingId?: string;
     name?: string;
     price?: number;
   }[];

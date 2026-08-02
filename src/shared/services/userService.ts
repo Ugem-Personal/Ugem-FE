@@ -8,9 +8,10 @@ export type UserProfile = {
   name?: string;
   fullName?: string;
   email?: string;
-  phoneNumber?: string;
+  phoneNumber?: string | null;
   avatarUrl?: string | null;
   role?: string;
+  createdAt?: string;
 };
 
 export async function getUserProfile() {
@@ -20,12 +21,14 @@ export async function getUserProfile() {
 
 export async function updateUserProfile(payload: {
   fullName?: string;
+  phoneNumber?: string;
   avatarUrl?: string;
 }) {
   const user = getCurrentUser();
 
   const { data } = await api.patch<ApiResponse<UserProfile>>("/user/profile", {
     fullName: payload.fullName,
+    phoneNumber: payload.phoneNumber,
     avatarUrl: payload.avatarUrl,
   });
 

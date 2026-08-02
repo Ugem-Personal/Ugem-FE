@@ -183,8 +183,21 @@ export async function getMyMerchantDetail() {
 export async function getMerchantOrders() {
   const res = await api.get<
     ApiResponse<MerchantOrderSummary[]> | MerchantOrderSummary[]
-  >("/orders");
-  return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+  >("/orders", { params: { pageSize: 100 } });
+  const orders = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+
+  return orders.map((order) => {
+    const rawOrder = order as MerchantOrderSummary & {
+      customer?: { fullName?: string | null } | null;
+    };
+
+    return {
+      ...order,
+      finalPrice: Number(order.finalPrice ?? 0),
+      customerName:
+        order.customerName || rawOrder.customer?.fullName || "Khách hàng",
+    };
+  });
 }
 
 export async function getMerchantOrderDetail(orderId: string) {
@@ -198,6 +211,14 @@ export async function acceptOrder(orderId: string) {
 
 export async function rejectOrder(orderId: string, reason: string) {
   return rejectMerchantOrder({ orderId, reason });
+}
+
+export async function updateMerchantOrderStatus(
+  orderId: string,
+  status: "Preparing" | "Ready" | "Delivering",
+) {
+  const res = await api.patch(`/orders/${orderId}/status`, { status });
+  return res.data;
 }
 
 export async function confirmCashPayment(orderId: string) {
@@ -257,6 +278,7 @@ export type UpdateMerchantPayload = {
   phone?: string;
   address?: string;
   openingHours?: string;
+  logoUrl?: string;
 };
 
 export async function updateMerchant(payload: UpdateMerchantPayload) {

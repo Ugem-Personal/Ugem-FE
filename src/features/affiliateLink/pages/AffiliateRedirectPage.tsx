@@ -15,7 +15,7 @@ export default function AffiliateRedirectPage() {
 
   if (!linkCode) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,#edfafa_0%,#ffffff_100%)] px-4 text-slate-950">
+      <main className="app-page grid place-items-center px-4">
         <section className="w-full max-w-md rounded-lg border border-white/80 bg-white/90 p-6 text-center shadow-xl shadow-cyan-950/10">
           <Link2 className="mx-auto h-9 w-9 text-cyan-700" />
           <h1 className="mt-3 text-2xl font-black">Link không hợp lệ</h1>
@@ -34,7 +34,7 @@ export default function AffiliateRedirectPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,#edfafa_0%,#ffffff_100%)] px-4 text-slate-950">
+    <main className="app-page grid place-items-center px-4">
       <section className="w-full max-w-md rounded-lg border border-white/80 bg-white/90 p-6 text-center shadow-xl shadow-cyan-950/10">
         <Loader2 className="mx-auto h-9 w-9 animate-spin text-cyan-700" />
         <h1 className="mt-3 text-2xl font-black">Đang mở quán</h1>

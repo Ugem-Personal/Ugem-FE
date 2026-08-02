@@ -82,7 +82,7 @@ export default function CheckInPage() {
   }, [checkInReturnPath, checkInToken, navigate, orderId, success]);
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.16),transparent_34%),linear-gradient(180deg,#f8fafc_0%,#ecfeff_52%,#fff7ed_100%)] px-5 py-10">
+    <main className="app-page relative flex items-center justify-center overflow-hidden px-5 py-10">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),transparent)]" />
       <div className="pointer-events-none absolute -right-24 top-24 h-56 w-56 rounded-full bg-amber-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -left-24 bottom-24 h-56 w-56 rounded-full bg-cyan-200/35 blur-3xl" />
