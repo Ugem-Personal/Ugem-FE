@@ -61,17 +61,15 @@ const STORIES = [
   },
 ];
 
-export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
+export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
   const storyCount = Math.max(1, Math.min(images.length || 1, STORIES.length));
   const stories = useMemo(() => STORIES.slice(0, storyCount), [storyCount]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  // Continuous auto-slide timer
   useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (paused || reduceMotion || stories.length <= 1) return;
+    if (paused || stories.length <= 1) return;
 
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % stories.length);
@@ -100,18 +98,18 @@ export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
             src={item.image}
             alt={storyIndex === index ? item.alt : ""}
             aria-hidden={storyIndex !== index}
-            className={`absolute inset-0 h-full w-full object-cover object-center transition-[opacity,transform] duration-1000 ease-out motion-reduce:transition-none ${
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-all duration-1000 ease-out ${
               storyIndex === index
-                ? "scale-100 opacity-100"
-                : "scale-[1.025] opacity-0"
+                ? "scale-100 opacity-100 z-10"
+                : "scale-[1.03] opacity-0 z-0"
             }`}
             fetchPriority={storyIndex === 0 ? "high" : "auto"}
           />
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,27,0.94)_0%,rgba(2,12,27,0.72)_36%,rgba(2,12,27,0.12)_78%),linear-gradient(0deg,rgba(2,12,27,0.82)_0%,transparent_48%)]" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(90deg,rgba(2,12,27,0.94)_0%,rgba(2,12,27,0.72)_36%,rgba(2,12,27,0.12)_78%),linear-gradient(0deg,rgba(2,12,27,0.82)_0%,transparent_48%)]" />
 
-      <header className="relative z-10 flex items-center justify-between">
+      <header className="relative z-20 flex items-center justify-between">
         <div className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-slate-950/35 py-2 pl-2 pr-4 text-xs font-extrabold uppercase tracking-[0.14em] text-white backdrop-blur-md">
           <span className="grid h-8 w-8 place-items-center rounded-full bg-cyan-300 text-slate-950">
             <Sparkles className="h-3.5 w-3.5" />
@@ -134,7 +132,7 @@ export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
                 {isActive ? (
                   <div
                     key={`${index}-${paused}`}
-                    className="h-full bg-cyan-300 rounded-full transition-all"
+                    className="h-full bg-cyan-300 rounded-full"
                     style={{
                       animation: paused
                         ? "none"
@@ -149,8 +147,8 @@ export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
         </div>
       </header>
 
-      <div className="relative z-10 flex flex-1 items-end py-10 xl:py-14">
-        <div key={index} className="max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="relative z-20 flex flex-1 items-end py-10 xl:py-14">
+        <div key={index} className="max-w-2xl transition-all duration-500">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/35 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-cyan-100 backdrop-blur-md">
             <StoryIcon className="h-3.5 w-3.5" />
             {story.eyebrow}
