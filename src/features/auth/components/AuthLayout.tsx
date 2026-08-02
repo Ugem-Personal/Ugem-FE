@@ -1,4 +1,6 @@
 import { type ReactNode, useState } from "react";
+import { Link } from "react-router-dom";
+import { Compass } from "lucide-react";
 import HeroCarousel from "./HeroCarousel";
 import { Logo } from "./Logo";
 import { ModeToggle } from "@/shared/components/ModeToggle";
@@ -41,8 +43,20 @@ export function AuthLayout({
 
           {/* Top Header Controls */}
           <header className="relative z-10 flex w-full items-center justify-between mb-2">
-            <Logo />
-            <ModeToggle />
+            <Link to="/explore" className="group flex items-center gap-2 hover:opacity-85 transition-opacity" title="Về trang Khám Phá">
+              <Logo />
+            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/explore"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-800/90 px-3 py-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800 dark:hover:border-cyan-800 dark:hover:bg-cyan-950 dark:hover:text-cyan-300 transition-all shadow-xs"
+                title="Khám phá các quán ăn ngon"
+              >
+                <Compass className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                <span>Khám phá quán</span>
+              </Link>
+              <ModeToggle />
+            </div>
           </header>
 
           {/* Main Form Content */}
