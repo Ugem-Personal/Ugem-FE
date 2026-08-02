@@ -105,8 +105,8 @@ function ApplicationTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-190">
-        <thead className="bg-cyan-50/70 text-left text-xs font-black uppercase tracking-[0.14em] text-cyan-800">
+      <table className="w-full min-w-[700px]">
+        <thead className="bg-cyan-50/70 dark:bg-slate-800/80 text-left text-xs font-black uppercase tracking-[0.14em] text-cyan-800 dark:text-cyan-300">
           <tr>
             <th className="px-5 py-4">Tên quán</th>
             <th className="px-5 py-4">Trạng thái</th>
@@ -116,16 +116,16 @@ function ApplicationTable({
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-slate-100/80">
+        <tbody className="divide-y divide-slate-100/80 dark:divide-slate-800/80">
           {applications.map((app) => {
             const statusMeta = getStatusMeta(app.status);
             const StatusIcon = statusMeta.icon;
             const isPending = normalizeStatus(app.status) === "pending";
 
             return (
-              <tr key={app.id} className="group transition hover:bg-cyan-50/50">
+              <tr key={app.id} className="group transition hover:bg-cyan-50/50 dark:hover:bg-slate-800/50">
                 <td className="px-5 py-4">
-                  <p className="max-w-72 truncate font-black text-slate-950">
+                  <p className="max-w-72 truncate font-black text-slate-950 dark:text-white">
                     {app.name || "Không tên"}
                   </p>
                 </td>
@@ -139,11 +139,11 @@ function ApplicationTable({
                   </span>
                 </td>
 
-                <td className="px-5 py-4 text-sm font-semibold text-slate-700">
+                <td className="px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {formatDate(app.createdAt)}
                 </td>
 
-                <td className="px-5 py-4 text-sm font-semibold text-slate-700">
+                <td className="px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {isPending ? "Chưa xử lý" : formatDate(app.reviewedAt)}
                 </td>
 
@@ -151,7 +151,7 @@ function ApplicationTable({
                   <Link
                     to={`${basePath}/${app.id}`}
                     state={{ application: app }}
-                    className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-xs font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-cyan-700"
+                    className="inline-flex items-center justify-center rounded-full bg-slate-950 dark:bg-cyan-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-cyan-700 dark:hover:bg-cyan-500"
                   >
                     {isPending && canReview ? "Xem và duyệt" : "Xem chi tiết"}
                   </Link>
@@ -163,9 +163,9 @@ function ApplicationTable({
           {applications.length === 0 && (
             <tr>
               <td className="px-6 py-14 text-center" colSpan={5}>
-                <div className="mx-auto max-w-sm rounded-3xl border border-dashed border-slate-200 bg-white/70 p-8">
-                  <Clock3 className="mx-auto h-8 w-8 text-slate-400" />
-                  <p className="mt-3 text-sm font-bold text-slate-500">
+                <div className="mx-auto max-w-sm rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-8">
+                  <Clock3 className="mx-auto h-8 w-8 text-slate-400 dark:text-slate-500" />
+                  <p className="mt-3 text-sm font-bold text-slate-500 dark:text-slate-400">
                     {emptyText}
                   </p>
                 </div>

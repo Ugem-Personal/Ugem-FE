@@ -263,17 +263,17 @@ function OverviewCard({
   value: number;
 }) {
   return (
-    <article className="rounded-3xl border border-white/70 bg-white/75 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+    <article className="rounded-3xl border border-white/70 dark:border-slate-800 bg-white/75 dark:bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+          <p className="text-xs font-black uppercase text-slate-500 dark:text-slate-400">{label}</p>
+          <p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">{value}</p>
         </div>
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-100 dark:ring-cyan-900">
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-500">{description}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
     </article>
   );
 }
@@ -309,8 +309,8 @@ function NotificationCard({ item }: { item: NotificationItem }) {
   return (
     <article
       className={cn(
-        "overflow-hidden rounded-3xl border bg-white/85 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl",
-        item.isRead ? "border-white/70" : tone.border,
+        "overflow-hidden rounded-3xl border bg-white/85 dark:bg-slate-900/85 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl",
+        item.isRead ? "border-white/70 dark:border-slate-800" : tone.border,
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -339,22 +339,22 @@ function NotificationCard({ item }: { item: NotificationItem }) {
               ) : (
                 <Badge
                   variant="secondary"
-                  className="border-0 bg-slate-100 text-slate-500"
+                  className="border-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                 >
                   Đã đọc
                 </Badge>
               )}
             </div>
 
-            <h2 className="mt-3 text-lg font-black text-slate-950">
+            <h2 className="mt-3 text-lg font-black text-slate-950 dark:text-white">
               {getNotificationTitle(item)}
             </h2>
 
             {body ? (
-              <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{body}</p>
             ) : null}
 
-            <p className="mt-3 text-xs font-semibold text-slate-500">
+            <p className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
               {time || "Mới cập nhật"}
             </p>
           </div>
@@ -364,7 +364,7 @@ function NotificationCard({ item }: { item: NotificationItem }) {
           <Button
             asChild
             variant="outline"
-            className="h-10 shrink-0 rounded-2xl bg-white font-black"
+            className="h-10 shrink-0 rounded-2xl bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 font-black"
           >
             <Link to={meta.actionTo} onClick={handleActionClick}>
               {meta.actionLabel}

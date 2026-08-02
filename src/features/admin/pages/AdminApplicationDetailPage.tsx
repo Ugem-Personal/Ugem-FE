@@ -569,17 +569,17 @@ export default function AdminApplicationDetailPage({
           </div>
 
           <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="rounded-3xl border border-white/70 dark:border-slate-800 bg-white/75 dark:bg-slate-900/80 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
               <div className="mb-5 flex items-center gap-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-slate-700 shadow-sm ring-1 ring-slate-200">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
                   <UserRound className="h-5 w-5" />
                 </div>
 
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-black text-slate-950">
+                  <h2 className="truncate text-lg font-black text-slate-950 dark:text-white">
                     Người nộp
                   </h2>
-                  <p className="text-sm text-slate-500">Tài khoản gửi hồ sơ.</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Tài khoản gửi hồ sơ.</p>
                 </div>
               </div>
 
@@ -599,25 +599,25 @@ export default function AdminApplicationDetailPage({
                     </div>
 
                     <div className="min-w-0">
-                      <p className="truncate font-black text-slate-950">
+                      <p className="truncate font-black text-slate-950 dark:text-white">
                         {applicant.fullName || "Chưa cập nhật"}
                       </p>
-                      <p className="text-xs font-semibold text-slate-500">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                         Merchant applicant
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-3 text-sm">
-                    <p className="flex min-w-0 items-center gap-2 break-all text-slate-700">
-                      <Mail className="h-4 w-4 shrink-0 text-cyan-700" />
+                    <p className="flex min-w-0 items-center gap-2 break-all text-slate-700 dark:text-slate-300">
+                      <Mail className="h-4 w-4 shrink-0 text-cyan-700 dark:text-cyan-400" />
                       <span className="min-w-0 break-all">
                         {applicant.email || "Chưa có email"}
                       </span>
                     </p>
 
-                    <p className="flex min-w-0 items-center gap-2 text-slate-700">
-                      <Phone className="h-4 w-4 shrink-0 text-cyan-700" />
+                    <p className="flex min-w-0 items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <Phone className="h-4 w-4 shrink-0 text-cyan-700 dark:text-cyan-400" />
                       <span className="min-w-0 break-words">
                         {applicant.phoneNumber || "Chưa có số điện thoại"}
                       </span>
@@ -625,19 +625,19 @@ export default function AdminApplicationDetailPage({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Hồ sơ chưa có thông tin người nộp.
                 </p>
               )}
             </section>
 
-            <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="rounded-3xl border border-white/70 dark:border-slate-800 bg-white/75 dark:bg-slate-900/80 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-black text-slate-950">
+                  <h2 className="truncate text-lg font-black text-slate-950 dark:text-white">
                     Xử lý hồ sơ
                   </h2>
-                  <p className="text-sm leading-6 text-slate-500">
+                  <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
                     Duyệt khi thông tin hợp lệ, từ chối nếu cần bổ sung.
                   </p>
                 </div>
@@ -650,20 +650,20 @@ export default function AdminApplicationDetailPage({
               </div>
 
               {!canReview ? (
-                <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-4 text-sm font-semibold leading-6 text-cyan-800">
+                <div className="rounded-2xl border border-cyan-100 dark:border-cyan-900/60 bg-cyan-50/80 dark:bg-cyan-950/40 p-4 text-sm font-semibold leading-6 text-cyan-800 dark:text-cyan-300">
                   Admin đang xem job ở chế độ quản lý. Quyền duyệt hoặc từ chối
                   hồ sơ được tách cho Staff xử lý.
                 </div>
               ) : (
                 <>
                   {!isPendingStatus && (
-                    <div className="mb-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-sm font-semibold text-slate-600">
+                    <div className="mb-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
                       Hồ sơ này đã được xử lý, không thể thao tác lại.
                     </div>
                   )}
 
                   <label className="block">
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                       Lý do từ chối
                     </span>
 
@@ -671,7 +671,7 @@ export default function AdminApplicationDetailPage({
                       value={reason}
                       onChange={(event) => setReason(event.target.value)}
                       placeholder="Ví dụ: Cần bổ sung ảnh món rõ hơn hoặc thông tin quán chưa đủ tin cậy..."
-                      className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm leading-6 text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 disabled:bg-slate-50"
+                      className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 px-4 py-3 text-sm leading-6 text-slate-900 dark:text-white shadow-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 disabled:bg-slate-50 dark:disabled:bg-slate-800"
                       disabled={submitting || !isPendingStatus}
                     />
                   </label>

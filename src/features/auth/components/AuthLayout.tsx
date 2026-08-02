@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from "react";
 import HeroCarousel from "./HeroCarousel";
-import { Logo } from "../pages/Logo";
+import { Logo } from "./Logo";
 import { ModeToggle } from "@/shared/components/ModeToggle";
 
 type AuthLayoutProps = {

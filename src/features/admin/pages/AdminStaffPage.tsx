@@ -275,8 +275,8 @@ export default function AdminStaffPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-180">
-                  <thead className="bg-cyan-50/70 text-left text-xs font-black uppercase tracking-[0.14em] text-cyan-800">
+                <table className="w-full min-w-[700px]">
+                  <thead className="bg-cyan-50/70 dark:bg-slate-800/80 text-left text-xs font-black uppercase tracking-[0.14em] text-cyan-800 dark:text-cyan-300">
                     <tr>
                       <th className="px-5 py-4">Tên nhân viên</th>
                       <th className="px-5 py-4">Email</th>
@@ -285,16 +285,16 @@ export default function AdminStaffPage() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-slate-100/80">
+                  <tbody className="divide-y divide-slate-100/80 dark:divide-slate-800/80">
                     {staffList.length > 0 ? (
                       staffList.map((staff: Staff, idx: number) => (
                         <tr
                           key={staff.id || idx}
-                          className="group transition hover:bg-cyan-50/50"
+                          className="group transition hover:bg-cyan-50/50 dark:hover:bg-slate-800/50"
                         >
                           <td className="px-5 py-4">
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-950 text-xs font-black text-white shadow-lg shadow-slate-950/10">
+                              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-950 dark:bg-cyan-700 text-xs font-black text-white shadow-lg shadow-slate-950/10">
                                 {(staff.name || staff.fullName || "NA")
                                   .trim()
                                   .split(/\s+/)
@@ -304,25 +304,25 @@ export default function AdminStaffPage() {
                                   .toUpperCase()}
                               </div>
 
-                              <p className="max-w-60 truncate font-black text-slate-950">
+                              <p className="max-w-60 truncate font-black text-slate-950 dark:text-white">
                                 {staff.name || staff.fullName || "N/A"}
                               </p>
                             </div>
                           </td>
 
                           <td className="px-5 py-4">
-                            <p className="max-w-72 truncate text-sm font-semibold text-slate-700">
+                            <p className="max-w-72 truncate text-sm font-semibold text-slate-700 dark:text-slate-300">
                               {staff.email || "N/A"}
                             </p>
                           </td>
 
                           <td className="px-5 py-4">
-                            <span className="inline-flex rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-800 shadow-sm">
+                            <span className="inline-flex rounded-full border border-cyan-100 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/40 px-3 py-1 text-xs font-black text-cyan-800 dark:text-cyan-300 shadow-sm">
                               {staff.role || "Staff"}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4 text-sm font-semibold text-slate-600">
+                          <td className="px-5 py-4 text-sm font-semibold text-slate-600 dark:text-slate-400">
                             <button
                               type="button"
                               onClick={() => void handleDeleteStaff(staff)}
@@ -330,7 +330,7 @@ export default function AdminStaffPage() {
                                 deletingId &&
                                 deletingId === (staff.id || staff.userId),
                               )}
-                              className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="rounded-full border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-black text-rose-700 dark:text-rose-300 transition hover:bg-rose-100 dark:hover:bg-rose-900/60 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {deletingId &&
                               deletingId === (staff.id || staff.userId)
@@ -343,8 +343,8 @@ export default function AdminStaffPage() {
                     ) : (
                       <tr>
                         <td className="px-6 py-14 text-center" colSpan={4}>
-                          <div className="mx-auto max-w-sm rounded-3xl border border-dashed border-slate-200 bg-white/70 p-8">
-                            <p className="text-sm font-bold text-slate-500">
+                          <div className="mx-auto max-w-sm rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-8">
+                            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
                               Chưa có nhân viên nào.
                             </p>
                           </div>

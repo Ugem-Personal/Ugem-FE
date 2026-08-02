@@ -27,7 +27,7 @@ import type { Category } from "@/shared/types";
 
 import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
-import NearbyMerchantsMap from "../components/NearbyMerchantsMap.tsx";
+import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
 import { getNearbyMerchants } from "../services/merchantService";
 import { getWishlist } from "../services/wishlistService";
 import { getCurrentUser } from "@/features/auth";
