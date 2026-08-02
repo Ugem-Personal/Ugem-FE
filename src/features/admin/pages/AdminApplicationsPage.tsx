@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock3,
   RefreshCw,
+  Search,
   XCircle,
 } from "lucide-react";
 import { useStaffApplications } from "../hooks/useApplications";
@@ -207,6 +208,7 @@ export default function AdminApplicationsPage({
   embedded = false,
 }: ApplicationsPageProps) {
   const [selectedTab, setSelectedTab] = useState<ApplicationTab>(initialTab);
+  const [searchTerm, setSearchTerm] = useState("");
   const activeTab = showTabs ? selectedTab : initialTab;
 
   const {
@@ -262,6 +264,16 @@ export default function AdminApplicationsPage({
     activeTab === "pending"
       ? groupedApplications.pending
       : groupedApplications.reviewed;
+
+  const filteredApplications = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return activeApplications;
+    return activeApplications.filter((app) => {
+      const name = (app.name || "").toLowerCase();
+      const email = (app.applicant?.email || "").toLowerCase();
+      return name.includes(term) || email.includes(term);
+    });
+  }, [activeApplications, searchTerm]);
 
   const activeEmptyText =
     activeTab === "pending"
@@ -465,19 +477,32 @@ export default function AdminApplicationsPage({
                   </div>
                 </div>
 
-                <span
-                  className={`rounded-full border px-3 py-1 text-sm font-black tabular-nums shadow-sm ${
-                    activeTab === "pending"
-                      ? "border-amber-200 bg-amber-50 text-amber-800"
-                      : "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  }`}
-                >
-                  {activeTabMeta.count} hồ sơ
-                </span>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Tìm theo tên quán, email..."
+                      className="h-9 w-48 sm:w-64 rounded-xl border border-slate-200 bg-white/90 pl-9 pr-3 text-xs font-semibold text-slate-900 shadow-xs outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                    />
+                  </div>
+
+                  <span
+                    className={`rounded-full border px-3 py-1 text-sm font-black tabular-nums shadow-sm ${
+                      activeTab === "pending"
+                        ? "border-amber-200 bg-amber-50 text-amber-800"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    }`}
+                  >
+                    {filteredApplications.length} hồ sơ
+                  </span>
+                </div>
               </div>
 
               <ApplicationTable
-                applications={activeApplications}
+                applications={filteredApplications}
                 emptyText={activeEmptyText}
                 basePath={basePath}
                 canReview={canReview}
