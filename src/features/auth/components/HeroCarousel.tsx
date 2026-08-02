@@ -61,7 +61,7 @@ const STORIES = [
   },
 ];
 
-export function HeroCarousel({ images, intervalMs = 7000, onChange }: Props) {
+export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
   const storyCount = Math.max(1, Math.min(images.length || 1, STORIES.length));
   const stories = useMemo(() => STORIES.slice(0, storyCount), [storyCount]);
   const [index, setIndex] = useState(0);
@@ -78,7 +78,7 @@ export function HeroCarousel({ images, intervalMs = 7000, onChange }: Props) {
     }, intervalMs);
 
     return () => window.clearInterval(timer);
-  }, [intervalMs, paused, stories.length]);
+  }, [index, intervalMs, paused, stories.length]);
 
   useEffect(() => {
     onChange?.(index);
@@ -118,17 +118,34 @@ export function HeroCarousel({ images, intervalMs = 7000, onChange }: Props) {
           </span>
           UGem Experience
         </div>
-        <div className="flex gap-1.5" aria-hidden="true">
-          {stories.map((_, storyIndex) => (
-            <span
-              key={storyIndex}
-              className={
-                storyIndex === index
-                  ? "h-1.5 w-7 rounded-full bg-cyan-300"
-                  : "h-1.5 w-1.5 rounded-full bg-white/35"
-              }
-            />
-          ))}
+        <div className="flex gap-2 items-center" aria-hidden="true">
+          {stories.map((_, storyIndex) => {
+            const isActive = storyIndex === index;
+            return (
+              <button
+                key={storyIndex}
+                type="button"
+                onClick={() => go(storyIndex)}
+                className={`relative h-2 overflow-hidden rounded-full transition-all duration-300 ${
+                  isActive ? "w-8 bg-white/20" : "w-2 bg-white/30 hover:bg-white/50"
+                }`}
+                title={`Chuyển đến slide ${storyIndex + 1}`}
+              >
+                {isActive ? (
+                  <div
+                    key={`${index}-${paused}`}
+                    className="h-full bg-cyan-300 rounded-full transition-all"
+                    style={{
+                      animation: paused
+                        ? "none"
+                        : `carouselProgress ${intervalMs}ms linear forwards`,
+                      width: paused ? "100%" : "0%",
+                    }}
+                  />
+                ) : null}
+              </button>
+            );
+          })}
         </div>
       </header>
 
@@ -153,18 +170,41 @@ export function HeroCarousel({ images, intervalMs = 7000, onChange }: Props) {
             Khám phá · Vận hành · Tăng trưởng
           </p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => go(index - 1)} aria-label="Nội dung trước" className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15">
+            <button
+              type="button"
+              onClick={() => go(index - 1)}
+              aria-label="Nội dung trước"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+            >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <button type="button" onClick={() => setPaused((value) => !value)} aria-label={paused ? "Tiếp tục trình chiếu" : "Tạm dừng trình chiếu"} aria-pressed={paused} className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15">
+            <button
+              type="button"
+              onClick={() => setPaused((value) => !value)}
+              aria-label={paused ? "Tiếp tục trình chiếu" : "Tạm dừng trình chiếu"}
+              aria-pressed={paused}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+            >
               {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             </button>
-            <button type="button" onClick={() => go(index + 1)} aria-label="Nội dung tiếp theo" className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15">
+            <button
+              type="button"
+              onClick={() => go(index + 1)}
+              aria-label="Nội dung tiếp theo"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+            >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
         </footer>
       ) : null}
+
+      <style>{`
+        @keyframes carouselProgress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </section>
   );
 }
