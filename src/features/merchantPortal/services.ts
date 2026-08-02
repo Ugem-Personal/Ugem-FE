@@ -268,6 +268,159 @@ export async function getMyMerchantStatistics() {
   return unwrapApiResponse(res.data);
 }
 
+export type MerchantDashboardOverview = {
+  merchant: {
+    id: string;
+    name: string;
+    rating: number;
+    reviewCount: number;
+  };
+  orders: {
+    total: number;
+    pending: number;
+    accepted: number;
+    completed: number;
+    paid: number;
+  };
+  revenue: {
+    total: number;
+  };
+  foods: {
+    total: number;
+  };
+  campaigns: {
+    total: number;
+    active: number;
+  };
+};
+
+export type MerchantRevenueByYear = {
+  merchant: {
+    id: string;
+    name: string;
+  };
+  year: number;
+  summary: {
+    totalRevenue: number;
+    totalPaidOrders: number;
+  };
+  months: {
+    month: number;
+    revenue: number;
+    paidOrders: number;
+  }[];
+};
+
+export type MerchantTopFoodItem = {
+  rank: number;
+  foodId: string;
+  foodName: string;
+  quantitySold: number;
+  revenue: number;
+};
+
+export type MerchantTopFoods = {
+  merchant: {
+    id: string;
+    name: string;
+  };
+  limit: number;
+  items: MerchantTopFoodItem[];
+};
+
+export type MerchantCampaignPerformanceItem = {
+  rank: number;
+  campaignId: string;
+  name: string;
+  description: string | null;
+  discountType: string;
+  discountValue: number;
+  minimumOrderAmount: number;
+  maximumDiscount: number | null;
+  usageLimit: number | null;
+  usedCount: number;
+  remainingUsage: number | null;
+  totalOrders: number;
+  paidOrders: number;
+  completedPaidOrders: number;
+  totalRevenue: number;
+  totalDiscount: number;
+  averageOrderValue: number;
+  isActive: boolean;
+  status: "Upcoming" | "Active" | "Expired" | "Disabled" | "OutOfUsage";
+  startAt: string;
+  endAt: string;
+};
+
+export type MerchantCampaignPerformance = {
+  merchant: {
+    id: string;
+    name: string;
+  };
+  limit: number;
+  items: MerchantCampaignPerformanceItem[];
+};
+
+export type MerchantOrderGrowthByYear = {
+  merchant: {
+    id: string;
+    name: string;
+  };
+  year: number;
+  summary: {
+    totalOrders: number;
+    pending: number;
+    accepted: number;
+    completed: number;
+    rejected: number;
+    paid: number;
+  };
+  months: {
+    month: number;
+    totalOrders: number;
+    pending: number;
+    accepted: number;
+    completed: number;
+    rejected: number;
+    paid: number;
+  }[];
+};
+
+export async function getMerchantDashboardOverview() {
+  const res = await api.get<
+    ApiResponse<MerchantDashboardOverview> | MerchantDashboardOverview
+  >("/dashboard/merchant");
+  return unwrapApiResponse(res.data);
+}
+
+export async function getMerchantRevenueByYear(year: number) {
+  const res = await api.get<
+    ApiResponse<MerchantRevenueByYear> | MerchantRevenueByYear
+  >(`/dashboard/merchant/revenue?year=${year}`);
+  return unwrapApiResponse(res.data);
+}
+
+export async function getMerchantTopFoods(limit = 5) {
+  const res = await api.get<ApiResponse<MerchantTopFoods> | MerchantTopFoods>(
+    `/dashboard/merchant/top-foods?limit=${limit}`,
+  );
+  return unwrapApiResponse(res.data);
+}
+
+export async function getMerchantCampaignPerformance(limit = 10) {
+  const res = await api.get<
+    ApiResponse<MerchantCampaignPerformance> | MerchantCampaignPerformance
+  >(`/dashboard/merchant/campaign-performance?limit=${limit}`);
+  return unwrapApiResponse(res.data);
+}
+
+export async function getMerchantOrderGrowthByYear(year: number) {
+  const res = await api.get<
+    ApiResponse<MerchantOrderGrowthByYear> | MerchantOrderGrowthByYear
+  >(`/dashboard/merchant/order-growth?year=${year}`);
+  return unwrapApiResponse(res.data);
+}
+
 export type UpdateMerchantPayload = {
   name?: string;
   description?: string;
