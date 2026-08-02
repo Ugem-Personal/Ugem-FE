@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CheckCircle2,
@@ -87,20 +87,20 @@ export default function CheckInPage() {
       <div className="pointer-events-none absolute -right-24 top-24 h-56 w-56 rounded-full bg-amber-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -left-24 bottom-24 h-56 w-56 rounded-full bg-cyan-200/35 blur-3xl" />
 
-      <section className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/80 bg-white/90 p-6 text-center shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-xl">
-        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+        <section className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-6 text-center shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-xl">
+        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-100 dark:ring-cyan-900">
           <Utensils className="h-6 w-6" />
         </div>
 
         {status === "success" && (
           <>
-            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-100/80">
+            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 ring-8 ring-emerald-100/80 dark:ring-emerald-900/40">
               <CheckCircle2 className="h-12 w-12 stroke-[2.4]" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-950">
+            <h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">
               Check-in thành công
             </h1>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600 dark:text-slate-300">
               {merchantName
                 ? `Cảm ơn bạn đã ghé ${merchantName}. Lượt check-in của bạn đã được ghi nhận.`
                 : "Cảm ơn bạn đã ghé quán. Lượt check-in của bạn đã được ghi nhận."}
@@ -108,7 +108,7 @@ export default function CheckInPage() {
             <button
               type="button"
               onClick={() => navigate("/customer", { replace: true })}
-              className="mt-7 inline-flex h-11 items-center justify-center rounded-xl bg-cyan-700 px-5 text-sm font-bold text-white shadow-lg shadow-cyan-900/15 transition hover:-translate-y-0.5 hover:bg-cyan-800"
+              className="mt-7 inline-flex h-11 items-center justify-center rounded-xl bg-cyan-700 dark:bg-cyan-600 px-5 text-sm font-bold text-white shadow-lg shadow-cyan-900/15 transition hover:-translate-y-0.5 hover:bg-cyan-800 dark:hover:bg-cyan-700"
             >
               Khám phá thêm các quán ăn khác
             </button>
@@ -117,18 +117,18 @@ export default function CheckInPage() {
 
         {status === "error" && (
           <>
-            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-8 ring-rose-100/80">
+            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 ring-8 ring-rose-100/80 dark:ring-rose-900/40">
               <XCircle className="h-12 w-12 stroke-[2.4]" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-950">
+            <h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">
               Check-in thất bại
             </h1>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600 dark:text-slate-300">
               {message}
             </p>
             <button
               type="button"
-              className="mt-7 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-5 text-sm font-bold text-white shadow-lg shadow-cyan-900/15 transition hover:-translate-y-0.5 hover:bg-cyan-800"
+              className="mt-7 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-700 dark:bg-cyan-600 px-5 text-sm font-bold text-white shadow-lg shadow-cyan-900/15 transition hover:-translate-y-0.5 hover:bg-cyan-800 dark:hover:bg-cyan-700"
               onClick={() => {
                 const returnUrl = encodeURIComponent(checkInReturnPath);
                 navigate(`/login?returnUrl=${returnUrl}`);
@@ -142,10 +142,10 @@ export default function CheckInPage() {
 
         {status === "idle" && (
           <>
-            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 ring-8 ring-cyan-100/80">
+            <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 ring-8 ring-cyan-100/80 dark:ring-cyan-900/40">
               <Loader2 className="h-11 w-11 animate-spin" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-950">
+            <h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">
               Đang ghi nhận check-in...
             </h1>
             <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">

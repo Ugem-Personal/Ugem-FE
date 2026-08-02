@@ -200,9 +200,9 @@ export default function AdminAuditLogsPage() {
               ))}
             </div>
 
-            <div className="mt-5 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+            <div className="mt-5 hidden overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm md:block">
               <table className="w-full table-fixed text-left text-sm">
-                <thead className="bg-slate-950 text-xs uppercase tracking-wider text-slate-300">
+                <thead className="bg-slate-950 dark:bg-slate-800 text-xs uppercase tracking-wider text-slate-300 dark:text-slate-200">
                   <tr>
                     <th className="w-[24%] px-5 py-4">Hành động</th>
                     <th className="w-[22%] px-5 py-4">Người thực hiện</th>
@@ -210,9 +210,9 @@ export default function AdminAuditLogsPage() {
                     <th className="w-[26%] px-5 py-4">Thời gian</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {page.items.map((log) => (
-                    <tr key={log.id} className="align-top transition hover:bg-slate-50">
+                    <tr key={log.id} className="align-top transition hover:bg-slate-50 dark:hover:bg-slate-800/50">
                       <td className="px-5 py-4">
                         <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}>
                           {getActionLabel(log.action)}
@@ -220,18 +220,18 @@ export default function AdminAuditLogsPage() {
                         <MetadataDetails log={log} />
                       </td>
                       <td className="px-5 py-4">
-                        <p className="font-bold text-slate-900">{log.actor?.fullName || "Hệ thống"}</p>
-                        <p className="mt-1 break-all text-xs text-slate-500">{log.actor?.email || log.actorRole || "—"}</p>
+                        <p className="font-bold text-slate-900 dark:text-white">{log.actor?.fullName || "Hệ thống"}</p>
+                        <p className="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">{log.actor?.email || log.actorRole || "—"}</p>
                       </td>
-                      <td className="px-5 py-4 text-slate-700">
+                      <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
                         <p className="font-bold">{log.entityType}</p>
-                        <p className="mt-1 break-all font-mono text-xs text-slate-500">{log.entityId || "—"}</p>
+                        <p className="mt-1 break-all font-mono text-xs text-slate-500 dark:text-slate-400">{log.entityId || "—"}</p>
                       </td>
                       <td className="px-5 py-4">
-                        <time className="font-semibold text-slate-700" dateTime={log.createdAt}>
+                        <time className="font-semibold text-slate-700 dark:text-slate-300" dateTime={log.createdAt}>
                           {formatDateTime(log.createdAt)}
                         </time>
-                        {log.ipAddress ? <p className="mt-1 font-mono text-xs text-slate-400">IP {log.ipAddress}</p> : null}
+                        {log.ipAddress ? <p className="mt-1 font-mono text-xs text-slate-400 dark:text-slate-500">IP {log.ipAddress}</p> : null}
                       </td>
                     </tr>
                   ))}

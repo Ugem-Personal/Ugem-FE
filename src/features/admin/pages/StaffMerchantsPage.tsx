@@ -146,13 +146,13 @@ function MerchantCard({ merchant }: { merchant: StaffMerchant }) {
   );
 
   return (
-    <article className="group relative overflow-hidden rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl transition hover:-translate-y-1 hover:shadow-2xl">
+    <article className="group relative overflow-hidden rounded-[28px] border border-white/70 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl transition hover:-translate-y-1 hover:shadow-2xl">
       <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-cyan-300/20 blur-3xl" />
       <div className="absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-amber-300/20 blur-3xl" />
 
       <div className="relative flex items-start gap-4">
         <div
-          className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-linear-to-br ${getLogoBg(merchant.name)} text-lg font-black text-white shadow-lg shadow-slate-950/15`}
+          className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br ${getLogoBg(merchant.name)} text-lg font-black text-white shadow-lg shadow-slate-950/15`}
         >
           {merchant.logoUrl ? (
             <img
@@ -168,7 +168,7 @@ function MerchantCard({ merchant }: { merchant: StaffMerchant }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="truncate text-lg font-black tracking-tight text-slate-950">
+              <h3 className="truncate text-lg font-black tracking-tight text-slate-950 dark:text-white">
                 {normalizeText(merchant.name)}
               </h3>
 
@@ -176,7 +176,7 @@ function MerchantCard({ merchant }: { merchant: StaffMerchant }) {
                 {cuisineType?.value ? (
                   <Badge
                     variant="secondary"
-                    className="rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-bold text-cyan-700"
+                    className="rounded-full bg-cyan-50 dark:bg-cyan-950/80 px-3 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300 border border-cyan-200/50 dark:border-cyan-800/50"
                   >
                     {cuisineType.value}
                   </Badge>
@@ -185,14 +185,14 @@ function MerchantCard({ merchant }: { merchant: StaffMerchant }) {
                 {mainDish?.value ? (
                   <Badge
                     variant="secondary"
-                    className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-700"
+                    className="rounded-full bg-amber-50 dark:bg-amber-950/80 px-3 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/50"
                   >
                     {mainDish.value}
                   </Badge>
                 ) : null}
               </div>
 
-              <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
+              <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {merchantDescription.summary || "Chưa có mô tả"}
               </p>
             </div>

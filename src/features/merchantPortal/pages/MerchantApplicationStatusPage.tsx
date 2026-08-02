@@ -194,8 +194,8 @@ export function MerchantApplicationStatusPage() {
   }, [isApproved]);
 
   return (
-    <main className="merchant-portal-layout bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] relative">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] [background-size:32px_32px]" />
+    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.10),transparent_34%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:32px_32px]" />
       <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
       <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
 
@@ -204,37 +204,37 @@ export function MerchantApplicationStatusPage() {
       <section className="merchant-main relative z-10">
         <MerchantHeader />
 
-        <div className="merchant-content max-w-4xl mx-auto">
+        <div className="merchant-content max-w-4xl mx-auto px-4 py-6 sm:px-8 sm:py-8">
           <section className="space-y-8">
             <div className="mb-8">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 dark:border-cyan-800/50 dark:bg-cyan-950/50 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/10">
                 Application Status
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
                 Trạng thái hồ sơ
               </h1>
-              <p className="mt-3 text-[14px] font-medium text-slate-500 leading-relaxed">
+              <p className="mt-3 text-[14px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
                 Theo dõi quá trình thẩm định quán của bạn.
               </p>
             </div>
 
             {isLoading && (
-              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-12 text-center shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-cyan-50 text-cyan-600 shadow-sm ring-1 ring-cyan-100">
+              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-2xl">
+                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-cyan-50 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-100 dark:ring-cyan-900">
                   <Clock3 size={28} className="animate-pulse" />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900">Đang tải hồ sơ...</h2>
-                <p className="mt-2 text-[14px] font-medium text-slate-500">Vui lòng chờ trong giây lát.</p>
+                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Đang tải hồ sơ...</h2>
+                <p className="mt-2 text-[14px] font-medium text-slate-500 dark:text-slate-400">Vui lòng chờ trong giây lát.</p>
               </section>
             )}
 
             {isError && (
-              <section className="relative overflow-hidden rounded-[32px] border border-rose-200/60 bg-rose-50/60 p-12 text-center shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-white text-rose-500 shadow-sm ring-1 ring-rose-200">
+              <section className="relative overflow-hidden rounded-[32px] border border-rose-200/60 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/40 p-12 text-center shadow-xl backdrop-blur-2xl">
+                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-white dark:bg-slate-800 text-rose-500 shadow-sm ring-1 ring-rose-200 dark:ring-rose-900">
                   <HelpCircle size={28} />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900">Không tải được trạng thái</h2>
-                <p className="mt-2 text-[14px] font-medium text-slate-500">
+                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Không tải được trạng thái</h2>
+                <p className="mt-2 text-[14px] font-medium text-slate-500 dark:text-slate-400">
                   {error instanceof Error
                     ? error.message
                     : "Có lỗi xảy ra khi lấy hồ sơ."}
@@ -243,12 +243,12 @@ export function MerchantApplicationStatusPage() {
             )}
 
             {!isLoading && !application && (
-              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-12 text-center shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-gradient-to-br from-cyan-50 to-blue-50 text-cyan-600 shadow-sm ring-1 ring-cyan-200">
+              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-2xl">
+                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950 dark:to-blue-950 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-200 dark:ring-cyan-900">
                   <Store size={28} />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900">Chưa gửi hồ sơ</h2>
-                <p className="mt-2 max-w-sm mx-auto text-[14px] font-medium text-slate-500">
+                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Chưa gửi hồ sơ</h2>
+                <p className="mt-2 max-w-sm mx-auto text-[14px] font-medium text-slate-500 dark:text-slate-400">
                   Bạn chưa có hồ sơ quán nào. Hãy gửi hồ sơ để bắt đầu thẩm định.
                 </p>
 
@@ -264,34 +264,34 @@ export function MerchantApplicationStatusPage() {
 
             {application && (
               <>
-                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)]">
+                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-2xl transition-all duration-500 hover:shadow-2xl">
                   <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl opacity-0 transition-opacity duration-500 hover:opacity-100 mix-blend-multiply" />
                   <div className="relative flex flex-col md:flex-row items-center md:items-stretch gap-6">
-                    <div className="relative h-40 w-full md:w-56 shrink-0 overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="relative h-40 w-full md:w-56 shrink-0 overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                       <img
                         src={getApplicationCoverImage(application)}
                         alt={application.name}
                         className="h-full w-full object-cover"
                       />
 
-                      <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-800 shadow-sm backdrop-blur">
+                      <div className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-slate-950/90 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 shadow-sm backdrop-blur">
                         {getStatusBadge(status)}
                       </div>
                     </div>
 
                     <div className="flex flex-1 flex-col justify-center py-2 min-w-0">
-                      <h2 className="text-[20px] font-black text-slate-900 truncate">{application.name}</h2>
+                      <h2 className="text-[20px] font-black text-slate-900 dark:text-white truncate">{application.name}</h2>
 
                       <div className="mt-4 space-y-3">
-                        <p className="flex items-start gap-2.5 text-[14px] font-medium text-slate-600">
-                          <MapPin size={18} className="mt-0.5 shrink-0 text-cyan-600" />
+                        <p className="flex items-start gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
+                          <MapPin size={18} className="mt-0.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
                           <span className="line-clamp-2">
                             {applicationAddress || "Địa chỉ đang chờ cập nhật"}
                           </span>
                         </p>
 
-                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600">
-                          <Mail size={18} className="shrink-0 text-amber-600" />
+                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
+                          <Mail size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
                           <span className="truncate">
                             {application.applicant?.email ||
                               user?.Email ||
@@ -299,8 +299,8 @@ export function MerchantApplicationStatusPage() {
                           </span>
                         </p>
 
-                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600">
-                          <Clock3 size={18} className="shrink-0 text-emerald-600" />
+                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
+                          <Clock3 size={18} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
                           <span>
                             Ngày gửi: {formatDate(application.createdAt)}
                           </span>
@@ -310,8 +310,8 @@ export function MerchantApplicationStatusPage() {
                   </div>
                 </section>
 
-                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl">
-                  <h2 className="mb-8 text-[18px] font-black tracking-tight text-slate-900">Tiến trình xét duyệt</h2>
+                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-8 sm:p-10 shadow-xl backdrop-blur-2xl">
+                  <h2 className="mb-8 text-[18px] font-black tracking-tight text-slate-900 dark:text-white">Tiến trình xét duyệt</h2>
 
                   <div className="relative">
                     <StepItem
@@ -329,7 +329,7 @@ export function MerchantApplicationStatusPage() {
                       icon={<SearchCheck size={18} />}
                     />
 
-                    <div className="ml-14 mb-8 inline-flex rounded-xl border border-cyan-200/50 bg-cyan-50/50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 shadow-sm relative z-10">
+                    <div className="ml-14 mb-8 inline-flex rounded-xl border border-cyan-200/50 bg-cyan-50/50 dark:border-cyan-800/50 dark:bg-cyan-950/50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300 shadow-sm relative z-10">
                       ƯỚC TÍNH: 1–2 NGÀY LÀM VIỆC
                     </div>
 
@@ -369,8 +369,8 @@ export function MerchantApplicationStatusPage() {
                   )}
 
                   {isApproved && (
-                    <div className="mt-8 pt-6 border-t border-slate-200/50">
-                      <p className="mb-5 text-[14px] font-medium text-slate-600 leading-relaxed bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                    <div className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800">
+                      <p className="mb-5 text-[14px] font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-emerald-50/50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/50">
                         Quán của bạn đã được duyệt và hiển thị trên UGem. Nếu
                         cần thay đổi thông tin, vui lòng liên hệ Support.
                       </p>
@@ -386,15 +386,15 @@ export function MerchantApplicationStatusPage() {
                   )}
                 </section>
 
-                <section className="relative overflow-hidden rounded-[24px] border border-cyan-200/50 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 p-6 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between gap-5 text-center sm:text-left">
+                <section className="relative overflow-hidden rounded-[24px] border border-cyan-200/50 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:border-cyan-900/50 dark:from-cyan-950/60 dark:to-blue-950/60 p-6 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between gap-5 text-center sm:text-left">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-cyan-600 shadow-sm ring-1 ring-cyan-100">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-100 dark:ring-cyan-900">
                       <User size={20} />
                     </div>
 
                     <div>
-                      <h3 className="text-[16px] font-black text-slate-900">Cần hỗ trợ?</h3>
-                      <p className="mt-1 text-[13px] font-medium text-slate-600">
+                      <h3 className="text-[16px] font-black text-slate-900 dark:text-white">Cần hỗ trợ?</h3>
+                      <p className="mt-1 text-[13px] font-medium text-slate-600 dark:text-slate-300">
                         Nếu bạn có thắc mắc về quá trình thẩm định, hãy nhắn cho
                         chúng tôi.
                       </p>
@@ -403,7 +403,7 @@ export function MerchantApplicationStatusPage() {
 
                   <button 
                     type="button"
-                    className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white px-5 text-[13px] font-black text-cyan-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border border-cyan-100"
+                    className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white dark:bg-slate-800 px-5 text-[13px] font-black text-cyan-700 dark:text-cyan-300 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border border-cyan-100 dark:border-cyan-800"
                   >
                     Nhắn tin với Support
                   </button>

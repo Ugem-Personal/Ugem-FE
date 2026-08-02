@@ -37,7 +37,7 @@ const MerchantDetailPage = lazy(() => import("@/features/customer/pages/Merchant
 const WishlistPage = lazy(() => import("@/features/customer/pages/WishlistPage"));
 const ConfirmBillPage = lazy(() => import("@/features/customer/pages/ConfirmBillPage"));
 const MerchantApplicationStatusPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantApplicationStatusPage"), "MerchantApplicationStatusPage");
-const MerchantCampaignPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantFeatureUnavailablePage"), "MerchantCampaignPage");
+const MerchantCampaignPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantCampaignPage"), "MerchantCampaignPage");
 const MerchantFoodsPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantFoodsPage"), "MerchantFoodsPage");
 const MerchantOnboardingPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantOnboardingPage"), "MerchantOnboardingPage");
 const MerchantPortalPage = lazyNamed(() => import("@/features/merchantPortal/pages/MerchantPortalPage"), "MerchantPortalPage");

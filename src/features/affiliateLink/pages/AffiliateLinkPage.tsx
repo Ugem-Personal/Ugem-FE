@@ -456,11 +456,11 @@ function MerchantSelectCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full gap-3 rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50/50 ${
-        selected ? "border-cyan-300 ring-2 ring-cyan-100" : "border-slate-200"
+      className={`flex w-full gap-3 rounded-lg border bg-white dark:bg-slate-900 p-3 text-left shadow-sm transition hover:border-cyan-200 dark:hover:border-cyan-800 hover:bg-cyan-50/50 dark:hover:bg-slate-800/50 ${
+        selected ? "border-cyan-300 dark:border-cyan-600 ring-2 ring-cyan-100 dark:ring-cyan-900" : "border-slate-200 dark:border-slate-800"
       }`}
     >
-      <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-cyan-50 text-cyan-700">
+      <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
         {image ? (
           <img src={image} alt={name} className="h-full w-full object-cover" />
         ) : (
@@ -470,7 +470,7 @@ function MerchantSelectCard({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="line-clamp-1 text-sm font-black text-slate-950">
+          <h3 className="line-clamp-1 text-sm font-black text-slate-950 dark:text-white">
             {name}
           </h3>
           {selected ? (
@@ -481,8 +481,8 @@ function MerchantSelectCard({
         </div>
 
         {merchant.address ? (
-          <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600" />
+          <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
             <span className="line-clamp-1">{cleanAddress(merchant.address)}</span>
           </p>
         ) : null}
@@ -504,15 +504,15 @@ function LinkBlock({
 }) {
   return (
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
         {label}
       </p>
-      <div className="mt-2 flex gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+      <div className="mt-2 flex gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-2">
         <a
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-bold text-cyan-700 ring-1 ring-slate-100 hover:underline"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold text-cyan-700 dark:text-cyan-400 ring-1 ring-slate-100 dark:ring-slate-800 hover:underline"
         >
           <ExternalLink className="h-4 w-4 shrink-0" />
           <span className="truncate">{value}</span>
@@ -521,7 +521,7 @@ function LinkBlock({
         <Button
           type="button"
           variant="outline"
-          className="h-10 w-10 shrink-0 rounded-lg p-0"
+          className="h-10 w-10 shrink-0 rounded-lg p-0 dark:border-slate-800 dark:text-slate-200"
           onClick={onCopy}
           aria-label={`Sao chép ${label}`}
         >
@@ -553,21 +553,21 @@ function EarningsCard({
     <article
       className={`rounded-lg border p-4 shadow-lg shadow-cyan-950/7 ${
         strong
-          ? "border-cyan-100 bg-cyan-950 text-white"
-          : "border-white/80 bg-white/90 text-slate-950"
+          ? "border-cyan-100 dark:border-cyan-900 bg-cyan-950 text-white"
+          : "border-white/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-slate-950 dark:text-white"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
             className={`text-xs font-black uppercase tracking-[0.14em] ${
-              strong ? "text-cyan-100" : "text-slate-500"
+              strong ? "text-cyan-100" : "text-slate-500 dark:text-slate-400"
             }`}
           >
             {title}
           </p>
           {loading ? (
-            <div className="mt-3 h-8 w-32 animate-pulse rounded bg-slate-200/60" />
+            <div className="mt-3 h-8 w-32 animate-pulse rounded bg-slate-200/60 dark:bg-slate-800" />
           ) : (
             <p className="mt-2 truncate text-2xl font-black">{value}</p>
           )}
@@ -576,7 +576,7 @@ function EarningsCard({
         {Icon ? (
           <span
             className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
-              strong ? "bg-white/10 text-cyan-100" : "bg-cyan-50 text-cyan-700"
+              strong ? "bg-white/10 text-cyan-100" : "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300"
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -598,7 +598,7 @@ function EarningsCard({
       </div>
       <p
         className={`mt-3 text-xs font-semibold leading-5 ${
-          strong ? "text-cyan-100/80" : "text-slate-500"
+          strong ? "text-cyan-100/80" : "text-slate-500 dark:text-slate-400"
         }`}
       >
         {description}
@@ -609,11 +609,11 @@ function EarningsCard({
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+    <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-1 truncate text-lg font-black text-slate-950">{value}</p>
+      <p className="mt-1 truncate text-lg font-black text-slate-950 dark:text-white">{value}</p>
     </div>
   );
 }
