@@ -16,17 +16,28 @@ export const registerSchema = z
       .string()
       .trim()
       .min(2, "Họ và tên phải có ít nhất 2 ký tự")
-      .max(100, "Họ và tên không được vượt quá 100 ký tự"),
+      .max(100, "Họ và tên không được vượt quá 100 ký tự")
+      .refine((val) => val.trim().split(/\s+/).filter(Boolean).length >= 2, {
+        message: "Họ và tên phải bao gồm ít nhất 2 từ (Ví dụ: Nguyễn Văn A)",
+      }),
     email: z
       .string()
       .trim()
       .min(1, "Vui lòng nhập email")
       .email("Email không hợp lệ"),
-    phoneNumber: z.string().trim().min(1, "Vui lòng nhập số điện thoại"),
+    phoneNumber: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập số điện thoại")
+      .regex(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/, "Số điện thoại không hợp lệ (Ví dụ: 0912345678)"),
     password: z
       .string()
-      .min(6, "Mật khẩu tối thiểu 6 ký tự")
-      .max(100, "Mật khẩu không được vượt quá 100 ký tự"),
+      .min(8, "Mật khẩu tối thiểu 8 ký tự")
+      .max(100, "Mật khẩu không được vượt quá 100 ký tự")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số",
+      ),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
     role: z.enum(["Customer", "Merchant"]),
   })
@@ -61,8 +72,12 @@ export const resetPasswordSchema = z
       .regex(/^\d{6}$/, "Mã xác nhận phải gồm 6 chữ số"),
     newPassword: z
       .string()
-      .min(6, "Mật khẩu tối thiểu 6 ký tự")
-      .max(100, "Mật khẩu không được vượt quá 100 ký tự"),
+      .min(8, "Mật khẩu mới tối thiểu 8 ký tự")
+      .max(100, "Mật khẩu mới không được vượt quá 100 ký tự")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số",
+      ),
     confirmNewPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
   })
   .refine((values) => values.newPassword === values.confirmNewPassword, {
