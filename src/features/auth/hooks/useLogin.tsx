@@ -1,8 +1,10 @@
-﻿import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { loginApi } from "../services";
 import { saveAuthToken } from "../store";
 import type { LoginRequest } from "../types";
+import { notify } from "@/shared/lib/notify";
+import { getLoginErrorMessage } from "../errorMessages";
 
 export function getRouteByRole(role?: string) {
   if (role === "Merchant") return "/merchant";
@@ -43,6 +45,7 @@ export function useLogin() {
     },
 
     onSuccess: ({ user }) => {
+      notify.success("Đăng nhập thành công! Chào mừng bạn quay trở lại.");
       if (returnUrl) {
         // try to navigate back to requested path
         try {
@@ -56,6 +59,10 @@ export function useLogin() {
       navigate(getRouteByRole(user.Role), {
         replace: true,
       });
+    },
+
+    onError: (error) => {
+      notify.error(getLoginErrorMessage(error));
     },
   });
 }

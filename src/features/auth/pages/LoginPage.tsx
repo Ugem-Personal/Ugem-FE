@@ -50,6 +50,13 @@ export function LoginPage() {
   }
 
   useEffect(() => {
+    if (sessionStorage.getItem("ugem_logout_success") === "true") {
+      sessionStorage.removeItem("ugem_logout_success");
+      notify.success("Đã đăng xuất tài khoản thành công.");
+    }
+  }, []);
+
+  useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
 
     let cancelled = false;
@@ -102,6 +109,8 @@ export function LoginPage() {
               refreshToken: data.refreshToken,
               refreshTokenExpiresAtUtc: data.refreshTokenExpiresAtUtc,
             });
+
+            notify.success("Đăng nhập bằng Google thành công!");
 
             if (data.isNewUser && user.Role === "Customer") {
               setShowGooglePurposeDialog(true);

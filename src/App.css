@@ -709,10 +709,65 @@
   color: #10304a;
 }
 
+.dark .merchant-onboarding-layout {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 211, 238, 0.1),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(99, 102, 241, 0.1),
+      transparent 40%
+    ),
+    #020617;
+  color: #f8fafc;
+}
+
 .onboarding-sidebar {
   background: rgba(255, 255, 255, 0.82);
   border-right: 1px solid rgba(186, 230, 253, 0.9);
   padding: 28px 24px;
+}
+
+.dark .onboarding-sidebar {
+  background: rgba(15, 23, 42, 0.85);
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .onboarding-brand {
+  color: #22d3ee;
+}
+
+.dark .onboarding-progress span {
+  color: #38bdf8;
+}
+
+.dark .onboarding-progress small {
+  color: #94a3b8;
+}
+
+.dark .onboarding-progress div {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .onboarding-sidebar nav button {
+  color: #94a3b8;
+}
+
+.dark .onboarding-sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.dark .onboarding-sidebar nav button.active {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 211, 238, 0.2),
+    rgba(99, 102, 241, 0.2)
+  );
+  color: #38bdf8;
 }
 
 .onboarding-brand {
@@ -859,6 +914,10 @@
   font-size: 12px;
 }
 
+.dark .stepper-item {
+  color: #94a3b8;
+}
+
 .stepper-item div {
   width: 38px;
   height: 38px;
@@ -871,10 +930,21 @@
   font-weight: 900;
 }
 
+.dark .stepper-item div {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
 .stepper-item.active div,
 .stepper-item.done div {
-  background: #c9471c;
+  background: #0891b2;
   color: white;
+}
+
+.dark .stepper-item.active div,
+.dark .stepper-item.done div {
+  background: linear-gradient(135deg, #0891b2, #0f766e);
+  color: #ffffff;
 }
 
 .onboarding-heading h1 {
@@ -883,9 +953,17 @@
   line-height: 1.08;
 }
 
+.dark .onboarding-heading h1 {
+  color: #f8fafc;
+}
+
 .onboarding-heading p {
   margin: 0 0 24px;
   color: #8a7468;
+}
+
+.dark .onboarding-heading p {
+  color: #94a3b8;
 }
 
 .onboarding-card {
@@ -894,6 +972,12 @@
   border-radius: 18px;
   padding: 28px;
   box-shadow: 0 14px 36px rgba(108, 65, 38, 0.06);
+}
+
+.dark .onboarding-card {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .onboarding-card h2 {

@@ -1,5 +1,4 @@
 import { UserAccountMenu } from "@/shared/components/UserAccountMenu";
-import { ModeToggle } from "@/shared/components/ModeToggle";
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -19,7 +18,6 @@ export function OnboardingTopbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <ModeToggle />
         <UserAccountMenu fallbackName="Merchant Applicant" />
       </div>
     </header>

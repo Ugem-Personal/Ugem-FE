@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X } from "lucide-react";
+import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles, Activity } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { UserAccountMenu } from "@/shared/components";
 
 const merchantItems = [
+  ["Hồ sơ quán", "/merchant", Home],
   ["Nhà hàng của bạn", "/merchant/restaurant", Store],
   ["Tạo đơn tại quán", "/merchant/create-order", ClipboardPlus],
-  ["Hồ sơ quán", "/merchant", Home],
   ["Trạng thái xét duyệt", "/merchant/application/status", Timer],
   ["Chiến dịch", "/merchant/campaigns", Megaphone],
   ["Thống kê lượt xem", "/merchant/view-statistics", BarChart3],
@@ -40,7 +40,7 @@ export function MerchantHeader() {
   }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 sm:h-18 items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-4 sm:px-6 lg:px-8 backdrop-blur-xl transition-colors duration-300">
+    <header className="sticky top-0 z-30 flex h-16 sm:h-20 items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 px-4 sm:px-6 lg:px-8 backdrop-blur-xl transition-colors duration-300 shadow-xs">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -51,13 +51,22 @@ export function MerchantHeader() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-            Không gian Chủ quán
-          </p>
-          <h1 className="mt-0.5 truncate text-sm sm:text-base font-black text-slate-900 dark:text-white">
-            Quản lý hồ sơ cửa hàng
-          </h1>
+        
+        <div className="min-w-0 flex items-center gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                KHÔNG GIANG CHỦ QUÁN
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono font-black text-emerald-600 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                SYSTEM ONLINE
+              </span>
+            </div>
+            <h1 className="mt-0.5 truncate text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              Quản lý hồ sơ cửa hàng
+            </h1>
+          </div>
         </div>
       </div>
 
@@ -65,31 +74,60 @@ export function MerchantHeader() {
         <UserAccountMenu fallbackName="Chủ quán" />
       </div>
 
-      {mobileOpen ? (
+      {/* Mobile Drawer */}
+      {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={() => setMobileOpen(false)} aria-label="Đóng menu Merchant" />
-          <aside className="absolute inset-y-0 left-0 w-[min(88vw,20rem)] overflow-y-auto bg-slate-950 p-4 text-white shadow-2xl animate-in slide-in-from-left duration-200" role="dialog" aria-modal="true" aria-label="Menu Merchant">
-            <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">UGem</p>
-                <p className="text-base font-black">Cổng Chủ Quán</p>
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Đóng menu Merchant"
+          />
+          <aside className="relative flex h-full w-[270px] max-w-[85vw] flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-2xl">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white shadow-md">
+                    <Sparkles className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-cyan-600 dark:text-cyan-400">UGem Partner</p>
+                    <p className="text-xs font-black text-slate-900 dark:text-white">Cổng Chủ Quán</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button type="button" onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/10" aria-label="Đóng menu Merchant">
-                <X className="h-4 w-4" />
-              </button>
+
+              <nav className="space-y-1">
+                {items.map(([label, path, Icon]) => (
+                  <NavLink
+                    key={path}
+                    to={path}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition",
+                        isActive
+                          ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-black border-l-3 border-cyan-500"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                      )
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </NavLink>
+                ))}
+              </nav>
             </div>
-            <nav className="grid gap-1.5" aria-label="Điều hướng Merchant">
-              {items.map(([label, path, Icon]) => (
-                <NavLink key={path} to={path} end={path === "/merchant"} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-colors", isActive ? "bg-cyan-500/20 text-cyan-300 border-l-3 border-cyan-400 pl-2.5" : "text-slate-200 hover:bg-white/10 hover:text-white")}>
-                  {({ isActive }) => (
-                    <><span className={cn("grid h-8 w-8 place-items-center rounded-lg", isActive ? "bg-cyan-500/20 text-cyan-400" : "bg-white/8 text-slate-300")}><Icon className="h-4 w-4" /></span><span className="truncate">{label}</span></>
-                  )}
-                </NavLink>
-              ))}
-            </nav>
           </aside>
         </div>
-      ) : null}
+      )}
     </header>
   );
 }
