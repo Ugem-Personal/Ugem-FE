@@ -86,6 +86,7 @@ export function UserAccountMenu({
   function handleLogout() {
     notify.confirmLogout(() => {
       clearAuth();
+      sessionStorage.setItem("ugem_logout_success", "true");
       window.location.href = "/login";
     });
   }

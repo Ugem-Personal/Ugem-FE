@@ -4,12 +4,9 @@ import { LogOut } from "lucide-react";
 export function showLogoutConfirmToast(onConfirm: () => void) {
   const LOGOUT_CONFIRM_TOAST_ID = "logout-confirm";
 
-  toast.dismiss(LOGOUT_CONFIRM_TOAST_ID);
-  toast.dismiss();
-
   toast.custom(
     (t) => (
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 p-4.5 shadow-2xl backdrop-blur-2xl text-slate-900 dark:text-white transition-all duration-300 ring-1 ring-slate-950/5 dark:ring-white/10">
+      <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 p-4.5 shadow-2xl backdrop-blur-2xl text-slate-900 dark:text-white transition-all duration-300 ring-1 ring-slate-950/5 dark:ring-white/10">
         <div className="flex items-start gap-3.5">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-500/15 to-amber-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 shadow-xs">
             <LogOut className="h-5 w-5" />

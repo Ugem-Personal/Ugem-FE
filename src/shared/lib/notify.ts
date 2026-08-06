@@ -1,18 +1,24 @@
-import { toast } from "sonner";
+import { toast, type ExternalToast } from "sonner";
 import { showLogoutConfirmToast } from "@/shared/components/ConfirmLogoutToast";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showInfoToast,
+  showLoadingToast,
+} from "@/shared/components/ToastNotification";
 
 export const notify = {
-  success(message: string, options?: Parameters<typeof toast.success>[1]) {
-    toast.success(message, options);
+  success(message: string, options?: ExternalToast) {
+    return showSuccessToast(message, options);
   },
-  error(message: string, options?: Parameters<typeof toast.error>[1]) {
-    toast.error(message, options);
+  error(message: string, options?: ExternalToast) {
+    return showErrorToast(message, options);
   },
-  info(message: string, options?: Parameters<typeof toast>[1]) {
-    toast(message, options);
+  info(message: string, options?: ExternalToast) {
+    return showInfoToast(message, options);
   },
-  loading(message: string, options?: Parameters<typeof toast.loading>[1]) {
-    return toast.loading(message, options);
+  loading(message: string, options?: ExternalToast) {
+    return showLoadingToast(message, options);
   },
   confirmLogout(onConfirm: () => void) {
     showLogoutConfirmToast(onConfirm);
