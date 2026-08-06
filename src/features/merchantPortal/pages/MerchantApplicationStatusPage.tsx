@@ -112,15 +112,15 @@ function getActiveDescription(isApproved: boolean) {
 function StepItem({ active, done, title, description, icon }: StepItemProps) {
   return (
     <div className={`relative flex gap-5 pb-8 last:pb-0 ${active ? "opacity-100" : "opacity-60 grayscale-[50%]"} transition-all duration-300`}>
-      <div className="absolute left-[19px] top-10 bottom-0 w-0.5 bg-gradient-to-b from-cyan-200 to-transparent last:hidden" />
-      <div className={`relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full shadow-sm ring-4 ring-white ${done ? "bg-emerald-500 text-white shadow-emerald-500/30" : active ? "bg-cyan-500 text-white shadow-cyan-500/30" : "bg-slate-200 text-slate-400"}`}>
+      <div className="absolute left-[19px] top-10 bottom-0 w-0.5 bg-gradient-to-b from-cyan-400/40 to-transparent last:hidden" />
+      <div className={`relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full shadow-xs ring-4 ring-slate-100 dark:ring-slate-800 ${done ? "bg-emerald-500 text-white shadow-emerald-500/20" : active ? "bg-cyan-500 text-slate-950 shadow-cyan-500/20" : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}>
         {icon}
       </div>
       <div className="pt-1.5 min-w-0">
-        <strong className={`block text-[15px] font-black tracking-tight ${done ? "text-emerald-700" : active ? "text-cyan-800" : "text-slate-600"}`}>
+        <strong className={`block text-[15px] font-black tracking-tight ${done ? "text-emerald-600 dark:text-emerald-400" : active ? "text-cyan-700 dark:text-cyan-400" : "text-slate-600 dark:text-slate-400"}`}>
           {title}
         </strong>
-        <p className="mt-1 text-[13px] font-medium text-slate-500 leading-relaxed">
+        <p className="mt-1 text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
           {description}
         </p>
       </div>
@@ -194,47 +194,49 @@ export function MerchantApplicationStatusPage() {
   }, [isApproved]);
 
   return (
-    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.10),transparent_34%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+    <main className="merchant-portal-layout min-h-screen bg-slate-50/80 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative flex">
+      {/* Background Glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/5 dark:bg-cyan-600/10 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/5 dark:bg-indigo-600/10 blur-[140px]" />
+      </div>
 
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
-        <div className="merchant-content max-w-4xl mx-auto px-4 py-6 sm:px-8 sm:py-8">
-          <section className="space-y-8">
-            <div className="mb-8">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 dark:border-cyan-800/50 dark:bg-cyan-950/50 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-500/10">
+        <div className="merchant-content w-full max-w-4xl mx-auto px-4 py-6 sm:px-8 sm:py-8 space-y-6 flex-1">
+          <section className="space-y-6">
+            <div>
+              <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
                 Application Status
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white leading-[1.15]">
                 Trạng thái hồ sơ
               </h1>
-              <p className="mt-3 text-[14px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                 Theo dõi quá trình thẩm định quán của bạn.
               </p>
             </div>
 
             {isLoading && (
-              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-cyan-50 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-100 dark:ring-cyan-900">
-                  <Clock3 size={28} className="animate-pulse" />
+              <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-10 text-center shadow-xs backdrop-blur-xl">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                  <Clock3 size={26} className="animate-pulse" />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Đang tải hồ sơ...</h2>
-                <p className="mt-2 text-[14px] font-medium text-slate-500 dark:text-slate-400">Vui lòng chờ trong giây lát.</p>
+                <h2 className="text-base font-black text-slate-950 dark:text-white">Đang tải hồ sơ...</h2>
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Vui lòng chờ trong giây lát.</p>
               </section>
             )}
 
             {isError && (
-              <section className="relative overflow-hidden rounded-[32px] border border-rose-200/60 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/40 p-12 text-center shadow-xl backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-white dark:bg-slate-800 text-rose-500 shadow-sm ring-1 ring-rose-200 dark:ring-rose-900">
-                  <HelpCircle size={28} />
+              <section className="relative overflow-hidden rounded-2xl border border-rose-200/80 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/40 p-10 text-center shadow-xs backdrop-blur-xl">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white dark:bg-slate-800 text-rose-500 border border-rose-200 dark:border-rose-800">
+                  <HelpCircle size={26} />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Không tải được trạng thái</h2>
-                <p className="mt-2 text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                <h2 className="text-base font-black text-slate-950 dark:text-white">Không tải được trạng thái</h2>
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                   {error instanceof Error
                     ? error.message
                     : "Có lỗi xảy ra khi lấy hồ sơ."}
@@ -243,19 +245,19 @@ export function MerchantApplicationStatusPage() {
             )}
 
             {!isLoading && !application && (
-              <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-2xl">
-                <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[20px] bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950 dark:to-blue-950 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-200 dark:ring-cyan-900">
-                  <Store size={28} />
+              <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-10 text-center shadow-xs backdrop-blur-xl">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                  <Store size={26} />
                 </div>
-                <h2 className="text-[18px] font-black text-slate-900 dark:text-white">Chưa gửi hồ sơ</h2>
-                <p className="mt-2 max-w-sm mx-auto text-[14px] font-medium text-slate-500 dark:text-slate-400">
+                <h2 className="text-base font-black text-slate-950 dark:text-white">Chưa gửi hồ sơ</h2>
+                <p className="mt-1 max-w-sm mx-auto text-xs font-medium text-slate-500 dark:text-slate-400">
                   Bạn chưa có hồ sơ quán nào. Hãy gửi hồ sơ để bắt đầu thẩm định.
                 </p>
 
                 <button
                   type="button"
                   onClick={() => navigate("/merchant/application/create")}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 px-6 py-3.5 text-[14px] font-black tracking-wide text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98]"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-5 py-2.5 text-xs font-black shadow-md shadow-cyan-500/20 transition"
                 >
                   Gửi hồ sơ quán
                 </button>
@@ -264,34 +266,33 @@ export function MerchantApplicationStatusPage() {
 
             {application && (
               <>
-                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-2xl transition-all duration-500 hover:shadow-2xl">
-                  <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl opacity-0 transition-opacity duration-500 hover:opacity-100 mix-blend-multiply" />
+                <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs backdrop-blur-xl">
                   <div className="relative flex flex-col md:flex-row items-center md:items-stretch gap-6">
-                    <div className="relative h-40 w-full md:w-56 shrink-0 overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="relative h-40 w-full md:w-56 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 dark:border-white/10">
                       <img
                         src={getApplicationCoverImage(application)}
                         alt={application.name}
                         className="h-full w-full object-cover"
                       />
 
-                      <div className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-slate-950/90 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 shadow-sm backdrop-blur">
+                      <div className="absolute left-3 top-3 rounded-full bg-slate-900/90 text-white px-3 py-1 text-[11px] font-black uppercase tracking-wider shadow-xs backdrop-blur">
                         {getStatusBadge(status)}
                       </div>
                     </div>
 
                     <div className="flex flex-1 flex-col justify-center py-2 min-w-0">
-                      <h2 className="text-[20px] font-black text-slate-900 dark:text-white truncate">{application.name}</h2>
+                      <h2 className="text-lg font-black text-slate-950 dark:text-white truncate">{application.name}</h2>
 
-                      <div className="mt-4 space-y-3">
-                        <p className="flex items-start gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
-                          <MapPin size={18} className="mt-0.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                      <div className="mt-3.5 space-y-2.5">
+                        <p className="flex items-start gap-2.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                          <MapPin size={16} className="mt-0.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
                           <span className="line-clamp-2">
                             {applicationAddress || "Địa chỉ đang chờ cập nhật"}
                           </span>
                         </p>
 
-                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
-                          <Mail size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                        <p className="flex items-center gap-2.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                          <Mail size={16} className="shrink-0 text-amber-600 dark:text-amber-400" />
                           <span className="truncate">
                             {application.applicant?.email ||
                               user?.Email ||
@@ -299,8 +300,8 @@ export function MerchantApplicationStatusPage() {
                           </span>
                         </p>
 
-                        <p className="flex items-center gap-2.5 text-[14px] font-medium text-slate-600 dark:text-slate-300">
-                          <Clock3 size={18} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <p className="flex items-center gap-2.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                          <Clock3 size={16} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
                           <span>
                             Ngày gửi: {formatDate(application.createdAt)}
                           </span>
@@ -310,8 +311,8 @@ export function MerchantApplicationStatusPage() {
                   </div>
                 </section>
 
-                <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 dark:border-slate-800 dark:bg-slate-900/80 p-8 sm:p-10 shadow-xl backdrop-blur-2xl">
-                  <h2 className="mb-8 text-[18px] font-black tracking-tight text-slate-900 dark:text-white">Tiến trình xét duyệt</h2>
+                <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xs backdrop-blur-xl">
+                  <h2 className="mb-6 text-base font-black tracking-tight text-slate-950 dark:text-white">Tiến trình xét duyệt</h2>
 
                   <div className="relative">
                     <StepItem
@@ -324,20 +325,20 @@ export function MerchantApplicationStatusPage() {
                     <StepItem
                       active={isPending}
                       done={isApproved || isRejected}
-                      title="Censor đang thẩm định"
-                      description="Censor kiểm tra xem quán có thật sự underrated hay không."
+                      title="Bộ phận thẩm định đang kiểm tra"
+                      description="Kiểm tra xem quán có thật sự đạt tiêu chí chất lượng hay không."
                       icon={<SearchCheck size={18} />}
                     />
 
-                    <div className="ml-14 mb-8 inline-flex rounded-xl border border-cyan-200/50 bg-cyan-50/50 dark:border-cyan-800/50 dark:bg-cyan-950/50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300 shadow-sm relative z-10">
+                    <div className="ml-14 mb-6 inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 shadow-2xs relative z-10">
                       ƯỚC TÍNH: 1–2 NGÀY LÀM VIỆC
                     </div>
 
                     <StepItem
                       active={isApproved || isRejected}
                       done={isApproved}
-                      title="Chờ Staff phê duyệt"
-                      description="Staff xem xét kết quả thẩm định."
+                      title="Nhân viên phê duyệt"
+                      description="Xem xét kết quả thẩm định."
                       icon={getReviewIcon(isApproved)}
                     />
 
@@ -352,7 +353,7 @@ export function MerchantApplicationStatusPage() {
                     <StepItem
                       active={isApproved}
                       done={isApproved}
-                      title="Active trên UGem"
+                      title="Hiển thị trên UGem"
                       description={getActiveDescription(isApproved)}
                       icon={<Home size={18} />}
                     />
@@ -360,7 +361,7 @@ export function MerchantApplicationStatusPage() {
 
                   {isRejected && (
                     <button
-                      className="mt-8 w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 px-6 py-3.5 text-[14px] font-black tracking-wide text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98]"
+                      className="mt-6 w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 px-5 py-2.5 text-xs font-black text-slate-950 shadow-md transition"
                       type="button"
                       onClick={() => navigate("/merchant/application/create")}
                     >
@@ -369,14 +370,14 @@ export function MerchantApplicationStatusPage() {
                   )}
 
                   {isApproved && (
-                    <div className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800">
-                      <p className="mb-5 text-[14px] font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-emerald-50/50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/50">
+                    <div className="mt-6 pt-6 border-t border-slate-200/80 dark:border-white/10">
+                      <p className="mb-4 text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
                         Quán của bạn đã được duyệt và hiển thị trên UGem. Nếu
                         cần thay đổi thông tin, vui lòng liên hệ Support.
                       </p>
 
                       <button
-                        className="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 px-6 py-3.5 text-[14px] font-black tracking-wide text-white shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-900/30 active:scale-[0.98]"
+                        className="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-xs font-black text-white shadow-md transition"
                         type="button"
                         onClick={() => navigate(portalPath)}
                       >
@@ -386,24 +387,23 @@ export function MerchantApplicationStatusPage() {
                   )}
                 </section>
 
-                <section className="relative overflow-hidden rounded-[24px] border border-cyan-200/50 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:border-cyan-900/50 dark:from-cyan-950/60 dark:to-blue-950/60 p-6 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between gap-5 text-center sm:text-left">
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-cyan-100 dark:ring-cyan-900">
-                      <User size={20} />
+                <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/60 p-5 shadow-xs flex flex-col sm:flex-row items-center sm:justify-between gap-4 text-center sm:text-left">
+                  <div className="flex flex-col sm:flex-row items-center gap-3.5">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                      <User size={18} />
                     </div>
 
                     <div>
-                      <h3 className="text-[16px] font-black text-slate-900 dark:text-white">Cần hỗ trợ?</h3>
-                      <p className="mt-1 text-[13px] font-medium text-slate-600 dark:text-slate-300">
-                        Nếu bạn có thắc mắc về quá trình thẩm định, hãy nhắn cho
-                        chúng tôi.
+                      <h3 className="text-sm font-black text-slate-950 dark:text-white">Cần hỗ trợ?</h3>
+                      <p className="mt-0.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                        Nếu bạn có thắc mắc về quá trình thẩm định, hãy nhắn cho chúng tôi.
                       </p>
                     </div>
                   </div>
 
                   <button 
                     type="button"
-                    className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white dark:bg-slate-800 px-5 text-[13px] font-black text-cyan-700 dark:text-cyan-300 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md border border-cyan-100 dark:border-cyan-800"
+                    className="inline-flex h-9 shrink-0 items-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-4 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:border-cyan-400 transition"
                   >
                     Nhắn tin với Support
                   </button>
@@ -413,8 +413,6 @@ export function MerchantApplicationStatusPage() {
           </section>
         </div>
       </section>
-
-      {/* Mobile nav removed for Promax layout to use modern bottom navigation if applicable */}
     </main>
   );
 }

@@ -472,13 +472,13 @@ export function MerchantFoodsPage() {
   }
 
   return (
-    <main className="merchant-portal-layout bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] relative min-h-screen">
+    <main className="merchant-portal-layout bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative min-h-screen flex">
       {/* Background Decorators */}
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:32px_32px]" />
 
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
         <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8">

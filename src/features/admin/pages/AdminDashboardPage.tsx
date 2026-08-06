@@ -1,6 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
 import {
-  Activity,
   ArrowDownRight,
   ArrowUpRight,
   Banknote,
@@ -21,6 +20,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldAlert,
+  PieChart,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -143,11 +143,6 @@ export default function AdminDashboardPage() {
     0,
     totalRevenue - totalPlatformFee - totalReviewerFee,
   );
-  const platformRate =
-    totalRevenue > 0 ? (totalPlatformFee / totalRevenue) * 100 : 0;
-  const reviewerRate =
-    totalRevenue > 0 ? (totalReviewerFee / totalRevenue) * 100 : 0;
-  const formatFeeMixRate = (value: number) => `${value.toFixed(3)}%`;
   const topMerchant = merchantRevenues.find(
     (merchant) => toNumber(merchant.totalRevenue) > 0,
   );
@@ -234,73 +229,79 @@ export default function AdminDashboardPage() {
         </div>
       ) : null}
 
-      {/* 2. Hero & Insights Section */}
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
+      {/* 2. Hero & Revenue Breakdown Donut Chart Section */}
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.9fr)]">
         <RevenueHeroCard
           isLoading={dashboardQuery.isLoading}
           totalRevenue={dashboard.totalRevenue}
           topMerchant={topMerchant}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          <InsightCard
-            icon={WalletCards}
-            label="Net Merchant"
-            value={formatCurrency(merchantNetRevenue)}
-            description="Gross revenue sau khi trừ phí nền tảng & reviewer fee"
-            tone="emerald"
-          />
-          <InsightCard
-            icon={Activity}
-            label="Tỷ lệ Fee Mix"
-            value={`${formatFeeMixRate(platformRate)} / ${formatFeeMixRate(reviewerRate)}`}
-            description="Tỷ lệ Platform Fee / Reviewer Fee trên tổng doanh thu"
-            tone="amber"
-          />
-        </div>
+        <RevenueDistributionDonutChart
+          totalRevenue={totalRevenue}
+          merchantNetRevenue={merchantNetRevenue}
+          totalPlatformFee={totalPlatformFee}
+          totalReviewerFee={totalReviewerFee}
+        />
       </section>
 
-      {/* 3. KPI Summary Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {dashboardQuery.isLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-32 animate-pulse rounded-2xl border border-border bg-card"
-            />
-          ))
-        ) : (
-          <>
-            <KpiCard
-              title="Phí nền tảng"
-              value={formatCurrency(dashboard.totalPlatformFee)}
-              icon={Banknote}
-              tone="slate"
-              hint="Sum PlatformFee"
-            />
-            <KpiCard
-              title="Phí Reviewer / Affiliate"
-              value={formatCurrency(dashboard.totalReviewerFee)}
-              icon={HandCoins}
-              tone="emerald"
-              hint="Sum ReviewerFee"
-            />
-            <KpiCard
-              title="Đơn hoàn tất"
-              value={formatNumber(completedOrders)}
-              icon={ShoppingBag}
-              tone="amber"
-              hint="Số đơn hàng Completed"
-            />
-            <KpiCard
-              title="Giá trị đơn trung bình (AOV)"
-              value={formatCurrency(dashboard.averageOrderValue)}
-              icon={WalletCards}
-              tone="rose"
-              hint="Doanh thu / Đơn completed"
-            />
-          </>
-        )}
+      {/* 3. Top Merchant Ranking Leaderboard Chart & KPI Summary Grid */}
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
+        <TopMerchantsRankChart
+          merchantRevenues={merchantRevenues}
+          isLoading={merchantRevenueQuery.isLoading}
+        />
+
+        <div className="flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Tổng Quan KPIs
+            </h2>
+            <span className="text-xs font-semibold text-muted-foreground">Theo thời gian thực</span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {dashboardQuery.isLoading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-32 animate-pulse rounded-2xl border border-border bg-card"
+                />
+              ))
+            ) : (
+              <>
+                <KpiCard
+                  title="Phí nền tảng"
+                  value={formatCurrency(dashboard.totalPlatformFee)}
+                  icon={Banknote}
+                  tone="slate"
+                  hint="Sum PlatformFee"
+                />
+                <KpiCard
+                  title="Phí Reviewer"
+                  value={formatCurrency(dashboard.totalReviewerFee)}
+                  icon={HandCoins}
+                  tone="emerald"
+                  hint="Sum ReviewerFee"
+                />
+                <KpiCard
+                  title="Đơn hoàn tất"
+                  value={formatNumber(completedOrders)}
+                  icon={ShoppingBag}
+                  tone="amber"
+                  hint="Số đơn completed"
+                />
+                <KpiCard
+                  title="AOV (Đơn TB)"
+                  value={formatCurrency(dashboard.averageOrderValue)}
+                  icon={WalletCards}
+                  tone="rose"
+                  hint="Doanh thu / Đơn"
+                />
+              </>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* 4. Quick Actions for Admin Role */}
@@ -465,40 +466,239 @@ function RevenueHeroCard({
   );
 }
 
-function InsightCard({
-  description,
-  icon: Icon,
-  label,
-  tone,
-  value,
+function RevenueDistributionDonutChart({
+  totalRevenue,
+  merchantNetRevenue,
+  totalPlatformFee,
+  totalReviewerFee,
 }: {
-  description: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  tone: "emerald" | "amber";
-  value: string;
+  totalRevenue: number;
+  merchantNetRevenue: number;
+  totalPlatformFee: number;
+  totalReviewerFee: number;
 }) {
+  const safeTotal = Math.max(totalRevenue, 1);
+  const netPct = totalRevenue > 0 ? (merchantNetRevenue / safeTotal) * 100 : 0;
+  const platformPct = totalRevenue > 0 ? (totalPlatformFee / safeTotal) * 100 : 0;
+  const reviewerPct = totalRevenue > 0 ? (totalReviewerFee / safeTotal) * 100 : 0;
+
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius; // ~226.19
+
+  const netLength = (netPct / 100) * circumference;
+  const platformLength = (platformPct / 100) * circumference;
+  const reviewerLength = (reviewerPct / 100) * circumference;
+
+  const netOffset = -circumference / 4;
+  const platformOffset = netOffset - netLength;
+  const reviewerOffset = platformOffset - platformLength;
+
   return (
-    <article className="rounded-2xl border border-border bg-card p-5 shadow-xs dark:bg-slate-900/90">
-      <div className="flex items-start justify-between gap-3">
+    <article className="rounded-3xl border border-border bg-card p-6 shadow-xs dark:bg-slate-900/90 flex flex-col justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <p className="mt-1.5 text-2xl font-black text-foreground">{value}</p>
+          <span className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+            Financial Breakdown
+          </span>
+          <h2 className="text-lg font-black text-foreground mt-0.5">Biểu Đồ Phân Bổ Doanh Thu</h2>
         </div>
-        <span
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-            tone === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
-            tone === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
-          )}
-        >
-          <Icon className="h-5 w-5" />
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
+          <PieChart className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-3 text-xs font-medium text-muted-foreground leading-relaxed">{description}</p>
+
+      <div className="mt-4 flex flex-col items-center sm:flex-row sm:items-center gap-6">
+        <div className="relative grid h-36 w-36 shrink-0 place-items-center">
+          <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              className="stroke-muted"
+              strokeWidth="12"
+              fill="transparent"
+            />
+            {netPct > 0 && (
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                className="stroke-emerald-500 transition-all duration-700"
+                strokeWidth="12"
+                fill="transparent"
+                strokeDasharray={`${netLength} ${circumference - netLength}`}
+                strokeDashoffset={netOffset}
+                strokeLinecap="round"
+              />
+            )}
+            {platformPct > 0 && (
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                className="stroke-cyan-500 transition-all duration-700"
+                strokeWidth="12"
+                fill="transparent"
+                strokeDasharray={`${platformLength} ${circumference - platformLength}`}
+                strokeDashoffset={platformOffset}
+                strokeLinecap="round"
+              />
+            )}
+            {reviewerPct > 0 && (
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                className="stroke-amber-500 transition-all duration-700"
+                strokeWidth="12"
+                fill="transparent"
+                strokeDasharray={`${reviewerLength} ${circumference - reviewerLength}`}
+                strokeDashoffset={reviewerOffset}
+                strokeLinecap="round"
+              />
+            )}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gross</span>
+            <span className="text-base font-black text-foreground tabular-nums leading-none mt-0.5">
+              {totalRevenue > 0 ? "100%" : "0%"}
+            </span>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-2.5 w-full">
+          <div className="rounded-xl border border-border bg-background/50 p-2.5">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-2 text-foreground">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                Net Merchant
+              </span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono">
+                {netPct.toFixed(1)}%
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-extrabold text-foreground tabular-nums">
+              {formatCurrency(merchantNetRevenue)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background/50 p-2.5">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-2 text-foreground">
+                <span className="h-2.5 w-2.5 rounded-full bg-cyan-500" />
+                Phí Nền Tảng (Platform Fee)
+              </span>
+              <span className="text-cyan-600 dark:text-cyan-400 font-mono">
+                {platformPct.toFixed(1)}%
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-extrabold text-foreground tabular-nums">
+              {formatCurrency(totalPlatformFee)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background/50 p-2.5">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-2 text-foreground">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                Phí Reviewer / Affiliate
+              </span>
+              <span className="text-amber-600 dark:text-amber-400 font-mono">
+                {reviewerPct.toFixed(1)}%
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-extrabold text-foreground tabular-nums">
+              {formatCurrency(totalReviewerFee)}
+            </p>
+          </div>
+        </div>
+      </div>
     </article>
   );
 }
+
+function TopMerchantsRankChart({
+  merchantRevenues,
+  isLoading,
+}: {
+  merchantRevenues: AdminMerchantRevenue[];
+  isLoading: boolean;
+}) {
+  const topList = merchantRevenues.slice(0, 5);
+  const maxRev = Math.max(...topList.map((m) => toNumber(m.totalRevenue)), 1);
+
+  const getRankMedal = (index: number) => {
+    if (index === 0) return { label: "🥇 #1", cls: "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700" };
+    if (index === 1) return { label: "🥈 #2", cls: "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700" };
+    if (index === 2) return { label: "🥉 #3", cls: "bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700" };
+    return { label: `#${index + 1}`, cls: "bg-muted text-muted-foreground border-border" };
+  };
+
+  return (
+    <article className="rounded-3xl border border-border bg-card p-6 shadow-xs dark:bg-slate-900/90">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div>
+          <span className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+            Leaderboard Chart
+          </span>
+          <h2 className="text-lg font-black text-foreground mt-0.5">Biểu Đồ Xếp Hạng Top Merchant</h2>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 px-3 py-1 text-xs font-bold text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50">
+          <BarChart3 className="h-3.5 w-3.5" />
+          <span>Top Performers</span>
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-2xl bg-muted" />
+          ))}
+        </div>
+      ) : topList.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs font-medium text-muted-foreground">
+          Chưa có dữ liệu merchant phát sinh doanh thu.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {topList.map((merchant, index) => {
+            const rev = toNumber(merchant.totalRevenue);
+            const pct = Math.min(100, Math.max(5, (rev / maxRev) * 100));
+            const medal = getRankMedal(index);
+
+            return (
+              <div key={merchant.merchantId || index} className="group">
+                <div className="flex items-center justify-between gap-3 text-xs font-bold mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black border", medal.cls)}>
+                      {medal.label}
+                    </span>
+                    <span className="truncate text-foreground font-black text-xs sm:text-sm">{merchant.merchantName}</span>
+                    <span className="hidden sm:inline-block rounded-md bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      {formatNumber(merchant.completedOrders)} đơn
+                    </span>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="font-black text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm">{formatCurrency(rev)}</span>
+                  </div>
+                </div>
+
+                <div className="h-3 w-full rounded-full bg-muted overflow-hidden p-0.5 border border-border/50">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-600 to-emerald-500 transition-all duration-700 group-hover:brightness-110"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </article>
+  );
+}
+
 
 function KpiCard({
   title,

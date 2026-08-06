@@ -670,26 +670,28 @@ export default function MerchantOrdersPage() {
   const detailTotal = getDetailTotal();
 
   return (
-    <main className="merchant-portal-layout bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_32%),linear-gradient(135deg,#ecfeff_0%,#f8fafc_46%,#fff7ed_100%)] relative">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] [background-size:32px_32px]" />
-      <div className="pointer-events-none fixed left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-      <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+    <main className="merchant-portal-layout min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative flex">
+      {/* Ambient Glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/10 dark:bg-indigo-600/15 blur-[140px]" />
+      </div>
 
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
-        <div className="merchant-content">
-          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="merchant-content p-4 sm:p-6 lg:p-8 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-500/10">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
                 Order Management
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-[1.15]">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
                 Đơn hàng của quán
               </h1>
-              <p className="mt-3 text-[14px] font-medium text-slate-500 leading-relaxed">
+              <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
                 Theo dõi, duyệt đơn và tạo QR xác nhận bill cho khách hàng.
               </p>
             </div>
@@ -698,17 +700,17 @@ export default function MerchantOrdersPage() {
               type="button"
               onClick={() => void loadOrders()}
               disabled={loading}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 px-5 text-[13px] font-black text-white shadow-lg shadow-cyan-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-900/30 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 px-5 text-xs font-black text-slate-950 hover:bg-cyan-400 shadow-md transition disabled:cursor-wait disabled:opacity-60"
             >
               <RefreshCw
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
-              Refresh
+              Làm mới
             </button>
           </div>
 
           {loading ? (
-            <p className="text-center font-medium text-slate-500 p-8">
+            <p className="text-center text-sm font-medium text-slate-500 dark:text-slate-400 p-8">
               Đang tải đơn hàng...
             </p>
           ) : (
@@ -717,58 +719,56 @@ export default function MerchantOrdersPage() {
                 return (
                   <div
                     key={order.orderId}
-                    className="group relative overflow-hidden rounded-[32px] border border-white/50 bg-white/60 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_0_rgba(31,38,135,0.12)] hover:border-white/80"
+                    className="group relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-2xl transition-all duration-300"
                   >
-                    <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 mix-blend-multiply" />
-
                     <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-3">
-                          <p className="text-[19px] font-black tracking-tight text-slate-900 group-hover:text-cyan-800 transition-colors">
+                          <p className="text-lg font-black tracking-tight text-slate-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                             Đơn #{order.orderId}
                           </p>
                           <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${getOrderTypeChipClass(
+                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${getOrderTypeChipClass(
                               order.orderType,
                             )}`}
                           >
                             {getOrderTypeLabel(order.orderType)}
                           </span>
                         </div>
-                        <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-50/90 to-blue-50/90 px-3.5 py-1 text-[13px] font-black text-cyan-800 shadow-sm">
+                        <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
                           Trạng thái: {getOrderStatusLabel(order.status)}
                         </p>
-                        <p className="mt-2.5 text-[14px] font-medium text-slate-600">
-                          <span className="font-bold text-slate-700">
+                        <p className="mt-2.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
+                          <span className="font-bold text-slate-900 dark:text-white">
                             Khách:
                           </span>{" "}
                           {order.customerName || "N/A"}
                         </p>
                         {order.createdAt ? (
-                          <p className="mt-1 text-[12px] font-bold text-slate-400">
+                          <p className="mt-1 text-xs font-mono text-slate-400 dark:text-slate-500">
                             {formatDateTime(order.createdAt)}
                           </p>
                         ) : null}
                       </div>
 
                       <div className="shrink-0 sm:text-right pt-2 sm:pt-0">
-                        <p className="text-[22px] font-black text-cyan-700">
+                        <p className="text-xl sm:text-2xl font-black text-cyan-600 dark:text-cyan-400">
                           {order.finalPrice.toLocaleString("vi-VN")}đ
                         </p>
                       </div>
                     </div>
 
-                    <div className="relative mt-5 flex flex-wrap items-center gap-3 border-t border-slate-200/50 pt-5">
+                    <div className="relative mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 dark:border-white/5 pt-5">
                       <button
                         type="button"
                         onClick={() => openOrderDetail(order.orderId)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-white/70 border border-cyan-200/60 px-5 py-2.5 text-[13px] font-black text-cyan-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-cyan-50 hover:shadow-md"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 shadow-xs transition"
                       >
                         <Eye size={16} />
                         Xem chi tiết
                       </button>
 
-                      <span className="rounded-xl border border-slate-200/60 bg-slate-50/80 px-4 py-2.5 text-[13px] font-bold text-slate-600 shadow-sm backdrop-blur">
+                      <span className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400">
                         {getOrderActionMessage(order.status, order.orderType)}
                       </span>
                     </div>
@@ -777,9 +777,9 @@ export default function MerchantOrdersPage() {
               })}
 
               {orders.length === 0 && (
-                <div className="rounded-[32px] border border-dashed border-slate-300 bg-white/40 p-12 text-center shadow-sm backdrop-blur">
-                  <p className="text-[15px] font-bold text-slate-500">
-                    Chưa có đơn nào.
+                <div className="rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-2xl">
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                    Chưa có đơn hàng nào.
                   </p>
                 </div>
               )}
@@ -788,30 +788,30 @@ export default function MerchantOrdersPage() {
 
           <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
             <DialogContent
-              className="max-h-[92vh] max-w-4xl overflow-hidden border-white/80 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/25 backdrop-blur-xl"
+              className="max-h-[92vh] max-w-4xl overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-0 shadow-2xl backdrop-blur-2xl"
               onInteractOutside={(event) => event.preventDefault()}
               onEscapeKeyDown={(event) => event.preventDefault()}
             >
-              <DialogHeader className="border-b border-cyan-100 bg-white/90 px-6 py-5 text-left">
-                <DialogTitle>Chi tiết đơn hàng</DialogTitle>
-                <DialogDescription className="mt-1 text-sm leading-6 text-slate-500">
+              <DialogHeader className="border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-5 text-left">
+                <DialogTitle className="text-lg font-black text-slate-950 dark:text-white">Chi tiết đơn hàng</DialogTitle>
+                <DialogDescription className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                   Xem món ăn, ghi chú, giá tiền và thao tác duyệt đơn ở đây.
                 </DialogDescription>
               </DialogHeader>
 
               {selectedOrder ? (
                 <div className="max-h-[calc(92vh-104px)] space-y-5 overflow-y-auto px-6 py-5">
-                  <div className="grid gap-3 rounded-3xl border border-white/80 bg-white p-4 text-sm text-slate-700 shadow-sm ring-1 ring-slate-950/5 sm:grid-cols-2">
+                  <div className="grid gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 text-xs text-slate-700 dark:text-slate-300 sm:grid-cols-2">
                     <div>
-                      <div className="text-slate-500">Mã đơn</div>
-                      <div className="break-all font-mono text-xs font-bold text-slate-900">
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Mã đơn</div>
+                      <div className="break-all font-mono text-xs font-bold text-slate-900 dark:text-white mt-0.5">
                         {selectedOrder.orderId}
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500">Trạng thái</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Trạng thái</div>
                       <div
-                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-black ${getOrderStatusChipClass(
+                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderStatusChipClass(
                           selectedOrder.status,
                         )}`}
                       >
@@ -819,9 +819,9 @@ export default function MerchantOrdersPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500">Loại đơn</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Loại đơn</div>
                       <div
-                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-black ${getOrderTypeChipClass(
+                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderTypeChipClass(
                           selectedOrder.orderType,
                         )}`}
                       >
@@ -829,49 +829,49 @@ export default function MerchantOrdersPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500">Khách</div>
-                      <div className="font-semibold text-slate-900">
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Khách hàng</div>
+                      <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                         {selectedOrder.customerName || "N/A"}
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500">Thời gian đặt</div>
-                      <div className="font-semibold text-slate-900">
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Thời gian đặt</div>
+                      <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                         {formatDateTime(selectedOrder.createdAt)}
                       </div>
                     </div>
                   </div>
 
                   {detailLoading ? (
-                    <p>Đang tải chi tiết đơn...</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Đang tải chi tiết đơn...</p>
                   ) : detailError ? (
-                    <div className="rounded-lg border border-rose-100 bg-rose-50 p-3 text-rose-700">
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-600 dark:text-rose-400">
                       {detailError}
                     </div>
                   ) : null}
 
-                  <div className="rounded-3xl border border-white/80 bg-white p-4 shadow-sm ring-1 ring-slate-950/5">
+                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-base font-semibold text-slate-950">
+                      <h3 className="text-sm font-black text-slate-950 dark:text-white">
                         Món đã gọi
                       </h3>
-                      <div className="rounded-full bg-cyan-50 px-3 py-1 text-sm font-black text-cyan-700 ring-1 ring-cyan-100">
+                      <div className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
                         Tổng: {formatCurrency(getDetailTotal())}
                       </div>
                     </div>
 
-                    <div className="mt-4 space-y-3">
+                    <div className="space-y-3">
                       {detailItems.map((item, index) => (
                         <div
                           key={`${getItemName(item)}-${index}`}
-                          className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 shadow-sm"
+                          className="rounded-xl border border-slate-200/80 dark:border-white/5 bg-white dark:bg-slate-800/60 p-4 shadow-xs"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
-                              <div className="font-black text-slate-950">
+                              <div className="font-bold text-sm text-slate-950 dark:text-white">
                                 {getItemName(item)}
                               </div>
-                              <div className="mt-1 inline-flex rounded-full bg-white px-2.5 py-1 text-sm font-bold text-slate-600 ring-1 ring-slate-100">
+                              <div className="mt-1 inline-flex rounded-full bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                                 Số lượng: {getItemQuantity(item)}
                               </div>
                               {getItemToppings(item).length > 0 && (
@@ -879,7 +879,7 @@ export default function MerchantOrdersPage() {
                                   {getItemToppings(item).map((topping) => (
                                     <span
                                       key={topping.id ?? topping.name}
-                                      className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                                      className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400"
                                     >
                                       +{topping.name}
                                     </span>
@@ -887,27 +887,27 @@ export default function MerchantOrdersPage() {
                                 </div>
                               )}
                               {getItemNote(item) ? (
-                                <div className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-100">
+                                <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300 font-medium">
                                   Ghi chú: {getItemNote(item)}
                                 </div>
                               ) : null}
                             </div>
 
-                            <div className="shrink-0 rounded-2xl bg-white px-4 py-3 text-right text-sm shadow-sm ring-1 ring-slate-100">
-                              <div className="font-medium text-slate-700">
+                            <div className="shrink-0 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-white/5 px-3 py-2 text-right text-xs">
+                              <div className="font-medium text-slate-700 dark:text-slate-300">
                                 Đơn giá:{" "}
                                 {formatCurrency(getItemDisplayUnitPrice(item))}
                               </div>
-                              <div className="mt-1 text-xs font-semibold text-slate-500">
+                              <div className="mt-0.5 text-[11px] font-bold text-slate-400 dark:text-slate-500">
                                 SL: {getItemQuantity(item)}
                               </div>
                               {getItemToppingTotal(item) > 0 ? (
-                                <div className="mt-1 text-xs font-semibold text-emerald-700">
+                                <div className="mt-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                                   Topping: +
                                   {formatCurrency(getItemToppingTotal(item))}
                                 </div>
                               ) : null}
-                              <div className="mt-1 font-black text-cyan-700">
+                              <div className="mt-1 font-mono font-black text-cyan-600 dark:text-cyan-400">
                                 Thành tiền:{" "}
                                 {formatCurrency(getItemDisplayTotal(item))}
                               </div>
@@ -917,37 +917,37 @@ export default function MerchantOrdersPage() {
                       ))}
 
                       {!detailLoading && detailItems.length === 0 ? (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           Chưa có dữ liệu món ăn.
                         </p>
                       ) : null}
                     </div>
 
                     {getDetailNote(orderDetail) ? (
-                      <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
-                        <div className="font-semibold">Ghi chú của khách</div>
-                        <div className="mt-1">{getDetailNote(orderDetail)}</div>
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
+                        <div className="font-bold">Ghi chú của khách</div>
+                        <div className="mt-0.5">{getDetailNote(orderDetail)}</div>
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="rounded-3xl border border-cyan-100 bg-cyan-50/80 p-4 shadow-sm">
+                  <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm text-slate-500">Tổng tiền</div>
-                      <div className="text-2xl font-black text-cyan-700">
+                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">Tổng tiền</div>
+                      <div className="text-xl sm:text-2xl font-black text-cyan-600 dark:text-cyan-400">
                         {formatCurrency(detailTotal)}
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-cyan-100 bg-white px-4 py-3 text-sm font-semibold text-cyan-800 shadow-sm ring-1 ring-cyan-50">
+                  <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold text-cyan-700 dark:text-cyan-300">
                     {getOrderActionMessage(
                       selectedOrder.status,
                       selectedOrder.orderType,
                     )}
                   </div>
 
-                  <DialogFooter className="border-t border-slate-100 pt-4 gap-3 sm:justify-between">
+                  <DialogFooter className="border-t border-slate-100 dark:border-white/10 pt-4 gap-3 sm:justify-between">
                     <div className="flex flex-wrap gap-2">
                       {getOrderStatusKey(selectedOrder.status) === "pending" ? (
                         <>
@@ -957,7 +957,7 @@ export default function MerchantOrdersPage() {
                               void handleAcceptOrder(selectedOrder)
                             }
                             disabled={actionOrderId === selectedOrder.orderId}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-emerald-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
                           >
                             <Check size={16} />
                             Xác nhận đơn
@@ -969,7 +969,7 @@ export default function MerchantOrdersPage() {
                               void handleRejectOrder(selectedOrder)
                             }
                             disabled={actionOrderId === selectedOrder.orderId}
-                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:-translate-y-px hover:bg-rose-50 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50"
                           >
                             <X size={16} />
                             Từ chối đơn
@@ -985,7 +985,7 @@ export default function MerchantOrdersPage() {
                           type="button"
                           onClick={() => void handleAdvanceOrder(selectedOrder)}
                           disabled={actionOrderId === selectedOrder.orderId}
-                          className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-cyan-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex h-10 items-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 shadow-md transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {getOrderStatusKey(selectedOrder.status) ===
                           "accepted" ? (
@@ -1011,7 +1011,7 @@ export default function MerchantOrdersPage() {
                           type="button"
                           onClick={() => void handleUpdateBill(selectedOrder)}
                           disabled={actionOrderId === selectedOrder.orderId}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-700 transition hover:-translate-y-px hover:bg-amber-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-300 transition hover:bg-amber-500/20 disabled:opacity-50"
                         >
                           Cập nhật hóa đơn
                         </button>
@@ -1034,7 +1034,7 @@ export default function MerchantOrdersPage() {
                             actionOrderId === selectedOrder.orderId ||
                             Boolean(qrUrls[selectedOrder.orderId])
                           }
-                          className="inline-flex items-center gap-2 rounded-2xl border border-cyan-200 bg-white px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:-translate-y-px hover:bg-cyan-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 transition hover:bg-cyan-500/20 disabled:opacity-50"
                         >
                           <QrCode size={16} />
                           {qrUrls[selectedOrder.orderId]
@@ -1053,7 +1053,7 @@ export default function MerchantOrdersPage() {
                             void handleConfirmCashPayment(selectedOrder)
                           }
                           disabled={actionOrderId === selectedOrder.orderId}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-emerald-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
                         >
                           <Check size={16} />
                           Xác nhận thanh toán tiền mặt
@@ -1064,14 +1064,14 @@ export default function MerchantOrdersPage() {
                     <button
                       type="button"
                       onClick={() => setDetailOpen(false)}
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-px hover:bg-slate-50"
+                      className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/20"
                     >
                       Đóng
                     </button>
                   </DialogFooter>
 
                   {qrUrls[selectedOrder.orderId] ? (
-                    <div className="mx-auto inline-flex rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
+                    <div className="mx-auto inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-white p-3 shadow-md">
                       <img
                         src={qrUrls[selectedOrder.orderId]}
                         alt={`QR check-in ${selectedOrder.orderId}`}

@@ -12,33 +12,28 @@ type StatusInfo = {
 const STATUS_CONFIG = {
   empty: {
     icon: FilePlus2,
-    badge: "border-cyan-200 bg-cyan-50 text-cyan-700",
-    iconBox: "bg-cyan-100 text-cyan-700",
-    ring: "ring-cyan-200/70",
+    badge: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300",
+    iconBox: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
   pending: {
     icon: Clock3,
-    badge: "border-amber-200 bg-amber-50 text-amber-700",
-    iconBox: "bg-amber-100 text-amber-700",
-    ring: "ring-amber-200/80",
+    badge: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    iconBox: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   },
   approved: {
     icon: CheckCircle2,
-    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    iconBox: "bg-emerald-100 text-emerald-700",
-    ring: "ring-emerald-200/80",
+    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    iconBox: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   },
   rejected: {
     icon: XCircle,
-    badge: "border-rose-200 bg-rose-50 text-rose-700",
-    iconBox: "bg-rose-100 text-rose-700",
-    ring: "ring-rose-200/80",
+    badge: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    iconBox: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
   },
   default: {
     icon: Store,
-    badge: "border-cyan-200 bg-cyan-50 text-cyan-700",
-    iconBox: "bg-cyan-100 text-cyan-700",
-    ring: "ring-cyan-200/70",
+    badge: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300",
+    iconBox: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
 } as const;
 
@@ -55,7 +50,7 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
   if (application.status === "Pending") {
     return {
       label: "Đang xét duyệt",
-      description: "Hồ sơ của bạn đang được staff kiểm tra và thẩm định.",
+      description: "Hồ sơ của bạn đang được đội ngũ thẩm định kiểm tra và xử lý.",
       tone: "pending",
     };
   }
@@ -67,7 +62,7 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
   ) {
     return {
       label: "Đã được duyệt",
-      description: "Quán của bạn đã được duyệt và có thể hiển thị trên UGem.",
+      description: "Quán của bạn đã được duyệt thành công và hiển thị trên UGem.",
       tone: "approved",
     };
   }
@@ -75,7 +70,7 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
   if (application.status === "Rejected") {
     return {
       label: "Bị từ chối",
-      description: "Hồ sơ chưa đạt yêu cầu. Bạn có thể chỉnh sửa và gửi lại.",
+      description: "Hồ sơ chưa đạt yêu cầu. Bạn có thể cập nhật lại thông tin.",
       tone: "rejected",
     };
   }
@@ -97,41 +92,24 @@ export function ApplicationStatusCard({
   const Icon = config.icon;
 
   return (
-    <section
-      className={`
-        relative overflow-hidden rounded-[2rem] border border-white/70
-        bg-white/85 p-6 shadow-2xl shadow-amber-950/10
-        ring-1 ${config.ring} backdrop-blur-xl
-      `}
-    >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-200/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-amber-200/20 blur-3xl" />
+    <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs backdrop-blur-xl transition-colors duration-300 h-full flex flex-col justify-between">
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
 
       <div className="relative flex items-start gap-4">
-        <div
-          className={`
-            grid h-14 w-14 shrink-0 place-items-center rounded-2xl
-            shadow-sm ${config.iconBox}
-          `}
-        >
-          <Icon className="h-7 w-7" />
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl border ${config.iconBox}`}>
+          <Icon className="h-6 w-6" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <span
-            className={`
-              inline-flex rounded-full border px-3 py-1 text-xs font-bold
-              uppercase tracking-[0.18em] ${config.badge}
-            `}
-          >
+          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${config.badge}`}>
             Trạng thái hiện tại
           </span>
 
-          <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950">
+          <h2 className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight text-slate-950 dark:text-white">
             {status.label}
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-1.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400">
             {status.description}
           </p>
         </div>

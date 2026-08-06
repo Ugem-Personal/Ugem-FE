@@ -90,7 +90,7 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
   const StoryIcon = story.icon;
 
   return (
-    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[24px] bg-slate-950 p-6 xl:p-8 text-white shadow-[0_24px_70px_rgba(2,12,27,0.22)]">
+    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[28px] bg-slate-950 p-7 xl:p-10 text-white shadow-[0_24px_70px_rgba(2,12,27,0.25)]">
       <div className="absolute inset-0" aria-live="polite">
         {stories.map((item, storyIndex) => (
           <img
@@ -107,17 +107,20 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
           />
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(90deg,rgba(2,12,27,0.94)_0%,rgba(2,12,27,0.72)_36%,rgba(2,12,27,0.12)_78%),linear-gradient(0deg,rgba(2,12,27,0.82)_0%,transparent_48%)]" />
+      
+      {/* High-Contrast Dual Gradient Overlay */}
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(90deg,rgba(2,12,27,0.94)_0%,rgba(2,12,27,0.72)_40%,rgba(2,12,27,0.15)_82%),linear-gradient(0deg,rgba(2,12,27,0.85)_0%,transparent_50%)]" />
 
       {/* Header Controls */}
       <header className="relative z-20 flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/35 py-1.5 pl-2 pr-3 text-[11px] font-extrabold uppercase tracking-[0.12em] text-white backdrop-blur-md">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-cyan-300 text-slate-950">
-            <Sparkles className="h-3 w-3" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/40 py-1.5 pl-2.5 pr-3.5 text-xs font-bold tracking-wider text-white backdrop-blur-md shadow-xs">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-400 text-slate-950">
+            <Sparkles className="h-3.5 w-3.5" />
           </span>
-          UGem Experience
+          <span>UGEM EXPERIENCE</span>
         </div>
-        <div className="flex gap-2 items-center" aria-hidden="true">
+
+        <div className="flex gap-2 items-center" aria-label="Slider progress indicator">
           {stories.map((_, storyIndex) => {
             const isActive = storyIndex === index;
             return (
@@ -125,15 +128,16 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
                 key={storyIndex}
                 type="button"
                 onClick={() => go(storyIndex)}
-                className={`relative h-2 overflow-hidden rounded-full transition-all duration-300 ${
+                className={`relative h-2 overflow-hidden rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                   isActive ? "w-8 bg-white/20" : "w-2 bg-white/30 hover:bg-white/50"
                 }`}
-                title={`Chuyển đến slide ${storyIndex + 1}`}
+                aria-label={`Chuyển đến slide ${storyIndex + 1}`}
+                aria-current={isActive ? "true" : "false"}
               >
                 {isActive ? (
                   <div
                     key={`${index}-${paused}`}
-                    className="h-full bg-cyan-300 rounded-full"
+                    className="h-full bg-cyan-400 rounded-full"
                     style={{
                       animation: paused
                         ? "none"
@@ -151,14 +155,16 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
       {/* Content Area */}
       <div className="relative z-20 flex flex-1 items-end py-6 xl:py-8">
         <div key={index} className="max-w-xl transition-all duration-500">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/35 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.1em] text-cyan-100 backdrop-blur-md">
-            <StoryIcon className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-slate-950/40 px-3 py-1 text-xs font-bold text-cyan-200 backdrop-blur-md mb-3">
+            <StoryIcon className="h-3.5 w-3.5 text-cyan-300" />
             {story.eyebrow}
           </span>
-          <h2 className="editorial-heading mt-3 max-w-lg text-2xl sm:text-3xl xl:text-3xl 2xl:text-4xl font-black leading-[1.1] text-white">
+
+          <h2 className="mt-2 max-w-lg text-2xl sm:text-3xl xl:text-3xl 2xl:text-4xl font-black leading-[1.12] tracking-tight text-white">
             {story.title}
           </h2>
-          <p className="mt-3 max-w-md text-xs sm:text-sm font-medium leading-relaxed text-slate-200">
+
+          <p className="mt-3 max-w-md text-xs sm:text-sm font-medium leading-relaxed text-slate-200/90">
             {story.description}
           </p>
         </div>
@@ -166,33 +172,36 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
 
       {/* Footer Controls */}
       {stories.length > 1 ? (
-        <footer className="relative z-20 flex items-center justify-between border-t border-white/15 pt-3.5">
-          <p className="text-[11px] font-semibold text-slate-300">
+        <footer className="relative z-20 flex items-center justify-between border-t border-white/15 pt-4">
+          <p className="text-xs font-bold text-slate-300 tracking-wide">
             Khám phá · Vận hành · Tăng trưởng
           </p>
-          <div className="flex items-center gap-1.5">
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => go(index - 1)}
               aria-label="Nội dung trước"
-              className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
+
             <button
               type="button"
               onClick={() => setPaused((value) => !value)}
               aria-label={paused ? "Tiếp tục trình chiếu" : "Tạm dừng trình chiếu"}
               aria-pressed={paused}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
-              {paused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+              {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             </button>
+
             <button
               type="button"
               onClick={() => go(index + 1)}
               aria-label="Nội dung tiếp theo"
-              className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-slate-950/35 text-white backdrop-blur-md transition-colors hover:bg-white/15"
+              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
