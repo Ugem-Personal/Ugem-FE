@@ -130,8 +130,8 @@ export function UserAccountMenu({
               className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black leading-none border",
                 chip.tone === "reviewer"
-                  ? "bg-violet-50 text-violet-700 border-violet-200"
-                  : "bg-cyan-50 text-cyan-800 border-cyan-200",
+                  ? "bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800"
+                  : "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800",
               )}
             >
               {chip.label}
@@ -146,10 +146,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
         >
           <Link to="/staff/profile">
-            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Profile
           </Link>
         </Button>
@@ -161,10 +161,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
         >
           <Link to="/merchant/profile">
-            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Profile
           </Link>
         </Button>
@@ -176,10 +176,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
         >
           <Link to="/admin/dashboard">
-            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Profile
           </Link>
         </Button>
@@ -191,10 +191,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
         >
           <Link to="/customer/profile">
-            <UserRound className="h-3.5 w-3.5 text-cyan-600" />
+            <UserRound className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Profile
           </Link>
         </Button>
@@ -206,10 +206,10 @@ export function UserAccountMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 text-xs font-black hover:border-cyan-400 lg:inline-flex"
+          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
         >
           <Link to="/affiliate-links">
-            <Link2 className="h-3.5 w-3.5 text-cyan-600" />
+            <Link2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Affiliate
           </Link>
         </Button>
@@ -220,7 +220,7 @@ export function UserAccountMenu({
         variant="outline"
         size="sm"
         onClick={handleLogout}
-        className="h-10 w-10 shrink-0 gap-1.5 rounded-xl border-slate-200 p-0 text-xs font-black text-rose-600 hover:bg-rose-50 hover:border-rose-200 2xl:w-auto 2xl:px-3.5"
+        className="h-10 w-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 p-0 text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-200 dark:hover:border-rose-800 2xl:w-auto 2xl:px-3.5"
         aria-label="Đăng xuất"
       >
         <LogOut className="h-3.5 w-3.5" />

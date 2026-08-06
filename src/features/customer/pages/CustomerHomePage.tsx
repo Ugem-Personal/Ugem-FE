@@ -19,7 +19,7 @@ import { notify } from "@/shared/lib/notify";
 
 import logoUrl from "@/assets/ugem-logo.png";
 import { cn } from "@/lib/utils";
-import { UserAccountMenu, ModeToggle } from "@/shared/components";
+import { UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { getCategories } from "@/shared/services/categoryService";
@@ -666,7 +666,7 @@ export default function CustomerHomePage() {
     return (
       <div
         className={cn(
-          "grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 backdrop-blur-md shadow-inner",
+          "grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-100/80 dark:bg-slate-900/80 p-1.5 backdrop-blur-md shadow-inner",
           className,
         )}
         aria-label="Chọn kiểu sử dụng dịch vụ"
@@ -679,13 +679,15 @@ export default function CustomerHomePage() {
             "flex h-12 items-center justify-center gap-2.5 rounded-xl px-4 text-sm font-black transition-all duration-300",
             serviceMode === "delivery"
               ? "bg-linear-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/25 scale-[1.01]"
-              : "text-slate-600 hover:bg-white/80 hover:text-cyan-800",
+              : "text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-800 hover:text-cyan-800 dark:hover:text-cyan-400",
           )}
         >
           <span
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-              serviceMode === "delivery" ? "bg-white/20 text-white" : "bg-cyan-100 text-cyan-700",
+              serviceMode === "delivery"
+                ? "bg-white/20 text-white"
+                : "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400",
             )}
           >
             <Navigation className="h-4 w-4" />
@@ -700,13 +702,15 @@ export default function CustomerHomePage() {
             "flex h-12 items-center justify-center gap-2.5 rounded-xl px-4 text-sm font-black transition-all duration-300",
             serviceMode === "dineIn"
               ? "bg-linear-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/25 scale-[1.01]"
-              : "text-slate-600 hover:bg-white/80 hover:text-amber-700",
+              : "text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-800 hover:text-amber-700 dark:hover:text-amber-400",
           )}
         >
           <span
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-              serviceMode === "dineIn" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700",
+              serviceMode === "dineIn"
+                ? "bg-white/20 text-white"
+                : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
             )}
           >
             <MapIcon className="h-4 w-4" />
@@ -751,14 +755,14 @@ export default function CustomerHomePage() {
   function renderPriceRangeFilters(className = "") {
     return (
       <div className={cn("flex flex-wrap items-center gap-2", className)}>
-        <span className="text-xs font-extrabold text-slate-500 mr-1 hidden sm:inline">Khoảng giá:</span>
+        <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">Khoảng giá:</span>
         <button
           type="button"
           onClick={() => setSelectedPriceRange("")}
           className={`h-9 rounded-full px-4 text-xs font-black transition ${
             selectedPriceRange === ""
-              ? "bg-slate-900 text-white shadow-xs"
-              : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-400"
+              ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+              : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
           }`}
         >
           Tất cả
@@ -771,8 +775,8 @@ export default function CustomerHomePage() {
             onClick={() => setSelectedPriceRange(label)}
             className={`h-9 rounded-full px-4 text-xs font-black transition ${
               selectedPriceRange === label
-                ? "bg-slate-900 text-white shadow-xs"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-cyan-400"
+                ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
             }`}
           >
             {label}
@@ -789,10 +793,10 @@ export default function CustomerHomePage() {
 
     if (displayedMerchants.length === 0) {
       return (
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-10 text-center text-sm font-semibold text-slate-500 shadow-xs">
-          <Utensils className="mx-auto h-10 w-10 text-slate-300" />
-          <p className="mt-3 text-base font-black text-slate-900">Không tìm thấy quán phù hợp</p>
-          <p className="mt-1 text-xs">Thử thay đổi từ khóa tìm kiếm hoặc chọn khoảng giá khác.</p>
+        <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 shadow-md backdrop-blur-md transition-colors">
+          <Utensils className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <p className="mt-3 text-base font-black text-slate-900 dark:text-white">Không tìm thấy quán phù hợp</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Thử thay đổi từ khóa tìm kiếm hoặc chọn khoảng giá khác.</p>
         </div>
       );
     }
@@ -1018,14 +1022,13 @@ export default function CustomerHomePage() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <ModeToggle />
             <Button
               type="button"
               onClick={handleOpenMyOrders}
-              className="h-11 gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-5 text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400"
+              className="h-11 gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400"
             >
               <ShoppingBag className="h-4 w-4" />
-              Đơn hàng của tôi
+              <span className="hidden sm:inline">Đơn hàng của tôi</span>
             </Button>
             <UserAccountMenu fallbackName="Customer" />
           </div>

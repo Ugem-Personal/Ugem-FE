@@ -74,10 +74,10 @@ export function MerchantFeatureUnavailablePage({
   const navigate = useNavigate();
 
   return (
-    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
+    <main className="merchant-portal-layout relative bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex">
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
         <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8">
@@ -455,10 +455,10 @@ export function MerchantCampaignPage() {
     : false;
 
   return (
-    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
+    <main className="merchant-portal-layout relative bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex">
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
         <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8 space-y-6">
@@ -1107,10 +1107,10 @@ export function MerchantViewStatisticsPage() {
   }, []);
 
   return (
-    <main className="merchant-portal-layout relative bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.12),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#f1f5f9_50%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.08),transparent_35%),linear-gradient(135deg,#0f172a_0%,#020617_50%,#0f172a_100%)] min-h-screen">
+    <main className="merchant-portal-layout relative bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex">
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
         <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8 space-y-6">

@@ -63,6 +63,31 @@
     --border: oklch(0.91 0.015 245);
     --input: oklch(0.90 0.02 245);
     --ring: oklch(0.60 0.18 220);
+
+    /* Merchant Portal Semantic Theme Tokens - Light Mode */
+    --color-page-bg: #f8fafc;
+    --color-sidebar-bg: #0b1329;
+    --color-header-bg: rgba(255, 255, 255, 0.9);
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-surface-muted: #f1f5f9;
+    --color-surface-interactive: #f8fafc;
+    --color-border: rgba(226, 232, 240, 0.9);
+    --color-border-strong: rgba(203, 213, 225, 1);
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-primary: #06b6d4;
+    --color-primary-hover: #0891b2;
+    --color-primary-soft: rgba(6, 182, 212, 0.1);
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
     --chart-1: oklch(0.74 0.18 236);
     --chart-2: oklch(0.79 0.16 178);
     --chart-3: oklch(0.76 0.2 55);
@@ -102,6 +127,30 @@
     --border: oklch(1 0 0 / 12%);
     --input: oklch(1 0 0 / 16%);
     --ring: oklch(0.72 0.17 225);
+
+    /* Merchant Portal Semantic Theme Tokens - Dark Mode */
+    --color-page-bg: #020617;
+    --color-sidebar-bg: #030712;
+    --color-header-bg: rgba(15, 23, 42, 0.9);
+    --color-surface: #0f172a;
+    --color-surface-raised: #1e293b;
+    --color-surface-muted: #1e293b;
+    --color-surface-interactive: #334155;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-strong: rgba(255, 255, 255, 0.2);
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    --color-primary: #06b6d4;
+    --color-primary-hover: #22d3ee;
+    --color-primary-soft: rgba(6, 182, 212, 0.15);
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #f43f5e;
+    --color-info: #3b82f6;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   }
   * {
     @apply border-border outline-ring/50;

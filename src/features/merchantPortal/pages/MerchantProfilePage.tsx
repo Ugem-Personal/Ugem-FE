@@ -71,7 +71,7 @@ export default function MerchantProfilePage() {
   ]);
 
   return (
-    <main className="merchant-portal-layout min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
+    <main className="merchant-portal-layout min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative flex">
       {/* Ambient Glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
@@ -80,7 +80,7 @@ export default function MerchantProfilePage() {
 
       <MerchantSidebar />
 
-      <section className="merchant-main relative z-10">
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
         <MerchantHeader />
 
         <div className="merchant-content p-4 sm:p-6 lg:p-8 space-y-6">
