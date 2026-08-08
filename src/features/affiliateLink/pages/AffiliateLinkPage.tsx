@@ -12,7 +12,8 @@ import {
   Search,
   Store,
 } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import {
   createAffiliateLink,
@@ -56,7 +57,7 @@ function formatPercentRate(value?: number | null) {
 }
 
 export default function AffiliateLinkPage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer");
   const [searchParams] = useSearchParams();
   const initialMerchantId = searchParams.get("merchantId") ?? "";
 
@@ -180,15 +181,6 @@ export default function AffiliateLinkPage() {
       console.error(error);
       notify.error("Không thể sao chép liên kết.");
     }
-  }
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer");
   }
 
   return (

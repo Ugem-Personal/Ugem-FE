@@ -22,6 +22,7 @@ import logoUrl from "@/assets/ugem-logo.png";
 import { ModeToggle } from "@/shared/components";
 import { getCategories } from "@/shared/services/categoryService";
 import type { Category } from "@/shared/types";
+import { getCategoryDisplayName } from "@/shared/utils/category";
 import { cleanAddress } from "@/shared/utils/address";
 import {
   getMerchantDetail,
@@ -291,7 +292,7 @@ export default function GuestExplorePage() {
                     : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
                 }`}
               >
-                {category.name}
+                {getCategoryDisplayName(category.name)}
               </button>
             ))}
           </div>

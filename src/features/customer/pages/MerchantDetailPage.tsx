@@ -9,6 +9,7 @@ import {
   Search,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import {
   getReviewsByMerchantId,
@@ -205,6 +206,7 @@ export default function MerchantDetailPage() {
   const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer");
   const currentUser = getCurrentUser();
   const isOfflineOrder = searchParams.get("mode") === "offline";
   const affiliateRef = searchParams.get("ref")?.trim() || undefined;
@@ -471,15 +473,6 @@ export default function MerchantDetailPage() {
   function clearCart() {
     setCart([]);
     setCartOpen(false);
-  }
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer");
   }
 
   useEffect(() => {

@@ -1,4 +1,12 @@
-import { CheckCircle2, Clock3, FilePlus2, Store, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  FilePlus2,
+  Store,
+  XCircle,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import type { MerchantApplication } from "../types";
 
 type StatusTone = "empty" | "pending" | "approved" | "rejected" | "default";
@@ -7,6 +15,8 @@ type StatusInfo = {
   label: string;
   description: string;
   tone: StatusTone;
+  actionLabel: string;
+  actionTo: string;
 };
 
 const STATUS_CONFIG = {
@@ -44,6 +54,8 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
       description:
         "Hãy bắt đầu gửi thông tin để quán của bạn được xuất hiện trên UGem.",
       tone: "empty",
+      actionLabel: "Bắt đầu nộp hồ sơ",
+      actionTo: "/merchant/application/create",
     };
   }
 
@@ -52,6 +64,8 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
       label: "Đang xét duyệt",
       description: "Hồ sơ của bạn đang được đội ngũ thẩm định kiểm tra và xử lý.",
       tone: "pending",
+      actionLabel: "Xem hồ sơ",
+      actionTo: "/merchant/application/status",
     };
   }
 
@@ -64,6 +78,8 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
       label: "Đã được duyệt",
       description: "Quán của bạn đã được duyệt thành công và hiển thị trên UGem.",
       tone: "approved",
+      actionLabel: "Quản lý nhà hàng",
+      actionTo: "/merchant/restaurant",
     };
   }
 
@@ -72,6 +88,8 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
       label: "Bị từ chối",
       description: "Hồ sơ chưa đạt yêu cầu. Bạn có thể cập nhật lại thông tin.",
       tone: "rejected",
+      actionLabel: "Chỉnh sửa và gửi lại",
+      actionTo: "/merchant/application/create",
     };
   }
 
@@ -79,6 +97,8 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
     label: application.status,
     description: "Trạng thái hồ sơ hiện tại của bạn.",
     tone: "default",
+    actionLabel: "Xem hồ sơ",
+    actionTo: "/merchant/application/status",
   };
 }
 
@@ -112,6 +132,14 @@ export function ApplicationStatusCard({
           <p className="mt-1.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400">
             {status.description}
           </p>
+
+          <Link
+            to={status.actionTo}
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-md shadow-cyan-500/20 transition-all duration-200 hover:from-cyan-500 hover:to-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+          >
+            {status.actionLabel}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </section>

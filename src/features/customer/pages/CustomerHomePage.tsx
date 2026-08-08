@@ -24,6 +24,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { getCategories } from "@/shared/services/categoryService";
 import type { Category } from "@/shared/types";
+import { getCategoryDisplayName } from "@/shared/utils/category";
 
 import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
@@ -1121,7 +1122,7 @@ export default function CustomerHomePage() {
                       : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
                   }`}
                 >
-                  {category.name}
+                  {getCategoryDisplayName(category.name)}
                 </button>
               ))}
             </div>

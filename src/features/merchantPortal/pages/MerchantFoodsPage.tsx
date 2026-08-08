@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import {
   ChevronLeft,
   ImagePlus,
@@ -32,6 +32,11 @@ import type { Food } from "../types";
 import { getCategories } from "@/shared/services/categoryService";
 import type { Category } from "@/shared/types";
 import {
+  CUISINE_OPTIONS,
+  getCategoryDisplayName,
+  isFoodTypeCategoryName,
+} from "@/shared/utils/category";
+import {
   IMAGE_UPLOAD_ACCEPT,
   uploadImage,
   validateImageFile,
@@ -56,7 +61,7 @@ import {
 } from "@/shared/components/ui/dialog";
 
 export function MerchantFoodsPage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/merchant");
 
   // Data state
   const [foods, setFoods] = useState<Food[]>([]);
@@ -77,6 +82,7 @@ export function MerchantFoodsPage() {
     description: "",
     price: "",
     imageUrl: "",
+    cuisine: "",
     categoryIds: [] as string[],
   });
   const [formErrors, setFormErrors] = useState<{
@@ -133,6 +139,11 @@ export function MerchantFoodsPage() {
     });
   }, []);
 
+  const foodTypeCategories = useMemo(
+    () => categories.filter((category) => isFoodTypeCategoryName(category.name)),
+    [categories],
+  );
+
   // Filtered foods calculation
   const filteredFoods = useMemo(() => {
     return foods.filter((food) => {
@@ -141,7 +152,9 @@ export function MerchantFoodsPage() {
         !searchQuery.trim() ||
         food.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
         (food.description &&
-          food.description.toLowerCase().includes(searchQuery.toLowerCase().trim()));
+          food.description.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
+        (food.cuisine &&
+          food.cuisine.toLowerCase().includes(searchQuery.toLowerCase().trim()));
 
       // Category filter
       const matchesCategory =
@@ -165,9 +178,9 @@ export function MerchantFoodsPage() {
     const total = foods.length;
     const available = foods.filter((f) => f.isAvailable ?? true).length;
     const unavailable = total - available;
-    const totalCategories = categories.length;
+    const totalCategories = foodTypeCategories.length;
     return { total, available, unavailable, totalCategories };
-  }, [foods, categories]);
+  }, [foods, foodTypeCategories]);
 
   // Image Upload handler
   async function handleImageUpload(file?: File) {
@@ -214,13 +227,11 @@ export function MerchantFoodsPage() {
     setImageFileName("");
   }
 
-  // Toggle Category Selection in Form
+  // Mỗi món chỉ thuộc một loại món; nền ẩm thực được lưu riêng.
   function toggleCategorySelection(categoryId: string) {
     setForm((prev) => {
       const exists = prev.categoryIds.includes(categoryId);
-      const nextIds = exists
-        ? prev.categoryIds.filter((id) => id !== categoryId)
-        : [...prev.categoryIds, categoryId];
+      const nextIds = exists ? [] : [categoryId];
 
       if (nextIds.length > 0 && formErrors.categoryIds) {
         setFormErrors((e) => ({ ...e, categoryIds: undefined }));
@@ -278,6 +289,7 @@ export function MerchantFoodsPage() {
         description: form.description.trim() || undefined,
         price: Number(form.price),
         imageUrl: form.imageUrl.trim() || undefined,
+        cuisine: form.cuisine || undefined,
         isAvailable: true,
         categoryIds: form.categoryIds,
       };
@@ -312,6 +324,7 @@ export function MerchantFoodsPage() {
       description: "",
       price: "",
       imageUrl: "",
+      cuisine: "",
       categoryIds: [],
     });
     setFormErrors({});
@@ -323,19 +336,17 @@ export function MerchantFoodsPage() {
   function startEditingFood(food: Food) {
     setEditingFoodId(food.id);
 
-    const foodCategoryIds =
-      food.categoryIds && food.categoryIds.length > 0
-        ? food.categoryIds
-        : food.categories
-        ? food.categories.map((c) => c.id)
-        : [];
+    const selectedFoodTypeId = food.categories?.find((category) =>
+      isFoodTypeCategoryName(category.name),
+    )?.id;
 
     setForm({
       name: food.name,
       description: food.description ?? "",
       price: String(food.price),
       imageUrl: food.imageUrl ?? "",
-      categoryIds: foodCategoryIds,
+      cuisine: food.cuisine ?? "",
+      categoryIds: selectedFoodTypeId ? [selectedFoodTypeId] : [],
     });
     setFormErrors({});
     setImagePreview(food.imageUrl ?? "");
@@ -487,7 +498,7 @@ export function MerchantFoodsPage() {
             <div>
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-md transition-all duration-200 hover:border-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-700"
               >
                 <ChevronLeft size={16} />
@@ -706,27 +717,25 @@ export function MerchantFoodsPage() {
                   </div>
                 </div>
 
-                {/* Danh mục (Category Selector) */}
+                {/* Loại món */}
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
                     <span>
-                      Danh mục áp dụng <span className="text-rose-500">*</span>
-                    </span>
-                    <span className="text-xs text-cyan-600 font-semibold">
-                      Đã chọn: {form.categoryIds.length}
+                      Loại món <span className="text-rose-500">*</span>
                     </span>
                   </label>
 
-                  {categories.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic">Chưa có danh mục khả dụng nào.</p>
+                  {foodTypeCategories.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">Chưa có loại món khả dụng nào.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {categories.map((cat) => {
+                      {foodTypeCategories.map((cat) => {
                         const selected = form.categoryIds.includes(cat.id);
                         return (
                           <button
                             key={cat.id}
                             type="button"
+                            aria-pressed={selected}
                             onClick={() => toggleCategorySelection(cat.id)}
                             className={`inline-flex items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-xs font-bold transition-all ${
                               selected
@@ -735,7 +744,7 @@ export function MerchantFoodsPage() {
                             }`}
                           >
                             <Tag size={13} className={selected ? "text-cyan-600" : "text-slate-400"} />
-                            {cat.name}
+                            {getCategoryDisplayName(cat.name)}
                             {selected && <CheckCircle2 size={13} className="text-cyan-600 ml-0.5" />}
                           </button>
                         );
@@ -748,6 +757,30 @@ export function MerchantFoodsPage() {
                     </p>
                   )}
                 </div>
+
+                {/* Nền ẩm thực */}
+                <label className="space-y-2 md:col-span-2">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Nền ẩm thực <span className="font-semibold normal-case tracking-normal text-slate-400">(không bắt buộc)</span>
+                  </span>
+                  <select
+                    value={form.cuisine}
+                    onChange={(event) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        cuisine: event.target.value,
+                      }))
+                    }
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white/70 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                  >
+                    <option value="">Chọn nền ẩm thực</option>
+                    {CUISINE_OPTIONS.map((cuisine) => (
+                      <option key={cuisine} value={cuisine}>
+                        {cuisine}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               {/* Submit Buttons */}
@@ -821,10 +854,10 @@ export function MerchantFoodsPage() {
                     onChange={(e) => setSelectedCategoryFilter(e.target.value)}
                     className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-cyan-500"
                   >
-                    <option value="all">Tất cả danh mục ({categories.length})</option>
-                    {categories.map((c) => (
+                    <option value="all">Tất cả loại món ({foodTypeCategories.length})</option>
+                    {foodTypeCategories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name}
+                        {getCategoryDisplayName(c.name)}
                       </option>
                     ))}
                   </select>
@@ -944,6 +977,9 @@ export function MerchantFoodsPage() {
                 {filteredFoods.map((food) => {
                   const isAvail = food.isAvailable ?? true;
                   const isUpdatingAvail = updatingAvailabilityId === food.id;
+                  const foodTypeCategoriesForCard = (food.categories ?? []).filter(
+                    (category) => isFoodTypeCategoryName(category.name),
+                  );
 
                   return (
                     <div
@@ -1034,21 +1070,27 @@ export function MerchantFoodsPage() {
                       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                         {/* Categories Badges */}
                         <div className="flex flex-wrap items-center gap-1.5">
-                          {food.categories && food.categories.length > 0 ? (
-                            food.categories.map((c) => (
+                          {foodTypeCategoriesForCard.length > 0 ? (
+                            foodTypeCategoriesForCard.map((c) => (
                               <span
                                 key={c.id}
                                 className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300"
                               >
                                 <Tag size={10} className="text-slate-400" />
-                                {c.name}
+                                {getCategoryDisplayName(c.name)}
                               </span>
                             ))
                           ) : (
                             <span className="text-[10px] font-semibold text-slate-400 italic">
-                              Chưa phân danh mục
+                              Chưa chọn loại món
                             </span>
                           )}
+                          {food.cuisine ? (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-cyan-50 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300">
+                              <Sparkles size={10} />
+                              {food.cuisine}
+                            </span>
+                          ) : null}
                         </div>
 
                         {/* Manage Toppings Button */}

@@ -93,6 +93,7 @@ function mapPayloadToFormData(payload: CreateApplicationPayload) {
     appendNumber(formData, `${prefix}.price`, menuItem.price);
     appendString(formData, `${prefix}.imageUrl`, menuItem.imageUrl);
     appendString(formData, `${prefix}.category`, menuItem.category);
+    appendString(formData, `${prefix}.cuisine`, menuItem.cuisine);
   });
 
   return formData;
@@ -119,6 +120,7 @@ function mapPayloadToJsonRequest(payload: CreateApplicationPayload) {
       price: m.price,
       imageUrl: m.imageUrl || "",
       category: m.category || "",
+      cuisine: m.cuisine || "",
     })),
   };
 }

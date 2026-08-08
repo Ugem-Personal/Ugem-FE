@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { getCurrentUser } from "@/features/auth";
 import {
   confirmBill,
@@ -135,6 +136,9 @@ export default function ConfirmBillPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const orderId = searchParams.get("orderId");
+  const handleBack = useSafeBack(
+    orderId ? `/customer/orders/${orderId}` : "/customer/orders",
+  );
   const checkInToken = searchParams.get("checkInToken");
   const billConfirmedFromQr = searchParams.get("billConfirmed") === "1";
 
@@ -428,7 +432,7 @@ export default function ConfirmBillPage() {
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
             type="button"
-            onClick={() => navigate(`/customer/orders/${orderId || ""}`)}
+            onClick={handleBack}
             className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />

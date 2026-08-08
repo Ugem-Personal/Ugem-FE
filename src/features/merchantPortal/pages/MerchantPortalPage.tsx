@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight,
   BarChart3,
   Eye,
   ShoppingBag,
-  Sparkles,
   Store,
   UtensilsCrossed,
   Wallet,
@@ -18,7 +16,6 @@ import { useMyApplications } from "../hooks/useMyApplications";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { OnboardingSteps } from "@/shared/layouts/Merchants/OnboardingSteps";
-import { Button } from "@/shared/components/ui/button";
 import { MerchantStatusBadge } from "@/shared/components";
 import {
   getCurrentMerchantId,
@@ -28,10 +25,6 @@ import {
 } from "../services";
 import type { MerchantDetail } from "@/features/customer/types";
 
-function handleSendApplication() {
-  globalThis.location.href = "/merchant/application/create";
-}
-
 export function MerchantPortalPage() {
   const { data: applications = [], isLoading: isLoadingApp } = useMyApplications();
   const [stats, setStats] = useState<MerchantStatistics | null>(null);
@@ -40,7 +33,6 @@ export function MerchantPortalPage() {
 
   const merchantId = getCurrentMerchantId();
   const latestApplication = applications[0];
-  const showSubmitCard = !latestApplication || latestApplication.status === "Rejected";
 
   useEffect(() => {
     let active = true;
@@ -101,7 +93,7 @@ export function MerchantPortalPage() {
           {/* Hero Welcome Section */}
           <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xs backdrop-blur-xl transition-colors duration-300">
             <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-            <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="relative">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-bold text-cyan-600 dark:text-cyan-400">
@@ -120,32 +112,6 @@ export function MerchantPortalPage() {
                   Bảng điều khiển quản lý kinh doanh, thống kê doanh thu và phục vụ thực khách đích thực.
                 </p>
               </div>
-
-              {showSubmitCard ? (
-                <Button
-                  type="button"
-                  onClick={handleSendApplication}
-                  className="h-12 shrink-0 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-sm px-6 shadow-md shadow-cyan-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-                >
-                  Nộp Hồ Sơ Đăng Ký Quán
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Link
-                    to="/merchant/restaurant"
-                    className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 px-4 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-cyan-400 dark:hover:border-cyan-500 transition"
-                  >
-                    <Store className="h-4 w-4" /> Chi tiết nhà hàng
-                  </Link>
-                  <Link
-                    to="/merchant/orders"
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-5 text-xs font-bold shadow-md shadow-cyan-500/20 transition"
-                  >
-                    <ShoppingBag className="h-4 w-4" /> Quản lý đơn hàng
-                  </Link>
-                </div>
-              )}
             </div>
           </section>
 
@@ -225,29 +191,9 @@ export function MerchantPortalPage() {
 
           {/* Application Status / Onboarding Section */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            {showSubmitCard && (
-              <article className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs backdrop-blur-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Tham gia mạng lưới UGem</span>
-                  </div>
-                  <h2 className="mt-2 text-xl font-black text-slate-950 dark:text-white">Đăng ký quán ăn của bạn</h2>
-                  <p className="mt-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-                    UGem thẩm định kỹ lưỡng nhằm tôn vinh những quán ăn chất lượng tốt nhất. Nộp hồ sơ để được xét duyệt nhanh chóng.
-                  </p>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleSendApplication}
-                  className="mt-5 font-black text-xs sm:text-sm h-11 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-md shadow-cyan-500/20 w-fit"
-                >
-                  Gửi Hồ Sơ Ngay
-                  <ArrowRight className="h-4 w-4 ml-1.5" />
-                </Button>
-              </article>
-            )}
+            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs backdrop-blur-xl">
+              <OnboardingSteps />
+            </div>
 
             {isLoadingApp ? (
               <section className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 flex items-center justify-center min-h-[180px]">
@@ -257,12 +203,6 @@ export function MerchantPortalPage() {
               <ApplicationStatusCard application={latestApplication} />
             )}
           </section>
-
-          {showSubmitCard && (
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs">
-              <OnboardingSteps />
-            </div>
-          )}
 
           <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-6 shadow-xs">
             <TipsSection />

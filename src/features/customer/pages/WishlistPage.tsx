@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   Heart,
@@ -15,13 +15,14 @@ import {
 } from "../services/wishlistService";
 import { notify } from "@/shared/lib/notify";
 import { ModeToggle } from "@/shared/components";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import {
   WishlistMerchantCard,
   WishlistMerchantCardSkeleton,
 } from "../components/WishlistMerchantCard";
 
 export default function WishlistPage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer");
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -96,15 +97,6 @@ export default function WishlistPage() {
       (item.name || "").toLowerCase().includes(keyword),
     );
   }, [items, searchKeyword]);
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer");
-  }
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">

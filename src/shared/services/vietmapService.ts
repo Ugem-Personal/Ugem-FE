@@ -1,3 +1,5 @@
+import { cleanAddress, isDetailedAddress } from "@/shared/utils/address";
+
 // ============================================================
 // VietMap API Service
 // Tích hợp: Geocode (text → tọa độ) + Route (tìm đường)
@@ -63,6 +65,12 @@ export interface GeocodeResult {
   address: string;
   lat: number;
   lng: number;
+}
+
+export interface ReverseGeocodeResult {
+  address: string;
+  isDetailed: boolean;
+  distance: number | null;
 }
 
 export interface RouteStep {
@@ -227,6 +235,37 @@ async function getPlaceByRefId(
   return null;
 }
 
+/** Resolve a selected autocomplete item into VietMap's full Place response. */
+export async function getGeocodePlaceDetails(
+  fallback: GeocodeResult,
+): Promise<GeocodeResult> {
+  if (!fallback.ref_id) return fallback;
+
+  const place = await getPlaceByRefId(fallback.ref_id);
+  if (!place) return fallback;
+
+  const lat = Number(
+    place.lat ?? place.latitude ?? place.y ?? fallback.lat,
+  );
+  const lng = Number(
+    place.lng ?? place.longitude ?? place.x ?? fallback.lng,
+  );
+  const placeName = getText(place.name);
+  const placeAddress = getText(place.address);
+  const placeDisplay =
+    getText(place.display) ||
+    [placeName, placeAddress].filter(Boolean).join(" ");
+
+  return {
+    ref_id: getText(place.ref_id) || getText(place.id) || fallback.ref_id,
+    name: placeName || fallback.name,
+    display: placeDisplay || fallback.display,
+    address: placeAddress || placeDisplay || fallback.address,
+    lat: Number.isFinite(lat) ? lat : fallback.lat,
+    lng: Number.isFinite(lng) ? lng : fallback.lng,
+  };
+}
+
 function getText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -257,7 +296,7 @@ function getReverseRecords(payload: unknown): Record<string, unknown>[] {
 export async function reverseGeocode(
   lat: number,
   lng: number,
-): Promise<string> {
+): Promise<ReverseGeocodeResult | null> {
   if (!HAS_VIETMAP_SERVICE_KEY)
     throw new Error("Chưa cấu hình VietMap Service key");
 
@@ -271,15 +310,41 @@ export async function reverseGeocode(
   if (!res.ok) throw new Error(`Reverse API error: ${res.status}`);
 
   const records = getReverseRecords(await res.json());
-  const first = records[0];
-  if (!first) return "";
+  if (records.length === 0) return null;
 
-  const display = getText(first.display);
-  if (display) return display;
+  const candidates = records.map((record) => {
+    const name = getText(record.name);
+    const administrativeAddress = getText(record.address);
+    const display =
+      getText(record.display) ||
+      [name, administrativeAddress].filter(Boolean).join(" ");
+    const address = cleanAddress(display || administrativeAddress);
+    const rawDistance = Number(record.distance);
+    const distance = Number.isFinite(rawDistance) ? rawDistance : null;
+    const plusCode = /^[23456789CFGHJMPQRVWX]{4,8}\+/i.test(
+      name || display,
+    );
+    const detailed = isDetailedAddress(address) && !plusCode;
 
-  const name = getText(first.name);
-  const address = getText(first.address);
-  return [name, address].filter(Boolean).join(" ");
+    let score = 0;
+    if (detailed) score += 100;
+    if (plusCode) score -= 200;
+    if (name) score += 20;
+    if (administrativeAddress) score += 10;
+    if (distance !== null) score -= Math.min(Math.max(distance, 0), 1) * 20;
+
+    return { address, isDetailed: detailed, distance, score };
+  });
+
+  candidates.sort((a, b) => b.score - a.score);
+  const best = candidates.find((candidate) => candidate.address);
+  if (!best) return null;
+
+  return {
+    address: best.address,
+    isDetailed: best.isDetailed,
+    distance: best.distance,
+  };
 }
 
 // ─── Route: tính đường đi giữa 2 điểm ───────────────────────
