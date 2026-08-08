@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt, Copy, Check } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { getCurrentUser } from "@/features/auth";
+import { notify } from "@/shared/lib/notify";
 import {
   confirmBill,
   getCustomerOrderId,
@@ -57,10 +58,14 @@ function getPersistedCashRequest(orderId?: string | null) {
 }
 
 function getServerMessage(error: unknown, fallback: string) {
+  if (!error) return fallback;
+  const err = error as any;
+  const responseMsg = err.response?.data?.message;
+  if (Array.isArray(responseMsg)) return responseMsg.join(", ");
+  if (typeof responseMsg === "string" && responseMsg.trim()) return responseMsg;
   if (error instanceof Error && error.message) {
     return error.message;
   }
-
   return fallback;
 }
 
@@ -98,9 +103,29 @@ function getBillPaymentMethod(bill?: Bill | null): BillPaymentMethod {
   return paymentMethod.includes("banktransfer") ? "BankTransfer" : "Cash";
 }
 
-function getBankTransferDescription(orderId?: string | null) {
-  if (!orderId) return "UGem";
-  return `UGem-${orderId}`;
+function removeAccents(str: string): string {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+function getBankTransferDescription(
+  orderId?: string | null,
+  customerName?: string | null,
+) {
+  if (!orderId) return "UGEM CHUYEN TIEN";
+  const user = getCurrentUser();
+  const rawName = customerName || user?.Name || "";
+  const nameClean = rawName ? removeAccents(rawName) : "";
+  const shortId = orderId.split("-")[0].toUpperCase();
+  return nameClean
+    ? `${nameClean} CHUYEN TIEN DON ${shortId}`
+    : `UGEM CHUYEN TIEN DON ${shortId}`;
 }
 
 function getBankTransferInfo(
@@ -111,7 +136,7 @@ function getBankTransferInfo(
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
   const description =
-    bill?.description ?? getBankTransferDescription(orderId);
+    bill?.description ?? getBankTransferDescription(orderId, (bill as any)?.customerName);
   const amount = Math.round(
     Number(bill?.totalAmount ?? finalPrice ?? 0),
   );
@@ -154,6 +179,17 @@ export default function ConfirmBillPage() {
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  function copyToClipboard(text: string, field: string) {
+    if (!text) return;
+    void navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    notify.success(
+      `Đã sao chép ${field === "account" ? "Số tài khoản" : "Nội dung chuyển khoản"}!`,
+    );
+    setTimeout(() => setCopiedField(null), 2000);
+  }
 
   const billOrderId = bill?.orderId ?? orderId;
   const finalPrice = bill?.finalPrice ?? 0;
@@ -642,25 +678,47 @@ export default function ConfirmBillPage() {
                         </div>
 
                         <div className="space-y-2 text-xs font-semibold text-cyan-950 dark:text-cyan-100 flex-1 w-full">
-                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                          <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
                             <span className="text-slate-500 dark:text-slate-400">Ngân hàng</span>
                             <span className="font-bold">{bankTransferInfo.bankName}</span>
                           </div>
-                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                          <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
                             <span className="text-slate-500 dark:text-slate-400">Số tài khoản</span>
-                            <span className="font-mono font-black">{bankTransferInfo.bankAccount}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-sm">{bankTransferInfo.bankAccount}</span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(bankTransferInfo.bankAccount, "account")}
+                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
+                                title="Sao chép số tài khoản"
+                              >
+                                {copiedField === "account" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                {copiedField === "account" ? "Đã chép" : "Sao chép"}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex justify-between border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                          <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
                             <span className="text-slate-500 dark:text-slate-400">Số tiền</span>
-                            <span className="font-mono font-black text-cyan-600 dark:text-cyan-400">
+                            <span className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
                               {formatCurrency(bankTransferInfo.amount)}
                             </span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between items-center">
                             <span className="text-slate-500 dark:text-slate-400">Nội dung</span>
-                            <span className="font-mono font-black text-slate-900 dark:text-white">
-                              {bankTransferInfo.description}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-slate-900 dark:text-white">
+                                {bankTransferInfo.description}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(bankTransferInfo.description, "description")}
+                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
+                                title="Sao chép nội dung chuyển khoản"
+                              >
+                                {copiedField === "description" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                {copiedField === "description" ? "Đã chép" : "Sao chép"}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

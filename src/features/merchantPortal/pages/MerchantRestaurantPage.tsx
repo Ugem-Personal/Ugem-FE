@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { cleanAddress } from "@/shared/utils/address";
 import { Link } from "react-router-dom";
@@ -18,6 +18,7 @@ import {
   Tag,
   DollarSign,
   Compass,
+  MessageSquare,
 } from "lucide-react";
 
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
@@ -25,6 +26,7 @@ import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
 import { getMapMerchants, getMerchantDetail } from "@/features/customer/services/merchantService";
 import type { MerchantDetail } from "@/features/customer/types";
+import { getReviewsByMerchantId, type Review } from "@/features/review/services";
 import {
   getMyMerchantDetail,
   updateMerchant,
@@ -77,6 +79,26 @@ function getDisplayDescription(description?: string) {
         );
 
   return summaryLines.join("\n").trim();
+}
+
+function getReviewAuthorName(review: Review) {
+  return (
+    review.customerName ||
+    review.name ||
+    review.title ||
+    "Thực khách ẩn danh"
+  );
+}
+
+function getReviewAuthorAvatarUrl(review: Review) {
+  return review.customerAvatarUrl || review.imageUrl || null;
+}
+
+function getInitials(name?: string) {
+  if (!name) return "KH";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
@@ -173,6 +195,10 @@ async function resolveMerchantFromApprovedApplication(
 
 export function MerchantRestaurantPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const reviewsRef = useRef<HTMLDivElement | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -215,6 +241,22 @@ export function MerchantRestaurantPage() {
         if (active) {
           setMerchant(data);
           setForm(toEditForm(data));
+        }
+
+        if (data?.id) {
+          setLoadingReviews(true);
+          try {
+            const reviewList = await getReviewsByMerchantId(data.id);
+            if (active) {
+              setReviews(reviewList);
+            }
+          } catch (err) {
+            console.error("Không tải được danh sách đánh giá:", err);
+          } finally {
+            if (active) {
+              setLoadingReviews(false);
+            }
+          }
         }
       } catch (error) {
         console.error(error);
@@ -523,17 +565,21 @@ export function MerchantRestaurantPage() {
                     />
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-5 shadow-lg backdrop-blur-2xl">
+                  <button
+                    type="button"
+                    onClick={() => reviewsRef.current?.scrollIntoView({ behavior: "smooth" })}
+                    className="w-full text-left rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-5 shadow-lg backdrop-blur-2xl transition hover:border-amber-300/80 hover:bg-amber-50/20 dark:hover:bg-amber-950/10 cursor-pointer"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Đánh giá thực khách
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        Đánh giá thực khách <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold hover:underline">(Xem chi tiết ↓)</span>
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 text-xs font-black text-amber-800 dark:text-amber-300">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                        {merchant.rating || 0} / 5 ({merchant.reviewCount || 0} đánh giá)
+                        {merchant.rating || 0} / 5 ({reviews.length || merchant.reviewCount || 0} đánh giá)
                       </span>
                     </div>
-                  </div>
+                  </button>
                 </div>
 
                 {/* Details Grid (8 cols) */}
@@ -615,6 +661,116 @@ export function MerchantRestaurantPage() {
                   >
                     + Thêm món ăn mới
                   </Link>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Customer Reviews Section */}
+          {merchant && (
+            <section
+              ref={reviewsRef}
+              className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-2xl transition-colors duration-300 space-y-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-0.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                      <MessageSquare className="h-3.5 w-3.5" /> Phản hồi khách hàng
+                    </span>
+                  </div>
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white">
+                    Chi tiết đánh giá ({reviews.length} nhận xét)
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Danh sách các phản hồi và số sao thực tế từ khách hàng đã trải nghiệm tại quán
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-2xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/50 px-4 py-2 text-xs font-black text-amber-800 dark:text-amber-300 shadow-xs">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <span>{merchant.rating || 0} / 5 điểm trung bình</span>
+                </div>
+              </div>
+
+              {loadingReviews ? (
+                <div className="py-8 text-center text-xs font-bold text-slate-400 space-y-2">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-cyan-500" />
+                  <p>Đang tải chi tiết các đánh giá...</p>
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review, idx) => (
+                    <div
+                      key={review.reviewId || idx}
+                      className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/80 dark:bg-slate-950/60 p-5 space-y-3 transition hover:border-cyan-500/30"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 dark:bg-cyan-950 text-xs font-black text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                            {getReviewAuthorAvatarUrl(review) ? (
+                              <img
+                                src={getReviewAuthorAvatarUrl(review)}
+                                alt={getReviewAuthorName(review)}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              getInitials(getReviewAuthorName(review))
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-950 dark:text-white">
+                              {getReviewAuthorName(review)}
+                            </p>
+                            {review.createdAt && (
+                              <p className="text-[11px] font-semibold text-slate-400">
+                                {new Date(review.createdAt).toLocaleString("vi-VN")}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/20">
+                          {Array.from({ length: review.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                      </div>
+
+                      {review.content && (
+                        <p className="text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
+                          "{review.content}"
+                        </p>
+                      )}
+
+                      {review.details && review.details.length > 0 && (
+                        <div className="pt-3 border-t border-slate-200/60 dark:border-white/5 space-y-2">
+                          <p className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Đánh giá món ăn cụ thể:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {review.details.map((detail, dIdx) => (
+                              <span
+                                key={detail.reviewDetailId || dIdx}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 shadow-2xs"
+                              >
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                <span className="font-bold">{detail.rating}/5</span>
+                                {detail.content ? `: ${detail.content}` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-8 text-center">
+                  <MessageSquare className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Chưa có nhận xét hay bình luận chi tiết nào từ thực khách.
+                  </p>
                 </div>
               )}
             </section>

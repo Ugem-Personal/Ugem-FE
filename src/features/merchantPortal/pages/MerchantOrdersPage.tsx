@@ -383,7 +383,7 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.error("Chấp nhận đơn thất bại.");
+      notify.errorApi(error, "Chấp nhận đơn thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -410,7 +410,7 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.error("Từ chối đơn thất bại.");
+      notify.errorApi(error, "Từ chối đơn thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -432,7 +432,7 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.error("Không thể cập nhật tiến độ đơn. Vui lòng thử lại.");
+      notify.errorApi(error, "Không thể cập nhật tiến độ đơn. Vui lòng thử lại.");
     } finally {
       setActionOrderId(null);
     }
@@ -457,7 +457,7 @@ export default function MerchantOrdersPage() {
       }));
     } catch (error) {
       console.error(error);
-      notify.error("Không tạo được QR check-in.");
+      notify.errorApi(error, "Không tạo được QR check-in.");
     } finally {
       generatingQrRef.current.delete(orderId);
       setActionOrderId(null);
@@ -563,7 +563,7 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.error("Cập nhật hóa đơn thất bại.");
+      notify.errorApi(error, "Cập nhật hóa đơn thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -588,7 +588,7 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.error("Xác nhận thanh toán thất bại.");
+      notify.errorApi(error, "Xác nhận thanh toán thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -1145,12 +1145,50 @@ export default function MerchantOrdersPage() {
                   </DialogFooter>
 
                   {qrUrls[selectedOrder.orderId] ? (
-                    <div className="mx-auto inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-white p-3 shadow-md">
-                      <img
-                        src={qrUrls[selectedOrder.orderId]}
-                        alt={`QR check-in ${selectedOrder.orderId}`}
-                        className="h-40 w-40 object-contain"
-                      />
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 rounded-2xl border border-cyan-500/30 bg-cyan-50/60 dark:bg-cyan-950/40 p-4 shadow-md">
+                      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white p-2 shrink-0">
+                        <img
+                          src={qrUrls[selectedOrder.orderId]}
+                          alt={`QR check-in ${selectedOrder.orderId}`}
+                          className="h-36 w-36 object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 w-full space-y-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <div className="font-bold text-cyan-600 dark:text-cyan-400 border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
+                          Thông tin chuyển khoản (Nếu không quét QR):
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
+                          <span className="text-slate-500 dark:text-slate-400">Ngân hàng:</span>
+                          <span className="font-bold">{import.meta.env.VITE_BANK_NAME || "BIDV"}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
+                          <span className="text-slate-500 dark:text-slate-400">Số tài khoản (STK):</span>
+                          <span className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
+                            {import.meta.env.VITE_BANK_ACCOUNT || "5321252810"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
+                          <span className="text-slate-500 dark:text-slate-400">Số tiền:</span>
+                          <span className="font-mono font-black text-slate-900 dark:text-white">
+                            {formatCurrency(detailTotal)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 dark:text-slate-400">Nội dung CK:</span>
+                          <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px]">
+                            {selectedOrder.customerName
+                              ? `${selectedOrder.customerName
+                                  .normalize("NFD")
+                                  .replace(/[\u0300-\u036f]/g, "")
+                                  .replace(/đ/g, "d")
+                                  .replace(/Đ/g, "D")
+                                  .replace(/[^a-zA-Z0-9 ]/g, "")
+                                  .trim()
+                                  .toUpperCase()} CHUYEN TIEN DON ${selectedOrder.orderId.split("-")[0].toUpperCase()}`
+                              : `UGEM CHUYEN TIEN DON ${selectedOrder.orderId.split("-")[0].toUpperCase()}`}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   ) : null}
                 </div>

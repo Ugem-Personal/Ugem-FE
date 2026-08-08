@@ -527,9 +527,18 @@ export function metersToKm(meters: number): string {
 }
 
 export function secondsToText(seconds: number): string {
-  const m = Math.round(seconds / 60);
-  if (m < 60) return `${m} phút`;
+  const totalSec = Math.max(0, Math.round(seconds));
+  if (totalSec === 0) return "1 phút";
+  if (totalSec < 60) return `${totalSec} giây`;
+
+  const m = Math.floor(totalSec / 60);
+  const remSec = totalSec % 60;
+
+  if (m < 60) {
+    return remSec > 0 ? `${m} phút ${remSec} giây` : `${m} phút`;
+  }
+
   const h = Math.floor(m / 60);
-  const rem = m % 60;
-  return rem > 0 ? `${h} giờ ${rem} phút` : `${h} giờ`;
+  const remMin = m % 60;
+  return remMin > 0 ? `${h} giờ ${remMin} phút` : `${h} giờ`;
 }

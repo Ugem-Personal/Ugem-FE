@@ -412,7 +412,7 @@ export default function MerchantDetailPage() {
       navigate("/customer/orders");
     } catch (error) {
       console.error(error);
-      notify.error("Đặt món thất bại.");
+      notify.errorApi(error, "Đặt món thất bại. Vui lòng thử lại.");
     } finally {
       setOrdering(false);
     }

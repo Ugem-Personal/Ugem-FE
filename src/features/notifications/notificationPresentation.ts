@@ -315,54 +315,54 @@ function getActionLabel(category: NotificationCategory) {
 export function getToneClasses(tone: NotificationTone) {
   if (tone === "emerald") {
     return {
-      badge: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-      border: "border-emerald-200",
-      icon: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-      panel: "bg-emerald-50/70",
+      badge: "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-800",
+      border: "border-emerald-200 dark:border-emerald-800/60",
+      icon: "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-800",
+      panel: "bg-emerald-50/70 dark:bg-emerald-950/40",
     };
   }
 
   if (tone === "amber") {
     return {
-      badge: "bg-amber-50 text-amber-700 ring-amber-100",
-      border: "border-amber-200",
-      icon: "bg-amber-50 text-amber-700 ring-amber-100",
-      panel: "bg-amber-50/70",
+      badge: "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-800",
+      border: "border-amber-200 dark:border-amber-800/60",
+      icon: "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-800",
+      panel: "bg-amber-50/70 dark:bg-amber-950/40",
     };
   }
 
   if (tone === "rose") {
     return {
-      badge: "bg-rose-50 text-rose-700 ring-rose-100",
-      border: "border-rose-200",
-      icon: "bg-rose-50 text-rose-700 ring-rose-100",
-      panel: "bg-rose-50/70",
+      badge: "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 ring-rose-200 dark:ring-rose-800",
+      border: "border-rose-200 dark:border-rose-800/60",
+      icon: "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 ring-rose-200 dark:ring-rose-800",
+      panel: "bg-rose-50/70 dark:bg-rose-950/40",
     };
   }
 
   if (tone === "violet") {
     return {
-      badge: "bg-violet-50 text-violet-700 ring-violet-100",
-      border: "border-violet-200",
-      icon: "bg-violet-50 text-violet-700 ring-violet-100",
-      panel: "bg-violet-50/70",
+      badge: "bg-violet-50 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-800",
+      border: "border-violet-200 dark:border-violet-800/60",
+      icon: "bg-violet-50 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-800",
+      panel: "bg-violet-50/70 dark:bg-violet-950/40",
     };
   }
 
   if (tone === "slate") {
     return {
-      badge: "bg-slate-100 text-slate-700 ring-slate-200",
-      border: "border-slate-200",
-      icon: "bg-slate-100 text-slate-700 ring-slate-200",
-      panel: "bg-slate-50",
+      badge: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-slate-200 dark:ring-slate-700",
+      border: "border-slate-200 dark:border-slate-800",
+      icon: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-slate-200 dark:ring-slate-700",
+      panel: "bg-slate-50 dark:bg-slate-900/60",
     };
   }
 
   return {
-    badge: "bg-cyan-50 text-cyan-700 ring-cyan-100",
-    border: "border-cyan-200",
-    icon: "bg-cyan-50 text-cyan-700 ring-cyan-100",
-    panel: "bg-cyan-50/70",
+    badge: "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-cyan-200 dark:ring-cyan-800",
+    border: "border-cyan-200 dark:border-cyan-800/60",
+    icon: "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-cyan-200 dark:ring-cyan-800",
+    panel: "bg-cyan-50/70 dark:bg-cyan-950/40",
   };
 }
 

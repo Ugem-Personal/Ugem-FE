@@ -174,36 +174,40 @@ export default function NotificationsPage() {
   }, [activeFilter, notifications]);
 
   return (
-    <div className="app-page px-4 py-6">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] [background-size:32px_32px]" />
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
+      {/* Background glow & grid */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/10 blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
 
-      <main className="relative mx-auto max-w-6xl space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/70 bg-white/75 p-5 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+      <main className="relative mx-auto max-w-6xl space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-xl transition-colors">
           <div className="flex min-w-0 items-center gap-4">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/20">
               <Bell className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-black uppercase text-cyan-700 ring-1 ring-cyan-100">
+              <div className="mb-1.5 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
                 Notification center
               </div>
-              <h1 className="text-3xl font-black tracking-tight">
+              <h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">
                 Thông báo
               </h1>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
                 Theo dõi đơn hàng, hồ sơ merchant/reviewer, staff, affiliate và
                 cảnh báo hệ thống.
               </p>
             </div>
           </div>
 
-          <div className="fixed right-5 top-4 z-50 flex flex-wrap items-center justify-end gap-2 lg:right-7">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => void handleMarkAllAsRead()}
               disabled={!notifications.some((item) => !item.isRead)}
-              className="h-11 rounded-2xl bg-white px-4 font-black"
+              className="h-11 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-black hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
             >
               <CheckCircle2 className="h-4 w-4" />
               Đọc tất cả
@@ -211,7 +215,7 @@ export default function NotificationsPage() {
             <Button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="h-11 rounded-2xl bg-slate-950 px-4 font-black text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-700"
+              className="h-11 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-4 font-black text-white dark:text-slate-950 shadow-md hover:bg-slate-800 dark:hover:bg-cyan-400 transition"
             >
               {refreshing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -224,7 +228,7 @@ export default function NotificationsPage() {
           </div>
         </header>
 
-        <section className="grid gap-3 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-3">
           <OverviewCard
             icon={Inbox}
             label="Tổng thông báo"
@@ -245,7 +249,7 @@ export default function NotificationsPage() {
           />
         </section>
 
-        <section className="rounded-3xl border border-white/70 bg-white/75 p-4 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+        <section className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-4 shadow-xl backdrop-blur-xl">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {categoryFilters.map((filter) => {
               const isActive = activeFilter === filter.key;
@@ -257,19 +261,19 @@ export default function NotificationsPage() {
                   type="button"
                   onClick={() => setActiveFilter(filter.key)}
                   className={cn(
-                    "inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl px-3 text-sm font-black transition",
+                    "inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl px-3.5 text-xs font-black transition",
                     isActive
-                      ? "bg-slate-950 text-white shadow-lg shadow-slate-950/15"
-                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-cyan-50 hover:text-cyan-800",
+                      ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
+                      : "bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white",
                   )}
                 >
                   {filter.label}
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-xs",
+                      "rounded-full px-2 py-0.5 text-[11px] font-bold",
                       isActive
-                        ? "bg-white/15 text-white"
-                        : "bg-slate-100 text-slate-500",
+                        ? "bg-white/20 dark:bg-slate-950/20 text-white dark:text-slate-950"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
                     )}
                   >
                     {count}
@@ -281,9 +285,9 @@ export default function NotificationsPage() {
         </section>
 
         {loading ? (
-          <div className="rounded-3xl border border-white/70 bg-white/80 p-10 text-center shadow-xl ring-1 ring-slate-950/5">
-            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-cyan-600" />
-            <p className="text-sm font-semibold text-slate-500">
+          <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-xl">
+            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-cyan-500" />
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
               Đang tải thông báo...
             </p>
           </div>
@@ -298,12 +302,12 @@ export default function NotificationsPage() {
             ))}
           </section>
         ) : (
-          <div className="rounded-3xl border border-white/70 bg-white/80 p-10 text-center shadow-xl ring-1 ring-slate-950/5">
-            <Bell className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-            <p className="font-black text-slate-700">
+          <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-12 text-center shadow-xl backdrop-blur-xl">
+            <Bell className="mx-auto mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
+            <p className="font-black text-slate-950 dark:text-white">
               Không có thông báo trong bộ lọc này.
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Khi BE phát sinh notification mới, danh sách sẽ tự cập nhật.
             </p>
           </div>
@@ -325,17 +329,17 @@ function OverviewCard({
   value: number;
 }) {
   return (
-    <article className="rounded-3xl border border-white/70 dark:border-slate-800 bg-white/75 dark:bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+    <article className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl transition-all hover:translate-y-[-2px]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase text-slate-500 dark:text-slate-400">{label}</p>
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
           <p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">{value}</p>
         </div>
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-1 ring-cyan-100 dark:ring-cyan-900">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/20">
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
+      <p className="mt-3 text-xs leading-5 font-semibold text-slate-500 dark:text-slate-400">{description}</p>
     </article>
   );
 }
@@ -383,8 +387,8 @@ function NotificationCard({
   return (
     <article
       className={cn(
-        "overflow-hidden rounded-3xl border bg-white/85 dark:bg-slate-900/85 p-5 shadow-xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl",
-        item.isRead ? "border-white/70 dark:border-slate-800" : tone.border,
+        "overflow-hidden rounded-3xl border bg-white/80 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl transition-all",
+        item.isRead ? "border-slate-200/80 dark:border-white/10" : tone.border,
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -407,28 +411,28 @@ function NotificationCard({
                 {meta.categoryLabel}
               </Badge>
               {!item.isRead ? (
-                <Badge className="border-0 bg-cyan-600 text-white">
+                <Badge className="border-0 bg-cyan-600 text-white font-black">
                   Chưa đọc
                 </Badge>
               ) : (
                 <Badge
                   variant="secondary"
-                  className="border-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                  className="border-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold"
                 >
                   Đã đọc
                 </Badge>
               )}
             </div>
 
-            <h2 className="mt-3 text-lg font-black text-slate-950 dark:text-white">
+            <h2 className="mt-3 text-base sm:text-lg font-black text-slate-950 dark:text-white">
               {getNotificationTitle(item)}
             </h2>
 
             {body ? (
-              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{body}</p>
+              <p className="mt-2 text-xs sm:text-sm leading-6 font-semibold text-slate-600 dark:text-slate-300">{body}</p>
             ) : null}
 
-            <p className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <p className="mt-3 text-xs font-semibold text-slate-400 dark:text-slate-500">
               {time || "Mới cập nhật"}
             </p>
           </div>
@@ -438,7 +442,7 @@ function NotificationCard({
           <Button
             asChild
             variant="outline"
-            className="h-10 shrink-0 rounded-2xl bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 font-black"
+            className="h-10 shrink-0 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black hover:bg-slate-100 dark:hover:bg-slate-700 shadow-2xs"
           >
             <Link to={meta.actionTo} onClick={handleActionClick}>
               {meta.actionLabel}

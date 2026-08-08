@@ -1,8 +1,32 @@
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Star, MessageSquareQuote, Store, Sparkles, RefreshCw } from "lucide-react";
+import { Star, MessageSquareQuote, Store, Sparkles, RefreshCw, ChevronDown, Loader2 } from "lucide-react";
 import { useReviews } from "../hooks";
 import type { Review } from "../services";
 import { UserAccountMenu } from "@/shared/components/UserAccountMenu";
+import { searchMerchants } from "@/features/customer/services/merchantService";
+import { getMyMerchantDetail } from "@/features/merchantPortal/services";
+import type { Merchant } from "@/features/customer/types";
+
+function getReviewAuthorName(review: Review) {
+  return (
+    review.customerName ||
+    review.name ||
+    review.title ||
+    "Thực khách ẩn danh"
+  );
+}
+
+function getReviewAuthorAvatarUrl(review: Review) {
+  return review.customerAvatarUrl || review.imageUrl || null;
+}
+
+function getInitials(name?: string) {
+  if (!name) return "KH";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function getReviewText(review: Review) {
   return review.content || "";
@@ -15,6 +39,8 @@ function formatDate(dateStr?: string) {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return "N/A";
@@ -22,9 +48,53 @@ function formatDate(dateStr?: string) {
 }
 
 export default function ReviewsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const merchantId = searchParams.get("merchantId") ?? undefined;
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [loadingMerchants, setLoadingMerchants] = useState(false);
+
   const { data: reviews = [], isLoading, isError, error, refetch } = useReviews(merchantId);
+
+  // Auto-detect merchant if user is merchant and no merchantId is in search params
+  useEffect(() => {
+    let active = true;
+
+    async function init() {
+      setLoadingMerchants(true);
+
+      try {
+        const merchantList = await searchMerchants({ pageSize: 100 });
+        if (active) {
+          setMerchants(merchantList);
+        }
+
+        if (!merchantId) {
+          try {
+            const myMerchant = await getMyMerchantDetail();
+            if (myMerchant?.id && active) {
+              setSearchParams({ merchantId: myMerchant.id }, { replace: true });
+            }
+          } catch {
+            // Not a merchant or error, user will select from list
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách nhà hàng:", err);
+      } finally {
+        if (active) {
+          setLoadingMerchants(false);
+        }
+      }
+    }
+
+    void init();
+
+    return () => {
+      active = false;
+    };
+  }, [merchantId, setSearchParams]);
+
+  const selectedMerchant = merchants.find((m) => m.id === merchantId);
 
   const averageRating = reviews.length > 0
     ? (reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length).toFixed(1)
@@ -49,20 +119,86 @@ export default function ReviewsPage() {
             </div>
           </div>
 
-          <UserAccountMenu fallbackName="Khách" />
+          <div className="flex items-center gap-3">
+            {/* Merchant Selector Dropdown */}
+            {merchants.length > 0 && (
+              <div className="relative">
+                <select
+                  value={merchantId || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) {
+                      setSearchParams({ merchantId: val });
+                    } else {
+                      setSearchParams({});
+                    }
+                  }}
+                  className="h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 pr-8 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 appearance-none cursor-pointer"
+                >
+                  <option value="">-- Chọn quán cần xem --</option>
+                  {merchants.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+            )}
+
+            <UserAccountMenu fallbackName="Khách" />
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-6">
         {!merchantId ? (
-          <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/30 p-6 text-center shadow-sm">
-            <Store className="mx-auto h-8 w-8 text-amber-600 dark:text-amber-400" />
-            <h3 className="mt-3 text-base font-bold text-amber-900 dark:text-amber-200">
-              Vui lòng chọn quán
-            </h3>
-            <p className="mt-1 text-sm text-amber-700 dark:text-amber-300/80">
-              Hãy chọn một merchant từ danh sách để xem tổng hợp các đánh giá thực tế.
-            </p>
+          <div className="rounded-3xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/30 p-8 text-center shadow-sm space-y-4">
+            <Store className="mx-auto h-12 w-12 text-amber-600 dark:text-amber-400" />
+            <div>
+              <h3 className="text-lg font-black text-amber-900 dark:text-amber-200">
+                Vui lòng chọn quán ăn
+              </h3>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300/80">
+                Hãy chọn một nhà hàng từ danh sách dưới đây hoặc từ menu để xem tổng hợp các đánh giá thực tế.
+              </p>
+            </div>
+
+            {loadingMerchants ? (
+              <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 py-4">
+                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                Đang tải danh sách quán...
+              </div>
+            ) : merchants.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto pt-2">
+                {merchants.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSearchParams({ merchantId: m.id })}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 text-left shadow-sm hover:border-amber-500 hover:shadow-md transition active:scale-98"
+                  >
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300 text-xs">
+                      {m.logoUrl ? (
+                        <img src={m.logoUrl} alt={m.name} className="h-full w-full object-cover" />
+                      ) : (
+                        m.name.slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-black text-slate-900 dark:text-white">
+                        {m.name}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-400">
+                        ⭐ {m.rating || 0}/5 ({m.reviewCount || 0} đánh giá)
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Chưa có quán nào trên hệ thống.</p>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
@@ -86,10 +222,10 @@ export default function ReviewsPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-slate-950 dark:text-white">
-                    Tổng quan đánh giá
+                    {selectedMerchant?.name ? `Tổng quan đánh giá: ${selectedMerchant.name}` : "Tổng quan đánh giá"}
                   </h2>
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    {reviews.length} nhận xét được ghi nhận
+                    {reviews.length} nhận xét được ghi nhận từ khách hàng
                   </p>
                 </div>
               </div>
@@ -126,31 +262,65 @@ export default function ReviewsPage() {
                 {reviews.map((review: Review, idx: number) => (
                   <article
                     key={review.reviewId || idx}
-                    className="group rounded-2xl border border-white/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-5 shadow-lg shadow-cyan-950/5 backdrop-blur-xl transition hover:border-cyan-200 dark:hover:border-cyan-900 hover:shadow-xl"
+                    className="group rounded-2xl border border-white/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-5 shadow-lg shadow-cyan-950/5 backdrop-blur-xl transition hover:border-cyan-200 dark:hover:border-cyan-900 hover:shadow-xl space-y-3"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-slate-950 dark:text-white">
-                            {review.title || review.name || "Đánh giá từ khách hàng"}
-                          </p>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            {review.rating || 0}/5
-                          </span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950 text-xs font-black text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          {getReviewAuthorAvatarUrl(review) ? (
+                            <img
+                              src={getReviewAuthorAvatarUrl(review)!}
+                              alt={getReviewAuthorName(review)}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            getInitials(getReviewAuthorName(review))
+                          )}
                         </div>
-
-                        {getReviewText(review) && (
-                          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                            {getReviewText(review)}
+                        <div>
+                          <p className="text-sm font-black text-slate-950 dark:text-white">
+                            {getReviewAuthorName(review)}
                           </p>
-                        )}
+                          <time className="text-[11px] font-semibold text-slate-400">
+                            {formatDate(review.createdAt)}
+                          </time>
+                        </div>
                       </div>
 
-                      <time className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                        {formatDate(review.createdAt)}
-                      </time>
+                      <div className="flex items-center gap-1 bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/20">
+                        {Array.from({ length: review.rating || 5 }).map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        ))}
+                        <span className="ml-1 text-xs font-bold text-amber-700 dark:text-amber-300">
+                          {review.rating || 0}/5
+                        </span>
+                      </div>
                     </div>
+
+                    {getReviewText(review) && (
+                      <p className="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium">
+                        "{getReviewText(review)}"
+                      </p>
+                    )}
+
+                    {review.details && review.details.length > 0 && (
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                        <p className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                          Đánh giá chi tiết từng món:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {review.details.map((detail, dIdx) => (
+                            <span
+                              key={detail.reviewDetailId || dIdx}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 px-3 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                            >
+                              ⭐ {detail.rating}/5
+                              {detail.content ? `: ${detail.content}` : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </article>
                 ))}
               </div>

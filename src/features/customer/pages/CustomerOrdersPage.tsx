@@ -66,9 +66,13 @@ export default function CustomerOrdersPage() {
       );
       setOrders(sortedOrders);
       setPaginationMeta(res.meta ?? null);
-    } catch (error) {
-      console.error(error);
-      notify.error("Không tải được lịch sử đơn hàng.");
+    } catch (error: unknown) {
+      console.error("Lỗi khi tải lịch sử đơn hàng:", error);
+      const apiMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setOrders([]);
+      setPaginationMeta(null);
+      notify.error(apiMessage || "Không tải được lịch sử đơn hàng.");
     } finally {
       setLoading(false);
     }
@@ -77,35 +81,14 @@ export default function CustomerOrdersPage() {
   useEffect(() => {
     let active = true;
 
-    const statusFilter = activeTab === "all" ? undefined : activeTab;
-
-    getCustomerOrders({
-      pageIndex,
-      pageSize: 10,
-      status: statusFilter,
-    })
-      .then((res) => {
-        if (!active) return;
-        const sortedOrders = [...(res.data ?? [])].sort(
-          (left, right) => getOrderSortTime(right) - getOrderSortTime(left),
-        );
-        setOrders(sortedOrders);
-        setPaginationMeta(res.meta ?? null);
-      })
-      .catch((error) => {
-        if (!active) return;
-        console.error(error);
-        notify.error("Không tải được lịch sử đơn hàng.");
-      })
-      .finally(() => {
-        if (!active) return;
-        setLoading(false);
-      });
+    if (active) {
+      void fetchOrders();
+    }
 
     return () => {
       active = false;
     };
-  }, [pageIndex, activeTab]);
+  }, [fetchOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
