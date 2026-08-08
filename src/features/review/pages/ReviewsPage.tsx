@@ -180,9 +180,9 @@ export default function ReviewsPage() {
                   >
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center font-bold text-amber-700 dark:text-amber-300 text-xs">
                       {m.logoUrl ? (
-                        <img src={m.logoUrl} alt={m.name} className="h-full w-full object-cover" />
+                        <img src={m.logoUrl} alt={m.name || "Quán"} className="h-full w-full object-cover" />
                       ) : (
-                        m.name.slice(0, 2).toUpperCase()
+                        (m.name || "Quán").slice(0, 2).toUpperCase()
                       )}
                     </div>
                     <div className="min-w-0 flex-1">

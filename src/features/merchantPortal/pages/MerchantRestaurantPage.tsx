@@ -710,7 +710,7 @@ export function MerchantRestaurantPage() {
                           <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-cyan-100 dark:bg-cyan-950 text-xs font-black text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
                             {getReviewAuthorAvatarUrl(review) ? (
                               <img
-                                src={getReviewAuthorAvatarUrl(review)}
+                                src={getReviewAuthorAvatarUrl(review) || undefined}
                                 alt={getReviewAuthorName(review)}
                                 className="h-full w-full object-cover"
                               />
