@@ -1,5 +1,4 @@
 import { api } from "../../lib/axios";
-import { getCurrentUser } from "@/features/auth";
 import type { ApiResponse, MerchantOrderSummary } from "@/shared/types";
 import type { MerchantDetail } from "@/features/customer/types";
 import type { CreateApplicationPayload, MerchantApplication } from "./types";
@@ -156,19 +155,9 @@ export async function getMyApplications() {
   return (res.data.data ?? []).map(normalizeApplication);
 }
 
-export function getCurrentMerchantId() {
-  return getCurrentUser()?.MerchantId ?? null;
-}
-
 export async function getMyMerchantDetail() {
-  const merchantId = getCurrentMerchantId();
-
-  if (!merchantId) {
-    return null;
-  }
-
   const res = await api.get<ApiResponse<MerchantDetail> | MerchantDetail>(
-    `/merchants/${merchantId}`,
+    "/merchants/me",
   );
 
   const merchant = unwrapApiResponse(res.data);

@@ -18,7 +18,6 @@ import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { OnboardingSteps } from "@/shared/layouts/Merchants/OnboardingSteps";
 import { MerchantStatusBadge } from "@/shared/components";
 import {
-  getCurrentMerchantId,
   getMyMerchantDetail,
   getMyMerchantStatistics,
   type MerchantStatistics,
@@ -31,18 +30,12 @@ export function MerchantPortalPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  const merchantId = getCurrentMerchantId();
   const latestApplication = applications[0];
 
   useEffect(() => {
     let active = true;
 
     const loadPortalData = async () => {
-      if (!merchantId) {
-        setLoadingData(false);
-        return;
-      }
-
       setLoadingData(true);
 
       try {
@@ -74,7 +67,7 @@ export function MerchantPortalPage() {
     return () => {
       active = false;
     };
-  }, [merchantId]);
+  }, []);
 
   return (
     <main className="merchant-portal-layout min-h-screen bg-slate-50/80 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative flex">
@@ -116,7 +109,7 @@ export function MerchantPortalPage() {
           </section>
 
           {/* Business KPI Statistics (Real Backend Data) */}
-          {merchantId && (
+          {merchant && (
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <PortalKpiCard
                 icon={Eye}

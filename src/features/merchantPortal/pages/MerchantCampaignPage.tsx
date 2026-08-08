@@ -45,7 +45,6 @@ import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
 
 import {
-  getCurrentMerchantId,
   getMyMerchantStatistics,
   getMyMerchantViews,
   type MerchantStatistics,
@@ -58,6 +57,7 @@ import {
   type CreateCampaignPayload,
   type UpdateCampaignPayload,
   updateCampaign,
+  updateCampaignStatus,
 } from "../services/campaignService";
 
 type MerchantFeatureUnavailablePageProps = {
@@ -187,10 +187,8 @@ function normalizeCampaignTerm(value: string) {
   return value.trim().toLowerCase();
 }
 
-function isCampaignEditable(campaign: Campaign, merchantId: string | null) {
-  if (!merchantId) return false;
-
-  return !campaign.isGlobal && campaign.merchantId === merchantId;
+function isCampaignEditable(campaign: Campaign) {
+  return !campaign.isGlobal;
 }
 
 function isCampaignExpired(campaign: Campaign) {
@@ -280,11 +278,11 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
 // MODULE 1: Merchant Campaign Management
 export function MerchantCampaignPage() {
   const handleBack = useSafeBack("/merchant");
-  const merchantId = getCurrentMerchantId();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -321,10 +319,6 @@ export function MerchantCampaignPage() {
 
     return campaigns
       .filter((campaign) => {
-        if (!merchantId) return true;
-        return campaign.isGlobal || campaign.merchantId === merchantId;
-      })
-      .filter((campaign) => {
         if (!term) return true;
         const haystack = [campaign.code, campaign.title, campaign.description ?? ""]
           .join(" ")
@@ -338,7 +332,7 @@ export function MerchantCampaignPage() {
         if (statusFilter === "inactive") return !campaign.isActive && !expired;
         return true;
       });
-  }, [campaigns, merchantId, searchTerm, statusFilter]);
+  }, [campaigns, searchTerm, statusFilter]);
 
   const stats = useMemo(() => {
     const total = campaigns.length;
@@ -347,11 +341,9 @@ export function MerchantCampaignPage() {
     ).length;
     const expired = campaigns.filter((c) => isCampaignExpired(c)).length;
     const global = campaigns.filter((c) => c.isGlobal).length;
-    const mine = campaigns.filter(
-      (c) => c.merchantId === merchantId,
-    ).length;
+    const mine = campaigns.filter((c) => !c.isGlobal).length;
     return { total, active, expired, global, mine };
-  }, [campaigns, merchantId]);
+  }, [campaigns]);
 
   function resetForm() {
     setForm(createEmptyCampaignForm());
@@ -395,13 +387,46 @@ export function MerchantCampaignPage() {
     }
   }
 
+  async function handleToggleStatus(campaign: Campaign) {
+    if (isCampaignExpired(campaign) || togglingId) return;
+
+    const nextStatus = !campaign.isActive;
+    const toastId = "merchant-campaign-status";
+    setTogglingId(campaign.id);
+    notify.loading("Đang cập nhật trạng thái Campaign...", { id: toastId });
+
+    try {
+      const updated = await updateCampaignStatus(campaign.id, nextStatus);
+      setCampaigns((current) =>
+        current.map((item) => (item.id === campaign.id ? updated : item)),
+      );
+      setSelectedCampaign((current) =>
+        current?.id === campaign.id ? updated : current,
+      );
+      setForm((current) =>
+        current.id === campaign.id
+          ? { ...current, isActive: nextStatus }
+          : current,
+      );
+      notify.success(
+        nextStatus ? "Đã bật Campaign." : "Đã tạm dừng Campaign.",
+        { id: toastId },
+      );
+    } catch (error) {
+      console.error(error);
+      notify.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể thay đổi trạng thái Campaign.",
+        { id: toastId },
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (!merchantId) {
-      notify.error("Tài khoản hiện tại chưa có MerchantId.");
-      return;
-    }
 
     if (!form.code.trim() || !form.title.trim()) {
       notify.error("Vui lòng nhập code và tiêu đề campaign.");
@@ -451,7 +476,7 @@ export function MerchantCampaignPage() {
   }
 
   const selectedCanManage = selectedCampaign
-    ? isCampaignEditable(selectedCampaign, merchantId)
+    ? isCampaignEditable(selectedCampaign)
     : false;
 
   return (
@@ -824,7 +849,7 @@ export function MerchantCampaignPage() {
                 ) : visibleCampaigns.length > 0 ? (
                   visibleCampaigns.map((campaign) => {
                     const expired = isCampaignExpired(campaign);
-                    const canEdit = isCampaignEditable(campaign, merchantId);
+                    const canEdit = isCampaignEditable(campaign);
 
                     return (
                       <div
@@ -892,6 +917,54 @@ export function MerchantCampaignPage() {
                             <span className="text-sm font-black text-cyan-600 dark:text-cyan-400">
                               {getCampaignDiscountLabel(campaign)}
                             </span>
+
+                            {canEdit && !expired && (
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={campaign.isActive}
+                                aria-label={
+                                  campaign.isActive
+                                    ? "Tạm dừng Campaign"
+                                    : "Bật Campaign"
+                                }
+                                title={
+                                  campaign.isActive
+                                    ? "Bấm để tạm dừng"
+                                    : "Bấm để kích hoạt"
+                                }
+                                disabled={togglingId === campaign.id}
+                                onClick={() => void handleToggleStatus(campaign)}
+                                className={`inline-flex min-w-[108px] items-center justify-start gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-extrabold transition disabled:cursor-wait disabled:opacity-60 ${
+                                  campaign.isActive
+                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                }`}
+                              >
+                                <span
+                                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
+                                    campaign.isActive
+                                      ? "bg-emerald-500"
+                                      : "bg-slate-300 dark:bg-slate-600"
+                                  }`}
+                                >
+                                  <span
+                                    className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                      campaign.isActive
+                                        ? "translate-x-[18px]"
+                                        : "translate-x-0.5"
+                                    }`}
+                                  />
+                                </span>
+                                <span className="shrink-0">
+                                  {togglingId === campaign.id
+                                    ? "Đang đổi..."
+                                    : campaign.isActive
+                                      ? "Đang chạy"
+                                      : "Tạm dừng"}
+                                </span>
+                              </button>
+                            )}
 
                             <div className="flex items-center gap-1">
                               <button
