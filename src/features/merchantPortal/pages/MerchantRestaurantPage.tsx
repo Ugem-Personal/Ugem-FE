@@ -26,7 +26,6 @@ import { notify } from "@/shared/lib/notify";
 import { getMapMerchants, getMerchantDetail } from "@/features/customer/services/merchantService";
 import type { MerchantDetail } from "@/features/customer/types";
 import {
-  getCurrentMerchantId,
   getMyMerchantDetail,
   updateMerchant,
 } from "../services";
@@ -179,7 +178,6 @@ export function MerchantRestaurantPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<MerchantEditForm>(() => toEditForm(null));
-  const merchantId = getCurrentMerchantId();
   const { data: applications = [], isLoading: isLoadingApplications } =
     useMyApplications();
 
@@ -204,12 +202,14 @@ export function MerchantRestaurantPage() {
       try {
         let data: MerchantDetail | null = null;
 
-        if (merchantId) {
+        try {
           data = await getMyMerchantDetail();
-        } else if (latestApprovedApplication) {
-          data = await resolveMerchantFromApprovedApplication(
-            latestApprovedApplication,
-          );
+        } catch {
+          if (latestApprovedApplication) {
+            data = await resolveMerchantFromApprovedApplication(
+              latestApprovedApplication,
+            );
+          }
         }
 
         if (active) {
@@ -231,7 +231,7 @@ export function MerchantRestaurantPage() {
     return () => {
       active = false;
     };
-  }, [latestApprovedApplication, merchantId]);
+  }, [latestApprovedApplication]);
 
   const menu = merchant?.menu ?? merchant?.foods ?? [];
 
@@ -293,13 +293,7 @@ export function MerchantRestaurantPage() {
         logoUrl: form.logoUrl.trim() || undefined,
       });
 
-      const nextMerchant = merchantId
-        ? await getMyMerchantDetail()
-        : latestApprovedApplication
-          ? await resolveMerchantFromApprovedApplication(
-              latestApprovedApplication,
-            )
-          : merchant;
+      const nextMerchant = await getMyMerchantDetail();
 
       setMerchant(nextMerchant);
       setForm(toEditForm(nextMerchant));

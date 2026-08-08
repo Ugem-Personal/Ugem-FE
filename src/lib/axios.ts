@@ -44,7 +44,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const responseErrors = error.response?.data?.errors;
+    const fieldError = Array.isArray(responseErrors)
+      ? responseErrors.find(
+          (item: unknown) =>
+            item &&
+            typeof item === "object" &&
+            "message" in item &&
+            typeof item.message === "string",
+        )?.message
+      : undefined;
     const message =
+      fieldError ||
       error.response?.data?.message ||
       error.response?.data?.title ||
       error.response?.statusText ||

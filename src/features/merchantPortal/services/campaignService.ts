@@ -60,6 +60,24 @@ export type UpdateCampaignPayload = CreateCampaignPayload & {
   isActive: boolean;
 };
 
+function toCampaignApiPayload(payload: CreateCampaignPayload) {
+  return {
+    code: payload.code,
+    name: payload.title,
+    description: payload.description,
+    discountType: payload.isPercentage ? "Percentage" : "FixedAmount",
+    discountValue: payload.discountValue,
+    minimumOrderAmount: payload.minOrderAmount,
+    maximumDiscount: payload.maxDiscountAmount,
+    usageLimit: payload.quantity,
+    maxUsagePerUser: payload.maxUsagePerUser,
+    isGlobal: payload.isGlobal,
+    isNewUserOnly: payload.isNewUserOnly,
+    startAt: payload.startDate,
+    endAt: payload.endDate,
+  };
+}
+
 export async function getCampaigns() {
   const { data } = await api.get<ApiResponse<Campaign[]> | Campaign[]>(
     "/campaigns",
@@ -77,18 +95,32 @@ export async function getCampaignById(id: string) {
 }
 
 export async function createCampaign(payload: CreateCampaignPayload) {
-  const { data } = await api.post<ApiResponse<string> | string>(
+  const { data } = await api.post<ApiResponse<Campaign> | Campaign>(
     "/campaigns",
-    payload,
+    toCampaignApiPayload(payload),
   );
 
   return unwrapData(data);
 }
 
 export async function updateCampaign(payload: UpdateCampaignPayload) {
-  const { data } = await api.put<ApiResponse<string> | string>(
+  const { id, isActive, ...campaignPayload } = payload;
+  const { data } = await api.put<ApiResponse<Campaign> | Campaign>(
     "/campaigns",
-    payload,
+    {
+      id,
+      isActive,
+      ...toCampaignApiPayload(campaignPayload),
+    },
+  );
+
+  return unwrapData(data);
+}
+
+export async function updateCampaignStatus(id: string, isActive: boolean) {
+  const { data } = await api.patch<ApiResponse<Campaign> | Campaign>(
+    `/campaigns/${id}/status`,
+    { isActive },
   );
 
   return unwrapData(data);
