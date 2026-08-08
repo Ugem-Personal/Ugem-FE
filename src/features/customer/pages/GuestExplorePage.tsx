@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import logoUrl from "@/assets/ugem-logo.png";
 import { ModeToggle } from "@/shared/components";
@@ -30,6 +30,7 @@ import {
   searchMerchants,
 } from "../services/merchantService";
 import type { Merchant, MerchantDetail } from "../types";
+import { getCurrentUser } from "@/features/auth";
 
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
@@ -91,6 +92,7 @@ function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number
 }
 
 export default function GuestExplorePage() {
+  const authenticatedUser = getCurrentUser();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -169,6 +171,21 @@ export default function GuestExplorePage() {
     } finally {
       setDetailLoading(false);
     }
+  }
+
+  if (authenticatedUser) {
+    const destination =
+      authenticatedUser.Role === "Merchant"
+        ? "/merchant"
+        : authenticatedUser.Role === "Staff"
+          ? "/staff/dashboard"
+          : authenticatedUser.Role === "Admin"
+            ? "/admin/dashboard"
+            : authenticatedUser.Role === "Reviewer"
+              ? "/affiliate-links"
+              : "/customer";
+
+    return <Navigate to={destination} replace />;
   }
 
   return (
@@ -441,7 +458,9 @@ export default function GuestExplorePage() {
                 <p className="mt-0.5 text-xs text-slate-300">Đăng nhập tài khoản UGem để bắt đầu ngay.</p>
               </div>
               <Link
-                to={`/login?returnUrl=${encodeURIComponent(`/customer/merchants/${detail.id}`)}`}
+                to={`/login?returnUrl=${encodeURIComponent(
+                  `/customer/merchants/${detail.id}?backTo=${encodeURIComponent("/customer")}`,
+                )}`}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 active:scale-95"
               >
                 Đăng nhập <ArrowRight className="h-4 w-4" />

@@ -155,7 +155,7 @@ export function OrderStatusTimeline({
   let currentIndex = statusOrder.indexOf(normalizedStatus);
   if (currentIndex === -1) {
     if (normalizedStatus === "ready" && !isOffline) {
-      currentIndex = 3;
+      currentIndex = 2; // Keep at "preparing" / ready state until merchant clicks "Bắt đầu giao hàng"
     } else {
       currentIndex = 0;
     }

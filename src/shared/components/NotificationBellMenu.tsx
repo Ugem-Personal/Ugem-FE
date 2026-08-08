@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 
 import {
   getNotifications,
+  getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   type NotificationItem,
@@ -42,15 +43,18 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-
-  const unreadCount = notifications.filter((item) => !item.isRead).length;
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const loadNotifications = async (showError = true) => {
     setLoading(true);
 
     try {
-      const data = await getNotifications();
+      const [data, count] = await Promise.all([
+        getNotifications(),
+        getUnreadNotificationCount(),
+      ]);
       setNotifications(data ?? []);
+      setUnreadCount(count);
     } catch (error) {
       console.error(error);
       if (showError) {
@@ -69,6 +73,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
         item.id === notificationId ? { ...item, isRead: true } : item,
       ),
     );
+    setUnreadCount((current) => Math.max(0, current - 1));
 
     try {
       await markNotificationAsRead(notificationId);
@@ -87,6 +92,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
     setNotifications((current) =>
       current.map((item) => ({ ...item, isRead: true })),
     );
+    setUnreadCount(0);
 
     try {
       await markAllNotificationsAsRead();
@@ -100,11 +106,23 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
   useEffect(() => {
     queueMicrotask(() => void loadNotifications(false));
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void loadNotifications(false);
+      }
+    };
     const interval = window.setInterval(() => {
       void loadNotifications(false);
-    }, 30000);
+    }, 10000);
 
-    return () => window.clearInterval(interval);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, []);
 
   useEffect(() => {
@@ -239,11 +257,17 @@ function BellNotificationItem({
   const time = formatNotificationTime(item.createdAt);
   const shouldRefreshReviewerRole =
     meta.category === "reviewer-application" &&
-    getNotificationText(item).includes("approved");
+    ["approved", "chấp thuận", "được duyệt"].some((value) =>
+      getNotificationText(item).includes(value),
+    );
 
   const handleActionClick = async (
     event: MouseEvent<HTMLAnchorElement>,
   ) => {
+    if (!item.isRead) {
+      onMarkAsRead(item.id);
+    }
+
     if (!shouldRefreshReviewerRole) return;
 
     event.preventDefault();

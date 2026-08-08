@@ -17,11 +17,14 @@ export type CustomerOrderType = "Online" | "Offline";
 export async function createOrder(payload: {
   name: string;
   deliveryAddress?: string;
+  deliveryLatitude?: number;
+  deliveryLongitude?: number;
   notes?: string;
   orderType?: CustomerOrderType;
   paymentMethod?: "Cash" | "BankTransfer" | "COD";
   finalPrice: number;
   affiliateLinkCode?: string;
+  campaignId?: string;
   foods: CreateOrderItem[];
 }) {
   const orderType = payload.orderType ?? "Online";
@@ -33,8 +36,13 @@ export async function createOrder(payload: {
     orderType,
     deliveryAddress:
       orderType === "Online" ? payload.deliveryAddress : "Tại quán",
+    deliveryLatitude:
+      orderType === "Online" ? payload.deliveryLatitude : undefined,
+    deliveryLongitude:
+      orderType === "Online" ? payload.deliveryLongitude : undefined,
     notes: payload.notes || "",
     affiliateLinkCode: payload.affiliateLinkCode,
+    campaignId: payload.campaignId,
     foods: payload.foods.map((f) => ({
       foodId: f.foodId,
       quantity: f.quantity,
@@ -44,6 +52,29 @@ export async function createOrder(payload: {
   });
 
   return res.data;
+}
+
+export type CheckoutCampaign = {
+  id: string;
+  code: string;
+  title: string;
+  discountValue: number;
+  isPercentage: boolean;
+  minOrderAmount?: number | null;
+  maxDiscountAmount?: number | null;
+  quantity?: number | null;
+  usedCount?: number;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+};
+
+export async function getMerchantCheckoutCampaigns(merchantId: string) {
+  const res = await api.get<ApiResponse<CheckoutCampaign[]>>(
+    `/campaigns/merchant/${merchantId}`,
+  );
+
+  return res.data.data ?? [];
 }
 
 export async function getCustomerOrders(params?: {

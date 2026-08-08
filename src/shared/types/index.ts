@@ -80,6 +80,8 @@ export type MerchantOrderSummary = {
   orderId: string;
   finalPrice: number;
   deliveryAddress: string;
+  deliveryLatitude?: number | null;
+  deliveryLongitude?: number | null;
   paymentMethod: string;
   orderType?: string;
   status: string;
@@ -96,6 +98,8 @@ export type CustomerOrderSummary = {
   orderedAt: string;
   notes?: string;
   deliveryAddress: string;
+  deliveryLatitude?: number | null;
+  deliveryLongitude?: number | null;
   orderType?: string;
 };
 

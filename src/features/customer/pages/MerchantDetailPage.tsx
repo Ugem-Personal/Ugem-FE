@@ -36,6 +36,10 @@ import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
 import { FoodOptionModal } from "../components/FoodOptionModal";
 import { CartDrawer, type CartItem } from "../components/CartDrawer";
+import {
+  CheckoutDialog,
+  type CheckoutFormData,
+} from "../components/CheckoutDialog";
 
 
 
@@ -206,7 +210,15 @@ export default function MerchantDetailPage() {
   const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
-  const handleBack = useSafeBack("/customer");
+  const safeBack = useSafeBack("/customer");
+  const handleBack = () => {
+    if (searchParams.get("backTo") === "/customer") {
+      navigate("/customer", { replace: true });
+      return;
+    }
+
+    safeBack();
+  };
   const currentUser = getCurrentUser();
   const isOfflineOrder = searchParams.get("mode") === "offline";
   const affiliateRef = searchParams.get("ref")?.trim() || undefined;
@@ -229,6 +241,7 @@ export default function MerchantDetailPage() {
 
   const [showReviews, setShowReviews] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
 
@@ -347,15 +360,8 @@ export default function MerchantDetailPage() {
     storeAffiliateRef(id, affiliateRef);
   }, [affiliateRef, currentUser?.Role, id]);
 
-  async function handleCreateOrder() {
+  function handleOpenCheckout() {
     if (!merchant?.id || cart.length === 0) return;
-
-    if (isOfflineOrder) {
-      notify.error(
-        "Đơn tại quán sẽ do merchant tạo. Khi tính tiền, bạn quét QR để check-in.",
-      );
-      return;
-    }
 
     if (affiliateRef && currentUser?.Role !== "Customer") {
       notify.error(
@@ -364,17 +370,27 @@ export default function MerchantDetailPage() {
       return;
     }
 
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  }
+
+  async function handleCreateOrder(checkout: CheckoutFormData) {
+    if (!merchant?.id || cart.length === 0) return;
+
     setOrdering(true);
 
     try {
       await createOrder({
-        name: `Order from ${merchant.name || "Unnamed merchant"}`,
-        deliveryAddress: merchant.address || "No address",
-        orderType: "Online",
-        paymentMethod: "COD",
+        name: checkout.recipientName,
+        deliveryAddress: checkout.deliveryAddress,
+        deliveryLatitude: checkout.deliveryLatitude,
+        deliveryLongitude: checkout.deliveryLongitude,
+        orderType: checkout.orderType,
+        paymentMethod: checkout.paymentMethod,
         notes: "",
         finalPrice: total,
         affiliateLinkCode: affiliateRef || getStoredAffiliateRef(merchant.id),
+        campaignId: checkout.campaignId,
         foods: cart.map((item) => ({
           foodId: item.food.id,
           quantity: item.quantity,
@@ -384,10 +400,15 @@ export default function MerchantDetailPage() {
         })),
       });
 
-      notify.success("Đặt món giao hàng thành công.");
+      notify.success(
+        checkout.campaignCode
+          ? `Đặt món thành công và đã áp dụng mã ${checkout.campaignCode}.`
+          : "Đặt món thành công.",
+      );
 
       setCart([]);
       setCartOpen(false);
+      setCheckoutOpen(false);
       navigate("/customer/orders");
     } catch (error) {
       console.error(error);
@@ -872,8 +893,24 @@ export default function MerchantDetailPage() {
           onIncrement={incrementCartItem}
           onDecrement={decrementCartItem}
           onClearCart={clearCart}
-          onCreateOrder={() => void handleCreateOrder()}
+          onCreateOrder={handleOpenCheckout}
         />
+
+        {merchant?.id ? (
+          <CheckoutDialog
+            open={checkoutOpen}
+            merchantId={merchant.id}
+            total={total}
+            defaultRecipientName={currentUser?.Name || ""}
+            defaultOrderType={isOfflineOrder ? "Offline" : "Online"}
+            submitting={ordering}
+            onOpenChange={(open) => {
+              setCheckoutOpen(open);
+              if (!open && cart.length > 0) setCartOpen(true);
+            }}
+            onConfirm={handleCreateOrder}
+          />
+        ) : null}
 
         {/* Floating Bottom Cart Bar */}
         {cart.length > 0 && !cartOpen && (
@@ -898,7 +935,7 @@ export default function MerchantDetailPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handleCreateOrder()}
+                  onClick={handleOpenCheckout}
                   disabled={ordering}
                   className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md hover:from-cyan-600 hover:to-blue-700 transition disabled:opacity-50"
                 >

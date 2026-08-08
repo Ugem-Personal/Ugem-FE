@@ -15,12 +15,21 @@ export type NotificationItem = {
   type?: string;
   isRead?: boolean;
   actionUrl?: string;
+  referenceId?: string | null;
+  referenceType?: string | null;
   metadata?: Record<string, unknown>;
 };
 
 export async function getNotifications() {
   const res = await api.get<ApiResponse<NotificationItem[]>>("/notifications");
   return res.data.data ?? [];
+}
+
+export async function getUnreadNotificationCount() {
+  const res = await api.get<ApiResponse<{ unreadCount: number }>>(
+    "/notifications/unread-count",
+  );
+  return res.data.data?.unreadCount ?? 0;
 }
 
 export async function markNotificationAsRead(notificationId: string) {

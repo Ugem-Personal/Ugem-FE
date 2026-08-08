@@ -89,7 +89,7 @@ const routers = createBrowserRouter([
       {
         path: "/orders/confirm",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <ConfirmBillPage />
           </ProtectedRoute>
         ),
@@ -101,7 +101,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <CustomerHomePage />
           </ProtectedRoute>
         ),
@@ -109,7 +109,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer/profile",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <CustomerProfilePage />
           </ProtectedRoute>
         ),
@@ -117,7 +117,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer/merchants/:id",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <MerchantDetailPage />
           </ProtectedRoute>
         ),
@@ -125,7 +125,7 @@ const routers = createBrowserRouter([
       {
         path: "/merchant/:id",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <MerchantDetailPage />
           </ProtectedRoute>
         ),
@@ -133,7 +133,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer/wishlist",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <WishlistPage />
           </ProtectedRoute>
         ),
@@ -141,7 +141,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer/orders",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <CustomerOrdersPage />
           </ProtectedRoute>
         ),
@@ -149,7 +149,7 @@ const routers = createBrowserRouter([
       {
         path: "/customer/orders/:id",
         element: (
-          <ProtectedRoute allowedRoles={["Customer"]}>
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <CustomerOrderDetailPage />
           </ProtectedRoute>
         ),

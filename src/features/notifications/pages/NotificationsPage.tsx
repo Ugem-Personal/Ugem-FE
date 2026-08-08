@@ -20,7 +20,11 @@ import { UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { notify } from "@/shared/lib/notify";
-import { getNotifications } from "../services";
+import {
+  getNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../services";
 import type { NotificationItem } from "../services";
 import {
   formatNotificationTime,
@@ -45,6 +49,7 @@ const categoryFilters: {
   { key: "review", label: "Đánh giá" },
   { key: "staff", label: "Staff" },
   { key: "affiliate", label: "Affiliate" },
+  { key: "campaign", label: "Ưu đãi" },
   { key: "system", label: "Hệ thống" },
 ];
 
@@ -85,14 +90,60 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleMarkAsRead = async (notificationId?: string) => {
+    if (!notificationId) return;
+
+    setNotifications((current) =>
+      current.map((item) =>
+        item.id === notificationId ? { ...item, isRead: true } : item,
+      ),
+    );
+
+    try {
+      await markNotificationAsRead(notificationId);
+    } catch (error) {
+      console.error(error);
+      notify.error("Không thể đánh dấu thông báo đã đọc.");
+      void loadNotifications(false);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (!notifications.some((item) => !item.isRead)) return;
+
+    setNotifications((current) =>
+      current.map((item) => ({ ...item, isRead: true })),
+    );
+
+    try {
+      await markAllNotificationsAsRead();
+    } catch (error) {
+      console.error(error);
+      notify.error("Không thể đánh dấu tất cả thông báo đã đọc.");
+      void loadNotifications(false);
+    }
+  };
+
   useEffect(() => {
     queueMicrotask(() => void loadNotifications(false));
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void loadNotifications(false);
+      }
+    };
     const interval = window.setInterval(() => {
       void loadNotifications(false);
-    }, 30000);
+    }, 10000);
 
-    return () => window.clearInterval(interval);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, []);
 
   const counts = useMemo(() => {
@@ -147,6 +198,16 @@ export default function NotificationsPage() {
           </div>
 
           <div className="fixed right-5 top-4 z-50 flex flex-wrap items-center justify-end gap-2 lg:right-7">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleMarkAllAsRead()}
+              disabled={!notifications.some((item) => !item.isRead)}
+              className="h-11 rounded-2xl bg-white px-4 font-black"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Đọc tất cả
+            </Button>
             <Button
               onClick={handleRefresh}
               disabled={refreshing}
@@ -232,6 +293,7 @@ export default function NotificationsPage() {
               <NotificationCard
                 key={item.id ?? `${item.title}-${index}`}
                 item={item}
+                onMarkAsRead={handleMarkAsRead}
               />
             ))}
           </section>
@@ -278,7 +340,13 @@ function OverviewCard({
   );
 }
 
-function NotificationCard({ item }: { item: NotificationItem }) {
+function NotificationCard({
+  item,
+  onMarkAsRead,
+}: {
+  item: NotificationItem;
+  onMarkAsRead: (notificationId?: string) => void;
+}) {
   const meta = getNotificationMeta(item);
   const tone = getToneClasses(meta.tone);
   const Icon = meta.icon;
@@ -286,11 +354,17 @@ function NotificationCard({ item }: { item: NotificationItem }) {
   const time = formatNotificationTime(item.createdAt);
   const shouldRefreshReviewerRole =
     meta.category === "reviewer-application" &&
-    getNotificationText(item).includes("approved");
+    ["approved", "chấp thuận", "được duyệt"].some((value) =>
+      getNotificationText(item).includes(value),
+    );
 
   const handleActionClick = async (
     event: MouseEvent<HTMLAnchorElement>,
   ) => {
+    if (!item.isRead) {
+      onMarkAsRead(item.id);
+    }
+
     if (!shouldRefreshReviewerRole) return;
 
     event.preventDefault();

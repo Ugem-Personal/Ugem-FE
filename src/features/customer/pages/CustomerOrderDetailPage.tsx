@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -24,6 +24,7 @@ import type {
 import { notify } from "@/shared/lib/notify";
 import {
   getCustomerOrderProgressMessage,
+  getOrderStatusLabel,
   isCustomerConfirmationReady,
 } from "@/shared/lib/order-status";
 import {
@@ -76,6 +77,7 @@ export default function CustomerOrderDetailPage() {
   const [items, setItems] = useState<CustomerOrderDetailItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState<string | null>(null);
+  const lastKnownStatusRef = useRef<string | null>(null);
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [, setMerchantName] = useState<string>("");
   const [hasReviewed, setHasReviewed] = useState(false);
@@ -140,13 +142,15 @@ export default function CustomerOrderDetailPage() {
 
         if (active) {
           setItems(data ?? []);
-          setOrderStatus(
+          const refreshedStatus =
             orders.find(
-              (order: CustomerOrderSummary) => getCustomerOrderId(order) === effectiveOrderId,
+              (order: CustomerOrderSummary) =>
+                getCustomerOrderId(order) === effectiveOrderId,
             )?.status ??
-              matchingSummaryOrder?.status ??
-              null,
-          );
+            matchingSummaryOrder?.status ??
+            null;
+          setOrderStatus(refreshedStatus);
+          lastKnownStatusRef.current = refreshedStatus;
         }
 
         const firstItem = data?.[0];
@@ -329,6 +333,61 @@ export default function CustomerOrderDetailPage() {
     itemsTotal > 0 ? itemsTotal : Number(summaryOrder?.finalPrice || 0);
   const title = summaryOrder?.name || `Đơn #${fallbackOrderNumber ?? id}`;
   const effectiveOrderId = hasRealOrderId ? id : resolvedOrderId;
+
+  useEffect(() => {
+    if (!effectiveOrderId) return;
+
+    let active = true;
+
+    const refreshStatus = async () => {
+      try {
+        const ordersRes = await getCustomerOrders();
+        const refreshedStatus = (ordersRes.data ?? []).find(
+          (order: CustomerOrderSummary) =>
+            getCustomerOrderId(order) === effectiveOrderId,
+        )?.status;
+
+        if (!active || !refreshedStatus) return;
+
+        const previousStatus = lastKnownStatusRef.current;
+        const statusChanged =
+          Boolean(previousStatus) &&
+          normalizeString(previousStatus) !== normalizeString(refreshedStatus);
+
+        lastKnownStatusRef.current = refreshedStatus;
+        setOrderStatus(refreshedStatus);
+
+        if (statusChanged) {
+          notify.info(
+            `Đơn hàng đã cập nhật: ${getOrderStatusLabel(refreshedStatus)}.`,
+          );
+        }
+      } catch (error) {
+        console.error("Không thể đồng bộ trạng thái đơn:", error);
+      }
+    };
+
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void refreshStatus();
+      }
+    }, 4_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      active = false;
+      window.clearInterval(pollId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [effectiveOrderId]);
+
   const displayOrderStatus = orderStatus ?? summaryOrder?.status ?? null;
   const normalizedOrderStatus = displayOrderStatus?.trim().toLowerCase();
   const isCompleted = normalizedOrderStatus === "completed";

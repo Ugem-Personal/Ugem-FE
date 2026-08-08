@@ -39,20 +39,24 @@ export function WishlistButton({
 
     setLoading(true);
     const nextSaved = !saved;
+    const toastId = "wishlist-action";
+    notify.loading("Đang cập nhật quán yêu thích...", { id: toastId });
 
     try {
       if (nextSaved) {
         await addWishlist(merchantId);
-        notify.success("Đã thêm quán vào yêu thích.");
+        notify.success("Đã thêm quán vào yêu thích.", { id: toastId });
       } else {
         await removeWishlist(merchantId);
-        notify.success("Đã xóa quán khỏi yêu thích.");
+        notify.success("Đã xóa quán khỏi yêu thích.", { id: toastId });
       }
       setSaved(nextSaved);
       onToggleSuccess?.(nextSaved);
     } catch (error) {
       console.error(error);
-      notify.error("Không thể thay đổi trạng thái yêu thích. Vui lòng thử lại.");
+      notify.error("Không thể thay đổi trạng thái yêu thích. Vui lòng thử lại.", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
     }
