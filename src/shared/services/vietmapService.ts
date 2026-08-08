@@ -304,7 +304,11 @@ export async function reverseGeocode(
   url.searchParams.set("apikey", VIETMAP_SERVICE_KEY);
   url.searchParams.set("lat", String(lat));
   url.searchParams.set("lng", String(lng));
-  url.searchParams.set("display_type", "1");
+  // Keep the detailed legacy administrative chain (ward/district/city) as the
+  // primary display value while VietMap still returns the new 2-level address
+  // in `data_new`. This produces a more useful delivery address without
+  // sacrificing compatibility with the post-2025 address model.
+  url.searchParams.set("display_type", "6");
 
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`Reverse API error: ${res.status}`);

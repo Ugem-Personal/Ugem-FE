@@ -36,3 +36,16 @@ export function isDetailedAddress(address?: string) {
     cleaned,
   );
 }
+
+/** True when the address identifies at least a street/road, not only an administrative area. */
+export function hasStreetLevelAddress(address?: string) {
+  const cleaned = cleanAddress(address);
+  if (!cleaned) return false;
+
+  return (
+    isDetailedAddress(cleaned) ||
+    /(?:^|[\s,])(đường|phố|đại lộ|quốc lộ|tỉnh lộ|hẻm|ngõ|ngách|kiệt)\s+\p{L}/iu.test(
+      cleaned,
+    )
+  );
+}

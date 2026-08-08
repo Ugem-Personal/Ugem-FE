@@ -72,10 +72,12 @@ export default function WishlistPage() {
     if (!merchantId) return;
 
     setRemovingId(merchantId);
+    const toastId = "wishlist-action";
+    notify.loading("Đang xóa quán khỏi yêu thích...", { id: toastId });
 
     try {
       await removeWishlist(merchantId);
-      notify.success("Đã xóa quán khỏi danh sách yêu thích.");
+      notify.success("Đã xóa quán khỏi danh sách yêu thích.", { id: toastId });
       setItems((prev) =>
         prev.filter(
           (item) => item.merchantId !== merchantId && item.id !== merchantId,
@@ -83,7 +85,7 @@ export default function WishlistPage() {
       );
     } catch (error) {
       console.error(error);
-      notify.error("Xóa khỏi yêu thích thất bại.");
+      notify.error("Xóa khỏi yêu thích thất bại.", { id: toastId });
     } finally {
       setRemovingId(null);
     }

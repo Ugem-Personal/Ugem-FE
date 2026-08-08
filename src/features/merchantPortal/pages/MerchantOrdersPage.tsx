@@ -4,6 +4,8 @@ import {
   Check,
   ChefHat,
   Eye,
+  Map,
+  MapPin,
   PackageCheck,
   QrCode,
   RefreshCw,
@@ -39,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import VietMapGL from "@/shared/components/VietMapGL";
 
 type OrderItemTopping = {
   id?: string;
@@ -77,6 +80,10 @@ function formatDateTime(value?: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function getShortOrderCode(orderId: string) {
+  return orderId.split("-")[0]?.toUpperCase() || orderId;
 }
 
 function getOrderStatusKey(status?: string | null) {
@@ -249,6 +256,7 @@ export default function MerchantOrdersPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
   const [orderDetail, setOrderDetail] =
     useState<MerchantOrderDetailPayload | null>(null);
   const [qrUrls, setQrUrls] = useState<Record<string, string>>({});
@@ -353,6 +361,7 @@ export default function MerchantOrdersPage() {
 
   function openOrderDetail(orderId: string) {
     setSelectedOrderId(orderId);
+    setDeliveryMapOpen(false);
     setDetailLoading(true);
     setDetailError(null);
     setOrderDetail(null);
@@ -724,8 +733,11 @@ export default function MerchantOrdersPage() {
                     <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-3">
-                          <p className="text-lg font-black tracking-tight text-slate-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                            Đơn #{order.orderId}
+                          <p
+                            title={order.orderId}
+                            className="text-lg font-black tracking-tight text-slate-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors"
+                          >
+                            Đơn #{getShortOrderCode(order.orderId)}
                           </p>
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${getOrderTypeChipClass(
@@ -747,6 +759,13 @@ export default function MerchantOrdersPage() {
                         {order.createdAt ? (
                           <p className="mt-1 text-xs font-mono text-slate-400 dark:text-slate-500">
                             {formatDateTime(order.createdAt)}
+                          </p>
+                        ) : null}
+                        {order.orderType?.toLowerCase() === "online" &&
+                        order.deliveryAddress ? (
+                          <p className="mt-2 flex items-start gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                            <span>{order.deliveryAddress}</span>
                           </p>
                         ) : null}
                       </div>
@@ -788,11 +807,11 @@ export default function MerchantOrdersPage() {
 
           <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
             <DialogContent
-              className="max-h-[92vh] max-w-4xl overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-0 shadow-2xl backdrop-blur-2xl"
+              className="!top-2 !bottom-2 flex !h-auto !max-h-none max-w-4xl !translate-y-0 flex-col gap-0 overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-0 shadow-2xl backdrop-blur-2xl [animation:none] sm:!top-6 sm:!bottom-6"
               onInteractOutside={(event) => event.preventDefault()}
               onEscapeKeyDown={(event) => event.preventDefault()}
             >
-              <DialogHeader className="border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-5 text-left">
+              <DialogHeader className="shrink-0 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-5 text-left">
                 <DialogTitle className="text-lg font-black text-slate-950 dark:text-white">Chi tiết đơn hàng</DialogTitle>
                 <DialogDescription className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                   Xem món ăn, ghi chú, giá tiền và thao tác duyệt đơn ở đây.
@@ -800,7 +819,7 @@ export default function MerchantOrdersPage() {
               </DialogHeader>
 
               {selectedOrder ? (
-                <div className="max-h-[calc(92vh-104px)] space-y-5 overflow-y-auto px-6 py-5">
+                <div className="min-h-0 flex-1 touch-pan-y space-y-5 overflow-y-auto overscroll-contain px-6 py-5 pb-32 [scrollbar-gutter:stable]">
                   <div className="grid gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 text-xs text-slate-700 dark:text-slate-300 sm:grid-cols-2">
                     <div>
                       <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Mã đơn</div>
@@ -840,6 +859,61 @@ export default function MerchantOrdersPage() {
                         {formatDateTime(selectedOrder.createdAt)}
                       </div>
                     </div>
+                    {selectedOrder.orderType?.toLowerCase() === "online" ? (
+                      <div className="sm:col-span-2">
+                        <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                          Điểm giao hàng
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-500/25 dark:bg-cyan-500/10">
+                          <span className="flex min-w-0 items-start gap-2 font-bold text-slate-900 dark:text-white">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                            {selectedOrder.deliveryAddress || "Chưa có địa chỉ giao hàng"}
+                          </span>
+                          {Number.isFinite(selectedOrder.deliveryLatitude) &&
+                          Number.isFinite(selectedOrder.deliveryLongitude) ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDeliveryMapOpen((current) => !current)
+                              }
+                              aria-expanded={deliveryMapOpen}
+                              className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-3 text-xs font-black text-white transition hover:bg-cyan-500"
+                            >
+                              <Map className="h-4 w-4" />
+                              {deliveryMapOpen
+                                ? "Ẩn VietMap"
+                                : "Xem trên VietMap"}
+                            </button>
+                          ) : null}
+                        </div>
+                        {deliveryMapOpen &&
+                        Number.isFinite(selectedOrder.deliveryLatitude) &&
+                        Number.isFinite(selectedOrder.deliveryLongitude) ? (
+                          <div className="mt-3 h-72 overflow-hidden rounded-xl border border-cyan-200 dark:border-cyan-500/25">
+                            <VietMapGL
+                              centerLat={Number(
+                                selectedOrder.deliveryLatitude,
+                              )}
+                              centerLng={Number(
+                                selectedOrder.deliveryLongitude,
+                              )}
+                              zoom={17}
+                              markers={[
+                                {
+                                  id: "delivery-location",
+                                  lat: Number(selectedOrder.deliveryLatitude),
+                                  lng: Number(selectedOrder.deliveryLongitude),
+                                  type: "user",
+                                },
+                              ]}
+                              selectedMarkerId="delivery-location"
+                              fitToMarkers
+                              className="h-full w-full"
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
                   {detailLoading ? (
@@ -947,7 +1021,7 @@ export default function MerchantOrdersPage() {
                     )}
                   </div>
 
-                  <DialogFooter className="border-t border-slate-100 dark:border-white/10 pt-4 gap-3 sm:justify-between">
+                  <DialogFooter className="absolute inset-x-0 bottom-0 z-20 gap-3 border-t border-slate-200 bg-white/95 px-6 py-4 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 sm:justify-between">
                     <div className="flex flex-wrap gap-2">
                       {getOrderStatusKey(selectedOrder.status) === "pending" ? (
                         <>

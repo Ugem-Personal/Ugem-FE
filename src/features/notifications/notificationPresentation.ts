@@ -32,6 +32,7 @@ export type NotificationCategory =
   | "review"
   | "staff"
   | "affiliate"
+  | "campaign"
   | "system"
   | "general";
 
@@ -87,6 +88,57 @@ function resolveActionTo(category: NotificationCategory, text: string) {
   return undefined;
 }
 
+function getReference(item: NotificationItem) {
+  const metadata = item.metadata ?? {};
+  return {
+    id:
+      item.referenceId ??
+      (typeof metadata.referenceId === "string" ? metadata.referenceId : null),
+    type:
+      item.referenceType ??
+      (typeof metadata.referenceType === "string"
+        ? metadata.referenceType
+        : null),
+  };
+}
+
+function resolveReferenceAction(item: NotificationItem) {
+  const role = getCurrentUser()?.Role;
+  const reference = getReference(item);
+
+  if (reference.type === "Order" && reference.id) {
+    return role === "Merchant"
+      ? "/merchant/orders"
+      : `/customer/orders/${reference.id}`;
+  }
+
+  if (reference.type === "Application" && reference.id) {
+    if (role === "Admin") return `/admin/applications/${reference.id}`;
+    if (role === "Staff") return `/staff/applications/${reference.id}`;
+    return "/merchant/application/status";
+  }
+
+  if (reference.type === "ReviewerApplication") {
+    if (role === "Admin") return "/admin/reviewer-applications";
+    if (role === "Staff") return "/staff/reviewer-applications";
+    if (role === "Reviewer") return "/affiliate-links";
+    return "/customer/profile";
+  }
+
+  if (reference.type === "Merchant" && reference.id) {
+    return role === "Merchant"
+      ? "/merchant"
+      : `/customer/merchants/${reference.id}`;
+  }
+
+  if (reference.type === "Review") return "/reviews";
+  if (reference.type === "Staff") {
+    return role === "Admin" ? "/admin/staff" : "/staff/profile";
+  }
+
+  return null;
+}
+
 function getExplicitRouteFromText(text: string) {
   const match = text.match(/\/(?:admin|staff|merchant|customer|notifications|reviews|affiliate-links)[^\s)]*/i);
   return match?.[0];
@@ -106,7 +158,14 @@ export function getNotificationTitle(item: NotificationItem) {
   const rawTitle = item.title || "Thông báo";
   const text = getNotificationText(item);
 
-  if (includesAny(text, ["merchant application", "application has been approved"])) {
+  if (
+    includesAny(text, [
+      "merchant application",
+      "application has been approved",
+      "hồ sơ merchant",
+      "hồ sơ đăng ký quán",
+    ])
+  ) {
     if (includesAny(text, ["approved", "duyệt"])) {
       return "Hồ sơ merchant được duyệt";
     }
@@ -118,7 +177,7 @@ export function getNotificationTitle(item: NotificationItem) {
     }
   }
 
-  if (includesAny(text, ["reviewer application"])) {
+  if (includesAny(text, ["reviewer application", "đăng ký reviewer"])) {
     if (includesAny(text, ["approved", "duyệt"])) {
       return "Hồ sơ Reviewer được duyệt";
     }
@@ -153,6 +212,7 @@ export function getNotificationTitle(item: NotificationItem) {
 export function getNotificationMeta(item: NotificationItem): NotificationMeta {
   const text = getNotificationText(item);
   const explicitType = item.type?.toLowerCase() ?? "";
+  const referenceType = getReference(item).type;
 
   let category: NotificationCategory = "general";
   let categoryLabel = "Thông báo";
@@ -160,6 +220,7 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
   let tone: NotificationTone = "cyan";
 
   if (
+    referenceType === "Application" ||
     explicitType.includes("merchantapplication") ||
     includesAny(text, ["merchant application", "application has been approved", "application has been reject"])
   ) {
@@ -168,6 +229,7 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
     icon = Store;
     tone = includesAny(text, ["reject", "từ chối"]) ? "rose" : "emerald";
   } else if (
+    referenceType === "ReviewerApplication" ||
     explicitType.includes("reviewerapplication") ||
     includesAny(text, ["reviewer application"])
   ) {
@@ -199,7 +261,11 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
     categoryLabel = "Đánh giá";
     icon = Star;
     tone = "amber";
-  } else if (explicitType.includes("staff") || includesAny(text, ["staff account"])) {
+  } else if (
+    referenceType === "Staff" ||
+    explicitType.includes("staff") ||
+    includesAny(text, ["staff account", "tài khoản staff"])
+  ) {
     category = "staff";
     categoryLabel = "Staff";
     icon = UserCog;
@@ -209,6 +275,11 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
     categoryLabel = "Affiliate";
     icon = WalletCards;
     tone = "emerald";
+  } else if (includesAny(text, ["campaign", "ưu đãi", "khuyến mãi"])) {
+    category = "campaign";
+    categoryLabel = "Ưu đãi";
+    icon = BadgeCheck;
+    tone = "violet";
   } else if (includesAny(text, ["report", "warning", "alert", "system"])) {
     category = "system";
     categoryLabel = "Hệ thống";
@@ -216,7 +287,8 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
     tone = "rose";
   }
 
-  const actionTo = item.actionUrl || resolveActionTo(category, text);
+  const actionTo =
+    resolveReferenceAction(item) || item.actionUrl || resolveActionTo(category, text);
 
   return {
     actionLabel: getActionLabel(category),
@@ -235,6 +307,7 @@ function getActionLabel(category: NotificationCategory) {
   if (category === "review") return "Xem đánh giá";
   if (category === "staff") return "Xem Staff";
   if (category === "affiliate") return "Xem affiliate";
+  if (category === "campaign") return "Xem ưu đãi";
   if (category === "system") return "Xem chi tiết";
   return "Mở";
 }

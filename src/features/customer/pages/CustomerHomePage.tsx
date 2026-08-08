@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Clock,
+  Heart,
   List,
   Loader2,
   Map as MapIcon,
@@ -663,6 +664,10 @@ export default function CustomerHomePage() {
     navigate("/customer/orders");
   }
 
+  function handleOpenWishlist() {
+    navigate("/customer/wishlist");
+  }
+
   function renderServiceModeTabs(className?: string) {
     return (
       <div
@@ -903,6 +908,16 @@ export default function CustomerHomePage() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleOpenWishlist}
+              aria-label="Mở danh sách quán yêu thích"
+              className="h-11 gap-2 rounded-xl border-rose-200 bg-white/90 px-3 font-black text-slate-800 shadow-xs backdrop-blur-lg hover:bg-rose-50"
+            >
+              <Heart className="h-4 w-4 text-rose-500" />
+              <span className="hidden sm:inline">Quán yêu thích</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setShowMerchantPanel((value) => !value)}
               aria-pressed={showMerchantPanel}
               className="h-11 gap-2 rounded-xl border-slate-200 bg-white/90 font-black shadow-xs backdrop-blur-lg hover:bg-white"
@@ -1023,6 +1038,16 @@ export default function CustomerHomePage() {
           </Link>
 
           <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleOpenWishlist}
+              aria-label="Mở danh sách quán yêu thích"
+              className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
+            >
+              <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
+              <span className="hidden md:inline">Quán yêu thích</span>
+            </Button>
             <Button
               type="button"
               onClick={handleOpenMyOrders}

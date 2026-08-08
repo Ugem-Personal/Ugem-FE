@@ -7,7 +7,7 @@ export default function App() {
   return (
     <>
       <RouterProvider router={routers} />
-      <Toaster />
+      <Toaster visibleToasts={1} />
     </>
   );
 }
