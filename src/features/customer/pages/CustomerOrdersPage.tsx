@@ -16,6 +16,7 @@ import {
 import type { CustomerOrderSummary } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
 import { ModeToggle } from "@/shared/components";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
 
 type OrderFilterTab =
@@ -30,6 +31,7 @@ type OrderFilterTab =
 
 export default function CustomerOrdersPage() {
   const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer");
   const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<OrderFilterTab>("all");
@@ -119,15 +121,6 @@ export default function CustomerOrdersPage() {
       return matchesSearch;
     });
   }, [orders, searchKeyword]);
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer");
-  }
 
   function handleViewDetail(
     order: CustomerOrderSummary,

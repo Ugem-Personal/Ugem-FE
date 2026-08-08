@@ -10,6 +10,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import {
   confirmReceived,
   getCustomerOrderDetail,
@@ -66,6 +67,7 @@ export default function CustomerOrderDetailPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer/orders");
   const navigationState = location.state as OrderDetailLocationState | null;
   const summaryOrder = navigationState?.order ?? null;
   const fallbackOrderNumber = navigationState?.fallbackOrderNumber ?? null;
@@ -288,15 +290,6 @@ export default function CustomerOrderDetailPage() {
     } finally {
       setSubmittingReview(false);
     }
-  }
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer/orders");
   }
 
   function handleRefresh() {

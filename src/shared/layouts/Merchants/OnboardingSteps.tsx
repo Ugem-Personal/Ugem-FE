@@ -12,18 +12,13 @@ const steps: Step[] = [
   },
   {
     number: 2,
-    title: "Bộ phận thẩm định",
-    description: "Đội ngũ thẩm định kiểm tra chất lượng và tính xác thực.",
+    title: "Staff xét duyệt",
+    description: "Đội ngũ UGem kiểm tra thông tin, món ăn và tính xác thực của quán.",
   },
   {
     number: 3,
-    title: "Nhân viên phê duyệt",
-    description: "Kiểm tra danh mục món và xét duyệt hồ sơ chính thức.",
-  },
-  {
-    number: 4,
-    title: "Quán được hiển thị",
-    description: "Sau khi duyệt, quán chính thức mở bán trên UGem Platform.",
+    title: "Kích hoạt quán",
+    description: "Hồ sơ được duyệt và quán chính thức sẵn sàng hoạt động trên UGem.",
   },
 ];
 
@@ -40,7 +35,7 @@ export function OnboardingSteps() {
       </div>
 
       {/* Desktop Stepper Horizontal */}
-      <div className="hidden lg:grid lg:grid-cols-4 gap-4 relative">
+      <div className="hidden lg:grid lg:grid-cols-3 gap-4 relative">
         {steps.map((step, idx) => (
           <div key={step.number} className="relative flex flex-col items-start p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/50">
             {/* Connecting line */}

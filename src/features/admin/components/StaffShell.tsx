@@ -13,7 +13,6 @@ import {
 
 import { UserAccountMenu } from "@/shared/components";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/shared/components/ModeToggle";
 import { useStaffApplications } from "../hooks/useApplications";
 
 export type StaffNavItemKey =
@@ -238,7 +237,6 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <ModeToggle />
               <UserAccountMenu fallbackName="Staff" />
             </div>
           </header>

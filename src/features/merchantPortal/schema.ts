@@ -37,7 +37,8 @@ export const onboardingSchema = z.object({
           .min(1000, "Giá tối thiểu 1000đ"),
         imageUrl: z.string().min(1, "Vui lòng tải ảnh món"),
         imageUploadDataUrl: z.string().optional(),
-        category: z.string().optional(),
+        category: z.string().min(1, "Vui lòng chọn loại món"),
+        cuisine: z.string().optional(),
       }),
     )
     .min(1, "Vui lòng thêm ít nhất 1 món"),

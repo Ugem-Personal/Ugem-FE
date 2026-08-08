@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ImagePlus,
@@ -16,6 +15,7 @@ import {
 
 import { getCurrentUser, refreshCurrentSession } from "@/features/auth";
 import { ModeToggle, UserAccountMenu } from "@/shared/components";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";
 import {
@@ -46,7 +46,7 @@ function getErrorMessage(error: unknown) {
 }
 
 export default function CustomerProfilePage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/customer");
   const currentUser = getCurrentUser();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -327,15 +327,6 @@ export default function CustomerProfilePage() {
     } finally {
       setIsSubmittingReviewerApp(false);
     }
-  }
-
-  function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/customer");
   }
 
   return (

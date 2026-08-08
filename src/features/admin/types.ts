@@ -7,6 +7,7 @@ export type Application = {
   updatedAt?: string | null;
   name?: string;
   description?: string;
+  logoUrl?: string;
   restaurantType?: string;
   mainDishType?: string;
   priceRange?: string;
@@ -23,6 +24,7 @@ export type Application = {
     description?: string;
     imageUrl?: string;
     category?: string;
+    cuisine?: string;
     price?: number;
   }[];
 };

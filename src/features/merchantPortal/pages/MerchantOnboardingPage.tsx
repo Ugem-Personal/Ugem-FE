@@ -199,6 +199,7 @@ export function MerchantOnboardingPage() {
           imageUrl: "",
           imageUploadDataUrl: "",
           category: "",
+          cuisine: "",
         },
       ],
       ...getDraftValues(),
@@ -258,23 +259,6 @@ export function MerchantOnboardingPage() {
     setCurrentStep(Math.max(currentStep - 1, 1));
   }
 
-  function buildDescription(values: OnboardingSchema) {
-    const descriptionLines = [
-      values.description?.trim() || "",
-      "",
-      "--- Thông tin UI bổ sung ---",
-      `Địa chỉ: ${values.address}`,
-      `Loại hình quán: ${values.restaurantType}`,
-      `Loại món chính: ${values.mainDishType}`,
-      `Khoảng giá trung bình: ${values.priceRange}`,
-    ];
-
-    return descriptionLines
-      .filter((line) => line !== undefined && line !== "")
-      .join("\n")
-      .trim();
-  }
-
   async function onSubmit(values: OnboardingSchema) {
     // Validate that all prices are valid numbers
     const validMenu = values.menu.map((menuItem) => {
@@ -299,7 +283,7 @@ export function MerchantOnboardingPage() {
       {
         name: values.restaurantName,
         email: values.email,
-        description: buildDescription(values),
+        description: values.description?.trim() || "",
         restaurantType: values.restaurantType,
         mainDishType: values.mainDishType,
         priceRange: values.priceRange,
@@ -314,6 +298,7 @@ export function MerchantOnboardingPage() {
           description: menuItem.description,
           price: menuItem.price,
           category: menuItem.category,
+          cuisine: menuItem.cuisine,
           imageUrl: getSubmittableImageUrl(menuItem.imageUrl),
         })),
       },

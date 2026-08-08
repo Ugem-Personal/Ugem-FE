@@ -6,16 +6,18 @@ import {
   type UseFormRegister,
   type UseFormSetValue,
 } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type { OnboardingFormValues } from "../schema";
-import { getCategories } from "@/shared/services/categoryService";
 import {
   IMAGE_UPLOAD_ACCEPT,
   uploadImage,
   validateImageFile,
 } from "@/shared/services/mediaService";
-import type { Category } from "@/shared/types";
+import {
+  CUISINE_OPTIONS,
+  FOOD_TYPE_OPTIONS,
+} from "@/shared/utils/category";
 
 type Props = {
   control: Control<OnboardingFormValues>;
@@ -35,7 +37,6 @@ export function MenuDetailsStep({
     name: "menu",
   });
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [uploadedFileNamesById, setUploadedFileNamesById] = useState<
     Record<string, string>
   >({});
@@ -50,14 +51,6 @@ export function MenuDetailsStep({
     control,
     name: "menu",
   });
-
-  useEffect(() => {
-    getCategories()
-      .then(setCategories)
-      .catch((error) => {
-        console.error("Không tải được danh mục:", error);
-      });
-  }, []);
 
   async function handleUpload(index: number, file?: File) {
     if (!file) return;
@@ -126,7 +119,7 @@ export function MenuDetailsStep({
         {fields.map((field, index) => (
           <article className="menu-item-card" key={field.id}>
             <div className="menu-item-title">
-              <strong>Món #{index + 1}</strong>
+              <strong>Món ăn {index + 1}</strong>
 
               {fields.length > 1 && (
                 <button type="button" onClick={() => remove(index)}>
@@ -181,17 +174,32 @@ export function MenuDetailsStep({
               </label>
 
               <label>
-                <span>Danh mục</span>
+                <span>Loại món *</span>
                 <select {...register(`menu.${index}.category`)}>
-                  <option value="">Chọn danh mục</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
+                  <option value="">Chọn loại món</option>
+                  {FOOD_TYPE_OPTIONS.map((foodType) => (
+                    <option key={foodType} value={foodType}>
+                      {foodType}
                     </option>
                   ))}
                 </select>
+                {errors.menu?.[index]?.category && (
+                  <small>{errors.menu[index]?.category?.message}</small>
+                )}
               </label>
             </div>
+
+            <label>
+              <span>Nền ẩm thực</span>
+              <select {...register(`menu.${index}.cuisine`)}>
+                <option value="">Chọn nền ẩm thực (không bắt buộc)</option>
+                {CUISINE_OPTIONS.map((cuisine) => (
+                  <option key={cuisine} value={cuisine}>
+                    {cuisine}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="menu-upload-field">
               <span>Tải ảnh từ máy</span>
@@ -234,7 +242,7 @@ export function MenuDetailsStep({
                   <div className="menu-image-preview">
                     <img
                       src={uploadSrc}
-                      alt={`Ảnh món #${index + 1} (Upload)`}
+                      alt={`Ảnh món ăn ${index + 1} (Upload)`}
                       loading="lazy"
                     />
                   </div>
@@ -260,6 +268,7 @@ export function MenuDetailsStep({
             imageUrl: "",
             imageUploadDataUrl: "",
             category: "",
+            cuisine: "",
           })
         }
       >

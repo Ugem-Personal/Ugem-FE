@@ -52,10 +52,38 @@ type MerchantEditForm = {
   logoUrl: string;
 };
 
+const DESCRIPTION_META_LABELS = [
+  "Địa chỉ",
+  "Loại hình quán",
+  "Loại món chính",
+  "Khoảng giá trung bình",
+];
+
+function getDisplayDescription(description?: string) {
+  const lines = (description || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const markerIndex = lines.findIndex((line) =>
+    line.toLowerCase().includes("thông tin ui bổ sung"),
+  );
+  const summaryLines =
+    markerIndex >= 0
+      ? lines.slice(0, markerIndex)
+      : lines.filter(
+          (line) =>
+            !DESCRIPTION_META_LABELS.some((label) =>
+              line.toLowerCase().startsWith(`${label.toLowerCase()}:`),
+            ),
+        );
+
+  return summaryLines.join("\n").trim();
+}
+
 function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
   return {
     merchantName: merchant?.name ?? "",
-    merchantDescription: merchant?.description ?? "",
+    merchantDescription: getDisplayDescription(merchant?.description),
     restaurantType: merchant?.restaurantType ?? "",
     mainDishType: merchant?.mainDishType ?? "",
     priceRange: merchant?.priceRange ?? "",
@@ -81,7 +109,9 @@ function applicationToMerchantDetail(
     description: item.description,
     price: item.price,
     imageUrl: item.imageUrl,
-    categoryDetail: item.category ? [item.category] : undefined,
+    categoryDetail: [item.category, item.cuisine].filter(
+      (value): value is string => Boolean(value),
+    ),
   }));
 
   return {
@@ -159,6 +189,10 @@ export function MerchantRestaurantPage() {
         isApprovedStatus(application.status),
       ) ?? null,
     [applications],
+  );
+  const displayDescription = useMemo(
+    () => getDisplayDescription(merchant?.description),
+    [merchant?.description],
   );
 
   useEffect(() => {
@@ -520,13 +554,13 @@ export function MerchantRestaurantPage() {
                     <InfoLine icon={<DollarSign className="h-4 w-4" />} label="Khoảng giá" value={merchant.priceRange} />
                   </div>
 
-                  {merchant.description && (
+                  {displayDescription && (
                     <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-6 shadow-lg backdrop-blur-2xl">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                         Mô tả nhà hàng
                       </p>
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
-                        {merchant.description}
+                      <p className="whitespace-pre-line text-xs font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
+                        {displayDescription}
                       </p>
                     </div>
                   )}

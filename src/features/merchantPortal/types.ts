@@ -12,6 +12,7 @@ export type ApplicationMenuItem = {
   price: number;
   imageUrl?: string;
   category?: string;
+  cuisine?: string;
 };
 
 export type PriceRange = "Tiết kiệm" | "Bình dân" | "Tầm trung";
@@ -41,6 +42,7 @@ export type OnboardingFormValues = {
     price: number;
     imageUrl?: string;
     category?: string;
+    cuisine?: string;
   }[];
 };
 
@@ -63,6 +65,7 @@ export type CreateApplicationPayload = {
     price: number;
     imageUrl?: string;
     category?: string;
+    cuisine?: string;
   }[];
 };
 
@@ -99,6 +102,7 @@ export type MerchantApplication = {
     price: number;
     imageUrl?: string;
     category?: string;
+    cuisine?: string;
   }[];
 };
 
@@ -107,6 +111,7 @@ export type Food = {
   foodId?: string;
   name: string;
   description?: string | null;
+  cuisine?: string | null;
   price: number;
   imageUrl?: string | null;
   merchantId?: string;
@@ -121,6 +126,7 @@ export type Food = {
 export type CreateFoodPayload = {
   name: string;
   description?: string;
+  cuisine?: string;
   price: number;
   imageUrl?: string;
   merchantId?: string;

@@ -9,12 +9,14 @@ import * as vietmapgl from "@vietmap/vietmap-gl-js/dist/vietmap-gl";
 import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
 import {
   type GeocodeResult,
+  getGeocodePlaceDetails,
   reverseGeocode as vietmapReverseGeocode,
   searchGeocodeAddress as vietmapSearchGeocodeAddress,
   HAS_VIETMAP_KEY,
   HAS_VIETMAP_SERVICE_KEY,
   VIETMAP_API_KEY,
 } from "@/shared/services/vietmapService";
+import { cleanAddress, isDetailedAddress } from "@/shared/utils/address";
 
 type Props = Readonly<{
   register: UseFormRegister<OnboardingFormValues>;
@@ -36,6 +38,12 @@ const GOOD_LOCATION_ACCURACY_METERS = 60;
 const MAX_ACCEPTED_LOCATION_ACCURACY_METERS = 150;
 const LOCATION_SAMPLE_TIMEOUT_MS = 12_000;
 
+function getSuggestionAddress(suggestion: GeocodeResult) {
+  return cleanAddress(
+    suggestion.display?.trim() || suggestion.address?.trim() || "",
+  );
+}
+
 export function AddressLocationStep({
   register,
   errors,
@@ -54,6 +62,9 @@ export function AddressLocationStep({
   const [locating, setLocating] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [locationError, setLocationError] = useState("");
+  const [addressDetailStatus, setAddressDetailStatus] = useState<
+    "idle" | "detailed" | "coarse"
+  >("idle");
   const [geocodeSuggestions, setGeocodeSuggestions] = useState<GeocodeResult[]>(
     [],
   );
@@ -175,7 +186,7 @@ export function AddressLocationStep({
     try {
       return await vietmapReverseGeocode(lat, lng);
     } catch {
-      return "";
+      return null;
     }
   }, []);
 
@@ -183,20 +194,23 @@ export function AddressLocationStep({
     async (
       lat: number,
       lng: number,
-      options?: { replaceAddress?: boolean },
     ) => {
       commitCoordinates(lat, lng);
 
-      if (!options?.replaceAddress && watchedAddress?.trim()) {
+      if (watchedAddress?.trim()) {
+        setAddressDetailStatus(
+          isDetailedAddress(watchedAddress) ? "detailed" : "coarse",
+        );
         return;
       }
 
-      const resolvedAddress = await reverseGeocode(lat, lng);
-      if (resolvedAddress) {
-        setValue("address", resolvedAddress, {
+      const result = await reverseGeocode(lat, lng);
+      if (result?.address) {
+        setValue("address", cleanAddress(result.address), {
           shouldDirty: true,
           shouldValidate: true,
         });
+        setAddressDetailStatus(result.isDetailed ? "detailed" : "coarse");
       }
     },
     [commitCoordinates, reverseGeocode, setValue, watchedAddress],
@@ -244,7 +258,7 @@ export function AddressLocationStep({
       const lng = Number.parseFloat(bestPosition.coords.longitude.toFixed(7));
 
       setLocationError("");
-      void applyCoordinates(lat, lng, { replaceAddress: true });
+      void applyCoordinates(lat, lng);
     };
 
     setLocating(true);
@@ -417,21 +431,33 @@ export function AddressLocationStep({
   );
 
   const handlePickSuggestion = useCallback(
-    (suggestion: GeocodeResult) => {
+    async (suggestion: GeocodeResult) => {
       setLocationError("");
       setLocationAccuracy(null);
-      const lat = Number(Number(suggestion.lat).toFixed(7));
-      const lng = Number(Number(suggestion.lng).toFixed(7));
+      setGeocoding(true);
+
+      let selectedSuggestion = suggestion;
+      try {
+        selectedSuggestion = await getGeocodePlaceDetails(suggestion);
+      } finally {
+        setGeocoding(false);
+      }
+
+      const lat = Number(Number(selectedSuggestion.lat).toFixed(7));
+      const lng = Number(Number(selectedSuggestion.lng).toFixed(7));
+      const selectedAddress = getSuggestionAddress(selectedSuggestion);
 
       setGeocodeSuggestions([]);
-      setGeocoding(false);
       setValue(
         "address",
-        suggestion.display?.trim() || suggestion.address?.trim() || "",
+        selectedAddress,
         {
           shouldDirty: true,
           shouldValidate: true,
         },
+      );
+      setAddressDetailStatus(
+        isDetailedAddress(selectedAddress) ? "detailed" : "coarse",
       );
 
       if (!isValidVietnamCoords(lat, lng)) {
@@ -455,6 +481,7 @@ export function AddressLocationStep({
     register("address").onChange(e);
 
     const val = e.target.value;
+    setAddressDetailStatus("idle");
     setGeocodeSuggestions([]);
     setGeocodeStatus("idle");
     setLocationError("");
@@ -534,7 +561,7 @@ export function AddressLocationStep({
                 <button
                   key={`${item.lat}-${item.lng}-${item.display}`}
                   type="button"
-                  onClick={() => handlePickSuggestion(item)}
+                  onClick={() => void handlePickSuggestion(item)}
                   style={{
                     width: "100%",
                     textAlign: "left",
@@ -547,10 +574,10 @@ export function AddressLocationStep({
                   <div
                     style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}
                   >
-                    {item.display || item.address}
+                    {getSuggestionAddress(item)}
                   </div>
                   <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                    {item.address}
+                    {cleanAddress(item.address)}
                   </div>
                 </button>
               ))}
@@ -571,6 +598,17 @@ export function AddressLocationStep({
         {geocodeStatus === "ok" && !geocoding && (
           <small style={{ color: "#2563eb" }}>
             📍 Vị trí đã được chọn trên bản đồ
+          </small>
+        )}
+        {addressDetailStatus === "detailed" && !geocoding && (
+          <small style={{ color: "#15803d" }}>
+            Địa chỉ chi tiết đã được VietMap xác định.
+          </small>
+        )}
+        {addressDetailStatus === "coarse" && !geocoding && (
+          <small style={{ color: "#b45309" }} role="status">
+            VietMap mới xác định được khu vực. Vui lòng bổ sung số nhà và tên
+            đường để hồ sơ chính xác hơn.
           </small>
         )}
       </label>

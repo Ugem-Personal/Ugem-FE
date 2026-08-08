@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { ShieldAlert, ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { ModeToggle } from "@/shared/components/ModeToggle";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();
+  const handleBack = useSafeBack("/login");
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 transition-colors duration-300 relative">
@@ -32,7 +34,7 @@ export default function UnauthorizedPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Button
             variant="outline"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="w-full sm:w-auto font-bold text-xs"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />

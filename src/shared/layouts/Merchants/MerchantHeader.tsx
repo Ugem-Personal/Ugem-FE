@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles, Activity } from "lucide-react";
+import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";

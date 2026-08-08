@@ -4,14 +4,35 @@
  */
 export function cleanAddress(address?: string) {
   if (!address) return "";
-  
-  const match = address.match(/^([^,0-9]{3,40})\s+(\d+.*)$/);
+
+  // Geocoding services may prepend a Google/Open Location Code when a street
+  // address is unavailable, for example: "7P28WQ98+HM Phường Dĩ An, ...".
+  // Keep the human-readable locality and discard only the leading code.
+  const withoutPlusCode = address
+    .trim()
+    .replace(
+      /^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}(?=\s|,|$)[\s,;:-]*/i,
+      "",
+    )
+    .trim();
+
+  const match = withoutPlusCode.match(/^([^,0-9]{3,40})\s+(\d+.*)$/);
   if (match) {
     const prefix = match[1].toLowerCase().trim();
     // Allow standard address prefixes
     if (!prefix.match(/^(số|đường|kiốt|kios|kiot|lô|tầng|quận|huyện|phường|xã|thị trấn|q|p)\s*$/)) {
-      return match[2];
+      return match[2].trim();
     }
   }
-  return address;
+  return withoutPlusCode;
+}
+
+/** True when an address contains a concrete house number instead of only an administrative area. */
+export function isDetailedAddress(address?: string) {
+  const cleaned = cleanAddress(address);
+  if (!cleaned) return false;
+
+  return /(?:^|,\s*)\d{1,5}(?:[/-]\d{1,5})*[a-z]?\s+\p{L}/iu.test(
+    cleaned,
+  );
 }

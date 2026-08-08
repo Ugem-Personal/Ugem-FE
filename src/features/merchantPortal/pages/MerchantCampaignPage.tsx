@@ -26,7 +26,7 @@ import {
   AlertTriangle,
   ChevronLeft,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -71,7 +71,7 @@ export function MerchantFeatureUnavailablePage({
   description = "Tính năng này hiện đang được hoàn thiện hệ thống.",
   missingApis = [],
 }: MerchantFeatureUnavailablePageProps = {}) {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/merchant");
 
   return (
     <main className="merchant-portal-layout relative bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex">
@@ -83,7 +83,7 @@ export function MerchantFeatureUnavailablePage({
         <div className="merchant-content px-4 py-6 sm:px-8 sm:py-8">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="mb-4 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition hover:border-cyan-400"
           >
             <ChevronLeft size={16} /> Quay lại
@@ -279,7 +279,7 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
 
 // MODULE 1: Merchant Campaign Management
 export function MerchantCampaignPage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/merchant");
   const merchantId = getCurrentMerchantId();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -466,7 +466,7 @@ export function MerchantCampaignPage() {
             <div>
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-md transition hover:border-cyan-400"
               >
                 <ChevronLeft size={16} /> Quay lại
@@ -1068,7 +1068,7 @@ export function MerchantCampaignPage() {
 
 // MODULE 2: Merchant Statistics
 export function MerchantViewStatisticsPage() {
-  const navigate = useNavigate();
+  const handleBack = useSafeBack("/merchant");
   const [stats, setStats] = useState<MerchantStatistics | null>(null);
   const [views, setViews] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1119,7 +1119,7 @@ export function MerchantViewStatisticsPage() {
             <div>
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="mb-3 inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-md transition hover:border-cyan-400"
               >
                 <ChevronLeft size={16} /> Quay lại

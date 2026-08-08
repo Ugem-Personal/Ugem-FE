@@ -7,6 +7,21 @@ type ApiResponse<T> = {
   data: T;
 };
 
+type ApplicationMenu = NonNullable<Application["applicationMenus"]>[number];
+type ApplicationApiShape = Application & {
+  menu?: ApplicationMenu[];
+};
+
+export function normalizeApplication(
+  application: ApplicationApiShape,
+): Application {
+  return {
+    ...application,
+    applicationMenus:
+      application.applicationMenus ?? application.menu ?? [],
+  };
+}
+
 export async function getStaffApplications() {
   const res = await api.get<ApiResponse<Application[]>>("/applications", {
     params: {
@@ -15,7 +30,17 @@ export async function getStaffApplications() {
     },
   });
 
-  return res.data.data ?? [];
+  return (res.data.data ?? []).map((application) =>
+    normalizeApplication(application as ApplicationApiShape),
+  );
+}
+
+export async function getStaffApplicationById(id: string) {
+  const res = await api.get<ApiResponse<ApplicationApiShape>>(
+    `/applications/${id}`,
+  );
+
+  return normalizeApplication(res.data.data);
 }
 
 export async function acceptApplication(id: string) {

@@ -109,9 +109,12 @@ export function ReviewSubmitStep({
                     {menuItem.description || "Chưa nhập mô tả"}
                   </p>
 
-                  {menuItem.category && (
+                  {(menuItem.category || menuItem.cuisine) && (
                     <p className="review-menu-meta">
-                      Danh mục: <strong>{menuItem.category}</strong>
+                      Loại món: <strong>{menuItem.category || "Chưa chọn"}</strong>
+                      {menuItem.cuisine && (
+                        <> · Nền ẩm thực: <strong>{menuItem.cuisine}</strong></>
+                      )}
                     </p>
                   )}
 
