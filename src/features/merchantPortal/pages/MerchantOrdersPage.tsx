@@ -1153,41 +1153,23 @@ export default function MerchantOrdersPage() {
                           className="h-36 w-36 object-contain"
                         />
                       </div>
-                      <div className="flex-1 w-full space-y-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <div className="flex-1 w-full space-y-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
                         <div className="font-bold text-cyan-600 dark:text-cyan-400 border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1">
-                          Thông tin chuyển khoản (Nếu không quét QR):
+                          Thông tin tài khoản ngân hàng của quán:
                         </div>
-                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
+                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1.5">
                           <span className="text-slate-500 dark:text-slate-400">Ngân hàng:</span>
                           <span className="font-bold">{import.meta.env.VITE_BANK_NAME || "BIDV"}</span>
                         </div>
-                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
+                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1.5">
                           <span className="text-slate-500 dark:text-slate-400">Số tài khoản (STK):</span>
                           <span className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
                             {import.meta.env.VITE_BANK_ACCOUNT || "5321252810"}
                           </span>
                         </div>
-                        <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1">
-                          <span className="text-slate-500 dark:text-slate-400">Số tiền:</span>
-                          <span className="font-mono font-black text-slate-900 dark:text-white">
-                            {formatCurrency(detailTotal)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Nội dung CK:</span>
-                          <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px]">
-                            {selectedOrder.customerName
-                              ? `${selectedOrder.customerName
-                                  .normalize("NFD")
-                                  .replace(/[\u0300-\u036f]/g, "")
-                                  .replace(/đ/g, "d")
-                                  .replace(/Đ/g, "D")
-                                  .replace(/[^a-zA-Z0-9 ]/g, "")
-                                  .trim()
-                                  .toUpperCase()} CHUYEN TIEN DON ${selectedOrder.orderId.split("-")[0].toUpperCase()}`
-                              : `UGEM CHUYEN TIEN DON ${selectedOrder.orderId.split("-")[0].toUpperCase()}`}
-                          </span>
-                        </div>
+                        <p className="text-[11px] font-normal text-slate-500 dark:text-slate-400 italic pt-1">
+                          Khách hàng quét mã QR trên điện thoại để xem hóa đơn và tự động điền số tiền + nội dung chuyển khoản.
+                        </p>
                       </div>
                     </div>
                   ) : null}
