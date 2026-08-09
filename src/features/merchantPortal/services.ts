@@ -180,11 +180,13 @@ export async function getMerchantOrders() {
   return orders.map((order) => {
     const rawOrder = order as MerchantOrderSummary & {
       customer?: { fullName?: string | null } | null;
+      paymentStatus?: string;
     };
 
     return {
       ...order,
       finalPrice: Number(order.finalPrice ?? 0),
+      paymentStatus: order.paymentStatus || rawOrder.paymentStatus || "Unpaid",
       customerName:
         order.customerName || rawOrder.customer?.fullName || "Khách hàng",
     };

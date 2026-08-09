@@ -570,13 +570,8 @@ export default function MerchantOrdersPage() {
   }
 
   async function handleConfirmCashPayment(order: MerchantOrderSummary) {
-    const orderStatus = getOrderStatusKey(order.status);
-    const paymentMethod = order.paymentMethod?.trim().toLowerCase();
-
-    if (orderStatus !== "cashpending" || paymentMethod !== "cash") {
-      notify.error(
-        "Chỉ có thể xác nhận thanh toán cho đơn tiền mặt đang chờ xác nhận.",
-      );
+    if (order.paymentStatus?.toLowerCase() === "paid") {
+      notify.error("Đơn hàng này đã được thanh toán.");
       return;
     }
 
@@ -584,7 +579,7 @@ export default function MerchantOrdersPage() {
 
     try {
       await confirmCashPayment(order.orderId);
-      notify.success("Đã xác nhận thanh toán tiền mặt.");
+      notify.success("Đã xác nhận thanh toán cho đơn hàng.");
       await loadOrders();
     } catch (error) {
       console.error(error);
@@ -786,6 +781,18 @@ export default function MerchantOrdersPage() {
                         <Eye size={16} />
                         Xem chi tiết
                       </button>
+
+                      {order.paymentStatus?.toLowerCase() !== "paid" ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleConfirmCashPayment(order)}
+                          disabled={actionOrderId === order.orderId}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          <Check size={16} />
+                          Xác nhận đã nhận tiền
+                        </button>
+                      ) : null}
 
                       <span className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400">
                         {getOrderActionMessage(order.status, order.orderType)}
@@ -1117,10 +1124,7 @@ export default function MerchantOrdersPage() {
                         </button>
                       ) : null}
 
-                      {getOrderStatusKey(selectedOrder.status) ===
-                        "cashpending" &&
-                      selectedOrder.paymentMethod?.trim().toLowerCase() ===
-                        "cash" ? (
+                      {selectedOrder.paymentStatus?.toLowerCase() !== "paid" ? (
                         <button
                           type="button"
                           onClick={() =>
@@ -1130,7 +1134,7 @@ export default function MerchantOrdersPage() {
                           className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
                         >
                           <Check size={16} />
-                          Xác nhận thanh toán tiền mặt
+                          Xác nhận đã nhận tiền
                         </button>
                       ) : null}
                     </div>

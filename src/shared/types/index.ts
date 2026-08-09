@@ -83,6 +83,7 @@ export type MerchantOrderSummary = {
   deliveryLatitude?: number | null;
   deliveryLongitude?: number | null;
   paymentMethod: string;
+  paymentStatus?: string;
   orderType?: string;
   status: string;
   customerName: string;
