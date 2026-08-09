@@ -208,7 +208,7 @@ export async function rejectOrder(orderId: string, reason: string) {
 
 export async function updateMerchantOrderStatus(
   orderId: string,
-  status: "Preparing" | "Ready" | "Delivering",
+  status: "Preparing" | "Ready" | "Delivering" | "Completed",
 ) {
   const res = await api.patch(`/orders/${orderId}/status`, { status });
   return res.data;

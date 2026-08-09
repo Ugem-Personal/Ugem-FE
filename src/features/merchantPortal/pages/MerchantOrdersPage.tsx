@@ -596,7 +596,16 @@ export default function MerchantOrdersPage() {
 
     try {
       await confirmCashPayment(order.orderId);
-      notify.success("Đã xác nhận thanh toán cho đơn hàng.");
+      const isOnlineDelivery = order.orderType?.trim().toLowerCase() === "online";
+      const isDelivering = getOrderStatusKey(order.status) === "delivering";
+
+      if (isOnlineDelivery && isDelivering) {
+        await updateMerchantOrderStatus(order.orderId, "Completed").catch(() => null);
+        notify.success("Đã xác nhận nhận tiền mặt và hoàn tất giao đơn hàng!");
+      } else {
+        notify.success("Đã xác nhận thanh toán thành công!");
+      }
+
       await loadOrders();
     } catch (error) {
       console.error(error);
