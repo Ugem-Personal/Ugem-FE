@@ -120,7 +120,7 @@ function getBankTransferDescription(
 ) {
   if (!orderId) return "UGEM CHUYEN TIEN";
   const user = getCurrentUser();
-  const rawName = customerName || user?.Name || "";
+  const rawName = user?.Name || customerName || "";
   const nameClean = rawName ? removeAccents(rawName) : "";
   const shortId = orderId.split("-")[0].toUpperCase();
   return nameClean
