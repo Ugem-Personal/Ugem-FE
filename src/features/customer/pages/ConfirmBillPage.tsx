@@ -14,7 +14,6 @@ import {
   requestCashPayment,
 } from "@/features/customer/services/orderService";
 import { verifyCheckIn } from "@/shared/services/checkInService";
-import { getUserProfile } from "@/shared/services/userService";
 import { ModeToggle } from "@/shared/components";
 import type { CustomerOrderSummary } from "@/shared/types";
 
@@ -105,40 +104,20 @@ function getBillPaymentMethod(bill?: Bill | null): BillPaymentMethod {
   return paymentMethod.includes("banktransfer") ? "BankTransfer" : "Cash";
 }
 
-function removeAccents(str: string): string {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .replace(/[^a-zA-Z0-9 ]/g, "")
-    .trim()
-    .toUpperCase();
-}
-
-function getBankTransferDescription(
-  orderId?: string | null,
-  userName?: string | null,
-) {
+function getBankTransferDescription(orderId?: string | null) {
   if (!orderId) return "UGEM CHUYEN TIEN";
-  const user = getCurrentUser();
-  const rawName = userName || user?.Name || "";
-  const nameClean = rawName ? removeAccents(rawName) : "";
   const shortId = orderId.split("-")[0].toUpperCase();
-  return nameClean
-    ? `${nameClean} CHUYEN TIEN DON ${shortId}`
-    : `UGEM CHUYEN TIEN DON ${shortId}`;
+  return `UGEM DON ${shortId}`;
 }
 
 function getBankTransferInfo(
   bill: Bill | null,
   orderId: string | null | undefined,
   finalPrice: number,
-  userName?: string | null,
 ) {
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
-  const description = getBankTransferDescription(orderId, userName);
+  const description = getBankTransferDescription(orderId);
 
   const amount = Math.round(
     Number(bill?.totalAmount ?? finalPrice ?? 0),
@@ -182,21 +161,6 @@ export default function ConfirmBillPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [customPayerName, setCustomPayerName] = useState<string>(() => {
-    const user = getCurrentUser();
-    return user?.Name || "";
-  });
-
-  useEffect(() => {
-    getUserProfile()
-      .then((profile) => {
-        const name = profile?.fullName || profile?.name;
-        if (name) {
-          setCustomPayerName((prev) => (prev ? prev : name));
-        }
-      })
-      .catch(() => undefined);
-  }, []);
 
   function copyToClipboard(text: string, field: string) {
     if (!text) return;
@@ -212,8 +176,8 @@ export default function ConfirmBillPage() {
   const finalPrice = bill?.finalPrice ?? 0;
   const items = useMemo(() => bill?.items ?? [], [bill]);
   const bankTransferInfo = useMemo(
-    () => getBankTransferInfo(bill, billOrderId, finalPrice, customPayerName),
-    [bill, billOrderId, finalPrice, customPayerName],
+    () => getBankTransferInfo(bill, billOrderId, finalPrice),
+    [bill, billOrderId, finalPrice],
   );
 
   const finishCheckIn = useCallback(async () => {
@@ -695,21 +659,8 @@ export default function ConfirmBillPage() {
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/80 dark:bg-cyan-950/40 p-4 text-xs space-y-4">
-                      <div className="font-bold text-cyan-900 dark:text-cyan-200 flex items-center justify-between">
-                        <span>Thanh toán qua mã QR Ngân hàng</span>
-                      </div>
-
-                      <div className="rounded-xl border border-cyan-200/80 dark:border-cyan-800/60 bg-white/70 dark:bg-slate-900/70 p-3 space-y-1.5 shadow-xs">
-                        <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          Họ và tên người chuyển khoản (Tên bạn)
-                        </label>
-                        <input
-                          type="text"
-                          value={customPayerName}
-                          onChange={(e) => setCustomPayerName(e.target.value)}
-                          placeholder="Nhập tên người chuyển (VD: NGUYEN MANH CUONG)"
-                          className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-black text-slate-900 dark:text-white shadow-xs focus:border-cyan-500 focus:outline-hidden"
-                        />
+                      <div className="font-bold text-cyan-900 dark:text-cyan-200">
+                        Thanh toán qua mã QR Ngân hàng
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-center gap-4">
