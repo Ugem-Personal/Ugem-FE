@@ -135,13 +135,21 @@ function getBankTransferInfo(
 ) {
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
-  const description =
-    bill?.description ?? getBankTransferDescription(orderId, (bill as any)?.customerName);
+  const user = getCurrentUser();
+  const currentUserName = user?.Name;
+  const orderCustomerName =
+    (bill as any)?.customerName ||
+    (bill as any)?.order?.customer?.user?.fullName;
+
+  const description = getBankTransferDescription(
+    orderId,
+    currentUserName || orderCustomerName,
+  );
+
   const amount = Math.round(
     Number(bill?.totalAmount ?? finalPrice ?? 0),
   );
   const qrCode =
-    bill?.qrCode ??
     `https://qr.sepay.vn/img?acc=${encodeURIComponent(
       bankAccount,
     )}&bank=${encodeURIComponent(bankName)}&amount=${amount}&des=${encodeURIComponent(
