@@ -8,6 +8,7 @@ import {
   confirmBill,
   getCustomerOrderId,
   getCustomerOrders,
+  getCustomerOrderDetail,
   getBill,
   rejectBill,
   requestCashPayment,
@@ -250,6 +251,20 @@ export default function ConfirmBillPage() {
         setError(null);
         setBillConfirmed(billConfirmedFromQr);
         const nextBill = billData as Bill;
+
+        if (!nextBill.items || nextBill.items.length === 0) {
+          const detailItems = await getCustomerOrderDetail(orderId).catch(() => []);
+          if (detailItems && detailItems.length > 0) {
+            nextBill.items = detailItems.map((f: any) => ({
+              name: f.foodNameSnapshot || f.foodName || f.name,
+              quantity: f.quantity,
+              subTotal: f.lineTotal ?? (f.unitPrice ? f.unitPrice * f.quantity : 0),
+              notes: f.notes,
+              toppings: f.toppings,
+            }));
+          }
+        }
+
         setBill(nextBill);
         setSelectedPaymentMethod(getBillPaymentMethod(nextBill));
 
