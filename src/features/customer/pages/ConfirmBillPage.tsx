@@ -182,16 +182,18 @@ export default function ConfirmBillPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [userProfileName, setUserProfileName] = useState<string | null>(() => {
+  const [customPayerName, setCustomPayerName] = useState<string>(() => {
     const user = getCurrentUser();
-    return user?.Name || null;
+    return user?.Name || "";
   });
 
   useEffect(() => {
     getUserProfile()
       .then((profile) => {
         const name = profile?.fullName || profile?.name;
-        if (name) setUserProfileName(name);
+        if (name) {
+          setCustomPayerName((prev) => (prev ? prev : name));
+        }
       })
       .catch(() => undefined);
   }, []);
@@ -210,8 +212,8 @@ export default function ConfirmBillPage() {
   const finalPrice = bill?.finalPrice ?? 0;
   const items = useMemo(() => bill?.items ?? [], [bill]);
   const bankTransferInfo = useMemo(
-    () => getBankTransferInfo(bill, billOrderId, finalPrice, userProfileName),
-    [bill, billOrderId, finalPrice, userProfileName],
+    () => getBankTransferInfo(bill, billOrderId, finalPrice, customPayerName),
+    [bill, billOrderId, finalPrice, customPayerName],
   );
 
   const finishCheckIn = useCallback(async () => {
@@ -693,8 +695,21 @@ export default function ConfirmBillPage() {
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/80 dark:bg-cyan-950/40 p-4 text-xs space-y-4">
-                      <div className="font-bold text-cyan-900 dark:text-cyan-200">
-                        Thanh toán qua mã QR Ngân hàng
+                      <div className="font-bold text-cyan-900 dark:text-cyan-200 flex items-center justify-between">
+                        <span>Thanh toán qua mã QR Ngân hàng</span>
+                      </div>
+
+                      <div className="rounded-xl border border-cyan-200/80 dark:border-cyan-800/60 bg-white/70 dark:bg-slate-900/70 p-3 space-y-1.5 shadow-xs">
+                        <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Họ và tên người chuyển khoản (Tên bạn)
+                        </label>
+                        <input
+                          type="text"
+                          value={customPayerName}
+                          onChange={(e) => setCustomPayerName(e.target.value)}
+                          placeholder="Nhập tên người chuyển (VD: NGUYEN MANH CUONG)"
+                          className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-black text-slate-900 dark:text-white shadow-xs focus:border-cyan-500 focus:outline-hidden"
+                        />
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-center gap-4">
