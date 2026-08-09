@@ -71,6 +71,15 @@ export async function forgotPasswordApi(payload: ForgotPasswordRequest) {
   return data;
 }
 
+export async function verifyResetCodeApi(payload: { email: string; token: string }) {
+  const { data } = await api.post<ApiResponse<null>>("/auth/verify-reset-code", {
+    email: payload.email,
+    token: payload.token,
+  });
+
+  return data;
+}
+
 export async function resetPasswordApi(payload: ResetPasswordRequest) {
   const { data } = await api.post<ApiResponse<null>>("/auth/reset-password", {
     email: payload.email,

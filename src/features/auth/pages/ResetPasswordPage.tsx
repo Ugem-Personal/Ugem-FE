@@ -24,7 +24,7 @@ import { Input } from "@/shared/components/ui/input";
 import { notify } from "@/shared/lib/notify";
 
 import { resetPasswordSchema, type ResetPasswordSchema } from "../schema";
-import { resetPasswordApi } from "../services";
+import { resetPasswordApi, verifyResetCodeApi } from "../services";
 import { getResetPasswordErrorMessage } from "../errorMessages";
 
 export function ResetPasswordPage() {
@@ -32,6 +32,7 @@ export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const [apiError, setApiError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
   const [codeConfirmed, setCodeConfirmed] = useState(false);
 
   const initialEmail = useMemo(
@@ -81,7 +82,7 @@ export function ResetPasswordPage() {
     }
   }
 
-  function handleConfirmCode() {
+  async function handleConfirmCode() {
     setApiError("");
 
     const email = form.getValues("email").trim();
@@ -122,7 +123,19 @@ export function ResetPasswordPage() {
 
     if (!valid) return;
 
-    setCodeConfirmed(true);
+    setVerifyingCode(true);
+    try {
+      const res = await verifyResetCodeApi({ email, token });
+      if (!res.success) {
+        throw new Error(res.message || "Mã xác nhận không chính xác");
+      }
+      setCodeConfirmed(true);
+    } catch (error) {
+      console.error(error);
+      setApiError(getResetPasswordErrorMessage(error));
+    } finally {
+      setVerifyingCode(false);
+    }
   }
 
   return (
@@ -283,9 +296,18 @@ export function ResetPasswordPage() {
               variant="accent"
               size="lg"
               onClick={handleConfirmCode}
+              disabled={verifyingCode}
+              aria-disabled={verifyingCode}
               className="w-full font-black text-sm"
             >
-              Xác nhận mã & Tiếp tục
+              {verifyingCode ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang kiểm tra mã...
+                </>
+              ) : (
+                "Xác nhận mã & Tiếp tục"
+              )}
             </Button>
           </div>
         )}
