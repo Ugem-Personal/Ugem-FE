@@ -274,7 +274,7 @@ export default function ConfirmBillPage() {
       .catch((err) => {
         console.error(err);
         if (!active) return;
-        setError("Không thể tải hóa đơn. Vui lòng thử lại.");
+        setError(getServerMessage(err, "Không thể tải hóa đơn. Vui lòng thử lại."));
       })
       .finally(() => {
         if (!active) return;
