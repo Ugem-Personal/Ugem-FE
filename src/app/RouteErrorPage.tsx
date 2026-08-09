@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, isRouteErrorResponse, useRouteError } from "react-router-dom";
 
 export default function RouteErrorPage() {
@@ -11,6 +12,21 @@ export default function RouteErrorPage() {
     message = error.message;
   }
 
+  const isChunkError =
+    error instanceof Error &&
+    (error.message.includes("Failed to fetch dynamically imported module") ||
+      error.message.includes("Importing a module script failed"));
+
+  useEffect(() => {
+    if (isChunkError) {
+      const storageKey = "ugem_chunk_reload_attempted";
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, "true");
+        window.location.reload();
+      }
+    }
+  }, [isChunkError]);
+
   return (
     <main
       style={{
@@ -21,6 +37,7 @@ export default function RouteErrorPage() {
         alignItems: "center",
         padding: 24,
         textAlign: "center",
+        background: "#f8fafc",
       }}
     >
       <div
@@ -36,14 +53,15 @@ export default function RouteErrorPage() {
         <p
           style={{ margin: 0, fontSize: 14, color: "#2563eb", fontWeight: 700 }}
         >
-          Something went wrong
+          {isChunkError ? "Cập nhật ứng dụng" : "Something went wrong"}
         </p>
-        <h1 style={{ margin: "16px 0 8px", fontSize: 38, lineHeight: 1.05 }}>
-          Oops.
+        <h1 style={{ margin: "16px 0 8px", fontSize: 32, lineHeight: 1.1, fontWeight: 900 }}>
+          {isChunkError ? "Đã có bản cập nhật mới!" : "Oops."}
         </h1>
-        <p style={{ margin: 0, color: "#334155", fontSize: 16 }}>
-          We weren’t able to load this page. Please try again or return to a
-          safe page.
+        <p style={{ margin: 0, color: "#334155", fontSize: 15, fontWeight: 500 }}>
+          {isChunkError
+            ? "Hệ thống vừa được nâng cấp phiên bản mới. Vui lòng ấn Tải lại trang để tiếp tục."
+            : "We weren’t able to load this page. Please try again or return to a safe page."}
         </p>
         <pre
           style={{
@@ -51,32 +69,56 @@ export default function RouteErrorPage() {
             padding: 16,
             borderRadius: 12,
             background: "#f8fafc",
-            color: "#0f172a",
-            fontSize: 13,
+            color: "#64748b",
+            fontSize: 12,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
+            textAlign: "left",
           }}
         >
           {message}
         </pre>
         <div
-          style={{ marginTop: 24, display: "flex", justifyContent: "center" }}
+          style={{ marginTop: 24, display: "flex", gap: 12, justifyContent: "center" }}
         >
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem("ugem_chunk_reload_attempted");
+              window.location.reload();
+            }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "12px 24px",
+              borderRadius: 999,
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Tải lại trang
+          </button>
           <Link
-            to="/login"
+            to="/customer/orders"
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               padding: "12px 20px",
               borderRadius: 999,
-              background: "#2563eb",
-              color: "#fff",
+              background: "#f1f5f9",
+              color: "#334155",
               textDecoration: "none",
               fontWeight: 700,
+              fontSize: 14,
             }}
           >
-            Go to login
+            Đơn hàng của tôi
           </Link>
         </div>
       </div>
