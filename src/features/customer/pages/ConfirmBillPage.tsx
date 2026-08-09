@@ -13,6 +13,7 @@ import {
   requestCashPayment,
 } from "@/features/customer/services/orderService";
 import { verifyCheckIn } from "@/shared/services/checkInService";
+import { getUserProfile } from "@/shared/services/userService";
 import { ModeToggle } from "@/shared/components";
 import type { CustomerOrderSummary } from "@/shared/types";
 
@@ -116,10 +117,11 @@ function removeAccents(str: string): string {
 
 function getBankTransferDescription(
   orderId?: string | null,
+  userName?: string | null,
 ) {
   if (!orderId) return "UGEM CHUYEN TIEN";
   const user = getCurrentUser();
-  const rawName = user?.Name || "";
+  const rawName = userName || user?.Name || "";
   const nameClean = rawName ? removeAccents(rawName) : "";
   const shortId = orderId.split("-")[0].toUpperCase();
   return nameClean
@@ -131,10 +133,11 @@ function getBankTransferInfo(
   bill: Bill | null,
   orderId: string | null | undefined,
   finalPrice: number,
+  userName?: string | null,
 ) {
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
-  const description = getBankTransferDescription(orderId);
+  const description = getBankTransferDescription(orderId, userName);
 
   const amount = Math.round(
     Number(bill?.totalAmount ?? finalPrice ?? 0),
@@ -178,6 +181,19 @@ export default function ConfirmBillPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [userProfileName, setUserProfileName] = useState<string | null>(() => {
+    const user = getCurrentUser();
+    return user?.Name || null;
+  });
+
+  useEffect(() => {
+    getUserProfile()
+      .then((profile) => {
+        const name = profile?.fullName || profile?.name;
+        if (name) setUserProfileName(name);
+      })
+      .catch(() => undefined);
+  }, []);
 
   function copyToClipboard(text: string, field: string) {
     if (!text) return;
@@ -193,8 +209,8 @@ export default function ConfirmBillPage() {
   const finalPrice = bill?.finalPrice ?? 0;
   const items = useMemo(() => bill?.items ?? [], [bill]);
   const bankTransferInfo = useMemo(
-    () => getBankTransferInfo(bill, billOrderId, finalPrice),
-    [bill, billOrderId, finalPrice],
+    () => getBankTransferInfo(bill, billOrderId, finalPrice, userProfileName),
+    [bill, billOrderId, finalPrice, userProfileName],
   );
 
   const finishCheckIn = useCallback(async () => {
