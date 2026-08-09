@@ -512,7 +512,7 @@ export default function CustomerOrderDetailPage() {
               </div>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
                 {isOfflineOrder
-                  ? "Vui lòng mở hóa đơn kiểm tra và hoàn tất xác nhận check-in."
+                  ? "Quán đã chuẩn bị xong món. Vui lòng mở hóa đơn để kiểm tra thông tin và tiến hành thanh toán."
                   : "Chỉ bấm xác nhận sau khi bạn đã kiểm tra và nhận đầy đủ món."}
               </p>
               <button
@@ -522,7 +522,7 @@ export default function CustomerOrderDetailPage() {
                 className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-950 dark:bg-cyan-500 px-5 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
               >
                 <Check className="h-4 w-4" />
-                {isOfflineOrder ? "Xác nhận bill" : "Đã nhận hàng"}
+                {isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng"}
               </button>
             </div>
           ) : effectiveOrderId ? (

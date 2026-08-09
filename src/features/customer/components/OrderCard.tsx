@@ -143,7 +143,7 @@ export function OrderCard({
               className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 px-3.5 py-1.5 text-xs font-black text-white hover:bg-cyan-500 transition shadow-sm"
             >
               <Check className="h-3.5 w-3.5" />
-              {isOfflineOrder ? "Xác nhận bill" : "Đã nhận hàng"}
+              {isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng"}
             </button>
           )}
 
