@@ -116,11 +116,10 @@ function removeAccents(str: string): string {
 
 function getBankTransferDescription(
   orderId?: string | null,
-  customerName?: string | null,
 ) {
   if (!orderId) return "UGEM CHUYEN TIEN";
   const user = getCurrentUser();
-  const rawName = user?.Name || customerName || "";
+  const rawName = user?.Name || "";
   const nameClean = rawName ? removeAccents(rawName) : "";
   const shortId = orderId.split("-")[0].toUpperCase();
   return nameClean
@@ -135,16 +134,7 @@ function getBankTransferInfo(
 ) {
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
-  const user = getCurrentUser();
-  const currentUserName = user?.Name;
-  const orderCustomerName =
-    (bill as any)?.customerName ||
-    (bill as any)?.order?.customer?.user?.fullName;
-
-  const description = getBankTransferDescription(
-    orderId,
-    currentUserName || orderCustomerName,
-  );
+  const description = getBankTransferDescription(orderId);
 
   const amount = Math.round(
     Number(bill?.totalAmount ?? finalPrice ?? 0),
