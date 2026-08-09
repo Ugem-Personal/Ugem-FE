@@ -214,6 +214,23 @@ function getDetailNote(detail: MerchantOrderDetailPayload | null) {
   return detail?.notes ?? "";
 }
 
+function canConfirmPayment(
+  status?: string | null,
+  paymentStatus?: string | null,
+) {
+  const statusKey = getOrderStatusKey(status);
+  const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
+  if (isPaid) return false;
+  if (
+    statusKey === "pending" ||
+    statusKey === "rejected" ||
+    statusKey === "cancelled"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function getLockedOrderMessage(status?: string | null) {
   const statusKey = getOrderStatusKey(status);
 
@@ -782,7 +799,7 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
-                      {order.paymentStatus?.toLowerCase() !== "paid" ? (
+                      {canConfirmPayment(order.status, order.paymentStatus) ? (
                         <button
                           type="button"
                           onClick={() => void handleConfirmCashPayment(order)}
@@ -1124,7 +1141,10 @@ export default function MerchantOrdersPage() {
                         </button>
                       ) : null}
 
-                      {selectedOrder.paymentStatus?.toLowerCase() !== "paid" ? (
+                      {canConfirmPayment(
+                        selectedOrder.status,
+                        selectedOrder.paymentStatus,
+                      ) ? (
                         <button
                           type="button"
                           onClick={() =>
