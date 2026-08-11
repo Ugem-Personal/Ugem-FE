@@ -363,10 +363,6 @@ export default function MerchantOrdersPage() {
   }
 
   useEffect(() => {
-    if (detailOpen) {
-      return;
-    }
-
     let active = true;
 
     queueMicrotask(() => {
@@ -374,7 +370,9 @@ export default function MerchantOrdersPage() {
     });
 
     const pollId = window.setInterval(() => {
-      void loadOrders(() => active, { silent: true });
+      if (!detailOpen) {
+        void loadOrders(() => active, { silent: true });
+      }
     }, 4000);
 
     return () => {
@@ -1294,7 +1292,14 @@ export default function MerchantOrdersPage() {
                     </div>
                   ) : null}
                 </div>
-              ) : null}
+              ) : (
+                <div className="flex flex-col items-center justify-center p-16 text-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-cyan-500 border-t-transparent" />
+                  <p className="mt-4 text-xs font-black text-slate-500 dark:text-slate-400">
+                    Đang tải thông tin đơn hàng...
+                  </p>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
 
