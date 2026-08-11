@@ -42,21 +42,32 @@ export function OrderCard({
     order.orderType?.trim().toLowerCase() === "offline" ||
     (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
 
+  const isPaid =
+    order.paymentStatus?.toLowerCase() === "paid" ||
+    order.status?.toLowerCase() === "completed";
+
   const isBillConfirmed =
-    (order as any)?.bill?.status?.toLowerCase() === "confirmed" ||
-    order.status?.toLowerCase() === "billconfirmed";
-  const isCashPending = order.status?.toLowerCase() === "cashpending";
+    !isPaid &&
+    (((order as any)?.bill?.status?.toLowerCase() === "confirmed" &&
+      order.status?.toLowerCase() !== "ready") ||
+      order.status?.toLowerCase() === "billconfirmed");
 
-  const isReadyToConfirm = isCustomerConfirmationReady(
-    order.status,
-    isOfflineOrder ? "Offline" : "Online",
-  );
+  const isCashPending = !isPaid && order.status?.toLowerCase() === "cashpending";
 
-  const displayStatus = isBillConfirmed
-    ? "billconfirmed"
-    : isCashPending
-      ? "cashpending"
-      : order.status;
+  const isReadyToConfirm =
+    !isPaid &&
+    isCustomerConfirmationReady(
+      order.status,
+      isOfflineOrder ? "Offline" : "Online",
+    );
+
+  const displayStatus = isPaid
+    ? "completed"
+    : isBillConfirmed
+      ? "billconfirmed"
+      : isCashPending
+        ? "cashpending"
+        : order.status;
 
   let confirmButtonText = isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng";
   let confirmButtonIcon = Check;
