@@ -138,8 +138,14 @@ function getOrderTypeChipClass(orderType?: string | null) {
 function canGenerateCheckInQr(
   status?: string | null,
   orderType?: string | null,
+  paymentStatus?: string | null,
 ) {
+  const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   const statusKey = getOrderStatusKey(status);
+
+  if (isPaid || statusKey === "completed") {
+    return false;
+  }
 
   if (orderType?.trim().toLowerCase() !== "offline") {
     return false;
@@ -155,8 +161,17 @@ function canGenerateCheckInQr(
 function getOrderActionMessage(
   status?: string | null,
   orderType?: string | null,
+  paymentStatus?: string | null,
 ) {
+  const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   const statusKey = getOrderStatusKey(status);
+
+  if (isPaid || statusKey === "completed") {
+    return orderType?.trim().toLowerCase() === "offline"
+      ? "Đơn offline đã hoàn tất, đã xác nhận thanh toán."
+      : "Đơn online đã hoàn tất.";
+  }
+
   const orderTypeKey = orderType?.trim().toLowerCase();
 
   if (statusKey === "accepted") {
@@ -819,6 +834,33 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
+                      {canGenerateCheckInQr(
+                        order.status,
+                        order.orderType,
+                        order.paymentStatus,
+                      ) ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleGenerateQr(
+                              order.orderId,
+                              getOrderStatusKey(order.status) ===
+                                "billconfirmed",
+                            )
+                          }
+                          disabled={
+                            actionOrderId === order.orderId ||
+                            Boolean(qrUrls[order.orderId])
+                          }
+                          className="inline-flex items-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 transition hover:bg-cyan-500/20 disabled:opacity-50"
+                        >
+                          <QrCode size={16} />
+                          {qrUrls[order.orderId]
+                            ? "Đã tạo QR"
+                            : "Tạo mã QR check-in"}
+                        </button>
+                      ) : null}
+
                       {canConfirmPayment(
                         order.status,
                         order.paymentStatus,
@@ -836,7 +878,7 @@ export default function MerchantOrdersPage() {
                       ) : null}
 
                       <span className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400">
-                        {getOrderActionMessage(order.status, order.orderType)}
+                        {getOrderActionMessage(order.status, order.orderType, order.paymentStatus)}
                       </span>
                     </div>
                   </div>
@@ -1066,6 +1108,7 @@ export default function MerchantOrdersPage() {
                     {getOrderActionMessage(
                       selectedOrder.status,
                       selectedOrder.orderType,
+                      selectedOrder.paymentStatus,
                     )}
                   </div>
 
@@ -1142,6 +1185,7 @@ export default function MerchantOrdersPage() {
                       {canGenerateCheckInQr(
                         selectedOrder.status,
                         selectedOrder.orderType,
+                        selectedOrder.paymentStatus,
                       ) ? (
                         <button
                           type="button"

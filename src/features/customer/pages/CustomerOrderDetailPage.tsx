@@ -559,7 +559,7 @@ export default function CustomerOrderDetailPage() {
 
         {/* Order Status Timeline Stepper */}
         <OrderStatusTimeline
-          status={displayOrderStatus}
+          status={isCompleted ? "Completed" : displayOrderStatus}
           orderType={isOfflineOrder ? "Offline" : "Online"}
           orderedAt={summaryOrder?.orderedAt}
         />
