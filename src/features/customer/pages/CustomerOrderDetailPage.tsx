@@ -543,23 +543,11 @@ export default function CustomerOrderDetailPage() {
               </button>
             </div>
           ) : isCompleted ? (
-            <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 px-5 py-4 text-xs font-bold text-emerald-900 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">🎉 Đơn hàng đã hoàn tất thành công!</p>
-                <p className="text-xs font-medium mt-0.5 text-emerald-700 dark:text-emerald-300">
-                  Cảm ơn bạn đã dùng bữa tại quán. Vui lòng để lại đánh giá về trải nghiệm của bạn bên dưới.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  document.getElementById("review-section")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition"
-              >
-                <Star className="h-3.5 w-3.5 fill-white" />
-                Đánh giá ngay
-              </button>
+            <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 px-5 py-4 text-xs font-bold text-emerald-900 dark:text-emerald-200">
+              <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">🎉 Đơn hàng đã hoàn tất thành công!</p>
+              <p className="text-xs font-medium mt-0.5 text-emerald-700 dark:text-emerald-300">
+                Cảm ơn bạn đã sử dụng dịch vụ. Vui lòng kéo xuống dưới để gửi đánh giá trải nghiệm nhé.
+              </p>
             </div>
           ) : effectiveOrderId ? (
             <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 px-5 py-4 text-xs font-bold text-amber-900 dark:text-amber-200">
