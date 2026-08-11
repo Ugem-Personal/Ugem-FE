@@ -44,6 +44,8 @@ type CheckoutDialogProps = {
   open: boolean;
   merchantId: string;
   total: number;
+  merchantLatitude?: number;
+  merchantLongitude?: number;
   defaultRecipientName?: string;
   defaultOrderType?: CustomerOrderType;
   submitting: boolean;
@@ -93,6 +95,8 @@ export function CheckoutDialog({
   open,
   merchantId,
   total,
+  merchantLatitude,
+  merchantLongitude,
   defaultRecipientName = "",
   defaultOrderType = "Online",
   submitting,
@@ -117,6 +121,19 @@ export function CheckoutDialog({
   >([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const merchantProximity = useMemo(() => {
+    if (
+      Number.isFinite(merchantLatitude) &&
+      Number.isFinite(merchantLongitude)
+    ) {
+      return {
+        lat: merchantLatitude as number,
+        lng: merchantLongitude as number,
+      };
+    }
+    return null;
+  }, [merchantLatitude, merchantLongitude]);
 
   useEffect(() => {
     if (!open) return;
@@ -307,6 +324,7 @@ export function CheckoutDialog({
             <DeliveryLocationPicker
               value={deliveryLocation}
               error={errors.deliveryAddress}
+              proximity={merchantProximity}
               onChange={(location) => {
                 setDeliveryLocation(location);
                 setErrors((current) => ({ ...current, deliveryAddress: "" }));

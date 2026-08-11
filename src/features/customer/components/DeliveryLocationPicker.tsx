@@ -23,12 +23,14 @@ const LOCATION_SAMPLE_TIMEOUT_MS = 12_000;
 type DeliveryLocationPickerProps = {
   value: DeliveryLocation;
   error?: string;
+  proximity?: { lat: number; lng: number } | null;
   onChange: (value: DeliveryLocation) => void;
 };
 
 export function DeliveryLocationPicker({
   value,
   error,
+  proximity,
   onChange,
 }: DeliveryLocationPickerProps) {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,7 +69,16 @@ export function DeliveryLocationPicker({
     setSearching(true);
     searchTimerRef.current = setTimeout(async () => {
       try {
-        const results = await searchGeocodeAddress(query, { size: 6 });
+        const proximityToUse =
+          proximity ||
+          (value.latitude && value.longitude
+            ? { lat: value.latitude, lng: value.longitude }
+            : null);
+
+        const results = await searchGeocodeAddress(query, {
+          size: 6,
+          proximity: proximityToUse,
+        });
         if (sequence === searchSequenceRef.current) {
           setSuggestions(results);
           setStatusMessage(

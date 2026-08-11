@@ -178,14 +178,22 @@ export async function geocodeAddress(
     (item) => Number.isFinite(item.lat) && Number.isFinite(item.lng),
   );
 
-  // If proximity provided, sort by distance to improve local relevance
-  if (opts.proximity && results.length > 0) {
-    const { lat: pLat, lng: pLng } = opts.proximity;
+  // If proximity provided or defaulted, sort by distance and prioritize local delivery area (<=60km)
+  const effectiveProximity = opts.proximity ?? { lat: 10.762622, lng: 106.660172 };
+  if (effectiveProximity && results.length > 0) {
+    const { lat: pLat, lng: pLng } = effectiveProximity;
     results.sort(
       (a, b) =>
         haversineDistanceKm(pLat, pLng, a.lat, a.lng) -
         haversineDistanceKm(pLat, pLng, b.lat, b.lng),
     );
+
+    const localResults = results.filter(
+      (item) => haversineDistanceKm(pLat, pLng, item.lat, item.lng) <= 60,
+    );
+    if (localResults.length > 0) {
+      return localResults;
+    }
   }
 
   return results;
@@ -198,17 +206,17 @@ export async function searchGeocodeAddress(
   const query = text.trim();
   if (!query) return [];
 
-  if (opts.proximity) {
-    const proxiedResults = await geocodeAddress(query, opts);
-    if (proxiedResults.length > 0) {
-      return proxiedResults;
-    }
+  const effectiveOptions = {
+    ...opts,
+    proximity: opts.proximity ?? { lat: 10.762622, lng: 106.660172 },
+  };
+
+  const proxiedResults = await geocodeAddress(query, effectiveOptions);
+  if (proxiedResults.length > 0) {
+    return proxiedResults;
   }
 
-  const fallbackOptions = opts.proximity
-    ? { ...opts, proximity: undefined }
-    : opts;
-  return geocodeAddress(query, fallbackOptions);
+  return geocodeAddress(query, { ...opts, proximity: undefined });
 }
 
 async function getPlaceByRefId(

@@ -901,6 +901,8 @@ export default function MerchantDetailPage() {
             open={checkoutOpen}
             merchantId={merchant.id}
             total={total}
+            merchantLatitude={merchant.latitude}
+            merchantLongitude={merchant.longitude}
             defaultRecipientName={currentUser?.Name || ""}
             defaultOrderType={isOfflineOrder ? "Offline" : "Online"}
             submitting={ordering}
