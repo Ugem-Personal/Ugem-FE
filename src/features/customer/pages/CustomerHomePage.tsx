@@ -931,6 +931,16 @@ export default function CustomerHomePage() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleOpenMyOrders}
+              aria-label="Xem đơn hàng của tôi"
+              className="h-11 gap-2 rounded-xl border-cyan-200 dark:border-cyan-500/30 bg-white/90 dark:bg-slate-900/90 px-3 font-black text-slate-800 dark:text-slate-100 shadow-xs backdrop-blur-lg hover:bg-cyan-50 dark:hover:bg-cyan-950/40"
+            >
+              <ShoppingBag className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+              <span className="hidden sm:inline">Đơn hàng của tôi</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               onClick={handleOpenWishlist}
               aria-label="Mở danh sách quán yêu thích"
               className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-500/30 bg-white/90 dark:bg-slate-900/90 px-3 font-black text-slate-800 dark:text-slate-100 shadow-xs backdrop-blur-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
