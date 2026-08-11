@@ -236,6 +236,7 @@ export default function MerchantDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const CART_STORAGE_KEY = id ? `ugem_cart_${id}` : null;
+  const CART_OPEN_STORAGE_KEY = id ? `ugem_cart_open_${id}` : null;
   const CHECKOUT_STORAGE_KEY = id ? `ugem_checkout_${id}` : null;
 
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -258,7 +259,17 @@ export default function MerchantDetailPage() {
   const [selectedFoodCategory, setSelectedFoodCategory] = useState("");
 
   const [showReviews, setShowReviews] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState<boolean>(() => {
+    if (!CART_OPEN_STORAGE_KEY || !CART_STORAGE_KEY) return false;
+    try {
+      const savedCart = sessionStorage.getItem(CART_STORAGE_KEY);
+      const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+      if (!Array.isArray(parsedCart) || parsedCart.length === 0) return false;
+      return sessionStorage.getItem(CART_OPEN_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
   const [checkoutOpen, setCheckoutOpen] = useState<boolean>(() => {
     if (!CHECKOUT_STORAGE_KEY || !CART_STORAGE_KEY) return false;
     try {
@@ -285,6 +296,19 @@ export default function MerchantDetailPage() {
       console.error("Failed to save cart to sessionStorage", e);
     }
   }, [cart, CART_STORAGE_KEY]);
+
+  useEffect(() => {
+    if (!CART_OPEN_STORAGE_KEY) return;
+    try {
+      if (cartOpen && cart.length > 0) {
+        sessionStorage.setItem(CART_OPEN_STORAGE_KEY, "true");
+      } else {
+        sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.error("Failed to save cartOpen to sessionStorage", e);
+    }
+  }, [cartOpen, cart.length, CART_OPEN_STORAGE_KEY]);
 
   useEffect(() => {
     if (!CHECKOUT_STORAGE_KEY) return;
@@ -380,17 +404,6 @@ export default function MerchantDetailPage() {
       .catch(() => undefined);
   }, [id, currentUser]);
 
-  useEffect(() => {
-    if (!isOfflineOrder) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setCart([]);
-      setCartOpen(false);
-      closeAddFoodModal();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isOfflineOrder]);
 
   useEffect(() => {
     if (!affiliateRef || !currentUser || currentUser.Role === "Customer") {
@@ -461,6 +474,7 @@ export default function MerchantDetailPage() {
       );
 
       if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
+      if (CART_OPEN_STORAGE_KEY) sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
       if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
       setCart([]);
       setCartOpen(false);
@@ -549,6 +563,7 @@ export default function MerchantDetailPage() {
 
   function clearCart() {
     if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
+    if (CART_OPEN_STORAGE_KEY) sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
     if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
     setCart([]);
     setCartOpen(false);

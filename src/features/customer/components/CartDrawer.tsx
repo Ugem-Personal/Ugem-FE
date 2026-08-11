@@ -46,7 +46,7 @@ export function CartDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end bg-slate-950/60 p-4 backdrop-blur-md sm:items-stretch sm:justify-end sm:p-0 transition-opacity"
+      className="fixed inset-0 z-50 flex items-end bg-slate-950/35 p-4 backdrop-blur-xs sm:items-stretch sm:justify-end sm:p-0 transition-opacity"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cart-drawer-title"
@@ -129,11 +129,14 @@ export function CartDrawer({
                     {onEditItem && (
                       <button
                         type="button"
-                        onClick={() => onEditItem(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditItem(item);
+                        }}
                         title="Chỉnh sửa ghi chú & topping"
-                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-white/10 grid place-items-center text-xs text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600 transition"
+                        className="h-8 w-8 shrink-0 rounded-xl border border-cyan-500/30 bg-cyan-500/10 grid place-items-center text-xs text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/60 active:scale-95 transition cursor-pointer"
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                       </button>
                     )}
                     <button
