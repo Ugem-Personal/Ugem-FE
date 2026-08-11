@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Clock,
-  ExternalLink,
   Heart,
   List,
   Loader2,
@@ -1024,34 +1023,17 @@ export default function CustomerHomePage() {
                     ) : null}
                   </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                  <div className="pt-2 border-t border-slate-100 dark:border-white/10">
                     <Button
                       type="button"
                       size="sm"
                       onClick={() =>
                         navigate(`/customer/merchant/${selectedMerchant.id}?mode=offline&backTo=/customer`)
                       }
-                      className="h-9 flex-1 gap-1.5 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-3 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500"
+                      className="h-10 w-full gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500 transition"
                     >
-                      <Store className="h-3.5 w-3.5" /> Đặt món trước (Ghé lấy)
+                      <Store className="h-4 w-4" /> Đặt món trước (Ghé lấy / Ăn tại quán)
                     </Button>
-                    {selectedMerchant.latitude && selectedMerchant.longitude && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          window.open(
-                            `https://maps.vietmap.vn/@${selectedMerchant.latitude},${selectedMerchant.longitude},16z`,
-                            "_blank",
-                            "noopener,noreferrer"
-                          )
-                        }
-                        className="h-9 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Chỉ đường VietMap
-                      </Button>
-                    )}
                   </div>
                 </div>
               )}
