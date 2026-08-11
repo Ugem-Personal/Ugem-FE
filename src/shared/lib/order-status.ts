@@ -82,6 +82,10 @@ export function isCustomerConfirmationReady(
   const statusKey = normalizeOrderStatus(status);
   const orderTypeKey = orderType?.trim().toLowerCase();
 
+  if (statusKey === "billconfirmed" || statusKey === "cashpending") {
+    return true;
+  }
+
   return orderTypeKey === "offline"
     ? statusKey === "ready"
     : statusKey === "delivering";

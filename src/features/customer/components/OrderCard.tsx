@@ -7,6 +7,7 @@ import {
   Store,
   Check,
   XCircle,
+  QrCode,
 } from "lucide-react";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { OrderStatusBadge } from "./OrderStatusBadge";
@@ -41,10 +42,34 @@ export function OrderCard({
     order.orderType?.trim().toLowerCase() === "offline" ||
     (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
 
+  const isBillConfirmed =
+    (order as any)?.bill?.status?.toLowerCase() === "confirmed" ||
+    order.status?.toLowerCase() === "billconfirmed";
+  const isCashPending = order.status?.toLowerCase() === "cashpending";
+
   const isReadyToConfirm = isCustomerConfirmationReady(
     order.status,
     isOfflineOrder ? "Offline" : "Online",
   );
+
+  const displayStatus = isBillConfirmed
+    ? "billconfirmed"
+    : isCashPending
+      ? "cashpending"
+      : order.status;
+
+  let confirmButtonText = isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng";
+  let confirmButtonIcon = Check;
+
+  if (isBillConfirmed) {
+    confirmButtonText = "Xem mã QR thanh toán";
+    confirmButtonIcon = QrCode;
+  } else if (isCashPending) {
+    confirmButtonText = "Chờ quán xác nhận tiền mặt";
+    confirmButtonIcon = Clock;
+  }
+
+  const ButtonIcon = confirmButtonIcon;
 
   return (
     <div
@@ -102,7 +127,7 @@ export function OrderCard({
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-3">
-          <OrderStatusBadge status={order.status} />
+          <OrderStatusBadge status={displayStatus} />
 
           <span className="text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">
             {formatCurrency(order.finalPrice)}
@@ -152,10 +177,17 @@ export function OrderCard({
                 e.stopPropagation();
                 onQuickConfirm(order);
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 px-3.5 py-1.5 text-xs font-black text-white hover:bg-cyan-500 transition shadow-sm"
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-black transition shadow-sm",
+                isBillConfirmed
+                  ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400 font-bold"
+                  : isCashPending
+                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                    : "bg-cyan-600 text-white hover:bg-cyan-500",
+              )}
             >
-              <Check className="h-3.5 w-3.5" />
-              {isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng"}
+              <ButtonIcon className="h-3.5 w-3.5" />
+              {confirmButtonText}
             </button>
           )}
 

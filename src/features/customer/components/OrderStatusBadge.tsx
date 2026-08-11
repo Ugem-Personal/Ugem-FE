@@ -97,6 +97,20 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     icon: Ban,
     description: "Đơn hàng đã bị hủy",
   },
+  billconfirmed: {
+    label: "Chờ chuyển khoản",
+    className:
+      "border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 font-bold",
+    icon: Sparkles,
+    description: "Khách đã xác nhận hóa đơn, đang mở QR thanh toán",
+  },
+  cashpending: {
+    label: "Chờ xác nhận tiền mặt",
+    className:
+      "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold",
+    icon: Banknote,
+    description: "Khách đã yêu cầu thanh toán bằng tiền mặt",
+  },
 };
 
 const PAYMENT_STATUS_CONFIG: Record<string, StatusConfig> = {

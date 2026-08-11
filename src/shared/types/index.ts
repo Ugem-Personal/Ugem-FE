@@ -96,6 +96,12 @@ export type CustomerOrderSummary = {
   discount?: number;
   finalPrice: number;
   status: string;
+  paymentStatus?: string;
+  bill?: {
+    id?: string;
+    status?: string;
+    method?: string;
+  } | null;
   orderedAt: string;
   notes?: string;
   deliveryAddress: string;
