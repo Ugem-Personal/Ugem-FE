@@ -323,7 +323,7 @@ export default function CustomerHomePage() {
 
     return `${displayedMerchants.length} địa điểm`;
   }, [displayedMerchants.length, loading]);
-  const hasMapSearch = keyword.trim().length > 0;
+
 
   const loadMerchants = useCallback(
     async (
@@ -951,7 +951,7 @@ export default function CustomerHomePage() {
           </div>
         </header>
 
-        {showMerchantPanel && hasMapSearch && (
+        {showMerchantPanel && (
           <aside className="pointer-events-auto absolute bottom-4 left-4 top-52 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
             <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-5 py-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
