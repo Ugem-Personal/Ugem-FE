@@ -16,7 +16,7 @@ import {
   Utensils,
   X,
 } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { notify } from "@/shared/lib/notify";
 
 import logoUrl from "@/assets/ugem-logo.png";
@@ -261,6 +261,10 @@ function getMerchantPriceRange(merchant: Merchant) {
 
 export default function CustomerHomePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTabIsMap =
+    searchParams.get("tab") === "map" || searchParams.get("mode") === "dinein";
+
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
@@ -285,9 +289,10 @@ export default function CustomerHomePage() {
     null,
   );
   const [, setCandidateAccuracy] = useState<number | null>(null);
-  const [serviceMode, setServiceMode] =
-    useState<CustomerServiceMode>("delivery");
-  const [showMap, setShowMap] = useState(false);
+  const [serviceMode, setServiceMode] = useState<CustomerServiceMode>(
+    initialTabIsMap ? "dineIn" : "delivery",
+  );
+  const [showMap, setShowMap] = useState(initialTabIsMap);
   const [showMerchantPanel, setShowMerchantPanel] = useState(true);
   const [showRoutePanel, setShowRoutePanel] = useState(true);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(
@@ -598,10 +603,26 @@ export default function CustomerHomePage() {
       setShowMap(true);
       setShowMerchantPanel(true);
       setShowRoutePanel(true);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("tab", "map");
+          return next;
+        },
+        { replace: true },
+      );
       return;
     }
 
     setShowMap(false);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", "delivery");
+        return next;
+      },
+      { replace: true },
+    );
   }
 
   async function handleRefreshCustomerLocation() {
@@ -1023,16 +1044,28 @@ export default function CustomerHomePage() {
                     ) : null}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 dark:border-white/10">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/customer/merchants/${selectedMerchant.id}?backTo=/customer`)
+                      }
+                      className="h-10 flex-1 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    >
+                      <Utensils className="h-3.5 w-3.5 text-amber-500" /> Xem Menu quán
+                    </Button>
+
                     <Button
                       type="button"
                       size="sm"
                       onClick={() =>
-                        navigate(`/customer/merchant/${selectedMerchant.id}?mode=offline&backTo=/customer`)
+                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=offline&backTo=/customer`)
                       }
-                      className="h-10 w-full gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500 transition"
+                      className="h-10 flex-1 gap-1.5 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-3 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500 transition"
                     >
-                      <Store className="h-4 w-4" /> Đặt món trước (Ghé lấy / Ăn tại quán)
+                      <Store className="h-3.5 w-3.5" /> Đặt món trước (Ghé lấy)
                     </Button>
                   </div>
                 </div>
