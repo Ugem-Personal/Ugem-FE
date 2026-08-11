@@ -893,39 +893,7 @@ export default function CustomerHomePage() {
         <div className="absolute inset-0">{mapCanvas}</div>
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-52 bg-linear-to-b from-white/90 dark:from-slate-950/90 via-white/60 dark:via-slate-950/60 to-transparent" />
 
-        <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-4 px-4 py-4 lg:px-6">
-          {showMerchantPanel && (
-            <div className="pointer-events-auto w-full max-w-96 rounded-3xl border border-white/60 dark:border-white/10 bg-white/80 dark:bg-slate-900/85 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-300">
-              <div className="flex items-center justify-between gap-3">
-                <Link to="/customer" className="flex items-center gap-2">
-                  <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
-                </Link>
-                <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3.5 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
-                  {merchantCountText}
-                </span>
-              </div>
-
-              <form onSubmit={handleSearch} className="mt-4 flex gap-2">
-                <Input
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="Tìm quán, món ăn..."
-                  className="h-11 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 px-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs focus:border-cyan-600"
-                />
-                <Button
-                  type="submit"
-                  className="h-11 shrink-0 gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 font-black shadow-md shadow-cyan-600/20"
-                  disabled={loading}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </form>
-
-              {renderServiceModeTabs("mt-3")}
-              {renderPriceRangeFilters("mt-3")}
-            </div>
-          )}
-
+        <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex items-start justify-between gap-4 p-4 lg:p-6">
           <div className="pointer-events-auto ml-auto flex max-w-full flex-wrap items-center justify-end gap-2.5">
             <Button
               type="button"
@@ -952,25 +920,46 @@ export default function CustomerHomePage() {
         </header>
 
         {showMerchantPanel && (
-          <aside className="pointer-events-auto absolute bottom-4 left-4 top-52 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
-            <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-5 py-4 backdrop-blur-sm">
+          <aside className="pointer-events-auto absolute bottom-4 left-4 top-4 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="shrink-0 border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Kết quả địa điểm</h2>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Bấm quán để xem chỉ đường chi tiết
-                  </p>
+                <Link to="/customer" className="flex items-center gap-2">
+                  <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
+                    {merchantCountText}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOpenMyOrders}
+                    className="h-7 gap-1 rounded-xl border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950 px-2.5 text-[11px] font-black text-cyan-800 dark:text-cyan-300 shadow-2xs hover:bg-cyan-100 dark:hover:bg-cyan-900"
+                  >
+                    <ShoppingBag className="h-3 w-3" /> Đơn hàng
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleOpenMyOrders}
-                  className="h-8 gap-1.5 rounded-xl border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950 px-3 text-xs font-black text-cyan-800 dark:text-cyan-300 shadow-2xs hover:bg-cyan-100 dark:hover:bg-cyan-900"
-                >
-                  <ShoppingBag className="h-3.5 w-3.5" /> Đơn hàng
-                </Button>
               </div>
+
+              <form onSubmit={handleSearch} className="mt-4 flex gap-2">
+                <Input
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="Tìm quán, món ăn..."
+                  className="h-11 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 px-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs focus:border-cyan-600"
+                />
+                <Button
+                  type="submit"
+                  className="h-11 shrink-0 gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 font-black shadow-md shadow-cyan-600/20"
+                  disabled={loading}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </form>
+
+              {renderServiceModeTabs("mt-3")}
+              {renderPriceRangeFilters("mt-3")}
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
@@ -980,7 +969,7 @@ export default function CustomerHomePage() {
         )}
 
         {showRoutePanel && (
-          <section className="pointer-events-auto absolute right-4 top-56 z-20 flex max-h-[calc(100vh-10rem)] w-[min(480px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+          <section className="pointer-events-auto absolute right-4 top-20 z-20 flex max-h-[calc(100vh-6rem)] w-[min(480px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
             <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-6 py-4 backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
