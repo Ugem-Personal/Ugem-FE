@@ -390,15 +390,18 @@ export default function CustomerOrderDetailPage() {
 
   const displayOrderStatus = orderStatus ?? summaryOrder?.status ?? null;
   const normalizedOrderStatus = displayOrderStatus?.trim().toLowerCase();
-  const isCompleted = normalizedOrderStatus === "completed";
+  const isPaid = summaryOrder?.paymentStatus?.trim().toLowerCase() === "paid";
+  const isCompleted = normalizedOrderStatus === "completed" || isPaid;
   const isOfflineOrder =
     summaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
     normalizeString(summaryOrder?.deliveryAddress) === "tai quan" ||
     normalizeString(summaryOrder?.notes).includes("offline");
-  const isConfirmationReady = isCustomerConfirmationReady(
-    displayOrderStatus,
-    isOfflineOrder ? "Offline" : "Online",
-  );
+  const isConfirmationReady =
+    !isCompleted &&
+    isCustomerConfirmationReady(
+      displayOrderStatus,
+      isOfflineOrder ? "Offline" : "Online",
+    );
   const reviewLocked = hasReviewed || submittingReview;
 
   if (loading) {
@@ -472,7 +475,7 @@ export default function CustomerOrderDetailPage() {
             </div>
 
             <div className="flex flex-col items-start sm:items-end gap-2">
-              <OrderStatusBadge status={displayOrderStatus} />
+              <OrderStatusBadge status={isCompleted ? "Completed" : displayOrderStatus} />
               <p className="text-2xl font-black tracking-tight text-cyan-600 dark:text-cyan-400 font-mono">
                 {formatPrice(total)}
               </p>
@@ -504,7 +507,7 @@ export default function CustomerOrderDetailPage() {
             </div>
           )}
 
-          {/* Ready / Confirmation Action Box */}
+          {/* Ready / Confirmation / Completion Action Box */}
           {effectiveOrderId && isConfirmationReady ? (
             <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
               <div className="font-black text-slate-950 dark:text-white text-sm">
@@ -523,6 +526,25 @@ export default function CustomerOrderDetailPage() {
               >
                 <Check className="h-4 w-4" />
                 {isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng"}
+              </button>
+            </div>
+          ) : isCompleted ? (
+            <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 px-5 py-4 text-xs font-bold text-emerald-900 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">🎉 Đơn hàng đã hoàn tất thành công!</p>
+                <p className="text-xs font-medium mt-0.5 text-emerald-700 dark:text-emerald-300">
+                  Cảm ơn bạn đã dùng bữa tại quán. Vui lòng để lại đánh giá về trải nghiệm của bạn bên dưới.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  document.getElementById("review-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition"
+              >
+                <Star className="h-3.5 w-3.5 fill-white" />
+                Đánh giá ngay
               </button>
             </div>
           ) : effectiveOrderId ? (
