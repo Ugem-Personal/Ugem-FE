@@ -97,6 +97,7 @@ export type CustomerOrderSummary = {
   finalPrice: number;
   status: string;
   paymentStatus?: string;
+  paymentMethod?: string;
   bill?: {
     id?: string;
     status?: string;

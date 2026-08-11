@@ -8,6 +8,8 @@ import {
   FileText,
   Clock,
   Receipt,
+  Copy,
+  QrCode,
 } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -88,6 +90,14 @@ export default function CustomerOrderDetailPage() {
   const [foodReviewDrafts, setFoodReviewDrafts] = useState<Record<string, { rating: number; content: string }>>({});
   const [, setActiveFoodReviewId] = useState<string | null>(null);
   const [fetchedSummaryOrder, setFetchedSummaryOrder] = useState<CustomerOrderSummary | null>(summaryOrder);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = (text: string, field: string) => {
+    void navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    notify.success("Đã sao chép vào bộ nhớ tạm!");
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   useEffect(() => {
     let active = true;
@@ -557,6 +567,91 @@ export default function CustomerOrderDetailPage() {
               )}
             </div>
           ) : null}
+          {/* VietQR SePay Payment Card for Online Orders */}
+          {!isPaid &&
+            (currentSummaryOrder?.paymentMethod === "BankTransfer" ||
+              currentSummaryOrder?.paymentMethod === "SePay" ||
+              currentSummaryOrder?.paymentMethod?.toLowerCase().includes("banktransfer") ||
+              currentSummaryOrder?.paymentMethod?.toLowerCase().includes("sepay")) &&
+            effectiveOrderId && (
+              <div className="mt-6 rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-6 shadow-xl text-white">
+                <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-cyan-500/20 p-2 text-cyan-400">
+                      <QrCode className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-base text-white">Thanh toán Chuyển khoản (VietQR / SePay)</h3>
+                      <p className="text-xs text-slate-400 font-medium">Quét mã QR bằng App Ngân hàng bất kỳ để tự động xác nhận</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-[11px] font-black text-amber-400 animate-pulse">
+                    Chờ thanh toán...
+                  </span>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  {/* QR Code Image */}
+                  <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-lg border border-white/20">
+                    <img
+                      src={`https://qr.sepay.vn/img?acc=${encodeURIComponent("123456789")}&bank=BIDV&amount=${Math.round(total)}&des=${encodeURIComponent(effectiveOrderId)}&template=qronly`}
+                      alt="Mã QR Thanh Toán SePay"
+                      className="h-52 w-52 object-contain"
+                    />
+                    <p className="mt-2 text-[11px] font-extrabold text-slate-700 text-center">
+                      Tự động xác nhận trong 1-3s sau khi nhận tiền
+                    </p>
+                  </div>
+
+                  {/* Account Info Details */}
+                  <div className="space-y-3 text-xs">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
+                      <div>
+                        <p className="text-slate-400 font-medium text-[11px]">Ngân hàng</p>
+                        <p className="font-black text-sm text-cyan-400">BIDV (NH Đầu tư & Phát triển VN)</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
+                      <div>
+                        <p className="text-slate-400 font-medium text-[11px]">Số tài khoản nhận</p>
+                        <p className="font-mono font-black text-base text-white tracking-wider">123456789</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy("123456789", "account")}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 font-bold text-cyan-300 hover:bg-cyan-500/30 transition"
+                      >
+                        {copiedField === "account" ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copiedField === "account" ? "Đã chép" : "Sao chép"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 p-3.5 flex justify-between items-center">
+                      <div>
+                        <p className="text-cyan-300 font-bold text-[11px]">Nội dung chuyển khoản (Bắt buộc)</p>
+                        <p className="font-mono font-black text-sm text-amber-300 tracking-wide">{effectiveOrderId}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(effectiveOrderId, "description")}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 px-3 py-1.5 font-black text-slate-950 hover:bg-cyan-400 transition shadow-md"
+                      >
+                        {copiedField === "description" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copiedField === "description" ? "Đã chép" : "Sao chép mã"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
+                      <div>
+                        <p className="text-slate-400 font-medium text-[11px]">Số tiền cần thanh toán</p>
+                        <p className="font-mono font-black text-lg text-emerald-400">{formatPrice(total)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Order Status Timeline Stepper */}
