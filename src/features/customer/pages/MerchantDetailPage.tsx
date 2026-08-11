@@ -587,6 +587,7 @@ export default function MerchantDetailPage() {
     setPendingNotes(cartItem.notes || "");
     setPendingToppingIds((cartItem.toppings || []).map((t) => t.id));
     setPendingMode("edit");
+    setCartOpen(false);
   }
 
   function removeFromCart(foodId: string) {
@@ -960,17 +961,27 @@ export default function MerchantDetailPage() {
               );
             }}
             onConfirm={() => {
+              const isEditing = pendingMode === "edit";
               const selectedToppings = (pendingFood.toppings ?? []).filter((topping) =>
                 pendingToppingIds.includes(topping.id),
               );
-              if (pendingMode === "edit") {
+              if (isEditing) {
                 updateCartItem(pendingFood.id, pendingQuantity, pendingNotes, selectedToppings);
               } else {
                 addToCart(pendingFood, pendingQuantity, pendingNotes, selectedToppings);
               }
               closeAddFoodModal();
+              if (isEditing) {
+                setCartOpen(true);
+              }
             }}
-            onClose={closeAddFoodModal}
+            onClose={() => {
+              const isEditing = pendingMode === "edit";
+              closeAddFoodModal();
+              if (isEditing) {
+                setCartOpen(true);
+              }
+            }}
           />
         )}
 

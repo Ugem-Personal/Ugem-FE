@@ -34,7 +34,7 @@ export function FoodOptionModal({
 }: FoodOptionModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md transition-opacity"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md transition-opacity"
       role="dialog"
       aria-modal="true"
       aria-labelledby="food-option-modal-title"
