@@ -53,7 +53,7 @@ export default function CustomerOrdersPage() {
     setLoading(true);
 
     try {
-      const statusFilter = activeTab === "all" ? undefined : activeTab;
+      const statusFilter = (activeTab === "all" || activeTab === "Cancelled") ? undefined : activeTab;
 
       const res = await getCustomerOrders({
         pageIndex,
@@ -101,9 +101,17 @@ export default function CustomerOrdersPage() {
         (order.notes ?? "").toLowerCase().includes(keyword) ||
         orderId.toLowerCase().includes(keyword);
 
-      return matchesSearch;
+      const statusLower = (order.status ?? "").toLowerCase();
+      const matchesTab =
+        activeTab === "all"
+          ? true
+          : activeTab === "Cancelled"
+            ? statusLower === "cancelled" || statusLower === "rejected"
+            : statusLower === activeTab.toLowerCase();
+
+      return matchesSearch && matchesTab;
     });
-  }, [orders, searchKeyword]);
+  }, [orders, searchKeyword, activeTab]);
 
   function handleViewDetail(
     order: CustomerOrderSummary,
