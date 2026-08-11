@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Bike,
   Check,
   ChefHat,
@@ -265,6 +266,13 @@ function getLockedOrderMessage(status?: string | null) {
   return "Chỉ có thể duyệt đơn đang ở trạng thái Pending.";
 }
 
+const QUICK_REJECT_REASONS = [
+  "Đơn không hợp lệ",
+  "Hết món / Hết nguyên liệu",
+  "Quán đang quá tải",
+  "Không thể giao tới địa chỉ này",
+];
+
 export default function MerchantOrdersPage() {
   const [orders, setOrders] = useState<MerchantOrderSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -278,6 +286,11 @@ export default function MerchantOrdersPage() {
     useState<MerchantOrderDetailPayload | null>(null);
   const [qrUrls, setQrUrls] = useState<Record<string, string>>({});
   const generatingQrRef = useRef(new Set<string>());
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTargetOrder, setRejectTargetOrder] =
+    useState<MerchantOrderSummary | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const selectedOrder = orders.find(
     (order) => order.orderId === selectedOrderId,
@@ -406,24 +419,29 @@ export default function MerchantOrdersPage() {
     }
   }
 
-  async function handleRejectOrder(order: MerchantOrderSummary) {
+  function handleRejectOrder(order: MerchantOrderSummary) {
     if (getOrderStatusKey(order.status) !== "pending") {
       notify.error(getLockedOrderMessage(order.status));
       return;
     }
 
-    const reason = window.prompt("Lý do từ chối đơn hàng")?.trim();
+    setRejectTargetOrder(order);
+    setRejectReason("Đơn không hợp lệ");
+    setRejectDialogOpen(true);
+  }
 
-    if (!reason) {
-      return;
-    }
+  async function confirmRejectOrder() {
+    if (!rejectTargetOrder || !rejectReason.trim()) return;
 
-    const { orderId } = order;
+    const { orderId } = rejectTargetOrder;
     setActionOrderId(orderId);
 
     try {
-      await rejectOrder(orderId, reason);
-      notify.success("Đã từ chối đơn.");
+      await rejectOrder(orderId, rejectReason.trim());
+      notify.success("Đã từ chối đơn hàng thành công.");
+      setRejectDialogOpen(false);
+      setRejectTargetOrder(null);
+      if (detailOpen) setDetailOpen(false);
       await loadOrders();
     } catch (error) {
       console.error(error);
@@ -1208,6 +1226,83 @@ export default function MerchantOrdersPage() {
                   ) : null}
                 </div>
               ) : null}
+            </DialogContent>
+          </Dialog>
+
+          {/* Reject Order Custom Modal */}
+          <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+            <DialogContent className="max-w-md border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 p-6 rounded-3xl text-slate-900 dark:text-white shadow-2xl backdrop-blur-2xl">
+              <DialogHeader className="text-left space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-base sm:text-lg font-black text-slate-950 dark:text-white">
+                      Từ chối đơn hàng #{rejectTargetOrder ? getShortOrderCode(rejectTargetOrder.orderId) : ""}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                      Chọn hoặc nhập lý do từ chối để phản hồi cho khách hàng.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-4 py-3">
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
+                    Lý do nhanh
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {QUICK_REJECT_REASONS.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setRejectReason(preset)}
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
+                          rejectReason === preset
+                            ? "border-rose-500 bg-rose-500/10 text-rose-600 dark:text-rose-400 shadow-xs"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                    Lý do chi tiết
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Nhập lý do chi tiết..."
+                    className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 p-3.5 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition resize-none"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setRejectDialogOpen(false)}
+                  className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/10 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/20 transition"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="button"
+                  disabled={!rejectReason.trim() || actionOrderId === rejectTargetOrder?.orderId}
+                  onClick={() => void confirmRejectOrder()}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-50"
+                >
+                  <X className="h-4 w-4" />
+                  Xác nhận từ chối
+                </button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
