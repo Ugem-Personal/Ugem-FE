@@ -1051,7 +1051,7 @@ export default function CustomerHomePage() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        navigate(`/customer/merchants/${selectedMerchant.id}?backTo=${encodeURIComponent("/customer?tab=map")}`)
+                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=dinein&backTo=${encodeURIComponent("/customer?tab=map")}`)
                       }
                       className="h-10 flex-1 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                     >
@@ -1062,7 +1062,7 @@ export default function CustomerHomePage() {
                       type="button"
                       size="sm"
                       onClick={() =>
-                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=offline&backTo=${encodeURIComponent("/customer?tab=map")}`)
+                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=takeaway&backTo=${encodeURIComponent("/customer?tab=map")}`)
                       }
                       className="h-10 flex-1 gap-1.5 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-3 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500 transition"
                     >

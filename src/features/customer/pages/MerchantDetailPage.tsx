@@ -7,6 +7,8 @@ import {
   Mail,
   Flame,
   Search,
+  Store,
+  Utensils,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -221,7 +223,10 @@ export default function MerchantDetailPage() {
     safeBack();
   };
   const currentUser = getCurrentUser();
-  const isOfflineOrder = searchParams.get("mode") === "offline";
+  const mode = searchParams.get("mode");
+  const isDineInOnly = mode === "dinein";
+  const isTakeaway = mode === "takeaway" || mode === "offline";
+  const isOfflineOrder = isTakeaway || isDineInOnly;
   const affiliateRef = searchParams.get("ref")?.trim() || undefined;
 
   const reviewSectionRef = useRef<HTMLElement | null>(null);
@@ -750,9 +755,21 @@ export default function MerchantDetailPage() {
             </div>
           )}
 
-          {isOfflineOrder && (
-            <div className="mb-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
-              Đang ở chế độ xem menu tại quán. Gọi món trực tiếp với nhân viên hoặc qua QR bàn.
+          {isTakeaway && (
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/30 px-5 py-4 text-sm font-bold text-cyan-900 dark:text-cyan-300 shadow-2xs">
+              <Store className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+              <span>
+                Chế độ <strong className="font-black text-cyan-950 dark:text-cyan-100">Đặt món trước (Ghé lấy)</strong>: Thêm món vào giỏ ➔ Đặt trước để quán chế biến sẵn, khi tới nơi nhận món ngay không cần chờ!
+              </span>
+            </div>
+          )}
+
+          {isDineInOnly && (
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
+              <Utensils className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>
+                Đang ở chế độ xem menu tại quán. Gọi món trực tiếp với nhân viên hoặc quét mã QR dán tại bàn.
+              </span>
             </div>
           )}
 
@@ -763,7 +780,7 @@ export default function MerchantDetailPage() {
                   key={food.id}
                   food={food}
                   cartQuantity={getCartQuantity(cart, food.id)}
-                  isOfflineOrder={isOfflineOrder}
+                  isOfflineOrder={isDineInOnly}
                   onOpenModal={openAddFoodModal}
                 />
               ))}
@@ -905,7 +922,7 @@ export default function MerchantDetailPage() {
             merchantLatitude={merchant.latitude}
             merchantLongitude={merchant.longitude}
             defaultRecipientName={currentUser?.Name || ""}
-            defaultOrderType={isOfflineOrder ? "Offline" : "Online"}
+            defaultOrderType={isTakeaway ? "Offline" : "Online"}
             submitting={ordering}
             onOpenChange={(open) => {
               setCheckoutOpen(open);
