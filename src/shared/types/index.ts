@@ -102,6 +102,7 @@ export type CustomerOrderSummary = {
   deliveryLatitude?: number | null;
   deliveryLongitude?: number | null;
   orderType?: string;
+  rejectionReason?: string | null;
 };
 
 export type CustomerOrderDetailItem = {

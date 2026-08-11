@@ -6,6 +6,7 @@ import {
   Star,
   Store,
   Check,
+  XCircle,
 } from "lucide-react";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { OrderStatusBadge } from "./OrderStatusBadge";
@@ -124,6 +125,17 @@ export function OrderCard({
             <span className="line-clamp-2">Ghi chú: {order.notes}</span>
           </div>
         )}
+
+        {order.rejectionReason &&
+          (order.status?.toLowerCase() === "rejected" ||
+            order.status?.toLowerCase() === "cancelled") && (
+            <div className="flex items-start gap-2 rounded-2xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/80 dark:bg-rose-950/60 p-2.5 text-rose-900 dark:text-rose-200">
+              <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+              <span className="line-clamp-2 font-bold">
+                Lý do từ chối: {order.rejectionReason}
+              </span>
+            </div>
+          )}
       </div>
 
       {/* Bottom Bar: Action buttons */}
