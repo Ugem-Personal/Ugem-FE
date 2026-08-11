@@ -510,7 +510,7 @@ export function CheckoutDialog({
             </button>
             <button
               type="submit"
-              disabled={submitting || checkingCampaign}
+              disabled={submitting || checkingCampaign || total <= 0}
               className="inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 text-sm font-black text-white shadow-lg shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

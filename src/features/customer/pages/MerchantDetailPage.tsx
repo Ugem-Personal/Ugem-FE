@@ -260,8 +260,11 @@ export default function MerchantDetailPage() {
   const [showReviews, setShowReviews] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState<boolean>(() => {
-    if (!CHECKOUT_STORAGE_KEY) return false;
+    if (!CHECKOUT_STORAGE_KEY || !CART_STORAGE_KEY) return false;
     try {
+      const savedCart = sessionStorage.getItem(CART_STORAGE_KEY);
+      const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+      if (!Array.isArray(parsedCart) || parsedCart.length === 0) return false;
       return sessionStorage.getItem(CHECKOUT_STORAGE_KEY) === "true";
     } catch {
       return false;
@@ -286,7 +289,7 @@ export default function MerchantDetailPage() {
   useEffect(() => {
     if (!CHECKOUT_STORAGE_KEY) return;
     try {
-      if (checkoutOpen) {
+      if (checkoutOpen && cart.length > 0) {
         sessionStorage.setItem(CHECKOUT_STORAGE_KEY, "true");
       } else {
         sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
@@ -294,7 +297,7 @@ export default function MerchantDetailPage() {
     } catch (e) {
       console.error("Failed to save checkout state to sessionStorage", e);
     }
-  }, [checkoutOpen, CHECKOUT_STORAGE_KEY]);
+  }, [checkoutOpen, cart.length, CHECKOUT_STORAGE_KEY]);
 
 
   const total = useMemo(() => {
