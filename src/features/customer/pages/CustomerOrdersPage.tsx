@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ShoppingBag,
@@ -32,11 +32,16 @@ type OrderFilterTab =
 export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const handleBack = useSafeBack("/customer");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialTab = (searchParams.get("status") as OrderFilterTab) || "all";
+  const initialPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
   const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<OrderFilterTab>("all");
+  const [activeTab, setActiveTab] = useState<OrderFilterTab>(initialTab);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [pageIndex, setPageIndex] = useState(1);
+  const [pageIndex, setPageIndex] = useState(initialPage);
   const [paginationMeta, setPaginationMeta] = useState<{
     pageIndex: number;
     pageSize: number;
@@ -222,8 +227,10 @@ export default function CustomerOrdersPage() {
               <button
                 key={tab.key}
                 onClick={() => {
-                  setActiveTab(tab.key as OrderFilterTab);
+                  const nextTab = tab.key as OrderFilterTab;
+                  setActiveTab(nextTab);
                   setPageIndex(1);
+                  setSearchParams({ status: nextTab, page: "1" }, { replace: true });
                 }}
                 className={`rounded-xl px-4 py-2 text-xs font-black transition ${
                   activeTab === tab.key
@@ -298,7 +305,11 @@ export default function CustomerOrdersPage() {
           <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-4 shadow-2xs backdrop-blur-md">
             <button
               type="button"
-              onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
+              onClick={() => {
+                const nextP = Math.max(1, pageIndex - 1);
+                setPageIndex(nextP);
+                setSearchParams({ status: activeTab, page: String(nextP) }, { replace: true });
+              }}
               disabled={pageIndex <= 1 || loading}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40"
             >
@@ -309,7 +320,11 @@ export default function CustomerOrdersPage() {
             </span>
             <button
               type="button"
-              onClick={() => setPageIndex((p) => Math.min(paginationMeta.totalPages, p + 1))}
+              onClick={() => {
+                const nextP = Math.min(paginationMeta.totalPages, pageIndex + 1);
+                setPageIndex(nextP);
+                setSearchParams({ status: activeTab, page: String(nextP) }, { replace: true });
+              }}
               disabled={pageIndex >= paginationMeta.totalPages || loading}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40"
             >

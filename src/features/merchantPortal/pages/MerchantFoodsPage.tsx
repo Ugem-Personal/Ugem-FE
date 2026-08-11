@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import {
   ChevronLeft,
@@ -62,6 +63,11 @@ import {
 
 export function MerchantFoodsPage() {
   const handleBack = useSafeBack("/merchant");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialCat = searchParams.get("category") || "all";
+  const initialStatus =
+    (searchParams.get("status") as "all" | "available" | "unavailable") || "all";
 
   // Data state
   const [foods, setFoods] = useState<Food[]>([]);
@@ -71,8 +77,8 @@ export function MerchantFoodsPage() {
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "available" | "unavailable">("all");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>(initialCat);
+  const [statusFilter, setStatusFilter] = useState<"all" | "available" | "unavailable">(initialStatus);
 
   // Form state (Create / Edit)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
@@ -851,7 +857,15 @@ export function MerchantFoodsPage() {
                   <Filter size={14} className="text-slate-400" />
                   <select
                     value={selectedCategoryFilter}
-                    onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedCategoryFilter(val);
+                      setSearchParams((prev) => {
+                        const next = new URLSearchParams(prev);
+                        next.set("category", val);
+                        return next;
+                      }, { replace: true });
+                    }}
                     className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-cyan-500"
                   >
                     <option value="all">Tất cả loại món ({foodTypeCategories.length})</option>
@@ -867,7 +881,14 @@ export function MerchantFoodsPage() {
                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl">
                   <button
                     type="button"
-                    onClick={() => setStatusFilter("all")}
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setSearchParams((prev) => {
+                        const next = new URLSearchParams(prev);
+                        next.set("status", "all");
+                        return next;
+                      }, { replace: true });
+                    }}
                     className={`px-3 py-1.5 text-xs font-bold rounded-xl transition ${
                       statusFilter === "all"
                         ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
@@ -878,7 +899,14 @@ export function MerchantFoodsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStatusFilter("available")}
+                    onClick={() => {
+                      setStatusFilter("available");
+                      setSearchParams((prev) => {
+                        const next = new URLSearchParams(prev);
+                        next.set("status", "available");
+                        return next;
+                      }, { replace: true });
+                    }}
                     className={`px-3 py-1.5 text-xs font-bold rounded-xl transition ${
                       statusFilter === "available"
                         ? "bg-emerald-500 text-white shadow-xs"
@@ -889,7 +917,14 @@ export function MerchantFoodsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStatusFilter("unavailable")}
+                    onClick={() => {
+                      setStatusFilter("unavailable");
+                      setSearchParams((prev) => {
+                        const next = new URLSearchParams(prev);
+                        next.set("status", "unavailable");
+                        return next;
+                      }, { replace: true });
+                    }}
                     className={`px-3 py-1.5 text-xs font-bold rounded-xl transition ${
                       statusFilter === "unavailable"
                         ? "bg-amber-500 text-white shadow-xs"

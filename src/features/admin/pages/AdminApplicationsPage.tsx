@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -207,7 +207,11 @@ export default function AdminApplicationsPage({
   showTabs = true,
   embedded = false,
 }: ApplicationsPageProps) {
-  const [selectedTab, setSelectedTab] = useState<ApplicationTab>(initialTab);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialParamTab =
+    (searchParams.get("tab") as ApplicationTab) || initialTab;
+
+  const [selectedTab, setSelectedTab] = useState<ApplicationTab>(initialParamTab);
   const [searchTerm, setSearchTerm] = useState("");
   const activeTab = showTabs ? selectedTab : initialTab;
 
@@ -428,7 +432,17 @@ export default function AdminApplicationsPage({
                         return (
                           <button
                             key={item.key}
-                            onClick={() => setSelectedTab(item.key)}
+                            onClick={() => {
+                              setSelectedTab(item.key);
+                              setSearchParams(
+                                (prev) => {
+                                  const next = new URLSearchParams(prev);
+                                  next.set("tab", item.key);
+                                  return next;
+                                },
+                                { replace: true },
+                              );
+                            }}
                             className={`flex flex-1 items-center justify-center rounded-xl px-4 py-2.5 transition sm:flex-none ${
                               isActive
                                 ? "bg-slate-950 text-white shadow-lg shadow-slate-950/15"
