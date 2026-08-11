@@ -223,10 +223,9 @@ function canConfirmPayment(
   const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   if (isPaid) return false;
 
-  // Quán chỉ thấy nút xác nhận nhận tiền khi đơn đã sẵn sàng (ready), đang giao (delivering), hoặc khách báo tiền mặt (cashpending)
+  // Quán chỉ thấy nút "Xác nhận đã nhận tiền" SAU KHI khách hàng đã bấm "Xác nhận hóa đơn" (billconfirmed hoặc cashpending)
   return (
-    statusKey === "ready" ||
-    statusKey === "delivering" ||
+    statusKey === "billconfirmed" ||
     statusKey === "cashpending"
   );
 }
