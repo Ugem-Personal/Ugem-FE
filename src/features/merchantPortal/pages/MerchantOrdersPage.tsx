@@ -795,7 +795,7 @@ export default function MerchantOrdersPage() {
                           </span>
                         </div>
                         <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                          Trạng thái: {getOrderStatusLabel(order.status)}
+                          Trạng thái: {getOrderStatusLabel(order.paymentStatus?.toLowerCase() === "paid" ? "Completed" : order.status)}
                         </p>
                         <p className="mt-2.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
                           <span className="font-bold text-slate-900 dark:text-white">
@@ -921,10 +921,10 @@ export default function MerchantOrdersPage() {
                       <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Trạng thái</div>
                       <div
                         className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderStatusChipClass(
-                          selectedOrder.status,
+                          selectedOrder.paymentStatus?.toLowerCase() === "paid" ? "Completed" : selectedOrder.status,
                         )}`}
                       >
-                        {getOrderStatusLabel(selectedOrder.status)}
+                        {getOrderStatusLabel(selectedOrder.paymentStatus?.toLowerCase() === "paid" ? "Completed" : selectedOrder.status)}
                       </div>
                     </div>
                     <div>
