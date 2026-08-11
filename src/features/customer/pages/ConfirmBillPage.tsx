@@ -238,9 +238,10 @@ export default function ConfirmBillPage() {
           (order: CustomerOrderSummary) => getCustomerOrderId(order) === orderId,
         );
         const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
+        const currentPaymentStatus = (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
         const persistedCashRequest = getPersistedCashRequest(orderId);
 
-        if (currentStatus === "completed") {
+        if (currentStatus === "completed" || currentPaymentStatus === "paid") {
           const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
           if (cashPaymentKey && typeof window !== "undefined") {
@@ -386,6 +387,13 @@ export default function ConfirmBillPage() {
       setBillConfirmed(true);
     } catch (err) {
       console.error(err);
+      const msg = getServerMessage(err, "");
+      if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
+        setBillConfirmed(true);
+        notify.success("Đơn hàng này đã được thanh toán thành công!");
+        await finishCheckIn();
+        return;
+      }
       setBillConfirmed(false);
       setError(
         getServerMessage(err, "Xác nhận hóa đơn thất bại. Vui lòng thử lại."),
@@ -419,6 +427,12 @@ export default function ConfirmBillPage() {
       setCashRequested(true);
     } catch (err) {
       console.error(err);
+      const msg = getServerMessage(err, "");
+      if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
+        notify.success("Đơn hàng này đã được thanh toán thành công!");
+        await finishCheckIn();
+        return;
+      }
       setError(
         getServerMessage(
           err,
