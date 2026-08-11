@@ -9,7 +9,6 @@ import {
   Search,
   Store,
   Utensils,
-  ShoppingCart,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -633,24 +632,7 @@ export default function MerchantDetailPage() {
             Quay lại
           </button>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setCartOpen(true)}
-              aria-label="Xem giỏ hàng"
-              className="relative inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black text-cyan-700 dark:text-cyan-300 shadow-md backdrop-blur-xl transition hover:bg-cyan-500/20 active:scale-95"
-            >
-              <ShoppingCart className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-              <span className="hidden sm:inline">Giỏ hàng</span>
-              {cartItemCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-600 px-1.5 text-[11px] font-black text-white shadow-xs font-mono">
-                  {cartItemCount}
-                </span>
-              )}
-            </button>
-
-            <ModeToggle />
-          </div>
+          <ModeToggle />
         </div>
 
         {/* Merchant Hero Banner */}
