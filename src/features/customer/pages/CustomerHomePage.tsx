@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Clock,
+  ExternalLink,
   Heart,
   List,
   Loader2,
@@ -9,11 +10,12 @@ import {
   Navigation,
   Route,
   Search,
-  X,
-  Utensils,
-  Sparkles,
   ShoppingBag,
   SlidersHorizontal,
+  Sparkles,
+  Store,
+  Utensils,
+  X,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { notify } from "@/shared/lib/notify";
@@ -1011,14 +1013,46 @@ export default function CustomerHomePage() {
               )}
 
               {selectedMerchant && (
-                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-4 shadow-2xs">
-                  <h3 className="font-black text-slate-950 dark:text-white text-base">{selectedMerchant.name}</h3>
-                  {selectedMerchant.address ? (
-                    <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      <MapPin className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                      {selectedMerchant.address}
-                    </p>
-                  ) : null}
+                <div className="space-y-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-4 shadow-2xs">
+                  <div>
+                    <h3 className="font-black text-slate-950 dark:text-white text-base">{selectedMerchant.name}</h3>
+                    {selectedMerchant.address ? (
+                      <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        <MapPin className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                        {selectedMerchant.address}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/customer/merchant/${selectedMerchant.id}?mode=offline&backTo=/customer`)
+                      }
+                      className="h-9 flex-1 gap-1.5 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-3 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500"
+                    >
+                      <Store className="h-3.5 w-3.5" /> Đặt món trước (Ghé lấy)
+                    </Button>
+                    {selectedMerchant.latitude && selectedMerchant.longitude && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          window.open(
+                            `https://maps.vietmap.vn/@${selectedMerchant.latitude},${selectedMerchant.longitude},16z`,
+                            "_blank",
+                            "noopener,noreferrer"
+                          )
+                        }
+                        className="h-9 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Chỉ đường VietMap
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
 

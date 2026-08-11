@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   Loader2,
+  Store,
   Tag,
   Truck,
   UserRound,
@@ -116,6 +117,14 @@ export function CheckoutDialog({
   >([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!open) return;
+    setRecipientName(defaultRecipientName);
+    setOrderType(defaultOrderType);
+    setPaymentMethod(defaultOrderType === "Online" ? "COD" : "Cash");
+    setErrors({});
+  }, [open, defaultOrderType, defaultRecipientName]);
 
   useEffect(() => {
     if (!open) return;
@@ -269,31 +278,29 @@ export function CheckoutDialog({
               ) : null}
             </label>
 
-            <fieldset className="space-y-2">
-              <legend className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-                <Truck className="h-4 w-4 text-cyan-600" /> Hình thức nhận món *
-              </legend>
-              <div className="grid grid-cols-2 gap-2">
-                {(["Online", "Offline"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={orderType === value}
-                    onClick={() => {
-                      setOrderType(value);
-                      setPaymentMethod(value === "Online" ? "COD" : "Cash");
-                    }}
-                    className={`h-12 rounded-xl border px-3 text-sm font-black transition ${
-                      orderType === value
-                        ? "border-cyan-500 bg-cyan-50 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-300"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    {value === "Online" ? "Giao hàng" : "Tại quán"}
-                  </button>
-                ))}
+            <div className="space-y-2">
+              <span className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                {orderType === "Online" ? (
+                  <Truck className="h-4 w-4 text-cyan-600" />
+                ) : (
+                  <Store className="h-4 w-4 text-cyan-600" />
+                )}
+                Hình thức nhận món *
+              </span>
+              <div className="flex h-12 items-center gap-2.5 rounded-xl border border-cyan-200 bg-cyan-50/80 dark:border-cyan-500/30 dark:bg-cyan-500/10 px-4 text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-2xs">
+                {orderType === "Online" ? (
+                  <>
+                    <Truck className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                    <span>Giao hàng tận nơi</span>
+                  </>
+                ) : (
+                  <>
+                    <Store className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                    <span>Tự đến lấy / Ăn tại quán</span>
+                  </>
+                )}
               </div>
-            </fieldset>
+            </div>
           </div>
 
           {orderType === "Online" ? (
@@ -305,7 +312,12 @@ export function CheckoutDialog({
                 setErrors((current) => ({ ...current, deliveryAddress: "" }));
               }}
             />
-          ) : null}
+          ) : (
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+              <Store className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>Đơn hàng sẽ được chuẩn bị tại quán. Quý khách vui lòng nhận món và thanh toán trực tiếp tại quán.</span>
+            </div>
+          )}
 
           <fieldset className="space-y-2">
             <legend className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
