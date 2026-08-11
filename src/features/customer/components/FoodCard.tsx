@@ -1,4 +1,4 @@
-import { Flame, Plus, ShoppingCart } from "lucide-react";
+import { Eye, Flame, Plus, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MerchantMenuItem } from "../types";
 import { ImageWithFallback } from "@/shared/components";
@@ -79,12 +79,18 @@ export function FoodCard({
             <button
               type="button"
               onClick={() => onOpenModal(food)}
-              disabled={isOfflineOrder}
-              aria-label={`Thêm ${food.name} vào đơn hàng`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 dark:bg-cyan-500 px-4 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md transition hover:bg-cyan-600 dark:hover:bg-cyan-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Xem chi tiết ${food.name}`}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 dark:bg-cyan-500 px-4 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md transition hover:bg-cyan-600 dark:hover:bg-cyan-400 active:scale-95"
             >
-              <Plus className="h-4 w-4" />
-              {isOfflineOrder ? "Tại quán" : "Thêm"}
+              {isOfflineOrder ? (
+                <>
+                  <Eye className="h-4 w-4" /> Chi tiết
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" /> Thêm
+                </>
+              )}
             </button>
           </div>
         </div>
