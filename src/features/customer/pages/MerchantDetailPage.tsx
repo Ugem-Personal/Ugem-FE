@@ -235,7 +235,19 @@ export default function MerchantDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const CART_STORAGE_KEY = id ? `ugem_cart_${id}` : null;
+  const CHECKOUT_STORAGE_KEY = id ? `ugem_checkout_${id}` : null;
+
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (!CART_STORAGE_KEY) return [];
+    try {
+      const saved = sessionStorage.getItem(CART_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [pendingFood, setPendingFood] = useState<MerchantMenuItem | null>(null);
   const [pendingQuantity, setPendingQuantity] = useState(1);
   const [pendingNotes, setPendingNotes] = useState("");
@@ -247,9 +259,42 @@ export default function MerchantDetailPage() {
 
   const [showReviews, setShowReviews] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState<boolean>(() => {
+    if (!CHECKOUT_STORAGE_KEY) return false;
+    try {
+      return sessionStorage.getItem(CHECKOUT_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
+
+  useEffect(() => {
+    if (!CART_STORAGE_KEY) return;
+    try {
+      if (cart.length > 0) {
+        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      } else {
+        sessionStorage.removeItem(CART_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.error("Failed to save cart to sessionStorage", e);
+    }
+  }, [cart, CART_STORAGE_KEY]);
+
+  useEffect(() => {
+    if (!CHECKOUT_STORAGE_KEY) return;
+    try {
+      if (checkoutOpen) {
+        sessionStorage.setItem(CHECKOUT_STORAGE_KEY, "true");
+      } else {
+        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.error("Failed to save checkout state to sessionStorage", e);
+    }
+  }, [checkoutOpen, CHECKOUT_STORAGE_KEY]);
 
 
   const total = useMemo(() => {
@@ -412,6 +457,8 @@ export default function MerchantDetailPage() {
           : "Đặt món thành công.",
       );
 
+      if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
+      if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
       setCart([]);
       setCartOpen(false);
       setCheckoutOpen(false);
@@ -498,8 +545,11 @@ export default function MerchantDetailPage() {
   }
 
   function clearCart() {
+    if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
+    if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
     setCart([]);
     setCartOpen(false);
+    setCheckoutOpen(false);
   }
 
   useEffect(() => {
