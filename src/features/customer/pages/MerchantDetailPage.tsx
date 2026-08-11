@@ -945,7 +945,7 @@ export default function MerchantDetailPage() {
             merchantLatitude={merchant.latitude}
             merchantLongitude={merchant.longitude}
             defaultRecipientName={currentUser?.Name || ""}
-            defaultOrderType={isTakeaway ? "Offline" : "Online"}
+            defaultOrderType={isOfflineOrder ? "Offline" : "Online"}
             submitting={ordering}
             onOpenChange={(open) => {
               setCheckoutOpen(open);
