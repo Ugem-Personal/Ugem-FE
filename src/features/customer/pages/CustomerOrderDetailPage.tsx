@@ -87,6 +87,7 @@ export default function CustomerOrderDetailPage() {
   const [reviewContent, setReviewContent] = useState<string>("");
   const [foodReviewDrafts, setFoodReviewDrafts] = useState<Record<string, { rating: number; content: string }>>({});
   const [, setActiveFoodReviewId] = useState<string | null>(null);
+  const [fetchedSummaryOrder, setFetchedSummaryOrder] = useState<CustomerOrderSummary | null>(summaryOrder);
 
   useEffect(() => {
     let active = true;
@@ -139,15 +140,16 @@ export default function CustomerOrderDetailPage() {
           getCustomerOrders().catch(() => ({ data: [] })),
         ]);
         const orders = ordersRes.data ?? [];
+        const refreshedSummary = orders.find(
+          (order: CustomerOrderSummary) =>
+            getCustomerOrderId(order) === effectiveOrderId,
+        ) ?? matchingSummaryOrder;
 
         if (active) {
           setItems(data ?? []);
+          setFetchedSummaryOrder(refreshedSummary);
           const refreshedStatus =
-            orders.find(
-              (order: CustomerOrderSummary) =>
-                getCustomerOrderId(order) === effectiveOrderId,
-            )?.status ??
-            matchingSummaryOrder?.status ??
+            refreshedSummary?.status ??
             null;
           setOrderStatus(refreshedStatus);
           lastKnownStatusRef.current = refreshedStatus;
@@ -326,13 +328,20 @@ export default function CustomerOrderDetailPage() {
 
 
 
+  const currentSummaryOrder = fetchedSummaryOrder ?? summaryOrder;
   const itemsTotal = items.reduce((sum, item) => {
     return sum + Number(item.unitPrice || 0) * Number(item.quantity || 0);
   }, 0);
   const total =
-    itemsTotal > 0 ? itemsTotal : Number(summaryOrder?.finalPrice || 0);
-  const title = summaryOrder?.name || `Đơn #${fallbackOrderNumber ?? id}`;
+    itemsTotal > 0 ? itemsTotal : Number(currentSummaryOrder?.finalPrice || 0);
   const effectiveOrderId = hasRealOrderId ? id : resolvedOrderId;
+  const title =
+    currentSummaryOrder?.name ||
+    (fallbackOrderNumber
+      ? `Đơn #${fallbackOrderNumber}`
+      : effectiveOrderId
+        ? `Đơn #${effectiveOrderId.slice(0, 8)}`
+        : "Đơn hàng");
 
   useEffect(() => {
     if (!effectiveOrderId) return;
@@ -342,12 +351,15 @@ export default function CustomerOrderDetailPage() {
     const refreshStatus = async () => {
       try {
         const ordersRes = await getCustomerOrders();
-        const refreshedStatus = (ordersRes.data ?? []).find(
+        const refreshedSummary = (ordersRes.data ?? []).find(
           (order: CustomerOrderSummary) =>
             getCustomerOrderId(order) === effectiveOrderId,
-        )?.status;
+        );
 
-        if (!active || !refreshedStatus) return;
+        if (!active || !refreshedSummary) return;
+
+        setFetchedSummaryOrder(refreshedSummary);
+        const refreshedStatus = refreshedSummary.status;
 
         const previousStatus = lastKnownStatusRef.current;
         const statusChanged =
@@ -388,14 +400,14 @@ export default function CustomerOrderDetailPage() {
     };
   }, [effectiveOrderId]);
 
-  const displayOrderStatus = orderStatus ?? summaryOrder?.status ?? null;
+  const displayOrderStatus = orderStatus ?? currentSummaryOrder?.status ?? null;
   const normalizedOrderStatus = displayOrderStatus?.trim().toLowerCase();
-  const isPaid = summaryOrder?.paymentStatus?.trim().toLowerCase() === "paid";
+  const isPaid = currentSummaryOrder?.paymentStatus?.trim().toLowerCase() === "paid";
   const isCompleted = normalizedOrderStatus === "completed" || isPaid;
   const isOfflineOrder =
-    summaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
-    normalizeString(summaryOrder?.deliveryAddress) === "tai quan" ||
-    normalizeString(summaryOrder?.notes).includes("offline");
+    currentSummaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
+    normalizeString(currentSummaryOrder?.deliveryAddress) === "tai quan" ||
+    normalizeString(currentSummaryOrder?.notes).includes("offline");
   const isConfirmationReady =
     !isCompleted &&
     isCustomerConfirmationReady(
@@ -463,10 +475,12 @@ export default function CustomerOrderDetailPage() {
                 {title}
               </h1>
 
-              {summaryOrder && (
+              {currentSummaryOrder && (
                 <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
                   <Clock className="h-3.5 w-3.5" />
-                  {new Date(summaryOrder.orderedAt).toLocaleString("vi-VN")}
+                  {currentSummaryOrder.orderedAt
+                    ? new Date(currentSummaryOrder.orderedAt).toLocaleString("vi-VN")
+                    : "Mới đây"}
                   {effectiveOrderId && (
                     <span className="font-mono">#{effectiveOrderId.slice(0, 8)}</span>
                   )}
@@ -483,24 +497,24 @@ export default function CustomerOrderDetailPage() {
           </div>
 
           {/* Delivery & Notes Info */}
-          {summaryOrder && (
+          {currentSummaryOrder && (
             <div className="mt-6 grid gap-4 sm:grid-cols-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-              {summaryOrder.deliveryAddress && !isOfflineOrder && (
+              {currentSummaryOrder.deliveryAddress && !isOfflineOrder && (
                 <div className="flex items-start gap-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-950/50 p-3.5">
                   <MapPin className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white">Địa chỉ giao hàng</p>
-                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">{summaryOrder.deliveryAddress}</p>
+                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">{currentSummaryOrder.deliveryAddress}</p>
                   </div>
                 </div>
               )}
 
-              {summaryOrder.notes && (
+              {currentSummaryOrder.notes && (
                 <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200/50 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-950/40 p-3.5 text-amber-900 dark:text-amber-200">
                   <FileText className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                   <div>
                     <p className="font-bold">Ghi chú của đơn</p>
-                    <p className="mt-0.5">{summaryOrder.notes}</p>
+                    <p className="mt-0.5">{currentSummaryOrder.notes}</p>
                   </div>
                 </div>
               )}
@@ -561,7 +575,7 @@ export default function CustomerOrderDetailPage() {
         <OrderStatusTimeline
           status={isCompleted ? "Completed" : displayOrderStatus}
           orderType={isOfflineOrder ? "Offline" : "Online"}
-          orderedAt={summaryOrder?.orderedAt}
+          orderedAt={currentSummaryOrder?.orderedAt}
         />
 
         {/* Ordered Food Items List */}
