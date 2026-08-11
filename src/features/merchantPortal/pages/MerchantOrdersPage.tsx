@@ -218,13 +218,17 @@ function getDetailNote(detail: MerchantOrderDetailPayload | null) {
 function canConfirmPayment(
   status?: string | null,
   paymentStatus?: string | null,
+  billStatus?: string | null,
 ) {
-  const statusKey = getOrderStatusKey(status);
   const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   if (isPaid) return false;
 
-  // Quán chỉ thấy nút "Xác nhận đã nhận tiền" SAU KHI khách hàng đã bấm "Xác nhận hóa đơn" (billconfirmed hoặc cashpending)
+  const statusKey = getOrderStatusKey(status);
+  const isBillConfirmed = billStatus?.trim().toLowerCase() === "confirmed";
+
+  // Quán thấy nút "Xác nhận đã nhận tiền" SAU KHI khách hàng đã bấm "Xác nhận hóa đơn" (billConfirmed hoặc status billconfirmed / cashpending)
   return (
+    isBillConfirmed ||
     statusKey === "billconfirmed" ||
     statusKey === "cashpending"
   );
@@ -824,7 +828,11 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
-                      {canConfirmPayment(order.status, order.paymentStatus) ? (
+                      {canConfirmPayment(
+                        order.status,
+                        order.paymentStatus,
+                        (order as any).bill?.status,
+                      ) ? (
                         <button
                           type="button"
                           onClick={() => void handleConfirmCashPayment(order)}
@@ -1169,6 +1177,7 @@ export default function MerchantOrdersPage() {
                       {canConfirmPayment(
                         selectedOrder.status,
                         selectedOrder.paymentStatus,
+                        (selectedOrder as any).bill?.status,
                       ) ? (
                         <button
                           type="button"
