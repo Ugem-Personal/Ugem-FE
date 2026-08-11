@@ -52,6 +52,7 @@ type Props = {
   merchant: Merchant;
   selected?: boolean;
   orderMode?: "online" | "offline";
+  backTo?: string;
   compact?: boolean;
   isWishlisted?: boolean;
   onWishlistToggle?: (nextSaved: boolean) => void;
@@ -80,6 +81,7 @@ export default function MerchantCard({
   merchant,
   selected = false,
   orderMode = "online",
+  backTo,
   compact = false,
   isWishlisted = false,
   onWishlistToggle,
@@ -95,9 +97,13 @@ export default function MerchantCard({
     merchant.menu?.find((item) => item.imageUrl?.trim())?.imageUrl?.trim() ||
     "";
 
+  const merchantUrl = `/customer/merchants/${merchant.id}?mode=${orderMode}${
+    backTo ? `&backTo=${encodeURIComponent(backTo)}` : ""
+  }`;
+
   return (
     <Link
-      to={`/customer/merchants/${merchant.id}?mode=${orderMode}`}
+      to={merchantUrl}
       aria-label={`Xem chi tiết quán ${name}`}
       className={cn(
         "group relative block overflow-hidden rounded-3xl border bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 shadow-xs transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:shadow-cyan-950/15 backdrop-blur-md",

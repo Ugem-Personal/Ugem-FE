@@ -212,8 +212,9 @@ export default function MerchantDetailPage() {
   const navigate = useNavigate();
   const safeBack = useSafeBack("/customer");
   const handleBack = () => {
-    if (searchParams.get("backTo") === "/customer") {
-      navigate("/customer", { replace: true });
+    const backTo = searchParams.get("backTo");
+    if (backTo) {
+      navigate(backTo, { replace: true });
       return;
     }
 
