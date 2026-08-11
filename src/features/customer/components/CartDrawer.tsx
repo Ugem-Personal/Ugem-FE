@@ -1,4 +1,4 @@
-import { Flame, Minus, Plus, ShoppingCart, X } from "lucide-react";
+import { Flame, Minus, Pencil, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import type { MerchantFoodTopping, MerchantMenuItem } from "../types";
 import { ImageWithFallback } from "@/shared/components";
 
@@ -18,6 +18,8 @@ type CartDrawerProps = {
   onClose: () => void;
   onIncrement: (foodId: string) => void;
   onDecrement: (foodId: string) => void;
+  onRemoveItem?: (foodId: string) => void;
+  onEditItem?: (item: CartItem) => void;
   onClearCart: () => void;
   onCreateOrder: () => void;
 };
@@ -35,6 +37,8 @@ export function CartDrawer({
   onClose,
   onIncrement,
   onDecrement,
+  onRemoveItem,
+  onEditItem,
   onClearCart,
   onCreateOrder,
 }: CartDrawerProps) {
@@ -121,7 +125,17 @@ export function CartDrawer({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    {onEditItem && (
+                      <button
+                        type="button"
+                        onClick={() => onEditItem(item)}
+                        title="Chỉnh sửa ghi chú & topping"
+                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-white/10 grid place-items-center text-xs text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600 transition"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onDecrement(item.food.id)}
@@ -141,6 +155,16 @@ export function CartDrawer({
                     >
                       <Plus className="h-3 w-3" />
                     </button>
+                    {onRemoveItem && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveItem(item.food.id)}
+                        title="Xóa món"
+                        className="h-7 w-7 rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 grid place-items-center text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

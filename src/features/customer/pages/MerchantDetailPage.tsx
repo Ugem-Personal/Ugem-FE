@@ -9,6 +9,7 @@ import {
   Search,
   Store,
   Utensils,
+  ShoppingCart,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -512,11 +513,32 @@ export default function MerchantDetailPage() {
   }, [showReviews]);
 
   function openAddFoodModal(food: MerchantMenuItem) {
-    setPendingFood(food);
-    setPendingQuantity(1);
-    setPendingNotes("");
-    setPendingToppingIds([]);
-    setPendingMode("add");
+    const existedItem = cart.find((item) => item.food.id === food.id);
+    if (existedItem) {
+      setPendingFood(food);
+      setPendingQuantity(existedItem.quantity);
+      setPendingNotes(existedItem.notes || "");
+      setPendingToppingIds((existedItem.toppings || []).map((t) => t.id));
+      setPendingMode("edit");
+    } else {
+      setPendingFood(food);
+      setPendingQuantity(1);
+      setPendingNotes("");
+      setPendingToppingIds([]);
+      setPendingMode("add");
+    }
+  }
+
+  function openEditFoodModal(cartItem: CartItem) {
+    setPendingFood(cartItem.food);
+    setPendingQuantity(cartItem.quantity);
+    setPendingNotes(cartItem.notes || "");
+    setPendingToppingIds((cartItem.toppings || []).map((t) => t.id));
+    setPendingMode("edit");
+  }
+
+  function removeFromCart(foodId: string) {
+    setCart((prev) => prev.filter((item) => item.food.id !== foodId));
   }
 
   function closeAddFoodModal() {
@@ -611,7 +633,24 @@ export default function MerchantDetailPage() {
             Quay lại
           </button>
 
-          <ModeToggle />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCartOpen(true)}
+              aria-label="Xem giỏ hàng"
+              className="relative inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black text-cyan-700 dark:text-cyan-300 shadow-md backdrop-blur-xl transition hover:bg-cyan-500/20 active:scale-95"
+            >
+              <ShoppingCart className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+              <span className="hidden sm:inline">Giỏ hàng</span>
+              {cartItemCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-600 px-1.5 text-[11px] font-black text-white shadow-xs font-mono">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
+
+            <ModeToggle />
+          </div>
         </div>
 
         {/* Merchant Hero Banner */}
@@ -910,6 +949,8 @@ export default function MerchantDetailPage() {
           onClose={() => setCartOpen(false)}
           onIncrement={incrementCartItem}
           onDecrement={decrementCartItem}
+          onRemoveItem={removeFromCart}
+          onEditItem={openEditFoodModal}
           onClearCart={clearCart}
           onCreateOrder={handleOpenCheckout}
         />
