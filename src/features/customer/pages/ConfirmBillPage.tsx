@@ -331,6 +331,10 @@ export default function ConfirmBillPage() {
           window.localStorage.removeItem(cashPaymentKey);
         }
 
+        if (currentPaymentStatus === "paid") {
+          notify.success("Hệ thống đã nhận được tiền chuyển khoản thành công!");
+        }
+
         await finishCheckIn();
         return;
       }
