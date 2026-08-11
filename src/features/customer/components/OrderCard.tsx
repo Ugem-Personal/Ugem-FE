@@ -37,14 +37,15 @@ export function OrderCard({
   className,
 }: OrderCardProps) {
   const orderId = getCustomerOrderId(order);
-  const isCompleted = order.status?.toLowerCase() === "completed";
-  const isOfflineOrder =
-    order.orderType?.trim().toLowerCase() === "offline" ||
-    (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
-
   const isPaid =
     order.paymentStatus?.toLowerCase() === "paid" ||
     order.status?.toLowerCase() === "completed";
+
+  const isCompleted = isPaid;
+
+  const isOfflineOrder =
+    order.orderType?.trim().toLowerCase() === "offline" ||
+    (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
 
   const isBillConfirmed =
     !isPaid &&
