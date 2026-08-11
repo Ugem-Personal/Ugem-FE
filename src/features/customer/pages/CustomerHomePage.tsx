@@ -866,18 +866,18 @@ export default function CustomerHomePage() {
 
   if (showMap) {
     return (
-      <div className="fixed inset-0 overflow-hidden bg-slate-100 text-slate-900 font-sans">
+      <div className="fixed inset-0 overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
         <div className="absolute inset-0">{mapCanvas}</div>
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-52 bg-linear-to-b from-white/90 via-white/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-52 bg-linear-to-b from-white/90 dark:from-slate-950/90 via-white/60 dark:via-slate-950/60 to-transparent" />
 
         <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-4 px-4 py-4 lg:px-6">
           {showMerchantPanel && (
-            <div className="pointer-events-auto w-full max-w-96 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="pointer-events-auto w-full max-w-96 rounded-3xl border border-white/60 dark:border-white/10 bg-white/80 dark:bg-slate-900/85 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-300">
               <div className="flex items-center justify-between gap-3">
                 <Link to="/customer" className="flex items-center gap-2">
                   <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
                 </Link>
-                <span className="flex items-center rounded-full bg-cyan-50 border border-cyan-200 px-3.5 py-1 text-xs font-black tracking-wide text-cyan-800 shadow-2xs">
+                <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3.5 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
                   {merchantCountText}
                 </span>
               </div>
@@ -887,7 +887,7 @@ export default function CustomerHomePage() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Tìm quán, món ăn..."
-                  className="h-11 rounded-xl border-slate-200 bg-white/90 px-4 text-sm font-semibold shadow-2xs focus:border-cyan-600"
+                  className="h-11 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 px-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs focus:border-cyan-600"
                 />
                 <Button
                   type="submit"
@@ -910,9 +910,9 @@ export default function CustomerHomePage() {
               variant="outline"
               onClick={handleOpenWishlist}
               aria-label="Mở danh sách quán yêu thích"
-              className="h-11 gap-2 rounded-xl border-rose-200 bg-white/90 px-3 font-black text-slate-800 shadow-xs backdrop-blur-lg hover:bg-rose-50"
+              className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-500/30 bg-white/90 dark:bg-slate-900/90 px-3 font-black text-slate-800 dark:text-slate-100 shadow-xs backdrop-blur-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
             >
-              <Heart className="h-4 w-4 text-rose-500" />
+              <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
               <span className="hidden sm:inline">Quán yêu thích</span>
             </Button>
             <Button
@@ -920,9 +920,9 @@ export default function CustomerHomePage() {
               variant="outline"
               onClick={() => setShowMerchantPanel((value) => !value)}
               aria-pressed={showMerchantPanel}
-              className="h-11 gap-2 rounded-xl border-slate-200 bg-white/90 font-black shadow-xs backdrop-blur-lg hover:bg-white"
+              className="h-11 gap-2 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 font-black shadow-xs backdrop-blur-lg hover:bg-white dark:hover:bg-slate-800"
             >
-              <List className="h-4 w-4 text-cyan-600" />
+              <List className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
               {showMerchantPanel ? "Ẩn quán" : "Hiện quán"}
             </Button>
             <Button
@@ -930,21 +930,21 @@ export default function CustomerHomePage() {
               variant="outline"
               onClick={() => setShowRoutePanel((value) => !value)}
               aria-pressed={showRoutePanel}
-              className="h-11 gap-2 rounded-xl border-slate-200 bg-white/90 font-black shadow-xs backdrop-blur-lg hover:bg-white"
+              className="h-11 gap-2 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 font-black shadow-xs backdrop-blur-lg hover:bg-white dark:hover:bg-slate-800"
             >
-              <MapPin className="h-4 w-4 text-emerald-600" />
+              <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               {showRoutePanel ? "Ẩn chỉ đường" : "Hiện chỉ đường"}
             </Button>
           </div>
         </header>
 
         {showMerchantPanel && hasMapSearch && (
-          <aside className="pointer-events-auto absolute bottom-4 left-4 top-52 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-2xl backdrop-blur-2xl transition-all duration-300">
-            <div className="border-b border-slate-200/80 bg-white/60 px-5 py-4 backdrop-blur-sm">
+          <aside className="pointer-events-auto absolute bottom-4 left-4 top-52 z-20 flex w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-5 py-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-black tracking-tight text-slate-900">Kết quả địa điểm</h2>
-                  <p className="text-xs font-semibold text-slate-500">
+                  <h2 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Kết quả địa điểm</h2>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Bấm quán để xem chỉ đường chi tiết
                   </p>
                 </div>
@@ -953,7 +953,7 @@ export default function CustomerHomePage() {
                   size="sm"
                   variant="outline"
                   onClick={handleOpenMyOrders}
-                  className="h-8 gap-1.5 rounded-xl border-cyan-200 bg-cyan-50 px-3 text-xs font-black text-cyan-800 shadow-2xs hover:bg-cyan-100"
+                  className="h-8 gap-1.5 rounded-xl border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950 px-3 text-xs font-black text-cyan-800 dark:text-cyan-300 shadow-2xs hover:bg-cyan-100 dark:hover:bg-cyan-900"
                 >
                   <ShoppingBag className="h-3.5 w-3.5" /> Đơn hàng
                 </Button>
@@ -967,14 +967,14 @@ export default function CustomerHomePage() {
         )}
 
         {showRoutePanel && (
-          <section className="pointer-events-auto absolute right-4 top-56 z-20 flex max-h-[calc(100vh-10rem)] w-[min(480px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-2xl backdrop-blur-2xl transition-all duration-300">
-            <div className="border-b border-slate-200/80 bg-white/60 px-6 py-4 backdrop-blur-sm">
+          <section className="pointer-events-auto absolute right-4 top-56 z-20 flex max-h-[calc(100vh-10rem)] w-[min(480px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/90 shadow-2xl backdrop-blur-2xl transition-all duration-300">
+            <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-6 py-4 backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-black text-slate-950 tracking-tight">Lộ trình & Chỉ đường</h2>
-                  <p className="text-xs font-bold text-slate-500">
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white tracking-tight">Lộ trình & Chỉ đường</h2>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                     {selectedMerchant ? (
-                      <span className="text-cyan-700">Đang hướng tới: {selectedMerchant.name}</span>
+                      <span className="text-cyan-700 dark:text-cyan-400">Đang hướng tới: {selectedMerchant.name}</span>
                     ) : (
                       "Chọn quán bất kỳ để nhận đường đi chính xác"
                     )}
@@ -987,7 +987,7 @@ export default function CustomerHomePage() {
                     size="sm"
                     variant="ghost"
                     onClick={handleClearRoute}
-                    className="h-8 gap-1 rounded-xl px-3 text-xs font-black text-rose-600 hover:bg-rose-50"
+                    className="h-8 gap-1 rounded-xl px-3 text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                   >
                     <X className="h-3.5 w-3.5" /> Bỏ chọn
                   </Button>
@@ -997,25 +997,25 @@ export default function CustomerHomePage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 [scrollbar-width:thin] space-y-4">
               {routeResult && (
-                <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-cyan-50 border border-cyan-200/90 px-4 py-3 shadow-2xs">
-                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900">
-                    <Route className="h-4 w-4 text-cyan-600" />
+                <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200/90 dark:border-cyan-800 px-4 py-3 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900 dark:text-cyan-200">
+                    <Route className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                     {metersToKm(routeResult.distance)}
                   </div>
-                  <div className="h-4 w-px bg-cyan-200" />
-                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900">
-                    <Clock className="h-4 w-4 text-cyan-600" />
+                  <div className="h-4 w-px bg-cyan-200 dark:bg-cyan-800" />
+                  <div className="flex items-center gap-1.5 text-sm font-black text-cyan-900 dark:text-cyan-200">
+                    <Clock className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                     {secondsToText(routeResult.duration)}
                   </div>
                 </div>
               )}
 
               {selectedMerchant && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-                  <h3 className="font-black text-slate-950 text-base">{selectedMerchant.name}</h3>
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-4 shadow-2xs">
+                  <h3 className="font-black text-slate-950 dark:text-white text-base">{selectedMerchant.name}</h3>
                   {selectedMerchant.address ? (
-                    <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500">
-                      <MapPin className="h-4 w-4 shrink-0 text-cyan-600" />
+                    <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      <MapPin className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
                       {selectedMerchant.address}
                     </p>
                   ) : null}
@@ -1024,19 +1024,19 @@ export default function CustomerHomePage() {
 
               {routeResult?.steps && routeResult.steps.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Navigation className="h-3.5 w-3.5 text-cyan-600" /> Hướng dẫn di chuyển ({routeResult.steps.length} bước)
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Navigation className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Hướng dẫn di chuyển ({routeResult.steps.length} bước)
                   </h4>
-                  <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs">
+                  <div className="space-y-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-3 shadow-2xs">
                     {routeResult.steps.map((step, idx) => (
-                      <div key={idx} className="flex items-start gap-3 rounded-xl p-2.5 hover:bg-slate-50 transition">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-800 text-[11px] font-extrabold">
+                      <div key={idx} className="flex items-start gap-3 rounded-xl p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 text-[11px] font-extrabold">
                           {idx + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-800 leading-snug">{step.instruction || "Đi tiếp theo đường"}</p>
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">{step.instruction || "Đi tiếp theo đường"}</p>
                           {step.distance > 0 && (
-                            <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+                            <p className="mt-0.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                               {metersToKm(step.distance)} • {secondsToText(step.duration)}
                             </p>
                           )}

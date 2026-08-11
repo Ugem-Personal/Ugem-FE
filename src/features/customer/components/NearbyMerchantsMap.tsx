@@ -181,7 +181,7 @@ export default function NearbyMerchantsMap({
   }, [center.latitude, center.longitude, editableUserMarker, merchants]);
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full dark:[&_.vietmapgl-canvas]:brightness-90 dark:[&_.vietmapgl-canvas]:contrast-[1.15] dark:[&_.vietmapgl-canvas]:hue-rotate-180 dark:[&_.vietmapgl-canvas]:invert">
       <VietMapGL
         centerLng={center.longitude}
         centerLat={center.latitude}
