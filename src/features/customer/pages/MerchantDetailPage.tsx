@@ -209,7 +209,7 @@ function getStoredAffiliateRef(merchantId: string) {
 
 export default function MerchantDetailPage() {
   const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const safeBack = useSafeBack("/customer");
@@ -756,38 +756,20 @@ export default function MerchantDetailPage() {
           )}
 
           {isTakeaway && (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/30 px-5 py-4 text-sm font-bold text-cyan-900 dark:text-cyan-300 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <Store className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                <span>
-                  Chế độ <strong className="font-black text-cyan-950 dark:text-cyan-100">Đặt món trước (Ghé lấy)</strong>: Thêm món vào giỏ ➔ Đặt trước để quán chế biến sẵn, khi tới nơi nhận món ngay không cần chờ!
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSearchParams({ mode: "dinein", backTo: searchParams.get("backTo") || "/customer?tab=map" })}
-                className="shrink-0 rounded-xl border border-cyan-300 dark:border-cyan-700 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-black text-cyan-800 dark:text-cyan-200 shadow-xs hover:bg-cyan-100 dark:hover:bg-slate-800 transition"
-              >
-                Xem dạng Menu tại quán
-              </button>
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/30 px-5 py-4 text-sm font-bold text-cyan-900 dark:text-cyan-300 shadow-2xs">
+              <Store className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+              <span>
+                Chế độ <strong className="font-black text-cyan-950 dark:text-cyan-100">Đặt món trước (Ghé lấy)</strong>: Thêm món vào giỏ ➔ Đặt đơn để quán chế biến sẵn, tới nơi nhận món ngay không cần chờ!
+              </span>
             </div>
           )}
 
           {isDineInOnly && (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <Utensils className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>
-                  Đang ở chế độ xem menu tại quán. Bạn có thể xem chi tiết món ăn hoặc chuyển sang Đặt món trước để quán làm sẵn.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSearchParams({ mode: "takeaway", backTo: searchParams.get("backTo") || "/customer?tab=map" })}
-                className="shrink-0 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-black text-amber-900 dark:text-amber-200 shadow-xs hover:bg-amber-100 dark:hover:bg-slate-800 transition"
-              >
-                Chuyển sang Đặt món trước
-              </button>
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
+              <Utensils className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>
+                Đang ở chế độ <strong className="font-black text-amber-950 dark:text-amber-100">Ăn tại quán (Xem Menu)</strong>: Gọi món trực tiếp với nhân viên hoặc quét mã QR dán tại bàn.
+              </span>
             </div>
           )}
 
