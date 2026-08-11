@@ -310,10 +310,7 @@ export default function ConfirmBillPage() {
 
     async function syncCashPaymentStatus() {
       if (!orderId) return;
-      const [ordersRes, latestBill] = await Promise.all([
-        getCustomerOrders().catch(() => ({ data: [] })),
-        getBill(orderId).catch(() => null),
-      ]);
+      const ordersRes = await getCustomerOrders().catch(() => ({ data: [] }));
       const orders = ordersRes.data ?? [];
 
       if (!active) return;
@@ -323,12 +320,10 @@ export default function ConfirmBillPage() {
       );
       const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
       const currentPaymentStatus = (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
-      const billStatus = (latestBill as any)?.status?.trim() ?? "";
 
       if (
         currentStatus === "completed" ||
-        currentPaymentStatus === "paid" ||
-        billStatus === "Confirmed"
+        currentPaymentStatus === "paid"
       ) {
         const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
