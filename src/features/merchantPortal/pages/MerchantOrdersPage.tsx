@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   Bike,
@@ -291,11 +292,14 @@ const QUICK_REJECT_REASONS = [
 ];
 
 export default function MerchantOrdersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlOrderId = searchParams.get("orderId");
+
   const [orders, setOrders] = useState<MerchantOrderSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionOrderId, setActionOrderId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(!!urlOrderId);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(urlOrderId);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
@@ -413,6 +417,29 @@ export default function MerchantOrdersPage() {
     setDetailError(null);
     setOrderDetail(null);
     setDetailOpen(true);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("orderId", orderId);
+        return next;
+      },
+      { replace: true }
+    );
+  }
+
+  function handleDetailOpenChange(open: boolean) {
+    setDetailOpen(open);
+    if (!open) {
+      setSelectedOrderId(null);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("orderId");
+          return next;
+        },
+        { replace: true }
+      );
+    }
   }
 
   async function handleAcceptOrder(order: MerchantOrderSummary) {
@@ -895,7 +922,7 @@ export default function MerchantOrdersPage() {
             </div>
           )}
 
-          <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <Dialog open={detailOpen} onOpenChange={handleDetailOpenChange}>
             <DialogContent
               className="!top-2 !bottom-2 flex !h-auto !max-h-none max-w-4xl !translate-y-0 flex-col gap-0 overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-0 shadow-2xl backdrop-blur-2xl [animation:none] sm:!top-6 sm:!bottom-6"
               onInteractOutside={(event) => event.preventDefault()}
@@ -1230,7 +1257,7 @@ export default function MerchantOrdersPage() {
 
                     <button
                       type="button"
-                      onClick={() => setDetailOpen(false)}
+                      onClick={() => handleDetailOpenChange(false)}
                       className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/20"
                     >
                       Đóng
