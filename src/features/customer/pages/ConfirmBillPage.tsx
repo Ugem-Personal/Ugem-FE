@@ -339,17 +339,7 @@ export default function ConfirmBillPage() {
         return;
       }
 
-      if (
-        selectedPaymentMethod === "BankTransfer" &&
-        (!currentStatus || currentStatus === "billconfirmed")
-      ) {
-        return;
-      }
-
       if (selectedPaymentMethod === "BankTransfer") {
-        setError(
-          "Trạng thái thanh toán chuyển khoản đã thay đổi. Vui lòng tải lại hóa đơn.",
-        );
         return;
       }
 

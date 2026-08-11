@@ -222,14 +222,13 @@ function canConfirmPayment(
   const statusKey = getOrderStatusKey(status);
   const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   if (isPaid) return false;
-  if (
-    statusKey === "pending" ||
-    statusKey === "rejected" ||
-    statusKey === "cancelled"
-  ) {
-    return false;
-  }
-  return true;
+
+  // Quán chỉ thấy nút xác nhận nhận tiền khi đơn đã sẵn sàng (ready), đang giao (delivering), hoặc khách báo tiền mặt (cashpending)
+  return (
+    statusKey === "ready" ||
+    statusKey === "delivering" ||
+    statusKey === "cashpending"
+  );
 }
 
 function getLockedOrderMessage(status?: string | null) {
