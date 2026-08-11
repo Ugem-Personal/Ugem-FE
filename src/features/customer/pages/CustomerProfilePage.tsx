@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { getCurrentUser, refreshCurrentSession } from "@/features/auth";
-import { ModeToggle, UserAccountMenu } from "@/shared/components";
+import { UserAccountMenu } from "@/shared/components";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";
@@ -360,7 +360,6 @@ export default function CustomerProfilePage() {
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
               Làm mới
             </button>
-            <ModeToggle />
             <UserAccountMenu
               fallbackName={roleLabel}
               avatarUrl={displayedAvatarUrl}
