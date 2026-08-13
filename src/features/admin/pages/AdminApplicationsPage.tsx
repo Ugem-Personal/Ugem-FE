@@ -253,8 +253,8 @@ export default function AdminApplicationsPage({
       },
       {
         key: "reviewed" as const,
-        label: "Đã duyệt",
-        description: "Hồ sơ đã được duyệt hoặc từ chối",
+        label: "Đã xử lý",
+        description: "Hồ sơ đã được phê duyệt hoặc từ chối",
         count: groupedApplications.reviewed.length,
       },
     ],

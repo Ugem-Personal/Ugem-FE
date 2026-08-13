@@ -692,6 +692,22 @@ export default function AdminApplicationDetailPage({
               )}
             </section>
 
+            <section className="rounded-3xl border border-amber-200/80 bg-amber-50/60 p-5 shadow-sm ring-1 ring-amber-100 backdrop-blur-2xl dark:border-amber-900/50 dark:bg-amber-950/30">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                  <BadgeCheck className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black text-slate-950 dark:text-white">
+                    Đánh giá tiêu chí UGem (Underrated Assessment)
+                  </h3>
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                    Kiểm tra thông tin quán, menu món ăn và category để đánh giá tiêu chí "underrated" trước khi phê duyệt.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div className="min-w-0">

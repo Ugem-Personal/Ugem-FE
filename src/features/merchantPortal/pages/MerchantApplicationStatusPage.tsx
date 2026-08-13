@@ -330,9 +330,7 @@ export function MerchantApplicationStatusPage() {
                       icon={<SearchCheck size={18} />}
                     />
 
-                    <div className="ml-14 mb-6 inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 shadow-2xs relative z-10">
-                      ƯỚC TÍNH: 1–2 NGÀY LÀM VIỆC
-                    </div>
+
 
                     <StepItem
                       active={isApproved || isRejected}
