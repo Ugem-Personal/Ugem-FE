@@ -319,20 +319,15 @@ export default function ConfirmBillPage() {
         if (!active) return;
         setError(getServerMessage(err, "Không thể tải hóa đơn. Vui lòng thử lại."));
       })
-      .finally(() => {
-        if (!active) return;
-        setLoading(false);
-      });
-
-    return () => {
+      .final    return () => {
       active = false;
     };
-  }, [billConfirmedFromQr, checkInToken, finishCheckIn, orderId, navigate]);
+  }, [billConfirmedFromQr, checkInToken, orderId, navigate]);
 
   useEffect(() => {
     const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
-    if (!cashPaymentKey || typeof window === "undefined") {
+    if (!cashPaymentKey || typeof window !== "undefined") {
       return;
     }
 
@@ -414,6 +409,12 @@ export default function ConfirmBillPage() {
       window.clearInterval(timerId);
     };
   }, [
+    billConfirmed,
+    cashRequested,
+    navigate,
+    orderId,
+    selectedPaymentMethod,
+  ]);[
     billConfirmed,
     cashRequested,
     finishCheckIn,
