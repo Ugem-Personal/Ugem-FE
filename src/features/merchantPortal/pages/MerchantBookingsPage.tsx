@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   Calendar,
-  Clock,
-  Users,
   CheckCircle2,
   XCircle,
   Loader2,
   RefreshCw,
   User,
   Phone,
-  Mail,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";

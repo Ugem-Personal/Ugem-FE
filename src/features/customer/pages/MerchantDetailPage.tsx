@@ -1082,7 +1082,7 @@ export default function MerchantDetailPage() {
       {merchant && (
         <BookingModal
           merchantId={merchant.id}
-          merchantName={merchant.name}
+          merchantName={merchant.name ?? ""}
           isOpen={bookingModalOpen}
           onClose={() => setBookingModalOpen(false)}
         />
