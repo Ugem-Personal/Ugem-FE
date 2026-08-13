@@ -332,7 +332,7 @@ export default function ConfirmBillPage() {
   useEffect(() => {
     const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
-    if (!cashPaymentKey || typeof window !== "undefined") {
+    if (!cashPaymentKey || typeof window === "undefined") {
       return;
     }
 
@@ -416,13 +416,6 @@ export default function ConfirmBillPage() {
   }, [
     billConfirmed,
     cashRequested,
-    navigate,
-    orderId,
-    selectedPaymentMethod,
-  ]);[
-    billConfirmed,
-    cashRequested,
-    finishCheckIn,
     navigate,
     orderId,
     selectedPaymentMethod,
