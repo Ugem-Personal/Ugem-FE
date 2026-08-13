@@ -45,6 +45,7 @@ import type {
   AdminDashboard,
   AdminMerchantRevenue,
 } from "../services/adminService";
+import { RebalancingOverview } from "../components/RebalancingOverview";
 
 const DEFAULT_DASHBOARD: AdminDashboard = {
   totalUsers: 0,
@@ -363,7 +364,7 @@ export default function AdminDashboardPage() {
       </section>
 
       {/* 5. Rebalancing Engine Section (Main Flow 4) */}
-      <RebalancingSection />
+      <RebalancingOverview />
 
       {/* 6. Main Merchant Revenue Table & Operations Panel */}
       <section className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -1055,157 +1056,5 @@ function MetricCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function RebalancingSection() {
-  const [data, setData] = useState<import("@/shared/services/rebalancingService").RebalancingStatusData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
-
-  async function loadData() {
-    try {
-      setLoading(true);
-      const { getRebalancingStatus } = await import("@/shared/services/rebalancingService");
-      const res = await getRebalancingStatus();
-      setData(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  async function handleRunNow() {
-    try {
-      setRunning(true);
-      const { runManualRebalancing } = await import("@/shared/services/rebalancingService");
-      await runManualRebalancing();
-      notify.success("Đã hoàn tất tính toán và lưu Rebalancing Ranking mới!");
-      await loadData();
-    } catch (err) {
-      console.error(err);
-      notify.error(getErrorMessage(err));
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="h-48 animate-pulse rounded-2xl border border-border bg-card p-6" />
-    );
-  }
-
-  return (
-    <section className="rounded-2xl border border-cyan-500/20 bg-card p-6 shadow-xs dark:bg-slate-900/90 space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5" /> Rebalancing Engine (Main Flow 4)
-          </div>
-          <h2 className="mt-1.5 text-lg font-black text-foreground">
-            Hệ Thống Tải Lại Ranking & Cân Bằng Thị Phần Quán
-          </h2>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">
-            Cập nhật Strength Index (SI), Underrated Score (US) & Recommendation Rank định kỳ 2 tuần.
-          </p>
-        </div>
-
-        <Button
-          type="button"
-          onClick={handleRunNow}
-          disabled={running}
-          variant="outline"
-          className="h-10 rounded-xl font-bold bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/20 shrink-0"
-        >
-          <RefreshCw className={cn("h-4 w-4 mr-2", running && "animate-spin")} />
-          {running ? "Đang Rebalance..." : "Chạy Rebalance Ngay"}
-        </Button>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-xl border border-border bg-background p-3.5">
-          <div className="text-[11px] font-bold text-muted-foreground uppercase">Trạng Thái Lần Chạy</div>
-          <div className="mt-1 text-sm font-black text-foreground">{data?.status || "Idle"}</div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background p-3.5">
-          <div className="text-[11px] font-bold text-muted-foreground uppercase">Lần Cập Nhật Gần Nhất</div>
-          <div className="mt-1 text-xs font-black text-foreground">
-            {formatDateTime(data?.lastUpdatedAt)}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background p-3.5">
-          <div className="text-[11px] font-bold text-muted-foreground uppercase">Số Quán Đã Xử Lý</div>
-          <div className="mt-1 text-sm font-black text-cyan-600 dark:text-cyan-400">
-            {data?.merchantCount || 0} quán
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background p-3.5">
-          <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Tăng Hiển Thị (Boost)</div>
-          <div className="mt-1 text-sm font-black text-emerald-600 dark:text-emerald-400">
-            +{data?.increasedVisibility || 0} quán
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background p-3.5">
-          <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase">Giảm Hiển Thị (Giảm Rank)</div>
-          <div className="mt-1 text-sm font-black text-rose-600 dark:text-rose-400">
-            {data?.decreasedVisibility || 0} quán
-          </div>
-        </div>
-      </div>
-
-      {/* Top Rebalanced Merchants Table */}
-      {data?.merchants && data.merchants.length > 0 && (
-        <div className="rounded-xl border border-border overflow-hidden bg-background">
-          <div className="p-3 bg-muted/30 text-xs font-black uppercase text-foreground tracking-wider border-b border-border">
-            Bảng Xếp Hạng Gợi Ý (Top Rebalanced Recommendation Ranks)
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="text-xs font-black">Rank</TableHead>
-                <TableHead className="text-xs font-black">Tên Nhà Hàng</TableHead>
-                <TableHead className="text-xs font-black text-center">Rating</TableHead>
-                <TableHead className="text-xs font-black text-center">Strength Index (SI)</TableHead>
-                <TableHead className="text-xs font-black text-center">Underrated Score (US)</TableHead>
-                <TableHead className="text-xs font-black text-right">Lần Rebalance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.merchants.slice(0, 10).map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="font-mono font-black text-xs text-cyan-600 dark:text-cyan-400">
-                    #{m.recommendationRank ?? "-"}
-                  </TableCell>
-                  <TableCell className="font-bold text-xs">{m.name}</TableCell>
-                  <TableCell className="text-center font-bold text-xs text-amber-500">
-                    ★ {m.rating}
-                  </TableCell>
-                  <TableCell className="text-center font-mono font-bold text-xs text-slate-600 dark:text-slate-300">
-                    {m.strengthIndex}
-                  </TableCell>
-                  <TableCell className="text-center font-mono font-black text-xs text-emerald-600 dark:text-emerald-400">
-                    {m.underratedScore}
-                  </TableCell>
-                  <TableCell className="text-right text-[11px] font-medium text-muted-foreground">
-                    {formatDateTime(m.lastRebalancedAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </section>
   );
 }
