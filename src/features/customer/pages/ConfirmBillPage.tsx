@@ -180,12 +180,40 @@ export default function ConfirmBillPage() {
     [bill, billOrderId, finalPrice],
   );
 
+function getCurrentPosition() {
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Trình duyệt không hỗ trợ định vị GPS"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  });
+}
+
   const finishCheckIn = useCallback(async () => {
     if (orderId && checkInToken) {
-      await verifyCheckIn({ orderId, checkInToken });
+      try {
+        const position = await getCurrentPosition();
+        await verifyCheckIn({
+          orderId,
+          checkInToken,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
+      } catch (err) {
+        console.error("GPS/Check-in verification error:", err);
+        const errorMsg = getServerMessage(err, "Không thể lấy vị trí GPS để xác thực check-in.");
+        notify.error(errorMsg);
+        navigate(`/check-in?orderId=${encodeURIComponent(orderId)}&checkInToken=${encodeURIComponent(checkInToken)}`, { replace: true });
+      }
+    } else {
+      navigate("/check-in?success=1", { replace: true });
     }
-
-    navigate("/check-in?success=1", { replace: true });
   }, [checkInToken, navigate, orderId]);
 
   useEffect(() => {

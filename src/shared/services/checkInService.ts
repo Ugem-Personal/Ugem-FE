@@ -17,6 +17,8 @@ export async function generateCheckInQr(params: GenerateQrParams) {
 export type CheckInRequest = {
   orderId: string;
   checkInToken: string;
+  latitude: number;
+  longitude: number;
 };
 
 export async function verifyCheckIn(payload: CheckInRequest) {
@@ -27,4 +29,14 @@ export async function verifyCheckIn(payload: CheckInRequest) {
 export async function getCurrentCheckIns() {
   const res = await api.get<ApiResponse<unknown>>("/check-in/current");
   return res.data.data ?? null;
+}
+
+export async function getMerchantCheckInStatistics() {
+  const res = await api.get<ApiResponse<{ totalCheckIns: number; verifiedVisits: number; todayCheckIns: number }>>("/check-in/merchant/statistics");
+  return res.data.data ?? null;
+}
+
+export async function getMerchantCheckInHistory() {
+  const res = await api.get<ApiResponse<unknown[]>>("/check-in/merchant/history");
+  return res.data.data ?? [];
 }

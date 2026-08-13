@@ -36,7 +36,7 @@ export default function CheckInPage() {
         if (success) {
           if (!active) return;
 
-          setMessage("Thanh toán và check-in thành công.");
+          setMessage("Check-in đã được xác thực thành công.");
           setStatus("success");
           return;
         }
@@ -108,7 +108,14 @@ export default function CheckInPage() {
             <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
               <button
                 type="button"
-                onClick={() => navigate("/customer/orders", { replace: true })}
+                onClick={() =>
+                  navigate(
+                    orderId
+                      ? `/customer/orders/${orderId}`
+                      : "/customer/orders",
+                    { replace: true },
+                  )
+                }
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 dark:bg-emerald-500 px-5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700 dark:hover:bg-emerald-600"
               >
                 Đánh giá quán ăn
