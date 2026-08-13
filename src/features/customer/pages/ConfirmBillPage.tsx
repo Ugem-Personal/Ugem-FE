@@ -319,7 +319,12 @@ export default function ConfirmBillPage() {
         if (!active) return;
         setError(getServerMessage(err, "Không thể tải hóa đơn. Vui lòng thử lại."));
       })
-      .final    return () => {
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+
+    return () => {
       active = false;
     };
   }, [billConfirmedFromQr, checkInToken, orderId, navigate]);
