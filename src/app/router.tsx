@@ -78,6 +78,9 @@ const CustomerOrderDetailPage = lazy(
 const CustomerOrdersPage = lazy(
   () => import("@/features/customer/pages/CustomerOrdersPage"),
 );
+const CustomerBookingsPage = lazy(
+  () => import("@/features/customer/pages/CustomerBookingsPage"),
+);
 const CustomerProfilePage = lazy(
   () => import("@/features/customer/pages/CustomerProfilePage"),
 );
@@ -120,6 +123,9 @@ const MerchantViewStatisticsPage = lazyNamed(
 );
 const MerchantOrdersPage = lazy(
   () => import("@/features/merchantPortal/pages/MerchantOrdersPage"),
+);
+const MerchantBookingsPage = lazy(
+  () => import("@/features/merchantPortal/pages/MerchantBookingsPage"),
 );
 const MerchantCreateOrderPage = lazy(
   () => import("@/features/merchantPortal/pages/MerchantCreateOrderPage"),
@@ -233,6 +239,14 @@ const routers = createBrowserRouter([
         ),
       },
       {
+        path: "/customer/bookings",
+        element: (
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
+            <CustomerBookingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/customer/orders/:id",
         element: (
           <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
@@ -285,6 +299,14 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Merchant"]}>
             <MerchantOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/merchant/bookings",
+        element: (
+          <ProtectedRoute allowedRoles={["Merchant"]}>
+            <MerchantBookingsPage />
           </ProtectedRoute>
         ),
       },

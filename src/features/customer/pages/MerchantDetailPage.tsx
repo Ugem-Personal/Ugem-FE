@@ -42,6 +42,7 @@ import {
   CheckoutDialog,
   type CheckoutFormData,
 } from "../components/CheckoutDialog";
+import { BookingModal } from "@/features/booking/components/BookingModal";
 
 
 
@@ -283,6 +284,7 @@ export default function MerchantDetailPage() {
   });
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   useEffect(() => {
     if (!CART_STORAGE_KEY) return;
@@ -779,6 +781,14 @@ export default function MerchantDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-start justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setBookingModalOpen(true)}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
+              >
+                <Utensils className="h-4 w-4" />
+                Đặt bàn ngay
+              </button>
               <WishlistButton
                 merchantId={merchant.id}
                 initialSaved={isWishlisted}
@@ -1068,6 +1078,15 @@ export default function MerchantDetailPage() {
           </div>
         )}
       </div>
+
+      {merchant && (
+        <BookingModal
+          merchantId={merchant.id}
+          merchantName={merchant.name}
+          isOpen={bookingModalOpen}
+          onClose={() => setBookingModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

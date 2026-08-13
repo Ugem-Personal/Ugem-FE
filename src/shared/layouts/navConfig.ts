@@ -184,6 +184,13 @@ export const MERCHANT_NAV_GROUPS: NavGroup[] = [
         icon: ShoppingBag,
       },
       {
+        key: "bookings",
+        label: "Quản Lý Đặt Bàn",
+        description: "Xử lý lịch đặt bàn trước",
+        to: "/merchant/bookings",
+        icon: CalendarPlus,
+      },
+      {
         key: "create-order",
         label: "Tạo Đơn Hàng Mới",
         description: "Tạo đơn tại chỗ cho khách",
@@ -232,6 +239,12 @@ export const CUSTOMER_NAV_ITEMS: NavItem[] = [
     label: "Đơn Hàng Của Tôi",
     to: "/customer/orders",
     icon: ShoppingBag,
+  },
+  {
+    key: "bookings",
+    label: "Đặt Bàn Của Tôi",
+    to: "/customer/bookings",
+    icon: CalendarPlus,
   },
   {
     key: "wishlist",
