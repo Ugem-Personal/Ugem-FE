@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt, Copy, Check } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt, Copy, Check, MapPin, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { getCurrentUser } from "@/features/auth";
@@ -31,6 +31,8 @@ type BillItem = {
 
 type Bill = {
   orderId?: string;
+  orderType?: string;
+  checkInStatus?: string | null;
   paymentMethod?: string;
   finalPrice?: number;
   totalAmount?: number;
@@ -162,6 +164,10 @@ export default function ConfirmBillPage() {
     useState<BillPaymentMethod>("Cash");
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  const [checkInVerified, setCheckInVerified] = useState<boolean>(false);
+  const [verifyingCheckIn, setVerifyingCheckIn] = useState<boolean>(false);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+
   function copyToClipboard(text: string, field: string) {
     if (!text) return;
     void navigator.clipboard.writeText(text);
@@ -180,41 +186,47 @@ export default function ConfirmBillPage() {
     [bill, billOrderId, finalPrice],
   );
 
-function getCurrentPosition() {
-  return new Promise<GeolocationPosition>((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Trình duyệt không hỗ trợ định vị GPS"));
+  function getCurrentPosition() {
+    return new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Trình duyệt không hỗ trợ định vị GPS"));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      });
+    });
+  }
+
+  const handleDoCheckIn = useCallback(async () => {
+    if (!orderId || !checkInToken) {
+      notify.error("Không tìm thấy mã QR check-in hợp lệ.");
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    });
-  });
-}
 
-  const finishCheckIn = useCallback(async () => {
-    if (orderId && checkInToken) {
-      try {
-        const position = await getCurrentPosition();
-        await verifyCheckIn({
-          orderId,
-          checkInToken,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
-      } catch (err) {
-        console.error("GPS/Check-in verification error:", err);
-        const errorMsg = getServerMessage(err, "Không thể lấy vị trí GPS để xác thực check-in.");
-        notify.error(errorMsg);
-        navigate(`/check-in?orderId=${encodeURIComponent(orderId)}&checkInToken=${encodeURIComponent(checkInToken)}`, { replace: true });
-      }
-    } else {
-      navigate("/check-in?success=1", { replace: true });
+    setVerifyingCheckIn(true);
+    setCheckInError(null);
+    try {
+      const position = await getCurrentPosition();
+      await verifyCheckIn({
+        orderId,
+        checkInToken,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+      setCheckInVerified(true);
+      notify.success("Xác thực check-in tại quán thành công!");
+    } catch (err) {
+      console.error("Check-in error:", err);
+      const msg = getServerMessage(err, "Không thể lấy vị trí GPS để xác thực check-in.");
+      setCheckInError(msg);
+      notify.error(msg);
+    } finally {
+      setVerifyingCheckIn(false);
     }
-  }, [checkInToken, navigate, orderId]);
+  }, [checkInToken, orderId]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -246,6 +258,13 @@ function getCurrentPosition() {
         setBillConfirmed(billConfirmedFromQr);
         const nextBill = billData as Bill;
 
+        if (
+          nextBill.checkInStatus === "Verified" ||
+          nextBill.orderType === "Online"
+        ) {
+          setCheckInVerified(true);
+        }
+
         if (!nextBill.items || nextBill.items.length === 0) {
           const detailItems = await getCustomerOrderDetail(orderId).catch(() => []);
           if (detailItems && detailItems.length > 0) {
@@ -276,7 +295,7 @@ function getCurrentPosition() {
             window.localStorage.removeItem(cashPaymentKey);
           }
 
-          await finishCheckIn();
+          navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
           return;
         }
 
@@ -364,7 +383,7 @@ function getCurrentPosition() {
           notify.success("Hệ thống đã nhận được tiền chuyển khoản thành công!");
         }
 
-        await finishCheckIn();
+        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
         return;
       }
 
@@ -419,7 +438,7 @@ function getCurrentPosition() {
       if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
         setBillConfirmed(true);
         notify.success("Đơn hàng này đã được thanh toán thành công!");
-        await finishCheckIn();
+        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
         return;
       }
       setBillConfirmed(false);
@@ -458,7 +477,7 @@ function getCurrentPosition() {
       const msg = getServerMessage(err, "");
       if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
         notify.success("Đơn hàng này đã được thanh toán thành công!");
-        await finishCheckIn();
+        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
         return;
       }
       setError(
@@ -548,6 +567,65 @@ function getCurrentPosition() {
                 </div>
               </div>
 
+              {/* Check-In Status Section for Offline Orders */}
+              {bill.orderType === "Offline" && (
+                <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-slate-950/60 p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-cyan-500" />
+                      Xác thực tại quán (Check-in)
+                    </div>
+                    {checkInVerified ? (
+                      <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        ✓ CHECK-IN VERIFIED
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                        CHƯA CHECK-IN
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                    <p className="flex items-center gap-2">
+                      <span className={checkInToken ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                        {checkInToken ? "✓" : "○"}
+                      </span>
+                      {checkInToken ? "Mã QR Check-in hợp lệ" : "Thiếu mã QR check-in"}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className={checkInVerified ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                        {checkInVerified ? "✓" : "○"}
+                      </span>
+                      {checkInVerified ? "Bạn đang trong phạm vi quán (Geofence OK)" : "Định vị vị trí GPS trong bán kính quán"}
+                    </p>
+                  </div>
+
+                  {checkInError && (
+                    <div className="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 p-3 rounded-xl">
+                      {checkInError}
+                    </div>
+                  )}
+
+                  {!checkInVerified && (
+                    <button
+                      type="button"
+                      onClick={handleDoCheckIn}
+                      disabled={verifyingCheckIn}
+                      className="w-full mt-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs py-3 shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {verifyingCheckIn ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Đang xác thực vị trí GPS...
+                        </>
+                      ) : (
+                        "Xác thực Check-in ngay"
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Order Items List */}
               <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/50 p-5">
                 <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
@@ -612,23 +690,30 @@ function getCurrentPosition() {
 
               {/* Actions Before Confirmation */}
               {!billConfirmed && (
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={handleConfirmBill}
-                    className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
-                  >
-                    {submitting ? "Đang xử lý..." : "Xác nhận hóa đơn"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => handleReject("Khác")}
-                    className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 px-6 py-3.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition disabled:opacity-50"
-                  >
-                    Từ chối
-                  </button>
+                <div className="mt-6 flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      disabled={submitting || (bill.orderType === "Offline" && !checkInVerified)}
+                      onClick={handleConfirmBill}
+                      className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
+                    >
+                      {submitting ? "Đang xử lý..." : "Xác nhận hóa đơn"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleReject("Khác")}
+                      className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 px-6 py-3.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition disabled:opacity-50"
+                    >
+                      Từ chối
+                    </button>
+                  </div>
+                  {bill.orderType === "Offline" && !checkInVerified && (
+                    <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 text-center">
+                      * Vui lòng hoàn tất Xác thực Check-in tại quán ở trên trước khi bấm Xác nhận hóa đơn.
+                    </p>
+                  )}
                 </div>
               )}
 
