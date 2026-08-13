@@ -105,13 +105,22 @@ export default function CheckInPage() {
                 ? `Cảm ơn bạn đã ghé ${merchantName}. Lượt check-in của bạn đã được ghi nhận.`
                 : "Cảm ơn bạn đã ghé quán. Lượt check-in của bạn đã được ghi nhận."}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate("/customer", { replace: true })}
-              className="mt-7 inline-flex h-11 items-center justify-center rounded-xl bg-cyan-700 dark:bg-cyan-600 px-5 text-sm font-bold text-white shadow-lg shadow-cyan-900/15 transition hover:-translate-y-0.5 hover:bg-cyan-800 dark:hover:bg-cyan-700"
-            >
-              Khám phá thêm các quán ăn khác
-            </button>
+            <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => navigate("/customer/orders", { replace: true })}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 dark:bg-emerald-500 px-5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700 dark:hover:bg-emerald-600"
+              >
+                Đánh giá quán ăn
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/customer", { replace: true })}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-5 text-sm font-bold text-foreground transition hover:bg-accent"
+              >
+                Khám phá thêm
+              </button>
+            </div>
           </>
         )}
 
