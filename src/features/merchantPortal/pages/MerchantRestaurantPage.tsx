@@ -169,7 +169,7 @@ async function resolveMerchantFromApprovedApplication(
   const normalizedName = (application.name || "").trim().toLowerCase();
   const normalizedAddress = (application.address || "").trim().toLowerCase();
 
-  const matchedMerchant = merchants.find((m) => {
+  const matchedMerchant = merchants.find((m: { name?: string; address?: string; id: string }) => {
     const mName = (m.name || "").trim().toLowerCase();
     const mAddress = (m.address || "").trim().toLowerCase();
 

@@ -225,37 +225,7 @@ async function searchOriginSuggestions(
   });
 }
 
-function normalizePriceRange(value?: string | null) {
-  const normalized = value?.trim().toLowerCase();
 
-  return (
-    PRICE_RANGE_FILTERS.find((label) => label.toLowerCase() === normalized) ||
-    ""
-  );
-}
-
-function getMerchantPriceRange(merchant: Merchant) {
-  const directPriceRange = normalizePriceRange(
-    (merchant as Merchant & { priceRange?: string }).priceRange,
-  );
-
-  if (directPriceRange) return directPriceRange;
-
-  const lines = (merchant.description || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const priceRangeLine = lines.find((line) =>
-    line.toLowerCase().startsWith("khoảng giá trung bình:"),
-  );
-
-  if (!priceRangeLine) return "";
-
-  const value = priceRangeLine.split(":").slice(1).join(":").trim();
-
-  return normalizePriceRange(value);
-}
 
 
 
@@ -310,13 +280,7 @@ export default function CustomerHomePage() {
     [merchants, selectedMerchantId],
   );
 
-  const displayedMerchants = useMemo(() => {
-    if (!selectedPriceRange) return merchants;
-
-    return merchants.filter(
-      (merchant) => getMerchantPriceRange(merchant) === selectedPriceRange,
-    );
-  }, [merchants, selectedPriceRange]);
+  const displayedMerchants = merchants;
 
   const merchantCountText = useMemo(() => {
     if (loading) return "Đang tìm...";
@@ -324,12 +288,12 @@ export default function CustomerHomePage() {
     return `${displayedMerchants.length} địa điểm`;
   }, [displayedMerchants.length, loading]);
 
-
   const loadMerchants = useCallback(
     async (
       searchKeyword: string,
       coordsToUse: Coords,
       categoryIdToUse?: string,
+      priceRangeToUse?: string,
     ) => {
       setLoading(true);
 
@@ -339,11 +303,13 @@ export default function CustomerHomePage() {
           longitude: coordsToUse.longitude,
           keyword: searchKeyword,
           categoryId: categoryIdToUse || undefined,
+          priceRange: priceRangeToUse || undefined,
+          radiusKm: 15,
         });
 
         setMerchants(data);
         setSelectedMerchantId((prev) =>
-          prev && data.some((merchant) => merchant.id === prev) ? prev : null,
+          prev && data.some((merchant: Merchant) => merchant.id === prev) ? prev : null,
         );
       } catch (error) {
         console.error(error);
@@ -367,9 +333,9 @@ export default function CustomerHomePage() {
       setLocationAccuracy(
         typeof accuracy === "number" ? Math.round(accuracy) : null,
       );
-      await loadMerchants(keyword, nextCoords, selectedCategoryId);
+      await loadMerchants(keyword, nextCoords, selectedCategoryId, selectedPriceRange);
     },
-    [keyword, loadMerchants, selectedCategoryId],
+    [keyword, loadMerchants, selectedCategoryId, selectedPriceRange],
   );
 
   useEffect(() => {
@@ -588,12 +554,17 @@ export default function CustomerHomePage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    loadMerchants(keyword, coords, selectedCategoryId);
+    loadMerchants(keyword, coords, selectedCategoryId, selectedPriceRange);
   }
 
   function handleCategoryChange(nextCategoryId: string) {
     setSelectedCategoryId(nextCategoryId);
-    void loadMerchants(keyword, coords, nextCategoryId);
+    void loadMerchants(keyword, coords, nextCategoryId, selectedPriceRange);
+  }
+
+  function handlePriceRangeChange(nextPriceRange: PriceRangeFilter | "") {
+    setSelectedPriceRange(nextPriceRange);
+    void loadMerchants(keyword, coords, selectedCategoryId, nextPriceRange);
   }
 
   function handleServiceModeChange(nextMode: CustomerServiceMode) {
@@ -786,7 +757,7 @@ export default function CustomerHomePage() {
         <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">Khoảng giá:</span>
         <button
           type="button"
-          onClick={() => setSelectedPriceRange("")}
+          onClick={() => handlePriceRangeChange("")}
           className={`h-9 rounded-full px-4 text-xs font-black transition ${
             selectedPriceRange === ""
               ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
@@ -800,7 +771,7 @@ export default function CustomerHomePage() {
           <button
             key={label}
             type="button"
-            onClick={() => setSelectedPriceRange(label)}
+            onClick={() => handlePriceRangeChange(label)}
             className={`h-9 rounded-full px-4 text-xs font-black transition ${
               selectedPriceRange === label
                 ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"

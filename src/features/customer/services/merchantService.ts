@@ -1,10 +1,7 @@
 import { api } from "@/lib/axios";
 import { getCurrentUser } from "@/features/auth";
 import type { Merchant, MerchantDetail } from "../types";
-import {
-  getDisplayUnderratedScore,
-  getRawUnderratedScore,
-} from "../utils/underratedScore";
+import { getRawUnderratedScore } from "../utils/underratedScore";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -23,13 +20,6 @@ type MerchantListResponse = Merchant[] | PageResult<Merchant>;
 type MerchantListApiPayload =
   | MerchantListResponse
   | ApiResponse<MerchantListResponse>;
-type MerchantRecord = Record<string, unknown>;
-type RankedMerchant = {
-  merchant: Merchant;
-  sourceIndex: number;
-};
-const MAX_NEARBY_DISTANCE_KM = 15;
-
 function unwrapApiData<T>(payload: T | ApiResponse<T>): T {
   if (
     payload &&
@@ -71,99 +61,6 @@ function extractDescriptionField(
       ?.slice(prefix.length)
       .trim() ?? ""
   );
-}
-
-function getNumberField(record: MerchantRecord, keys: string[]) {
-  for (const key of keys) {
-    const value = record[key];
-
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-
-    if (typeof value === "string") {
-      const parsed = Number(value.trim());
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-    }
-  }
-
-  return null;
-}
-
-function getMerchantCoords(
-  merchant: Merchant,
-): { lat: number; lng: number } | null {
-  const record = merchant as MerchantRecord;
-  const lat = getNumberField(record, ["latitude", "lat", "Latitude", "Lat"]);
-  const lng = getNumberField(record, ["longitude", "lng", "Longitude", "Lng"]);
-
-  if (lat === null || lng === null) return null;
-  return { lat, lng };
-}
-
-function getUnderratedScore(merchant?: Merchant | null) {
-  return getDisplayUnderratedScore(merchant)?.score ?? null;
-}
-
-function getDistanceValue(merchant: Merchant) {
-  return typeof merchant.distance === "number" && Number.isFinite(merchant.distance)
-    ? merchant.distance
-    : Number.POSITIVE_INFINITY;
-}
-
-function compareNearbyMerchantRank(a: RankedMerchant, b: RankedMerchant) {
-  const scoreA = getUnderratedScore(a.merchant);
-  const scoreB = getUnderratedScore(b.merchant);
-
-  if (scoreA !== null || scoreB !== null) {
-    const byUnderrated =
-      (scoreB ?? Number.NEGATIVE_INFINITY) -
-      (scoreA ?? Number.NEGATIVE_INFINITY);
-
-    if (byUnderrated !== 0) return byUnderrated;
-
-    const distanceA = getDistanceValue(a.merchant);
-    const distanceB = getDistanceValue(b.merchant);
-
-    if (distanceA !== distanceB) return distanceA - distanceB;
-  }
-
-  return a.sourceIndex - b.sourceIndex;
-}
-
-function calculateDistanceKm(
-  userLat: number,
-  userLng: number,
-  merchantLat: number,
-  merchantLng: number,
-) {
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const radiusKm = 6371;
-  const dLat = toRad(merchantLat - userLat);
-  const dLng = toRad(merchantLng - userLng);
-  const lat1 = toRad(userLat);
-  const lat2 = toRad(merchantLat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-
-  return 2 * radiusKm * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
-function attachClientDistance(
-  merchant: Merchant,
-  latitude: number,
-  longitude: number,
-): Merchant {
-  const coords = getMerchantCoords(merchant);
-  if (!coords) return merchant;
-
-  return {
-    ...merchant,
-    distance: calculateDistanceKm(latitude, longitude, coords.lat, coords.lng),
-  };
 }
 
 function merchantMatchesKeyword(merchant: Merchant, keyword: string) {
@@ -235,6 +132,8 @@ export async function getNearbyMerchants(params: {
   longitude: number;
   keyword?: string;
   categoryId?: string;
+  priceRange?: string;
+  radiusKm?: number;
 }) {
   const usesCategory = Boolean(params.categoryId);
   const res = await api.request<MerchantListApiPayload>({
@@ -243,48 +142,31 @@ export async function getNearbyMerchants(params: {
     params: {
       search: params.keyword,
       categoryId: params.categoryId,
+      priceRange: params.priceRange,
       pageIndex: 1,
       pageSize: 100,
       latitude: params.latitude,
       longitude: params.longitude,
+      radiusKm: params.radiusKm ?? 15,
     },
   });
 
   const summaries = unwrapMerchantList(res.data);
-  const summaryById = new Map(summaries.map((item) => [item.id, item]));
-  const ids = Array.from(summaryById.keys()).filter(Boolean);
+  const summaryById = new Map(summaries.map((item: Merchant) => [item.id, item]));
+  const ids = Array.from(summaryById.keys()).filter((id): id is string => Boolean(id));
 
-  const details = await Promise.all(ids.map((id) => getMerchantDetailSafe(id)));
+  const details = await Promise.all(ids.map((id: string) => getMerchantDetailSafe(id)));
   const detailById = new Map(
     details
       .filter((item): item is MerchantDetail => item !== null)
       .map((item) => [item.id, item]),
   );
 
-  return ids
-    .map((id, sourceIndex) => ({
-      merchant: mergeMerchantData(summaryById.get(id)!, detailById.get(id)),
-      sourceIndex,
-    }))
-    .filter(({ merchant }) =>
+  return summaries
+    .map((summary: Merchant) => mergeMerchantData(summary, detailById.get(summary.id)))
+    .filter((merchant: Merchant) =>
       merchantMatchesKeyword(merchant, params.keyword ?? ""),
-    )
-    .map(({ merchant, sourceIndex }) => ({
-      merchant: attachClientDistance(
-        merchant,
-        params.latitude,
-        params.longitude,
-      ),
-      sourceIndex,
-    }))
-    .filter(
-      ({ merchant }) =>
-        typeof merchant.distance === "number" &&
-        Number.isFinite(merchant.distance) &&
-        merchant.distance <= MAX_NEARBY_DISTANCE_KM,
-    )
-    .sort(compareNearbyMerchantRank)
-    .map(({ merchant }) => merchant);
+    );
 }
 
 export async function searchMerchants(params?: {
