@@ -37,6 +37,12 @@ export type ReviewerAffiliateEarnings = {
   affiliateLinkCount: number;
   totalClicks: number;
   commissionOrderCount: number;
+  summary?: {
+    totalEarnings: number;
+    totalClicks: number;
+    successfulOrders: number;
+    conversionRate: number;
+  };
   recentTransactions: ReviewerAffiliateEarningTransaction[];
 };
 

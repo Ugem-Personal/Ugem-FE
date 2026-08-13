@@ -260,24 +260,30 @@ export default function AffiliateLinkPage() {
           />
         </section>
 
-        <section className="mt-3 grid gap-3 md:grid-cols-3">
+        <section className="mt-3 grid gap-3 md:grid-cols-4">
           <EarningsCard
             loading={loadingEarnings}
             title="Rank"
             value={earnings?.rank || "-"}
-            description="Hạng reviewer do backend trả về."
+            description="Hạng reviewer hiện tại."
           />
           <EarningsCard
             loading={loadingEarnings}
             title="Points"
             value={formatNumber(earnings?.points)}
-            description="Điểm reviewer hiện tại."
+            description="Điểm reviewer tích lũy."
           />
           <EarningsCard
             loading={loadingEarnings}
             title="Commission rate"
             value={formatPercentRate(earnings?.commissionRate)}
-            description="Tỷ lệ BE dùng để tính phí affiliate."
+            description="Tỷ lệ hoa hồng theo hạng Reviewer."
+          />
+          <EarningsCard
+            loading={loadingEarnings}
+            title="Conversion rate"
+            value={`${earnings?.summary?.conversionRate ?? 0}%`}
+            description="Tỷ lệ click chuyển thành đơn hàng."
           />
         </section>
 
