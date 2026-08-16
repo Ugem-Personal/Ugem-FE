@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import { useStaffApplications } from "../hooks/useApplications";
 import { StaffShell } from "../components/StaffShell";
+import { RebalancingOverview } from "../components/RebalancingOverview";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -263,6 +264,11 @@ export default function StaffProfilePage() {
               )}
             </div>
           </div>
+        </section>
+
+        {/* Rebalancing & Ranking Engine Overview (MF4) */}
+        <section>
+          <RebalancingOverview />
         </section>
       </div>
     </StaffShell>

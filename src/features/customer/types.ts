@@ -20,6 +20,9 @@ export type Merchant = {
   lat?: number;
   lng?: number;
   status?: string;
+  hasActiveCampaign?: boolean;
+  featuredFoods?: string[];
+  recommendationScore?: number;
   menu?: MerchantMenuItem[];
 };
 

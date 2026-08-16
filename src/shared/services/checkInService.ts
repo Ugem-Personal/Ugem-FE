@@ -31,8 +31,29 @@ export async function getCurrentCheckIns() {
   return res.data.data ?? null;
 }
 
+export type MerchantCheckInStatistics = {
+  totalCheckIns: number;
+  verifiedVisits: number;
+  todayCheckIns: number;
+  customersOverTime?: {
+    date: string;
+    totalCheckIns: number;
+    uniqueCustomers: number;
+  }[];
+  abnormalCheckIns?: {
+    id: string;
+    action: string;
+    orderId?: string | null;
+    actorUserId?: string | null;
+    createdAt: string;
+    metadata?: unknown;
+  }[];
+};
+
 export async function getMerchantCheckInStatistics() {
-  const res = await api.get<ApiResponse<{ totalCheckIns: number; verifiedVisits: number; todayCheckIns: number }>>("/check-in/merchant/statistics");
+  const res = await api.get<ApiResponse<MerchantCheckInStatistics>>(
+    "/check-in/merchant/statistics",
+  );
   return res.data.data ?? null;
 }
 

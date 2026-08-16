@@ -9,6 +9,8 @@ import {
   Search,
   Store,
   Utensils,
+  Calendar,
+  ShoppingBag,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -780,14 +782,24 @@ export default function MerchantDetailPage() {
               )}
             </div>
 
-            <div className="flex flex-wrap items-start justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setBookingModalOpen(true)}
                 className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
               >
-                <Utensils className="h-4 w-4" />
-                Đặt bàn ngay
+                <Calendar className="h-4 w-4" />
+                Đặt bàn (Ăn tại quán)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  document.getElementById("menu-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 hover:bg-cyan-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-95 transition"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Đặt món giao về
               </button>
               <WishlistButton
                 merchantId={merchant.id}
@@ -801,7 +813,7 @@ export default function MerchantDetailPage() {
         </section>
 
         {/* Menu Section */}
-        <section className="mt-10">
+        <section id="menu-section" className="mt-10">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">

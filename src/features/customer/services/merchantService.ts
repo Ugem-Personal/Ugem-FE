@@ -108,6 +108,9 @@ function mergeMerchantData(
     rating: summary.rating ?? detail?.rating,
     underratedScore: underratedScore ?? undefined,
     distance: summary.distance ?? detail?.distance,
+    hasActiveCampaign: summary.hasActiveCampaign ?? detail?.hasActiveCampaign,
+    featuredFoods: summary.featuredFoods ?? detail?.featuredFoods,
+    recommendationScore: summary.recommendationScore ?? detail?.recommendationScore,
   };
 }
 
@@ -133,6 +136,8 @@ export async function getNearbyMerchants(params: {
   keyword?: string;
   categoryId?: string;
   priceRange?: string;
+  restaurantType?: string;
+  mainDishType?: string;
   radiusKm?: number;
 }) {
   const usesCategory = Boolean(params.categoryId);
@@ -143,6 +148,8 @@ export async function getNearbyMerchants(params: {
       search: params.keyword,
       categoryId: params.categoryId,
       priceRange: params.priceRange,
+      restaurantType: params.restaurantType,
+      mainDishType: params.mainDishType,
       pageIndex: 1,
       pageSize: 100,
       latitude: params.latitude,
@@ -205,9 +212,13 @@ export async function getMerchantDetail(id: string): Promise<MerchantDetail> {
   };
 }
 
-export async function incrementMerchantView(id: string) {
+export async function incrementMerchantView(
+  id: string,
+  source: string = "Recommendation",
+) {
   const res = await api.post<ApiResponse<string | null> | string | null>(
     `/merchants/${id}/views`,
+    { source },
   );
   return unwrapApiData(res.data);
 }

@@ -6,6 +6,9 @@ import {
   Sparkles,
   Star,
   Clock,
+  Tag,
+  Utensils,
+  Gift,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -14,6 +17,7 @@ import { getDisplayUnderratedScore } from "../utils/underratedScore";
 import { cleanAddress } from "@/shared/utils/address";
 import { ImageWithFallback } from "@/shared/components";
 import { WishlistButton } from "./WishlistButton";
+import { incrementMerchantView } from "../services/merchantService";
 
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
@@ -104,6 +108,9 @@ export default function MerchantCard({
   return (
     <Link
       to={merchantUrl}
+      onClick={() => {
+        incrementMerchantView(merchant.id, "Recommendation").catch(() => {});
+      }}
       aria-label={`Xem chi tiết quán ${name}`}
       className={cn(
         "group relative block overflow-hidden rounded-3xl border bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 shadow-xs transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:shadow-cyan-950/15 backdrop-blur-md",
@@ -216,6 +223,20 @@ export default function MerchantCard({
                   </span>
                 )}
 
+              {merchant.hasActiveCampaign && (
+                <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-emerald-50/90 dark:bg-emerald-500/10 px-2.5 py-1 text-emerald-800 dark:text-emerald-300 shadow-2xs font-bold">
+                  <Gift className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Khuyến mãi
+                </span>
+              )}
+
+              {merchant.priceRange && (
+                <span className="inline-flex items-center gap-1 rounded-xl border border-purple-200/80 dark:border-purple-500/20 bg-purple-50/90 dark:bg-purple-500/10 px-2.5 py-1 text-purple-800 dark:text-purple-300 shadow-2xs font-mono">
+                  <Tag className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  {merchant.priceRange}
+                </span>
+              )}
+
               {underratedScore !== null && (
                 <span
                   className={cn(
@@ -233,6 +254,15 @@ export default function MerchantCard({
                 </span>
               )}
             </div>
+
+            {merchant.featuredFoods && merchant.featuredFoods.length > 0 && (
+              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-white/5 px-2.5 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
+                <Utensils className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
+                <span className="line-clamp-1 font-medium">
+                  {merchant.featuredFoods.join(" • ")}
+                </span>
+              </div>
+            )}
 
             {merchant.address && (
               <p
