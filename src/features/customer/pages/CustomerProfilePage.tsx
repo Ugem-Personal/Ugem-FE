@@ -11,6 +11,7 @@ import {
   UserRound,
   Lock,
   Calendar,
+  Check,
 } from "lucide-react";
 
 import { getCurrentUser, refreshCurrentSession } from "@/features/auth";
@@ -28,6 +29,12 @@ import {
   uploadImage,
   validateImageFile,
 } from "@/shared/services/mediaService";
+import {
+  DEFAULT_DISCOVERY_OPTIONS,
+  getDiscoveryOptions,
+} from "@/shared/services/categoryService";
+import { getCategoryDisplayName } from "@/shared/utils/category";
+import type { DiscoveryOptions } from "@/shared/types";
 import {
   createReviewerApplication,
   getMyReviewerApplication,
@@ -740,25 +747,74 @@ function DiningPreferencesCard() {
   const [preferences, setPreferences] = useState<CustomerPreferences>({
     preferredRestaurantTypes: [],
     preferredMainDishTypes: [],
+    preferredCategoryIds: [],
     preferredPriceRanges: [],
   });
+  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
+    DEFAULT_DISCOVERY_OPTIONS,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  const restaurantTypeOptions = ["Quán ăn", "Nhà hàng", "Cafe", "Ăn vặt", "Quán nhậu"];
-  const mainDishTypeOptions = ["Cơm", "Bún", "Phở", "Lẩu", "Nướng", "Trà sữa"];
-  const priceRangeOptions = ["Bình dân", "Trung bình", "Cao cấp"];
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       try {
-        const data = await getCustomerPreferences();
+        const [data, options] = await Promise.all([
+          getCustomerPreferences(),
+          getDiscoveryOptions().catch(() => DEFAULT_DISCOVERY_OPTIONS),
+        ]);
         if (active && data) {
+          setDiscoveryOptions(options);
+
+          const restaurantAliases: Record<string, string> = {
+            "Quán ăn": "Quán ăn gia đình",
+            "Nhà hàng": "Nhà hàng nhỏ",
+            Cafe: "Cafe / Đồ uống",
+          };
+          const preferredRestaurantTypes = data.preferredRestaurantTypes
+            .map((value) => restaurantAliases[value] ?? value)
+            .filter((value) => options.restaurantTypes.includes(value));
+          const preferredPriceRanges = data.preferredPriceRanges
+            .map((value) => (value === "Trung bình" ? "Tầm trung" : value))
+            .filter((value) => options.priceRanges.includes(value));
+          const legacyFoodPreferences = [
+            ...data.preferredMainDishTypes,
+            ...data.preferredRestaurantTypes.filter(
+              (value) => value === "Ăn vặt",
+            ),
+          ];
+          const inferredCategoryIds = options.foodCategories
+            .filter((category) => {
+              const label = getCategoryDisplayName(category.name);
+              return legacyFoodPreferences.some((preference) => {
+                if (preference === "Ăn vặt") {
+                  return label === "Món ăn nhẹ" || label === "Ăn vặt";
+                }
+                if (preference === "Trà sữa") return label === "Đồ uống";
+                return ["Cơm", "Bún", "Phở", "Lẩu", "Nướng"].includes(
+                  preference,
+                )
+                  ? label === "Món chính"
+                  : label === preference;
+              });
+            })
+            .map((category) => category.id);
+          const availableCategoryIds = new Set(
+            options.foodCategories.map((category) => category.id),
+          );
+          const savedCategoryIds = (data.preferredCategoryIds ?? []).filter(
+            (categoryId) => availableCategoryIds.has(categoryId),
+          );
+
           setPreferences({
-            preferredRestaurantTypes: data.preferredRestaurantTypes || [],
-            preferredMainDishTypes: data.preferredMainDishTypes || [],
-            preferredPriceRanges: data.preferredPriceRanges || [],
+            preferredRestaurantTypes: [...new Set(preferredRestaurantTypes)],
+            preferredMainDishTypes: [],
+            preferredCategoryIds:
+              savedCategoryIds.length > 0
+                ? savedCategoryIds
+                : inferredCategoryIds,
+            preferredPriceRanges: [...new Set(preferredPriceRanges)],
           });
         }
       } catch (err) {
@@ -842,19 +898,21 @@ function DiningPreferencesCard() {
               Loại quán yêu thích
             </label>
             <div className="flex flex-wrap gap-2.5">
-              {restaurantTypeOptions.map((option) => {
+              {discoveryOptions.restaurantTypes.map((option) => {
                 const checked = preferences.preferredRestaurantTypes.includes(option);
                 return (
                   <button
                     key={option}
                     type="button"
                     onClick={() => toggleItem("preferredRestaurantTypes", option)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition border ${
+                    aria-pressed={checked}
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition ${
                       checked
                         ? "bg-amber-500 text-slate-950 border-amber-400 shadow-sm"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-amber-400/50"
                     }`}
                   >
+                    {checked ? <Check className="h-3.5 w-3.5" /> : null}
                     {option}
                   </button>
                 );
@@ -864,23 +922,32 @@ function DiningPreferencesCard() {
 
           <div>
             <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3">
-              Món chính ưa thích
+              Nhóm món yêu thích
             </label>
+            <p className="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Gợi ý dựa trên category thực tế của các món đang có trong menu.
+            </p>
             <div className="flex flex-wrap gap-2.5">
-              {mainDishTypeOptions.map((option) => {
-                const checked = preferences.preferredMainDishTypes.includes(option);
+              {discoveryOptions.foodCategories.map((category) => {
+                const checked = preferences.preferredCategoryIds.includes(
+                  category.id,
+                );
                 return (
                   <button
-                    key={option}
+                    key={category.id}
                     type="button"
-                    onClick={() => toggleItem("preferredMainDishTypes", option)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition border ${
+                    onClick={() =>
+                      toggleItem("preferredCategoryIds", category.id)
+                    }
+                    aria-pressed={checked}
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition ${
                       checked
                         ? "bg-amber-500 text-slate-950 border-amber-400 shadow-sm"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-amber-400/50"
                     }`}
                   >
-                    {option}
+                    {checked ? <Check className="h-3.5 w-3.5" /> : null}
+                    {getCategoryDisplayName(category.name)}
                   </button>
                 );
               })}
@@ -892,19 +959,21 @@ function DiningPreferencesCard() {
               Mức giá mong muốn
             </label>
             <div className="flex flex-wrap gap-2.5">
-              {priceRangeOptions.map((option) => {
+              {discoveryOptions.priceRanges.map((option) => {
                 const checked = preferences.preferredPriceRanges.includes(option);
                 return (
                   <button
                     key={option}
                     type="button"
                     onClick={() => toggleItem("preferredPriceRanges", option)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition border ${
+                    aria-pressed={checked}
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition ${
                       checked
                         ? "bg-amber-500 text-slate-950 border-amber-400 shadow-sm"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-amber-400/50"
                     }`}
                   >
+                    {checked ? <Check className="h-3.5 w-3.5" /> : null}
                     {option}
                   </button>
                 );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   FieldErrors,
   UseFormRegister,
@@ -7,6 +7,12 @@ import type {
 } from "react-hook-form";
 import { Info, Mail, Store, Tags, Utensils, Wallet, Clock, ImagePlus } from "lucide-react";
 import type { OnboardingFormValues } from "../schema";
+import {
+  DEFAULT_DISCOVERY_OPTIONS,
+  getDiscoveryOptions,
+} from "@/shared/services/categoryService";
+import { getCategoryDisplayName } from "@/shared/utils/category";
+import type { DiscoveryOptions } from "@/shared/types";
 import {
   IMAGE_UPLOAD_ACCEPT,
   uploadImage,
@@ -19,8 +25,6 @@ type Props = Readonly<{
   setValue: UseFormSetValue<OnboardingFormValues>;
   watch: UseFormWatch<OnboardingFormValues>;
 }>;
-
-const priceRanges = ["Tiết kiệm", "Bình dân", "Tầm trung"];
 
 const openingHourPresets = [
   { label: "Sáng - tối", value: "08:00 - 22:00" },
@@ -38,6 +42,8 @@ function getOpeningHourParts(value?: string) {
 
 export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
   const priceRange = watch("priceRange");
+  const restaurantType = watch("restaurantType");
+  const mainDishType = watch("mainDishType");
   const logoUploadDataUrl = watch("logoUploadDataUrl");
   const openingHours = watch("openingHours") || "08:00 - 22:00";
   const { start: openingStart, end: openingEnd } =
@@ -46,6 +52,26 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState("");
   const [logoFileName, setLogoFileName] = useState("");
+  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
+    DEFAULT_DISCOVERY_OPTIONS,
+  );
+  const mainDishOptions = useMemo(
+    () =>
+      discoveryOptions.foodCategories.map((category) =>
+        getCategoryDisplayName(category.name),
+      ),
+    [discoveryOptions.foodCategories],
+  );
+
+  useEffect(() => {
+    let active = true;
+    getDiscoveryOptions()
+      .then((options) => active && setDiscoveryOptions(options))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleLogoUpload(file?: File) {
     if (!file) return;
@@ -317,10 +343,15 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
                   {...register("restaurantType")}
                 >
                   <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Chọn loại hình</option>
-                  <option value="Quán ăn gia đình" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Quán ăn gia đình</option>
-                  <option value="Quán vỉa hè" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Quán vỉa hè</option>
-                  <option value="Nhà hàng nhỏ" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Nhà hàng nhỏ</option>
-                  <option value="Xe đẩy / gánh hàng" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Xe đẩy / gánh hàng</option>
+                  {restaurantType &&
+                  !discoveryOptions.restaurantTypes.includes(restaurantType) ? (
+                    <option value={restaurantType}>{restaurantType}</option>
+                  ) : null}
+                  {discoveryOptions.restaurantTypes.map((type) => (
+                    <option key={type} value={type} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </div>
               {errors.restaurantType && (
@@ -332,7 +363,7 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
 
             <label className="block space-y-2">
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                Loại món chính *
+                Nhóm món chủ đạo *
               </span>
               <div className="relative">
                 <Utensils className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -340,12 +371,15 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
                   className="h-12 w-full appearance-none rounded-2xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-800/90 pl-12 pr-4 text-sm font-medium text-slate-900 dark:text-white shadow-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
                   {...register("mainDishType")}
                 >
-                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Chọn món chính</option>
-                  <option value="Phở / Bún / Mì" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Phở / Bún / Mì</option>
-                  <option value="Cơm" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Cơm</option>
-                  <option value="Bánh mì" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Bánh mì</option>
-                  <option value="Ăn vặt" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Ăn vặt</option>
-                  <option value="Đặc sản vùng miền" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Đặc sản vùng miền</option>
+                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Chọn nhóm món</option>
+                  {mainDishType && !mainDishOptions.includes(mainDishType) ? (
+                    <option value={mainDishType}>{mainDishType}</option>
+                  ) : null}
+                  {mainDishOptions.map((type) => (
+                    <option key={type} value={type} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </div>
               {errors.mainDishType && (
@@ -363,7 +397,7 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
             </span>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {priceRanges.map((item) => (
+              {discoveryOptions.priceRanges.map((item) => (
                 <button
                   key={item}
                   type="button"

@@ -39,6 +39,12 @@ import {
   uploadImage,
   validateImageFile,
 } from "@/shared/services/mediaService";
+import {
+  DEFAULT_DISCOVERY_OPTIONS,
+  getDiscoveryOptions,
+} from "@/shared/services/categoryService";
+import { getCategoryDisplayName } from "@/shared/utils/category";
+import type { DiscoveryOptions } from "@/shared/types";
 
 type MerchantEditForm = {
   merchantName: string;
@@ -57,6 +63,7 @@ const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
   "Loại hình quán",
   "Loại món chính",
+  "Nhóm món chủ đạo",
   "Khoảng giá trung bình",
 ];
 
@@ -204,6 +211,9 @@ export function MerchantRestaurantPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<MerchantEditForm>(() => toEditForm(null));
+  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
+    DEFAULT_DISCOVERY_OPTIONS,
+  );
   const { data: applications = [], isLoading: isLoadingApplications } =
     useMyApplications();
 
@@ -218,6 +228,23 @@ export function MerchantRestaurantPage() {
     () => getDisplayDescription(merchant?.description),
     [merchant?.description],
   );
+  const mainDishOptions = useMemo(
+    () =>
+      discoveryOptions.foodCategories.map((category) =>
+        getCategoryDisplayName(category.name),
+      ),
+    [discoveryOptions.foodCategories],
+  );
+
+  useEffect(() => {
+    let active = true;
+    getDiscoveryOptions()
+      .then((options) => active && setDiscoveryOptions(options))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -472,26 +499,26 @@ export function MerchantRestaurantPage() {
                     disabled={saving}
                     placeholder="VD: 08:00 - 22:00"
                   />
-                  <EditField
+                  <EditSelectField
                     label="Loại hình nhà hàng"
                     value={form.restaurantType}
                     onChange={(v) => setForm((p) => ({ ...p, restaurantType: v }))}
                     disabled={saving}
-                    placeholder="VD: Quán ăn gia đình, Fast food..."
+                    options={discoveryOptions.restaurantTypes}
                   />
-                  <EditField
-                    label="Loại món ăn chính"
+                  <EditSelectField
+                    label="Nhóm món chủ đạo"
                     value={form.mainDishType}
                     onChange={(v) => setForm((p) => ({ ...p, mainDishType: v }))}
                     disabled={saving}
-                    placeholder="VD: Cơm tấm, Bún bò, Trà sữa..."
+                    options={mainDishOptions}
                   />
-                  <EditField
+                  <EditSelectField
                     label="Khoảng giá trung bình"
                     value={form.priceRange}
                     onChange={(v) => setForm((p) => ({ ...p, priceRange: v }))}
                     disabled={saving}
-                    placeholder="VD: 30.000đ - 100.000đ"
+                    options={discoveryOptions.priceRanges}
                   />
                   <EditField
                     label="Email liên hệ nhà hàng"
@@ -590,7 +617,7 @@ export function MerchantRestaurantPage() {
                     <InfoLine icon={<Mail className="h-4 w-4" />} label="Email nhà hàng" value={merchant.email} />
                     <InfoLine icon={<Clock3 className="h-4 w-4" />} label="Giờ mở cửa" value={merchant.openingHours} />
                     <InfoLine icon={<Tag className="h-4 w-4" />} label="Loại hình quán" value={merchant.restaurantType} />
-                    <InfoLine icon={<Compass className="h-4 w-4" />} label="Món chính" value={merchant.mainDishType} />
+                    <InfoLine icon={<Compass className="h-4 w-4" />} label="Nhóm món chủ đạo" value={merchant.mainDishType} />
                     <InfoLine icon={<DollarSign className="h-4 w-4" />} label="Khoảng giá" value={merchant.priceRange} />
                   </div>
 
@@ -829,6 +856,45 @@ function EditField({
         placeholder={placeholder || label}
         className="h-12 w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 placeholder:text-slate-400"
       />
+    </div>
+  );
+}
+
+function EditSelectField({
+  label,
+  value,
+  onChange,
+  disabled,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  options: string[];
+}) {
+  const visibleOptions = value && !options.includes(value)
+    ? [value, ...options]
+    : options;
+
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950/60 dark:text-white"
+      >
+        <option value="">Chọn {label.toLocaleLowerCase("vi-VN")}</option>
+        {visibleOptions.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

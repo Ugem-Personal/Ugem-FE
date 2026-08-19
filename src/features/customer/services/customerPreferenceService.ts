@@ -3,6 +3,7 @@ import { api } from "@/lib/axios";
 export type CustomerPreferences = {
   preferredRestaurantTypes: string[];
   preferredMainDishTypes: string[];
+  preferredCategoryIds: string[];
   preferredPriceRanges: string[];
 };
 

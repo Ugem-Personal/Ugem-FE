@@ -9,7 +9,7 @@ export const onboardingSchema = z.object({
     .regex(/^0\d{9}$/, "Số điện thoại không hợp lệ"),
 
   restaurantType: z.string().min(1, "Vui lòng chọn loại hình quán"),
-  mainDishType: z.string().min(1, "Vui lòng chọn loại món chính"),
+  mainDishType: z.string().min(1, "Vui lòng chọn nhóm món chủ đạo"),
   priceRange: z.string().min(1, "Vui lòng chọn khoảng giá"),
   openingHours: z.string().min(1, "Vui lòng nhập giờ mở cửa"),
 

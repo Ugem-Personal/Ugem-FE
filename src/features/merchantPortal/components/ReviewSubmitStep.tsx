@@ -69,7 +69,7 @@ export function ReviewSubmitStep({
         </article>
 
         <article>
-          <span>Món chính</span>
+          <span>Nhóm món chủ đạo</span>
           <strong>{values.mainDishType || "Chưa chọn"}</strong>
         </article>
 

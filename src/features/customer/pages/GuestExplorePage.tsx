@@ -20,8 +20,11 @@ import { Link, Navigate } from "react-router-dom";
 
 import logoUrl from "@/assets/ugem-logo.png";
 import { ModeToggle } from "@/shared/components";
-import { getCategories } from "@/shared/services/categoryService";
-import type { Category } from "@/shared/types";
+import {
+  DEFAULT_DISCOVERY_OPTIONS,
+  getDiscoveryOptions,
+} from "@/shared/services/categoryService";
+import type { Category, DiscoveryOptions } from "@/shared/types";
 import { getCategoryDisplayName } from "@/shared/utils/category";
 import { cleanAddress } from "@/shared/utils/address";
 import {
@@ -38,26 +41,12 @@ import {
 } from "@/shared/services/vietmapService";
 
 type Coords = { latitude: number; longitude: number };
-type RestaurantFilter =
-  | `restaurant:${string}`
-  | `dish:${string}`
-  | "";
-
 const DEFAULT_COORDS: Coords = {
   latitude: 10.762622,
   longitude: 106.660172,
 };
 
 const DISTANCE_OPTIONS = [5, 10, 15, 30];
-const PRICE_OPTIONS = ["Tiết kiệm", "Bình dân", "Tầm trung"];
-const RESTAURANT_TYPE_OPTIONS = [
-  "Quán ăn gia đình",
-  "Quán vỉa hè",
-  "Nhà hàng nhỏ",
-  "Xe đẩy / gánh hàng",
-];
-const MAIN_DISH_OPTIONS = ["Phở / Bún / Mì", "Cơm", "Bánh mì", "Ăn vặt"];
-
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
   "from-amber-600 via-orange-600 to-rose-700",
@@ -132,6 +121,9 @@ export default function GuestExplorePage() {
   const authenticatedUser = getCurrentUser();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
+    DEFAULT_DISCOVERY_OPTIONS,
+  );
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -147,8 +139,7 @@ export default function GuestExplorePage() {
   const [locationError, setLocationError] = useState("");
   const [distanceKm, setDistanceKm] = useState(15);
   const [priceRange, setPriceRange] = useState("");
-  const [restaurantFilter, setRestaurantFilter] =
-    useState<RestaurantFilter>("");
+  const [restaurantFilter, setRestaurantFilter] = useState("");
   const [requestVersion, setRequestVersion] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -157,8 +148,12 @@ export default function GuestExplorePage() {
 
   useEffect(() => {
     let active = true;
-    getCategories()
-      .then((items) => active && setCategories(items.filter((item) => !item.parentId)))
+    getDiscoveryOptions()
+      .then((options) => {
+        if (!active) return;
+        setDiscoveryOptions(options);
+        setCategories(options.foodCategories.filter((item) => !item.parentId));
+      })
       .catch(() => undefined);
     return () => {
       active = false;
@@ -196,21 +191,13 @@ export default function GuestExplorePage() {
   useEffect(() => {
     let active = true;
 
-    const restaurantType = restaurantFilter.startsWith("restaurant:")
-      ? restaurantFilter.slice("restaurant:".length)
-      : undefined;
-    const mainDishType = restaurantFilter.startsWith("dish:")
-      ? restaurantFilter.slice("dish:".length)
-      : undefined;
-
     const request = getNearbyMerchants({
       latitude: coords.latitude,
       longitude: coords.longitude,
       keyword: activeKeyword || undefined,
       categoryId: selectedCategory || undefined,
       priceRange: priceRange || undefined,
-      restaurantType,
-      mainDishType,
+      restaurantType: restaurantFilter || undefined,
       radiusKm: distanceKm,
     });
 
@@ -536,7 +523,7 @@ export default function GuestExplorePage() {
                   className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Tất cả mức giá</option>
-                  {PRICE_OPTIONS.map((price) => (
+                  {discoveryOptions.priceRanges.map((price) => (
                     <option key={price} value={price}>
                       {price}
                     </option>
@@ -545,30 +532,21 @@ export default function GuestExplorePage() {
               </label>
 
               <label className="relative min-w-44 flex-1 lg:max-w-56">
-                <span className="sr-only">Loại quán hoặc món chủ đạo</span>
+                <span className="sr-only">Loại hình quán</span>
                 <select
                   value={restaurantFilter}
                   onChange={(event) => {
                     setLoading(true);
-                    setRestaurantFilter(event.target.value as RestaurantFilter);
+                    setRestaurantFilter(event.target.value);
                   }}
                   className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="">Loại quán / món chủ đạo</option>
-                  <optgroup label="Loại quán">
-                    {RESTAURANT_TYPE_OPTIONS.map((type) => (
-                      <option key={type} value={`restaurant:${type}`}>
-                        {type}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Món chính">
-                    {MAIN_DISH_OPTIONS.map((dish) => (
-                      <option key={dish} value={`dish:${dish}`}>
-                        {dish}
-                      </option>
-                    ))}
-                  </optgroup>
+                  <option value="">Tất cả loại hình quán</option>
+                  {discoveryOptions.restaurantTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>

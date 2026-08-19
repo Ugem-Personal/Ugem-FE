@@ -1,5 +1,32 @@
 import { api } from "@/lib/axios";
-import type { ApiResponse, Category } from "@/shared/types";
+import type { ApiResponse, Category, DiscoveryOptions } from "@/shared/types";
+
+export const DEFAULT_DISCOVERY_OPTIONS: DiscoveryOptions = {
+  restaurantTypes: [
+    "Quán ăn gia đình",
+    "Quán vỉa hè",
+    "Nhà hàng nhỏ",
+    "Cafe / Đồ uống",
+    "Quán nhậu",
+    "Xe đẩy / gánh hàng",
+  ],
+  priceRanges: ["Tiết kiệm", "Bình dân", "Tầm trung"],
+  foodCategories: [],
+};
+
+let discoveryOptionsRequest: Promise<DiscoveryOptions> | null = null;
+
+export async function getDiscoveryOptions() {
+  discoveryOptionsRequest ??= api
+    .get<ApiResponse<DiscoveryOptions>>("/categories/discovery-options")
+    .then(({ data }) => data.data)
+    .catch((error) => {
+      discoveryOptionsRequest = null;
+      throw error;
+    });
+
+  return discoveryOptionsRequest;
+}
 
 export async function getCategories() {
   const { data } = await api.get<ApiResponse<Category[]>>("/categories");

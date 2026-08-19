@@ -48,6 +48,12 @@ export type Category = {
   description?: string;
 };
 
+export type DiscoveryOptions = {
+  restaurantTypes: string[];
+  priceRanges: string[];
+  foodCategories: Category[];
+};
+
 export type Food = {
   id: string;
   name: string;

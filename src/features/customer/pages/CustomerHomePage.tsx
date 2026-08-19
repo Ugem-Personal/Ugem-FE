@@ -24,8 +24,11 @@ import { cn } from "@/lib/utils";
 import { UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { getCategories } from "@/shared/services/categoryService";
-import type { Category } from "@/shared/types";
+import {
+  DEFAULT_DISCOVERY_OPTIONS,
+  getDiscoveryOptions,
+} from "@/shared/services/categoryService";
+import type { Category, DiscoveryOptions } from "@/shared/types";
 import { getCategoryDisplayName } from "@/shared/utils/category";
 
 import MerchantCard from "../components/MerchantCard";
@@ -53,14 +56,6 @@ type LocationResult = {
 type MerchantRecord = Record<string, unknown>;
 type LocationMode = "browser" | "manual" | "default";
 type CustomerServiceMode = "delivery" | "dineIn";
-type PriceRangeFilter = "Tiết kiệm" | "Bình dân" | "Tầm trung";
-
-const PRICE_RANGE_FILTERS: PriceRangeFilter[] = [
-  "Tiết kiệm",
-  "Bình dân",
-  "Tầm trung",
-];
-
 const DEFAULT_COORDS: Coords = {
   latitude: 10.762622,
   longitude: 106.660172,
@@ -237,11 +232,12 @@ export default function CustomerHomePage() {
 
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
+    DEFAULT_DISCOVERY_OPTIONS,
+  );
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedPriceRange, setSelectedPriceRange] = useState<
-    PriceRangeFilter | ""
-  >("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -343,8 +339,11 @@ export default function CustomerHomePage() {
 
     const loadCategories = async () => {
       try {
-        const data = await getCategories();
-        if (active) setCategories(data ?? []);
+        const options = await getDiscoveryOptions();
+        if (active) {
+          setDiscoveryOptions(options);
+          setCategories(options.foodCategories ?? []);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -562,7 +561,7 @@ export default function CustomerHomePage() {
     void loadMerchants(keyword, coords, nextCategoryId, selectedPriceRange);
   }
 
-  function handlePriceRangeChange(nextPriceRange: PriceRangeFilter | "") {
+  function handlePriceRangeChange(nextPriceRange: string) {
     setSelectedPriceRange(nextPriceRange);
     void loadMerchants(keyword, coords, selectedCategoryId, nextPriceRange);
   }
@@ -767,7 +766,7 @@ export default function CustomerHomePage() {
           Tất cả
         </button>
 
-        {PRICE_RANGE_FILTERS.map((label) => (
+        {discoveryOptions.priceRanges.map((label) => (
           <button
             key={label}
             type="button"
