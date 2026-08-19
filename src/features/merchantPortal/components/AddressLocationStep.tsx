@@ -496,65 +496,25 @@ export function AddressLocationStep({
 
       <label>
         <span>Địa chỉ quán *</span>
-        <div style={{ position: "relative" }}>
+        <div className="address-search-field">
           <input
             placeholder="Ví dụ: 12 Nguyễn Trãi, Quận 1, TP.HCM"
             {...register("address")}
             onChange={handleAddressChange}
           />
           {geocoding && (
-            <span
-              style={{
-                position: "absolute",
-                right: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 12,
-                color: "#888",
-              }}
-            >
+            <span className="address-searching-status">
               ⏳ Đang tìm...
             </span>
           )}
           {!HAS_VIETMAP_SERVICE_KEY && (
-            <div
-              style={{
-                position: "absolute",
-                right: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 12,
-                color: "#f59e0b",
-                textAlign: "right",
-              }}
-            >
+            <div className="address-service-warning">
               ⚠ Chưa cấu hình VietMap Service key
             </div>
           )}
           {geocodeSuggestions.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: "calc(100% + 8px)",
-                zIndex: 30,
-                border: "1px solid #dbe4f0",
-                borderRadius: 12,
-                background: "#fff",
-                boxShadow: "0 12px 30px rgba(15, 23, 42, 0.12)",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  padding: "8px 12px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#64748b",
-                  borderBottom: "1px solid #eef2f7",
-                }}
-              >
+            <div className="address-suggestions">
+              <div className="address-suggestions-heading">
                 Chọn một gợi ý bên dưới
               </div>
               {geocodeSuggestions.map((item) => (
@@ -562,21 +522,12 @@ export function AddressLocationStep({
                   key={`${item.lat}-${item.lng}-${item.display}`}
                   type="button"
                   onClick={() => void handlePickSuggestion(item)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    border: 0,
-                    background: "#fff",
-                    cursor: "pointer",
-                  }}
+                  className="address-suggestion-button"
                 >
-                  <div
-                    style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}
-                  >
+                  <div className="address-suggestion-title">
                     {getSuggestionAddress(item)}
                   </div>
-                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                  <div className="address-suggestion-subtitle">
                     {cleanAddress(item.address)}
                   </div>
                 </button>
@@ -586,117 +537,76 @@ export function AddressLocationStep({
         </div>
         {errors.address && <small>{errors.address.message}</small>}
         {geocodeStatus === "ok" && !geocoding && (
-          <small style={{ color: "#22c55e" }}>
+          <small className="address-status address-status-success">
             ✓ Đã xác định được vị trí trên bản đồ
           </small>
         )}
         {geocodeStatus === "error" && !geocoding && (
-          <small style={{ color: "#ef4444" }}>
+          <small className="address-status address-status-error">
             ⚠ Không tìm được vị trí, bạn có thể click thẳng trên bản đồ để chọn
           </small>
         )}
         {geocodeStatus === "ok" && !geocoding && (
-          <small style={{ color: "#2563eb" }}>
+          <small className="address-status address-status-info">
             📍 Vị trí đã được chọn trên bản đồ
           </small>
         )}
         {addressDetailStatus === "detailed" && !geocoding && (
-          <small style={{ color: "#15803d" }}>
+          <small className="address-status address-status-success">
             Địa chỉ chi tiết đã được VietMap xác định.
           </small>
         )}
         {addressDetailStatus === "coarse" && !geocoding && (
-          <small style={{ color: "#b45309" }} role="status">
+          <small className="address-status address-status-warning" role="status">
             VietMap mới xác định được khu vực. Vui lòng bổ sung số nhà và tên
             đường để hồ sơ chính xác hơn.
           </small>
         )}
       </label>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+      <div className="address-location-actions">
         <button
           type="button"
           onClick={handleUseCurrentLocation}
           disabled={locating}
-          style={{
-            border: "1px solid #d1d5db",
-            background: "#fff",
-            color: "#111827",
-            borderRadius: 999,
-            padding: "10px 14px",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: locating ? "wait" : "pointer",
-          }}
+          className="address-location-button"
         >
           {locating ? "Đang lấy vị trí..." : "Lấy vị trí hiện tại"}
         </button>
         {geocodeStatus === "ok" && (
-          <span
-            style={{
-              alignSelf: "center",
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#2563eb",
-            }}
-          >
+          <span className="address-location-pinned">
             Đã ghim vị trí hiện tại
           </span>
         )}
       </div>
 
       {(locating || locationAccuracy !== null || locationError) && (
-        <div style={{ marginTop: 8 }}>
+        <div className="address-location-feedback">
           {locating && (
-            <small style={{ color: "#2563eb" }}>
+            <small className="address-status address-status-info">
               Đang lấy vị trí chính xác nhất từ trình duyệt...
             </small>
           )}
           {locationAccuracy !== null && !locationError && (
-            <small style={{ color: "#2563eb" }}>
+            <small className="address-status address-status-info">
               Độ chính xác hiện tại: khoảng {locationAccuracy}m
             </small>
           )}
           {locationError && (
-            <small style={{ color: "#ef4444" }}>{locationError}</small>
+            <small className="address-status address-status-error">{locationError}</small>
           )}
         </div>
       )}
 
       {/* Map */}
-      <div
-        ref={mapContainer}
-        style={{
-          position: "relative",
-          width: "100%",
-          height: 320,
-          borderRadius: 12,
-          overflow: "hidden",
-          border: "1px solid #e5e7eb",
-          marginTop: 8,
-        }}
-      >
+      <div ref={mapContainer} className="address-map-shell">
         {!HAS_VIETMAP_KEY && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 16,
-              background: "#f8fafc",
-              color: "#64748b",
-              fontSize: 13,
-              fontWeight: 700,
-              textAlign: "center",
-            }}
-          >
+          <div className="address-map-unavailable">
             Chưa cấu hình VietMap API key
           </div>
         )}
       </div>
-      <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+      <p className="address-map-hint">
         💡 Nhập địa chỉ để tự động định vị, hoặc click trực tiếp trên bản đồ để
         chọn vị trí chính xác
       </p>
@@ -708,16 +618,7 @@ export function AddressLocationStep({
       />
 
       {(errors.latitude || errors.longitude) && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 10,
-            backgroundColor: "#fee2e2",
-            borderRadius: 8,
-            color: "#b91c1c",
-            fontSize: 12,
-          }}
-        >
+        <div className="address-coordinate-error">
           ⚠️{" "}
           {errors.latitude?.message ||
             errors.longitude?.message ||
