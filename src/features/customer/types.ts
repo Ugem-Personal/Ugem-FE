@@ -22,6 +22,7 @@ export type Merchant = {
   status?: string;
   hasActiveCampaign?: boolean;
   featuredFoods?: string[];
+  preferenceScore?: number;
   recommendationScore?: number;
   menu?: MerchantMenuItem[];
 };

@@ -230,6 +230,17 @@ export default function MerchantCard({
                 </span>
               )}
 
+              {typeof merchant.preferenceScore === "number" &&
+                merchant.preferenceScore > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-xl border border-cyan-200/80 bg-cyan-50/90 px-2.5 py-1 font-extrabold text-cyan-800 shadow-2xs dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-300"
+                    title="Mức độ phù hợp với sở thích ăn uống đã lưu"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                    Hợp gu {Math.round(merchant.preferenceScore)}%
+                  </span>
+                )}
+
               {merchant.priceRange && (
                 <span className="inline-flex items-center gap-1 rounded-xl border border-purple-200/80 dark:border-purple-500/20 bg-purple-50/90 dark:bg-purple-500/10 px-2.5 py-1 text-purple-800 dark:text-purple-300 shadow-2xs font-mono">
                   <Tag className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />

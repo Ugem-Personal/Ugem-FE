@@ -786,8 +786,11 @@ function DiningPreferencesCard() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateCustomerPreferences(preferences);
-      notify.success("Đã cập nhật sở thích ăn uống thành công.");
+      const savedPreferences = await updateCustomerPreferences(preferences);
+      setPreferences(savedPreferences);
+      notify.success(
+        "Đã lưu sở thích. Gợi ý quán sẽ được cập nhật theo gu của bạn.",
+      );
     } catch (err) {
       console.error(err);
       notify.error("Cập nhật sở thích thất bại.");

@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
   Bell,
   CheckCheck,
@@ -41,12 +41,23 @@ type NotificationBellMenuProps = {
 
 export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const loadNotifications = async (showError = true) => {
-    setLoading(true);
+  const loadNotifications = useCallback(async ({
+    background = false,
+    showError = true,
+  }: {
+    background?: boolean;
+    showError?: boolean;
+  } = {}) => {
+    if (background) {
+      setRefreshing(true);
+    } else {
+      setInitialLoading(true);
+    }
 
     try {
       const [data, count] = await Promise.all([
@@ -61,9 +72,24 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
         notify.error("Không tải được thông báo.");
       }
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  const hasActiveOrderNotification = useMemo(
+    () =>
+      notifications.some((item) => {
+        if (item.isRead || getNotificationMeta(item).category !== "order") {
+          return false;
+        }
+
+        return !/(completed|cancelled|canceled|rejected|expired|failed|hoàn tất|đã hủy|từ chối)/i.test(
+          getNotificationText(item),
+        );
+      }),
+    [notifications],
+  );
 
   const handleMarkAsRead = async (notificationId?: string) => {
     if (!notificationId) return;
@@ -80,7 +106,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
     } catch (error) {
       console.error(error);
       notify.error("Không thể đánh dấu thông báo đã đọc.");
-      void loadNotifications(false);
+      void loadNotifications({ background: true, showError: false });
     }
   };
 
@@ -99,39 +125,35 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
     } catch (error) {
       console.error(error);
       notify.error("Không thể đánh dấu tất cả thông báo đã đọc.");
-      void loadNotifications(false);
+      void loadNotifications({ background: true, showError: false });
     }
   };
 
   useEffect(() => {
-    queueMicrotask(() => void loadNotifications(false));
-
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") {
-        void loadNotifications(false);
-      }
-    };
-    const interval = window.setInterval(() => {
-      void loadNotifications(false);
-    }, 10000);
-
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
-    };
-  }, []);
+    queueMicrotask(() =>
+      void loadNotifications({ showError: false }),
+    );
+  }, [loadNotifications]);
 
   useEffect(() => {
     if (!open) return;
 
     queueMicrotask(() => {
-      void loadNotifications(false);
+      void loadNotifications({ background: true, showError: false });
     });
-  }, [open]);
+  }, [loadNotifications, open]);
+
+  useEffect(() => {
+    if (!open || !hasActiveOrderNotification) return;
+
+    const refreshActiveOrder = () => {
+      if (document.visibilityState !== "visible") return;
+      void loadNotifications({ background: true, showError: false });
+    };
+    const interval = window.setInterval(refreshActiveOrder, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [hasActiveOrderNotification, loadNotifications, open]);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -141,7 +163,7 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
           variant="outline"
           size="sm"
           className={cn(
-            "relative h-10 w-10 rounded-xl border-slate-200 bg-white p-0 text-cyan-700 shadow-sm hover:bg-cyan-50",
+            "relative h-10 w-10 rounded-xl border-slate-200 bg-white p-0 text-cyan-700 shadow-sm hover:bg-cyan-50 dark:border-white/10 dark:bg-slate-900 dark:text-cyan-300 dark:hover:bg-slate-800",
             className,
           )}
           aria-label="Xem thông báo"
@@ -155,13 +177,16 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-[min(26rem,calc(100vw-2rem))] rounded-2xl p-0">
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-slate-200 bg-white p-0 text-slate-950 shadow-2xl dark:border-white/10 dark:bg-slate-950 dark:text-white"
+      >
         <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <DropdownMenuLabel className="p-0 text-sm font-semibold text-slate-900">
+            <DropdownMenuLabel className="p-0 text-sm font-semibold text-slate-900 dark:text-white">
               Thông báo
             </DropdownMenuLabel>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {unreadCount > 0
                 ? `${unreadCount} thông báo chưa đọc`
                 : "Tất cả thông báo của tài khoản hiện tại"}
@@ -174,8 +199,8 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
               variant="ghost"
               size="sm"
               onClick={() => void handleMarkAllAsRead()}
-              className="h-8 gap-1.5 px-2 text-xs text-slate-600 hover:text-cyan-700"
-              disabled={loading || unreadCount === 0}
+              className="h-8 gap-1.5 px-2 text-xs text-slate-600 hover:text-cyan-700 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-cyan-300"
+              disabled={initialLoading || refreshing || unreadCount === 0}
             >
               <CheckCheck className="h-3.5 w-3.5" />
               Đọc tất cả
@@ -185,11 +210,11 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => void loadNotifications()}
-              className="h-8 gap-1.5 px-2 text-xs text-slate-600"
-              disabled={loading}
+              onClick={() => void loadNotifications({ background: true })}
+              className="h-8 gap-1.5 px-2 text-xs text-slate-600 hover:text-cyan-700 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-cyan-300"
+              disabled={initialLoading || refreshing}
             >
-              {loading ? (
+              {refreshing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <RefreshCw className="h-3.5 w-3.5" />
@@ -199,17 +224,17 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
           </div>
         </div>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="my-0 bg-slate-200 dark:bg-white/10" />
 
-        <div className="max-h-96 overflow-y-auto p-2">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
+        <div className="max-h-96 overflow-y-auto bg-slate-50/70 p-2 dark:bg-slate-950">
+          {initialLoading ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500 dark:text-slate-400">
               <Loader2 className="h-4 w-4 animate-spin" />
               Đang tải thông báo...
             </div>
           ) : notifications.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-500">
-              <Bell className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+            <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <Bell className="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-700" />
               Chưa có thông báo nào.
             </div>
           ) : (
@@ -225,12 +250,12 @@ export function NotificationBellMenu({ className }: NotificationBellMenuProps) {
           )}
         </div>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="my-0 bg-slate-200 dark:bg-white/10" />
 
-        <div className="p-3">
+        <div className="bg-white p-3 dark:bg-slate-950">
           <Button
             asChild
-            className="h-11 w-full justify-center rounded-xl bg-slate-950 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-cyan-700 hover:shadow-cyan-900/20 active:translate-y-0"
+            className="h-11 w-full justify-center rounded-xl bg-slate-950 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-cyan-700 hover:shadow-cyan-900/20 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
           >
             <Link to="/notifications" onClick={() => setOpen(false)}>
               Xem t&#7845;t c&#7843; th&#244;ng b&#225;o
@@ -286,7 +311,9 @@ function BellNotificationItem({
     <div
       className={cn(
         "rounded-xl border p-3 transition-colors",
-        item.isRead ? "border-slate-200 bg-white" : tone.border,
+        item.isRead
+          ? "border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900"
+          : tone.border,
         !item.isRead && tone.panel,
       )}
     >
@@ -315,17 +342,17 @@ function BellNotificationItem({
             ) : null}
           </div>
 
-          <p className="mt-1 text-sm font-black text-slate-950">
+          <p className="mt-1 text-sm font-black text-slate-950 dark:text-white">
             {getNotificationTitle(item)}
           </p>
 
           {body ? (
-            <p className="mt-1 line-clamp-3 text-sm leading-5 text-slate-600">
+            <p className="mt-1 line-clamp-3 text-sm leading-5 text-slate-600 dark:text-slate-300">
               {body}
             </p>
           ) : null}
 
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
             <span>{time || "Mới cập nhật"}</span>
             <div className="flex items-center gap-2">
               {!item.isRead ? (
@@ -336,7 +363,7 @@ function BellNotificationItem({
                     event.stopPropagation();
                     onMarkAsRead(item.id);
                   }}
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600 transition hover:bg-slate-50 hover:text-cyan-700"
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600 transition hover:bg-slate-50 hover:text-cyan-700 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-300"
                 >
                   Đã đọc
                 </button>
@@ -345,7 +372,7 @@ function BellNotificationItem({
                 <Link
                   to={meta.actionTo}
                   onClick={handleActionClick}
-                  className="inline-flex items-center gap-1 text-cyan-700"
+                  className="inline-flex items-center gap-1 text-cyan-700 hover:text-cyan-600 dark:text-cyan-300 dark:hover:text-cyan-200"
                 >
                   {meta.actionLabel}
                   <ExternalLink className="h-3 w-3" />
