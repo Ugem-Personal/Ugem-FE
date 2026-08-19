@@ -7,14 +7,18 @@ import {
   LoaderCircle,
   LockKeyhole,
   MapPin,
+  Navigation,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Store,
+  Tag,
   Utensils,
   X,
   ShieldCheck,
   Zap,
+  Gift,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 
@@ -26,11 +30,35 @@ import { getCategoryDisplayName } from "@/shared/utils/category";
 import { cleanAddress } from "@/shared/utils/address";
 import {
   getMerchantDetail,
-  getMerchantsByCategory,
-  searchMerchants,
+  getNearbyMerchants,
 } from "../services/merchantService";
 import type { Merchant, MerchantDetail } from "../types";
 import { getCurrentUser } from "@/features/auth";
+import {
+  reverseGeocode,
+  searchGeocodeAddress,
+} from "@/shared/services/vietmapService";
+
+type Coords = { latitude: number; longitude: number };
+type RestaurantFilter =
+  | `restaurant:${string}`
+  | `dish:${string}`
+  | "";
+
+const DEFAULT_COORDS: Coords = {
+  latitude: 10.762622,
+  longitude: 106.660172,
+};
+
+const DISTANCE_OPTIONS = [5, 10, 15, 30];
+const PRICE_OPTIONS = ["Tiết kiệm", "Bình dân", "Tầm trung"];
+const RESTAURANT_TYPE_OPTIONS = [
+  "Quán ăn gia đình",
+  "Quán vỉa hè",
+  "Nhà hàng nhỏ",
+  "Xe đẩy / gánh hàng",
+];
+const MAIN_DISH_OPTIONS = ["Phở / Bún / Mì", "Cơm", "Bánh mì", "Ăn vặt"];
 
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
@@ -40,6 +68,12 @@ const RICH_FOOD_GRADIENTS = [
   "from-rose-600 via-pink-600 to-amber-600",
   "from-cyan-600 via-blue-600 to-teal-700",
 ];
+
+function formatDistance(distance: number) {
+  if (distance < 1) return `${Math.max(1, Math.round(distance * 1000))} m`;
+  if (distance < 10) return `${distance.toFixed(1)} km`;
+  return `${Math.round(distance)} km`;
+}
 
 function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number }) {
   const image =
@@ -98,6 +132,16 @@ export default function GuestExplorePage() {
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
+  const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh");
+  const [locationInput, setLocationInput] = useState("");
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [locationBusy, setLocationBusy] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [distanceKm, setDistanceKm] = useState(15);
+  const [priceRange, setPriceRange] = useState("");
+  const [restaurantFilter, setRestaurantFilter] =
+    useState<RestaurantFilter>("");
   const [requestVersion, setRequestVersion] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -117,14 +161,23 @@ export default function GuestExplorePage() {
   useEffect(() => {
     let active = true;
 
-    const request = selectedCategory
-      ? getMerchantsByCategory({
-          categoryId: selectedCategory,
-          search: activeKeyword || undefined,
-          pageIndex: 1,
-          pageSize: 24,
-        })
-      : searchMerchants({ keyword: activeKeyword, pageIndex: 1, pageSize: 24 });
+    const restaurantType = restaurantFilter.startsWith("restaurant:")
+      ? restaurantFilter.slice("restaurant:".length)
+      : undefined;
+    const mainDishType = restaurantFilter.startsWith("dish:")
+      ? restaurantFilter.slice("dish:".length)
+      : undefined;
+
+    const request = getNearbyMerchants({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      keyword: activeKeyword || undefined,
+      categoryId: selectedCategory || undefined,
+      priceRange: priceRange || undefined,
+      restaurantType,
+      mainDishType,
+      radiusKm: distanceKm,
+    });
 
     request
       .then((items) => active && setMerchants(items))
@@ -139,7 +192,16 @@ export default function GuestExplorePage() {
     return () => {
       active = false;
     };
-  }, [activeKeyword, selectedCategory, requestVersion]);
+  }, [
+    activeKeyword,
+    coords.latitude,
+    coords.longitude,
+    distanceKm,
+    priceRange,
+    requestVersion,
+    restaurantFilter,
+    selectedCategory,
+  ]);
 
   const resultLabel = useMemo(() => {
     if (loading) return "Đang tìm những địa điểm phù hợp…";
@@ -159,6 +221,79 @@ export default function GuestExplorePage() {
     setLoading(true);
     setError("");
     setSelectedCategory(categoryId);
+  }
+
+  function applyLocation(nextCoords: Coords, nextLabel: string) {
+    setLoading(true);
+    setError("");
+    setLocationError("");
+    setCoords(nextCoords);
+    setLocationLabel(cleanAddress(nextLabel) || "Vị trí đã chọn");
+    setEditingLocation(false);
+  }
+
+  async function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationError("Trình duyệt không hỗ trợ lấy vị trí hiện tại.");
+      return;
+    }
+
+    setLocationBusy(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCoords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        void reverseGeocode(nextCoords.latitude, nextCoords.longitude)
+          .then((result) =>
+            applyLocation(
+              nextCoords,
+              result?.address || "Vị trí hiện tại",
+            ),
+          )
+          .catch(() => applyLocation(nextCoords, "Vị trí hiện tại"))
+          .finally(() => setLocationBusy(false));
+      },
+      () => {
+        setLocationBusy(false);
+        setLocationError(
+          "Không lấy được vị trí. Hãy cấp quyền Location hoặc nhập địa điểm thủ công.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+    );
+  }
+
+  async function applyManualLocation(event: FormEvent) {
+    event.preventDefault();
+    const query = locationInput.trim();
+    if (!query) return;
+
+    setLocationBusy(true);
+    setLocationError("");
+    try {
+      const results = await searchGeocodeAddress(query, {
+        proximity: { lat: coords.latitude, lng: coords.longitude },
+        size: 5,
+      });
+      const first = results[0];
+      if (!first) {
+        setLocationError("Không tìm thấy địa điểm này. Hãy nhập cụ thể hơn.");
+        return;
+      }
+
+      applyLocation(
+        { latitude: first.lat, longitude: first.lng },
+        first.display || first.address || query,
+      );
+    } catch {
+      setLocationError("Chưa thể tìm địa điểm. Vui lòng thử lại.");
+    } finally {
+      setLocationBusy(false);
+    }
   }
 
   async function openMerchant(merchant: Merchant) {
@@ -286,6 +421,141 @@ export default function GuestExplorePage() {
 
       {/* Main Content Area */}
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Guest discovery filters */}
+        <div className="mb-6 rounded-3xl border border-slate-200/80 bg-white/80 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-mono font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                Vị trí
+              </p>
+              <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-black text-slate-950 dark:text-white">
+                <MapPin className="h-4 w-4 shrink-0 text-cyan-500" />
+                <span className="truncate" title={locationLabel}>
+                  {locationLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingLocation((value) => !value)}
+                  className="ml-1 shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-500/10 dark:text-cyan-300"
+                >
+                  {editingLocation ? "Đóng" : "Đổi vị trí"}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row lg:max-w-3xl lg:justify-end">
+              <label className="relative min-w-36 flex-1 lg:max-w-48">
+                <span className="sr-only">Khoảng cách</span>
+                <select
+                  value={distanceKm}
+                  onChange={(event) => {
+                    setLoading(true);
+                    setDistanceKm(Number(event.target.value));
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  {DISTANCE_OPTIONS.map((distance) => (
+                    <option key={distance} value={distance}>
+                      ≤ {distance} km
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="relative min-w-36 flex-1 lg:max-w-48">
+                <span className="sr-only">Mức giá</span>
+                <select
+                  value={priceRange}
+                  onChange={(event) => {
+                    setLoading(true);
+                    setPriceRange(event.target.value);
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option value="">Tất cả mức giá</option>
+                  {PRICE_OPTIONS.map((price) => (
+                    <option key={price} value={price}>
+                      {price}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="relative min-w-44 flex-1 lg:max-w-56">
+                <span className="sr-only">Loại quán hoặc món chính</span>
+                <select
+                  value={restaurantFilter}
+                  onChange={(event) => {
+                    setLoading(true);
+                    setRestaurantFilter(event.target.value as RestaurantFilter);
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option value="">Tất cả loại quán</option>
+                  <optgroup label="Loại quán">
+                    {RESTAURANT_TYPE_OPTIONS.map((type) => (
+                      <option key={type} value={`restaurant:${type}`}>
+                        {type}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Món chính">
+                    {MAIN_DISH_OPTIONS.map((dish) => (
+                      <option key={dish} value={`dish:${dish}`}>
+                        {dish}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {editingLocation ? (
+            <form
+              onSubmit={applyManualLocation}
+              className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-white/10 sm:flex-row"
+            >
+              <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-500 focus-within:ring-3 focus-within:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800">
+                <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  value={locationInput}
+                  onChange={(event) => setLocationInput(event.target.value)}
+                  placeholder="Nhập phường, quận/huyện hoặc tỉnh/thành..."
+                  className="h-full w-full bg-transparent text-sm font-medium text-slate-950 outline-none placeholder:text-slate-400 dark:text-white"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={locationBusy || !locationInput.trim()}
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {locationBusy ? "Đang tìm..." : "Áp dụng"}
+              </button>
+              <button
+                type="button"
+                disabled={locationBusy}
+                onClick={useCurrentLocation}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black text-cyan-700 transition hover:bg-cyan-500/20 disabled:cursor-wait disabled:opacity-50 dark:text-cyan-300"
+              >
+                <Navigation className="h-4 w-4" />
+                Vị trí hiện tại
+              </button>
+            </form>
+          ) : null}
+
+          {locationError ? (
+            <p className="mt-3 text-xs font-semibold text-rose-600 dark:text-rose-400" role="status">
+              {locationError}
+            </p>
+          ) : null}
+
+          <div className="mt-4 flex items-center gap-2 border-t border-slate-200 pt-4 text-[11px] font-mono font-black uppercase tracking-[0.16em] text-slate-500 dark:border-white/10 dark:text-slate-400">
+            <SlidersHorizontal className="h-4 w-4 text-cyan-500" />
+            Bộ lọc khám phá cơ bản
+          </div>
+        </div>
+
         {/* Categories Bar */}
         {categories.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-none" aria-label="Danh mục quán">
@@ -368,6 +638,30 @@ export default function GuestExplorePage() {
                       <span className="line-clamp-2">{cleanAddress(merchant.address)}</span>
                     </p>
                   ) : null}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {typeof merchant.distance === "number" &&
+                    Number.isFinite(merchant.distance) ? (
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
+                        <Navigation className="h-3.5 w-3.5" />
+                        {formatDistance(merchant.distance)}
+                      </span>
+                    ) : null}
+
+                    {merchant.priceRange ? (
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300">
+                        <Tag className="h-3.5 w-3.5" />
+                        {merchant.priceRange}
+                      </span>
+                    ) : null}
+
+                    {merchant.hasActiveCampaign ? (
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                        <Gift className="h-3.5 w-3.5" />
+                        Khuyến mãi
+                      </span>
+                    ) : null}
+                  </div>
 
                   <div className="mt-5 flex items-center justify-between text-xs font-bold">
                     {typeof merchant.rating === "number" ? (
