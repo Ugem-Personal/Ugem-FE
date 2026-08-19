@@ -15,13 +15,43 @@ export const DEFAULT_DISCOVERY_OPTIONS: DiscoveryOptions = {
 };
 
 let discoveryOptionsRequest: Promise<DiscoveryOptions> | null = null;
+const DISCOVERY_OPTIONS_CACHE_KEY = "ugem.discovery-options.v1";
 
-export async function getDiscoveryOptions() {
+function readCachedDiscoveryOptions() {
+  try {
+    const cached = window.localStorage.getItem(DISCOVERY_OPTIONS_CACHE_KEY);
+    return cached ? (JSON.parse(cached) as DiscoveryOptions) : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheDiscoveryOptions(options: DiscoveryOptions) {
+  if (options.foodCategories.length === 0) return;
+  try {
+    window.localStorage.setItem(
+      DISCOVERY_OPTIONS_CACHE_KEY,
+      JSON.stringify(options),
+    );
+  } catch {
+    // Storage can be unavailable in private browsing; the network result still works.
+  }
+}
+
+export async function getDiscoveryOptions(forceRefresh = false) {
+  if (forceRefresh) discoveryOptionsRequest = null;
+
   discoveryOptionsRequest ??= api
     .get<ApiResponse<DiscoveryOptions>>("/categories/discovery-options")
-    .then(({ data }) => data.data)
+    .then(({ data }) => {
+      const options = data.data;
+      cacheDiscoveryOptions(options);
+      return options;
+    })
     .catch((error) => {
       discoveryOptionsRequest = null;
+      const cached = readCachedDiscoveryOptions();
+      if (cached?.foodCategories.length) return cached;
       throw error;
     });
 
