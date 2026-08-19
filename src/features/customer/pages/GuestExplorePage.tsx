@@ -35,6 +35,7 @@ import {
 import type { Merchant, MerchantDetail } from "../types";
 import { getCurrentUser } from "@/features/auth";
 import {
+  type GeocodeResult,
   reverseGeocode,
   searchGeocodeAddress,
 } from "@/shared/services/vietmapService";
@@ -135,6 +136,10 @@ export default function GuestExplorePage() {
   const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
   const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh");
   const [locationInput, setLocationInput] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState<
+    GeocodeResult[]
+  >([]);
+  const [locationSuggesting, setLocationSuggesting] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationBusy, setLocationBusy] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -157,6 +162,34 @@ export default function GuestExplorePage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const query = locationInput.trim();
+    if (!editingLocation || query.length < 2) return;
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setLocationSuggesting(true);
+      void searchGeocodeAddress(query, {
+        proximity: { lat: coords.latitude, lng: coords.longitude },
+        size: 6,
+      })
+        .then((results) => {
+          if (active) setLocationSuggestions(results.slice(0, 6));
+        })
+        .catch(() => {
+          if (active) setLocationSuggestions([]);
+        })
+        .finally(() => {
+          if (active) setLocationSuggesting(false);
+        });
+    }, 400);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [coords.latitude, coords.longitude, editingLocation, locationInput]);
 
   useEffect(() => {
     let active = true;
@@ -227,6 +260,7 @@ export default function GuestExplorePage() {
     setLoading(true);
     setError("");
     setLocationError("");
+    setLocationSuggestions([]);
     setCoords(nextCoords);
     setLocationLabel(cleanAddress(nextLabel) || "Vị trí đã chọn");
     setEditingLocation(false);
@@ -275,11 +309,14 @@ export default function GuestExplorePage() {
     setLocationBusy(true);
     setLocationError("");
     try {
-      const results = await searchGeocodeAddress(query, {
-        proximity: { lat: coords.latitude, lng: coords.longitude },
-        size: 5,
-      });
-      const first = results[0];
+      const first =
+        locationSuggestions[0] ??
+        (
+          await searchGeocodeAddress(query, {
+            proximity: { lat: coords.latitude, lng: coords.longitude },
+            size: 5,
+          })
+        )[0];
       if (!first) {
         setLocationError("Không tìm thấy địa điểm này. Hãy nhập cụ thể hơn.");
         return;
@@ -294,6 +331,14 @@ export default function GuestExplorePage() {
     } finally {
       setLocationBusy(false);
     }
+  }
+
+  function chooseLocationSuggestion(suggestion: GeocodeResult) {
+    setLocationInput(suggestion.display || suggestion.address);
+    applyLocation(
+      { latitude: suggestion.lat, longitude: suggestion.lng },
+      suggestion.display || suggestion.address || suggestion.name,
+    );
   }
 
   async function openMerchant(merchant: Merchant) {
@@ -516,15 +561,61 @@ export default function GuestExplorePage() {
               onSubmit={applyManualLocation}
               className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-white/10 sm:flex-row"
             >
-              <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-500 focus-within:ring-3 focus-within:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800">
-                <Search className="h-4 w-4 shrink-0 text-slate-400" />
-                <input
-                  value={locationInput}
-                  onChange={(event) => setLocationInput(event.target.value)}
-                  placeholder="Nhập phường, quận/huyện hoặc tỉnh/thành..."
-                  className="h-full w-full bg-transparent text-sm font-medium text-slate-950 outline-none placeholder:text-slate-400 dark:text-white"
-                />
-              </label>
+              <div className="relative min-w-0 flex-1">
+                <label className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-500 focus-within:ring-3 focus-within:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800">
+                  <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                  <input
+                    value={locationInput}
+                    onChange={(event) => {
+                      setLocationInput(event.target.value);
+                      setLocationSuggestions([]);
+                      setLocationSuggesting(false);
+                      setLocationError("");
+                    }}
+                    placeholder="Nhập phường, quận/huyện hoặc tỉnh/thành..."
+                    autoComplete="off"
+                    aria-autocomplete="list"
+                    aria-expanded={locationSuggestions.length > 0}
+                    aria-controls="guest-location-suggestions"
+                    className="h-full w-full bg-transparent text-sm font-medium text-slate-950 outline-none placeholder:text-slate-400 dark:text-white"
+                  />
+                  {locationSuggesting ? (
+                    <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-cyan-500" />
+                  ) : null}
+                </label>
+
+                {locationSuggestions.length > 0 ? (
+                  <div
+                    id="guest-location-suggestions"
+                    role="listbox"
+                    aria-label="Gợi ý địa điểm"
+                    className="absolute inset-x-0 top-[calc(100%+8px)] z-50 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-white/10 dark:bg-slate-800"
+                  >
+                    {locationSuggestions.map((suggestion) => (
+                      <button
+                        key={`${suggestion.ref_id}-${suggestion.lat}-${suggestion.lng}`}
+                        type="button"
+                        role="option"
+                        aria-selected="false"
+                        onClick={() => chooseLocationSuggestion(suggestion)}
+                        className="flex min-h-12 w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-cyan-50 focus-visible:bg-cyan-50 focus-visible:outline-none dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+                      >
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-500" />
+                        <span className="min-w-0">
+                          <strong className="block truncate text-xs font-black text-slate-950 dark:text-white">
+                            {suggestion.name || suggestion.display}
+                          </strong>
+                          <span className="mt-0.5 block line-clamp-2 text-[11px] font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+                            {cleanAddress(
+                              suggestion.display || suggestion.address,
+                            )}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <button
                 type="submit"
                 disabled={locationBusy || !locationInput.trim()}
