@@ -140,10 +140,13 @@ export async function getNearbyMerchants(params: {
   mainDishType?: string;
   radiusKm?: number;
 }) {
-  const usesCategory = Boolean(params.categoryId);
   const res = await api.request<MerchantListApiPayload>({
     method: "get",
-    url: usesCategory ? "/merchants/by-category" : "/merchants",
+    // The main endpoint composes category with every discovery filter.
+    // `/merchants/by-category` only forwards category/search/location, which
+    // causes price and restaurant type selections to be lost after a category
+    // is chosen.
+    url: "/merchants",
     params: {
       search: params.keyword,
       categoryId: params.categoryId,
