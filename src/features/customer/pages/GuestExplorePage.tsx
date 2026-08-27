@@ -41,6 +41,8 @@ import {
 } from "@/shared/services/vietmapService";
 
 type Coords = { latitude: number; longitude: number };
+type LocationMode = "current" | "custom";
+
 const DEFAULT_COORDS: Coords = {
   latitude: 10.762622,
   longitude: 106.660172,
@@ -128,6 +130,7 @@ export default function GuestExplorePage() {
   const [activeKeyword, setActiveKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
+  const [locationMode, setLocationMode] = useState<LocationMode>("custom");
   const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh");
   const [locationInput, setLocationInput] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState<
@@ -281,12 +284,17 @@ export default function GuestExplorePage() {
     setRestaurantFilter("");
   }
 
-  function applyLocation(nextCoords: Coords, nextLabel: string) {
+  function applyLocation(
+    nextCoords: Coords,
+    nextLabel: string,
+    nextMode: LocationMode = "custom",
+  ) {
     setLoading(true);
     setError("");
     setLocationError("");
     setLocationSuggestions([]);
     setCoords(nextCoords);
+    setLocationMode(nextMode);
     setLocationLabel(cleanAddress(nextLabel) || "Vị trí đã chọn");
     setEditingLocation(false);
   }
@@ -311,9 +319,10 @@ export default function GuestExplorePage() {
             applyLocation(
               nextCoords,
               result?.address || "Vị trí hiện tại",
+              "current",
             ),
           )
-          .catch(() => applyLocation(nextCoords, "Vị trí hiện tại"))
+          .catch(() => applyLocation(nextCoords, "Vị trí hiện tại", "current"))
           .finally(() => setLocationBusy(false));
       },
       () => {
@@ -474,22 +483,64 @@ export default function GuestExplorePage() {
         {/* Guest discovery filters */}
         <div className="mb-6 rounded-3xl border border-slate-200/80 bg-white/80 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
+            <div className="min-w-0 lg:max-w-xl">
               <p className="text-[11px] font-mono font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                Vị trí
+                Phạm vi tìm kiếm
               </p>
-              <div className="mt-1 flex min-w-0 items-center gap-2 text-sm font-black text-slate-950 dark:text-white">
-                <MapPin className="h-4 w-4 shrink-0 text-cyan-500" />
-                <span className="truncate" title={locationLabel}>
-                  {locationLabel}
-                </span>
+              <div
+                className="mt-2 flex flex-wrap gap-2"
+                role="group"
+                aria-label="Chọn cách xác định khu vực tìm kiếm"
+              >
                 <button
                   type="button"
-                  onClick={() => setEditingLocation((value) => !value)}
-                  className="ml-1 shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-500/10 dark:text-cyan-300"
+                  aria-pressed={locationMode === "current"}
+                  disabled={locationBusy}
+                  onClick={useCurrentLocation}
+                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-wait disabled:opacity-50 ${
+                    locationMode === "current"
+                      ? "border-cyan-500 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                  }`}
                 >
-                  {editingLocation ? "Đóng" : "Đổi vị trí"}
+                  {locationBusy ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Navigation className="h-4 w-4" />
+                  )}
+                  Vị trí hiện tại
                 </button>
+                <button
+                  type="button"
+                  aria-pressed={locationMode === "custom"}
+                  aria-expanded={editingLocation}
+                  onClick={() =>
+                    setEditingLocation((value) =>
+                      locationMode === "custom" ? !value : true,
+                    )
+                  }
+                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
+                    locationMode === "custom"
+                      ? "border-cyan-500 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                  }`}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Khu vực khác
+                </button>
+              </div>
+              <div className="mt-3 flex min-w-0 items-start gap-2 text-sm font-black text-slate-950 dark:text-white">
+                <MapPin className="h-4 w-4 shrink-0 text-cyan-500" />
+                <span className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {locationMode === "current"
+                      ? "Đang tìm gần bạn"
+                      : "Đang tìm quanh điểm đã chọn"}
+                  </span>
+                  <span className="mt-0.5 block truncate" title={locationLabel}>
+                    {locationLabel}
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -569,6 +620,7 @@ export default function GuestExplorePage() {
                       setLocationError("");
                     }}
                     placeholder="Nhập phường, quận/huyện hoặc tỉnh/thành..."
+                    aria-label="Nhập khu vực muốn tìm quán"
                     autoComplete="off"
                     aria-autocomplete="list"
                     aria-expanded={locationSuggestions.length > 0}
@@ -618,15 +670,6 @@ export default function GuestExplorePage() {
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {locationBusy ? "Đang tìm..." : "Áp dụng"}
-              </button>
-              <button
-                type="button"
-                disabled={locationBusy}
-                onClick={useCurrentLocation}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black text-cyan-700 transition hover:bg-cyan-500/20 disabled:cursor-wait disabled:opacity-50 dark:text-cyan-300"
-              >
-                <Navigation className="h-4 w-4" />
-                Vị trí hiện tại
               </button>
             </form>
           ) : null}
@@ -762,6 +805,9 @@ export default function GuestExplorePage() {
                     Number.isFinite(merchant.distance) ? (
                       <span className="inline-flex items-center gap-1 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
                         <Navigation className="h-3.5 w-3.5" />
+                        {locationMode === "current"
+                          ? "Cách bạn "
+                          : "Cách điểm đã chọn "}
                         {formatDistance(merchant.distance)}
                       </span>
                     ) : null}
