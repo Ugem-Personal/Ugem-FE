@@ -15,6 +15,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import {
   confirmReceived,
+  getBill,
   getCustomerOrderDetail,
   getCustomerOrderId,
   getCustomerOrders,
@@ -43,6 +44,22 @@ type OrderDetailLocationState = {
   order?: CustomerOrderSummary;
   fallbackOrderNumber?: number;
 };
+
+type PaymentBankInfo = {
+  bankName?: string;
+  bankAccount?: string;
+};
+
+function getPaymentBankInfo(value: unknown): PaymentBankInfo | null {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  return {
+    bankName: typeof record.bankName === "string" ? record.bankName : undefined,
+    bankAccount:
+      typeof record.bankAccount === "string" ? record.bankAccount : undefined,
+  };
+}
 
 
 
@@ -91,6 +108,8 @@ export default function CustomerOrderDetailPage() {
   const [, setActiveFoodReviewId] = useState<string | null>(null);
   const [fetchedSummaryOrder, setFetchedSummaryOrder] = useState<CustomerOrderSummary | null>(summaryOrder);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [paymentBankInfo, setPaymentBankInfo] =
+    useState<PaymentBankInfo | null>(null);
 
   const handleCopy = (text: string, field: string) => {
     void navigator.clipboard.writeText(text);
@@ -145,9 +164,10 @@ export default function CustomerOrderDetailPage() {
           }
         }
 
-        const [data, ordersRes] = await Promise.all([
+        const [data, ordersRes, billPayload] = await Promise.all([
           getCustomerOrderDetail(effectiveOrderId),
           getCustomerOrders().catch(() => ({ data: [] })),
+          getBill(effectiveOrderId).catch(() => null),
         ]);
         const orders = ordersRes.data ?? [];
         const refreshedSummary = orders.find(
@@ -158,6 +178,7 @@ export default function CustomerOrderDetailPage() {
         if (active) {
           setItems(data ?? []);
           setFetchedSummaryOrder(refreshedSummary);
+          setPaymentBankInfo(getPaymentBankInfo(billPayload));
           const refreshedStatus =
             refreshedSummary?.status ??
             null;
@@ -345,6 +366,12 @@ export default function CustomerOrderDetailPage() {
   const total =
     itemsTotal > 0 ? itemsTotal : Number(currentSummaryOrder?.finalPrice || 0);
   const effectiveOrderId = hasRealOrderId ? id : resolvedOrderId;
+  const paymentBankCode = paymentBankInfo?.bankName?.trim() ?? "";
+  const paymentBankAccount = paymentBankInfo?.bankAccount?.trim() ?? "";
+  const paymentQrCode =
+    effectiveOrderId && paymentBankCode && paymentBankAccount
+      ? `https://qr.sepay.vn/img?acc=${encodeURIComponent(paymentBankAccount)}&bank=${encodeURIComponent(paymentBankCode)}&amount=${Math.round(total)}&des=${encodeURIComponent(effectiveOrderId)}&template=qronly`
+      : "";
   const title =
     currentSummaryOrder?.name ||
     (fallbackOrderNumber
@@ -593,11 +620,17 @@ export default function CustomerOrderDetailPage() {
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   {/* QR Code Image */}
                   <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-lg border border-white/20">
-                    <img
-                      src={`https://qr.sepay.vn/img?acc=${encodeURIComponent("123456789")}&bank=BIDV&amount=${Math.round(total)}&des=${encodeURIComponent(effectiveOrderId)}&template=qronly`}
-                      alt="Mã QR Thanh Toán SePay"
-                      className="h-52 w-52 object-contain"
-                    />
+                    {paymentQrCode ? (
+                      <img
+                        src={paymentQrCode}
+                        alt="Mã QR Thanh Toán SePay"
+                        className="h-52 w-52 object-contain"
+                      />
+                    ) : (
+                      <div className="grid h-52 w-52 place-items-center px-5 text-center text-xs font-bold text-rose-700">
+                        Chưa cấu hình tài khoản nhận tiền. Vui lòng thử lại sau.
+                      </div>
+                    )}
                     <p className="mt-2 text-[11px] font-extrabold text-slate-700 text-center">
                       Tự động xác nhận trong 1-3s sau khi nhận tiền
                     </p>
@@ -608,18 +641,23 @@ export default function CustomerOrderDetailPage() {
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
                       <div>
                         <p className="text-slate-400 font-medium text-[11px]">Ngân hàng</p>
-                        <p className="font-black text-sm text-cyan-400">BIDV (NH Đầu tư & Phát triển VN)</p>
+                        <p className="font-black text-sm text-cyan-400">
+                          {paymentBankCode || "Chưa cấu hình"}
+                        </p>
                       </div>
                     </div>
 
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
                       <div>
                         <p className="text-slate-400 font-medium text-[11px]">Số tài khoản nhận</p>
-                        <p className="font-mono font-black text-base text-white tracking-wider">123456789</p>
+                        <p className="font-mono font-black text-base text-white tracking-wider">
+                          {paymentBankAccount || "Chưa cấu hình"}
+                        </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy("123456789", "account")}
+                        onClick={() => handleCopy(paymentBankAccount, "account")}
+                        disabled={!paymentBankAccount}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 font-bold text-cyan-300 hover:bg-cyan-500/30 transition"
                       >
                         {copiedField === "account" ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
