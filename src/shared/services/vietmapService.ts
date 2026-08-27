@@ -178,8 +178,12 @@ export async function geocodeAddress(
     (item) => Number.isFinite(item.lat) && Number.isFinite(item.lng),
   );
 
-  // If proximity provided or defaulted, sort by distance and prioritize local delivery area (<=60km)
-  const effectiveProximity = opts.proximity ?? { lat: 10.762622, lng: 106.660172 };
+  // `undefined` keeps the historic HCMC default, while `null` explicitly
+  // enables a nationwide search without local-distance prioritization.
+  const effectiveProximity =
+    opts.proximity === undefined
+      ? { lat: 10.762622, lng: 106.660172 }
+      : opts.proximity;
   if (effectiveProximity && results.length > 0) {
     const { lat: pLat, lng: pLng } = effectiveProximity;
     results.sort(
@@ -206,17 +210,20 @@ export async function searchGeocodeAddress(
   const query = text.trim();
   if (!query) return [];
 
-  const effectiveOptions = {
-    ...opts,
-    proximity: opts.proximity ?? { lat: 10.762622, lng: 106.660172 },
-  };
+  const effectiveProximity =
+    opts.proximity === undefined
+      ? { lat: 10.762622, lng: 106.660172 }
+      : opts.proximity;
+  const effectiveOptions = { ...opts, proximity: effectiveProximity };
 
   const proxiedResults = await geocodeAddress(query, effectiveOptions);
   if (proxiedResults.length > 0) {
     return proxiedResults;
   }
 
-  return geocodeAddress(query, { ...opts, proximity: undefined });
+  if (effectiveProximity === null) return [];
+
+  return geocodeAddress(query, { ...opts, proximity: null });
 }
 
 async function getPlaceByRefId(

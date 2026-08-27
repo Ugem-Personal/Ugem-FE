@@ -171,7 +171,7 @@ export default function GuestExplorePage() {
     const timer = window.setTimeout(() => {
       setLocationSuggesting(true);
       void searchGeocodeAddress(query, {
-        proximity: { lat: coords.latitude, lng: coords.longitude },
+        proximity: null,
         size: 6,
       })
         .then((results) => {
@@ -189,7 +189,7 @@ export default function GuestExplorePage() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [coords.latitude, coords.longitude, editingLocation, locationInput]);
+  }, [editingLocation, locationInput]);
 
   useEffect(() => {
     let active = true;
@@ -347,7 +347,7 @@ export default function GuestExplorePage() {
         locationSuggestions[0] ??
         (
           await searchGeocodeAddress(query, {
-            proximity: { lat: coords.latitude, lng: coords.longitude },
+            proximity: null,
             size: 5,
           })
         )[0];
