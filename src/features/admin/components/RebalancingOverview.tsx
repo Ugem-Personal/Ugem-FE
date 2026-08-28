@@ -68,7 +68,8 @@ export function RebalancingOverview() {
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tự động tính toán Strength Index (SI), chuẩn hóa Underrated Score (US) và cập nhật thứ hạng Visibility định kỳ.
+            Tự động tính toán Strength Index (SI), chuẩn hóa Underrated Score
+            (US) và cập nhật thứ hạng Visibility định kỳ.
           </p>
         </div>
 
@@ -80,7 +81,9 @@ export function RebalancingOverview() {
             disabled={isLoading}
             className="h-10 rounded-2xl border-slate-200 dark:border-white/10 text-xs font-bold gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
             Làm mới
           </Button>
 
@@ -95,7 +98,9 @@ export function RebalancingOverview() {
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {isTriggering ? "Đang Rebalance..." : "Kích hoạt Rebalance Thủ công"}
+            {isTriggering
+              ? "Đang Rebalance..."
+              : "Kích hoạt Rebalance Thủ công"}
           </Button>
         </div>
       </div>
@@ -145,7 +150,9 @@ export function RebalancingOverview() {
             <span className="text-3xl font-black text-slate-900 dark:text-white">
               {data?.merchantCount ?? 0}
             </span>
-            <span className="text-xs text-slate-500 font-semibold">quán Active</span>
+            <span className="text-xs text-slate-500 font-semibold">
+              quán Active
+            </span>
           </div>
           <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
             <Store className="h-3.5 w-3.5" /> Áp dụng tính SI & US
@@ -175,10 +182,12 @@ export function RebalancingOverview() {
           </span>
           <div className="flex items-center gap-4 text-xs font-bold">
             <span className="flex items-center gap-1 text-rose-500">
-              <TrendingDown className="h-4 w-4" /> Giảm: {data?.decreasedVisibility ?? 0}
+              <TrendingDown className="h-4 w-4" /> Giảm:{" "}
+              {data?.decreasedVisibility ?? 0}
             </span>
             <span className="flex items-center gap-1 text-slate-400">
-              <Minus className="h-4 w-4" /> Giữ nguyên: {data?.unchangedVisibility ?? 0}
+              <Minus className="h-4 w-4" /> Giữ nguyên:{" "}
+              {data?.unchangedVisibility ?? 0}
             </span>
           </div>
           <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
@@ -245,7 +254,9 @@ export function RebalancingOverview() {
                     </td>
                     <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                       {m.lastRebalancedAt
-                        ? new Date(m.lastRebalancedAt).toLocaleDateString("vi-VN")
+                        ? new Date(m.lastRebalancedAt).toLocaleDateString(
+                            "vi-VN",
+                          )
                         : "Chưa rebalance"}
                     </td>
                   </tr>
