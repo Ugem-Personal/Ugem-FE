@@ -299,7 +299,9 @@ export default function MerchantOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [actionOrderId, setActionOrderId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(!!urlOrderId);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(urlOrderId);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(
+    urlOrderId,
+  );
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
@@ -421,7 +423,7 @@ export default function MerchantOrdersPage() {
         next.set("orderId", orderId);
         return next;
       },
-      { replace: true }
+      { replace: true },
     );
   }
 
@@ -435,7 +437,7 @@ export default function MerchantOrdersPage() {
           next.delete("orderId");
           return next;
         },
-        { replace: true }
+        { replace: true },
       );
     }
   }
@@ -509,7 +511,10 @@ export default function MerchantOrdersPage() {
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.errorApi(error, "Không thể cập nhật tiến độ đơn. Vui lòng thử lại.");
+      notify.errorApi(
+        error,
+        "Không thể cập nhật tiến độ đơn. Vui lòng thử lại.",
+      );
     } finally {
       setActionOrderId(null);
     }
@@ -820,7 +825,12 @@ export default function MerchantOrdersPage() {
                           </span>
                         </div>
                         <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                          Trạng thái: {getOrderStatusLabel(order.paymentStatus?.toLowerCase() === "paid" ? "Completed" : order.status)}
+                          Trạng thái:{" "}
+                          {getOrderStatusLabel(
+                            order.paymentStatus?.toLowerCase() === "paid"
+                              ? "Completed"
+                              : order.status,
+                          )}
                         </p>
                         <p className="mt-2.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
                           <span className="font-bold text-slate-900 dark:text-white">
@@ -889,7 +899,7 @@ export default function MerchantOrdersPage() {
                       {canConfirmPayment(
                         order.status,
                         order.paymentStatus,
-                        (order as any).bill?.status,
+                        order.bill?.status,
                       ) ? (
                         <button
                           type="button"
@@ -903,7 +913,11 @@ export default function MerchantOrdersPage() {
                       ) : null}
 
                       <span className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400">
-                        {getOrderActionMessage(order.status, order.orderType, order.paymentStatus)}
+                        {getOrderActionMessage(
+                          order.status,
+                          order.orderType,
+                          order.paymentStatus,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -927,7 +941,9 @@ export default function MerchantOrdersPage() {
               onEscapeKeyDown={(event) => event.preventDefault()}
             >
               <DialogHeader className="shrink-0 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-6 py-5 text-left">
-                <DialogTitle className="text-lg font-black text-slate-950 dark:text-white">Chi tiết đơn hàng</DialogTitle>
+                <DialogTitle className="text-lg font-black text-slate-950 dark:text-white">
+                  Chi tiết đơn hàng
+                </DialogTitle>
                 <DialogDescription className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                   Xem món ăn, ghi chú, giá tiền và thao tác duyệt đơn ở đây.
                 </DialogDescription>
@@ -937,23 +953,35 @@ export default function MerchantOrdersPage() {
                 <div className="min-h-0 flex-1 touch-pan-y space-y-5 overflow-y-auto overscroll-contain px-6 py-5 pb-32 [scrollbar-gutter:stable]">
                   <div className="grid gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 text-xs text-slate-700 dark:text-slate-300 sm:grid-cols-2">
                     <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Mã đơn</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                        Mã đơn
+                      </div>
                       <div className="break-all font-mono text-xs font-bold text-slate-900 dark:text-white mt-0.5">
                         {selectedOrder.orderId}
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Trạng thái</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                        Trạng thái
+                      </div>
                       <div
                         className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderStatusChipClass(
-                          selectedOrder.paymentStatus?.toLowerCase() === "paid" ? "Completed" : selectedOrder.status,
+                          selectedOrder.paymentStatus?.toLowerCase() === "paid"
+                            ? "Completed"
+                            : selectedOrder.status,
                         )}`}
                       >
-                        {getOrderStatusLabel(selectedOrder.paymentStatus?.toLowerCase() === "paid" ? "Completed" : selectedOrder.status)}
+                        {getOrderStatusLabel(
+                          selectedOrder.paymentStatus?.toLowerCase() === "paid"
+                            ? "Completed"
+                            : selectedOrder.status,
+                        )}
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Loại đơn</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                        Loại đơn
+                      </div>
                       <div
                         className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderTypeChipClass(
                           selectedOrder.orderType,
@@ -963,13 +991,17 @@ export default function MerchantOrdersPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Khách hàng</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                        Khách hàng
+                      </div>
                       <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                         {selectedOrder.customerName || "N/A"}
                       </div>
                     </div>
                     <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">Thời gian đặt</div>
+                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
+                        Thời gian đặt
+                      </div>
                       <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                         {formatDateTime(selectedOrder.createdAt)}
                       </div>
@@ -982,7 +1014,8 @@ export default function MerchantOrdersPage() {
                         <div className="mt-1 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-500/25 dark:bg-cyan-500/10">
                           <span className="flex min-w-0 items-start gap-2 font-bold text-slate-900 dark:text-white">
                             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                            {selectedOrder.deliveryAddress || "Chưa có địa chỉ giao hàng"}
+                            {selectedOrder.deliveryAddress ||
+                              "Chưa có địa chỉ giao hàng"}
                           </span>
                           {Number.isFinite(selectedOrder.deliveryLatitude) &&
                           Number.isFinite(selectedOrder.deliveryLongitude) ? (
@@ -1006,9 +1039,7 @@ export default function MerchantOrdersPage() {
                         Number.isFinite(selectedOrder.deliveryLongitude) ? (
                           <div className="mt-3 h-72 overflow-hidden rounded-xl border border-cyan-200 dark:border-cyan-500/25">
                             <VietMapGL
-                              centerLat={Number(
-                                selectedOrder.deliveryLatitude,
-                              )}
+                              centerLat={Number(selectedOrder.deliveryLatitude)}
                               centerLng={Number(
                                 selectedOrder.deliveryLongitude,
                               )}
@@ -1032,7 +1063,9 @@ export default function MerchantOrdersPage() {
                   </div>
 
                   {detailLoading ? (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Đang tải chi tiết đơn...</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Đang tải chi tiết đơn...
+                    </p>
                   ) : detailError ? (
                     <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-600 dark:text-rose-400">
                       {detailError}
@@ -1115,14 +1148,18 @@ export default function MerchantOrdersPage() {
                     {getDetailNote(orderDetail) ? (
                       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
                         <div className="font-bold">Ghi chú của khách</div>
-                        <div className="mt-0.5">{getDetailNote(orderDetail)}</div>
+                        <div className="mt-0.5">
+                          {getDetailNote(orderDetail)}
+                        </div>
                       </div>
                     ) : null}
                   </div>
 
                   <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">Tổng tiền</div>
+                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                        Tổng tiền
+                      </div>
                       <div className="text-xl sm:text-2xl font-black text-cyan-600 dark:text-cyan-400">
                         {formatCurrency(detailTotal)}
                       </div>
@@ -1237,7 +1274,7 @@ export default function MerchantOrdersPage() {
                       {canConfirmPayment(
                         selectedOrder.status,
                         selectedOrder.paymentStatus,
-                        (selectedOrder as any).bill?.status,
+                        selectedOrder.bill?.status,
                       ) ? (
                         <button
                           type="button"
@@ -1276,17 +1313,24 @@ export default function MerchantOrdersPage() {
                           Thông tin tài khoản ngân hàng của quán:
                         </div>
                         <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1.5">
-                          <span className="text-slate-500 dark:text-slate-400">Ngân hàng:</span>
-                          <span className="font-bold">{import.meta.env.VITE_BANK_NAME || "BIDV"}</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Ngân hàng:
+                          </span>
+                          <span className="font-bold">
+                            {import.meta.env.VITE_BANK_NAME || "BIDV"}
+                          </span>
                         </div>
                         <div className="flex justify-between border-b border-slate-200/50 dark:border-white/10 pb-1.5">
-                          <span className="text-slate-500 dark:text-slate-400">Số tài khoản (STK):</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Số tài khoản (STK):
+                          </span>
                           <span className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
                             {import.meta.env.VITE_BANK_ACCOUNT || "5321252810"}
                           </span>
                         </div>
                         <p className="text-[11px] font-normal text-slate-500 dark:text-slate-400 italic pt-1">
-                          Khách hàng quét mã QR trên điện thoại để xem hóa đơn và tự động điền số tiền + nội dung chuyển khoản.
+                          Khách hàng quét mã QR trên điện thoại để xem hóa đơn
+                          và tự động điền số tiền + nội dung chuyển khoản.
                         </p>
                       </div>
                     </div>
@@ -1313,7 +1357,10 @@ export default function MerchantOrdersPage() {
                   </div>
                   <div>
                     <DialogTitle className="text-base sm:text-lg font-black text-slate-950 dark:text-white">
-                      Từ chối đơn hàng #{rejectTargetOrder ? getShortOrderCode(rejectTargetOrder.orderId) : ""}
+                      Từ chối đơn hàng #
+                      {rejectTargetOrder
+                        ? getShortOrderCode(rejectTargetOrder.orderId)
+                        : ""}
                     </DialogTitle>
                     <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                       Chọn hoặc nhập lý do từ chối để phản hồi cho khách hàng.
@@ -1369,7 +1416,10 @@ export default function MerchantOrdersPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!rejectReason.trim() || actionOrderId === rejectTargetOrder?.orderId}
+                  disabled={
+                    !rejectReason.trim() ||
+                    actionOrderId === rejectTargetOrder?.orderId
+                  }
                   onClick={() => void confirmRejectOrder()}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-50"
                 >
