@@ -1,4 +1,3 @@
-
 import {
   ChevronRight,
   Flame,
@@ -91,7 +90,9 @@ export default function MerchantCard({
   onWishlistToggle,
 }: Props) {
   const name = merchant.name || "Quán trên UGem";
-  const descriptionPreview = getMerchantDescriptionPreview(merchant.description);
+  const descriptionPreview = getMerchantDescriptionPreview(
+    merchant.description,
+  );
   const underratedScore = getDisplayUnderratedScore(merchant);
   const isHotUnderrated =
     underratedScore !== null && underratedScore.percent >= 80;
@@ -276,7 +277,9 @@ export default function MerchantCard({
                 )}
               >
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                <span className="min-w-0 flex-1 wrap-break-word">{cleanAddress(merchant.address)}</span>
+                <span className="min-w-0 flex-1 wrap-break-word">
+                  {cleanAddress(merchant.address)}
+                </span>
               </p>
             )}
 

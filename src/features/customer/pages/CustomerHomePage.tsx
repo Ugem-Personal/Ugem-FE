@@ -222,10 +222,6 @@ async function searchOriginSuggestions(
   });
 }
 
-
-
-
-
 export default function CustomerHomePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -307,7 +303,9 @@ export default function CustomerHomePage() {
 
         setMerchants(data);
         setSelectedMerchantId((prev) =>
-          prev && data.some((merchant: Merchant) => merchant.id === prev) ? prev : null,
+          prev && data.some((merchant: Merchant) => merchant.id === prev)
+            ? prev
+            : null,
         );
       } catch (error) {
         console.error(error);
@@ -331,7 +329,12 @@ export default function CustomerHomePage() {
       setLocationAccuracy(
         typeof accuracy === "number" ? Math.round(accuracy) : null,
       );
-      await loadMerchants(keyword, nextCoords, selectedCategoryId, selectedPriceRange);
+      await loadMerchants(
+        keyword,
+        nextCoords,
+        selectedCategoryId,
+        selectedPriceRange,
+      );
     },
     [keyword, loadMerchants, selectedCategoryId, selectedPriceRange],
   );
@@ -633,10 +636,6 @@ export default function CustomerHomePage() {
     }
   }
 
-
-
-
-
   function handleCandidateDrag(lat: number, lng: number) {
     setCandidateLocation({ latitude: lat, longitude: lng });
     setCandidateAccuracy(null);
@@ -747,7 +746,11 @@ export default function CustomerHomePage() {
         ) : (
           <Navigation className="h-3.5 w-3.5 text-cyan-600" />
         )}
-        {calculating ? "Đang tính quãng đường..." : selected ? "Bỏ xem đường đi" : "Xem lộ trình trên bản đồ"}
+        {calculating
+          ? "Đang tính quãng đường..."
+          : selected
+            ? "Bỏ xem đường đi"
+            : "Xem lộ trình trên bản đồ"}
       </Button>
     );
   }
@@ -755,7 +758,9 @@ export default function CustomerHomePage() {
   function renderPriceRangeFilters(className = "") {
     return (
       <div className={cn("flex flex-wrap items-center gap-2", className)}>
-        <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">Khoảng giá:</span>
+        <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">
+          Khoảng giá:
+        </span>
         <button
           type="button"
           onClick={() => handlePriceRangeChange("")}
@@ -786,7 +791,10 @@ export default function CustomerHomePage() {
     );
   }
 
-  function renderMerchantListContent(withRouteActions: boolean, compact = false) {
+  function renderMerchantListContent(
+    withRouteActions: boolean,
+    compact = false,
+  ) {
     if (loading) {
       return <MerchantCardSkeleton count={compact ? 4 : 6} compact={compact} />;
     }
@@ -795,14 +803,22 @@ export default function CustomerHomePage() {
       return (
         <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 shadow-md backdrop-blur-md transition-colors">
           <Utensils className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
-          <p className="mt-3 text-base font-black text-slate-900 dark:text-white">Không tìm thấy quán phù hợp</p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Thử thay đổi từ khóa tìm kiếm hoặc chọn khoảng giá khác.</p>
+          <p className="mt-3 text-base font-black text-slate-900 dark:text-white">
+            Không tìm thấy quán phù hợp
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Thử thay đổi từ khóa tìm kiếm hoặc chọn khoảng giá khác.
+          </p>
         </div>
       );
     }
 
     return (
-      <div className={compact ? "space-y-3" : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"}>
+      <div
+        className={
+          compact ? "space-y-3" : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+        }
+      >
         {displayedMerchants.map((merchant) => {
           const selected = selectedMerchantId === merchant.id;
 
@@ -819,7 +835,11 @@ export default function CustomerHomePage() {
                 merchant={merchant}
                 selected={selected}
                 orderMode={serviceMode === "dineIn" ? "offline" : "online"}
-                backTo={serviceMode === "dineIn" ? "/customer?tab=map" : "/customer?tab=delivery"}
+                backTo={
+                  serviceMode === "dineIn"
+                    ? "/customer?tab=map"
+                    : "/customer?tab=delivery"
+                }
                 compact={compact}
                 isWishlisted={wishlistIds.has(merchant.id)}
                 onWishlistToggle={(nextSaved) => {
@@ -955,10 +975,14 @@ export default function CustomerHomePage() {
             <div className="border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-6 py-4 backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-black text-slate-950 dark:text-white tracking-tight">Lộ trình & Chỉ đường</h2>
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white tracking-tight">
+                    Lộ trình & Chỉ đường
+                  </h2>
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                     {selectedMerchant ? (
-                      <span className="text-cyan-700 dark:text-cyan-400">Đang hướng tới: {selectedMerchant.name}</span>
+                      <span className="text-cyan-700 dark:text-cyan-400">
+                        Đang hướng tới: {selectedMerchant.name}
+                      </span>
                     ) : (
                       "Chọn quán bất kỳ để nhận đường đi chính xác"
                     )}
@@ -997,7 +1021,9 @@ export default function CustomerHomePage() {
               {selectedMerchant && (
                 <div className="space-y-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-4 shadow-2xs">
                   <div>
-                    <h3 className="font-black text-slate-950 dark:text-white text-base">{selectedMerchant.name}</h3>
+                    <h3 className="font-black text-slate-950 dark:text-white text-base">
+                      {selectedMerchant.name}
+                    </h3>
                     {selectedMerchant.address ? (
                       <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                         <MapPin className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
@@ -1012,18 +1038,23 @@ export default function CustomerHomePage() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=dinein&backTo=${encodeURIComponent("/customer?tab=map")}`)
+                        navigate(
+                          `/customer/merchants/${selectedMerchant.id}?mode=dinein&backTo=${encodeURIComponent("/customer?tab=map")}`,
+                        )
                       }
                       className="h-10 flex-1 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                     >
-                      <Utensils className="h-3.5 w-3.5 text-amber-500" /> Xem Menu quán
+                      <Utensils className="h-3.5 w-3.5 text-amber-500" /> Xem
+                      Menu quán
                     </Button>
 
                     <Button
                       type="button"
                       size="sm"
                       onClick={() =>
-                        navigate(`/customer/merchants/${selectedMerchant.id}?mode=takeaway&backTo=${encodeURIComponent("/customer?tab=map")}`)
+                        navigate(
+                          `/customer/merchants/${selectedMerchant.id}?mode=takeaway&backTo=${encodeURIComponent("/customer?tab=map")}`,
+                        )
                       }
                       className="h-10 flex-1 gap-1.5 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-3 text-xs font-black text-white shadow-xs hover:from-cyan-500 hover:to-blue-500 transition"
                     >
@@ -1036,19 +1067,26 @@ export default function CustomerHomePage() {
               {routeResult?.steps && routeResult.steps.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <Navigation className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Hướng dẫn di chuyển ({routeResult.steps.length} bước)
+                    <Navigation className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />{" "}
+                    Hướng dẫn di chuyển ({routeResult.steps.length} bước)
                   </h4>
                   <div className="space-y-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/90 p-3 shadow-2xs">
                     {routeResult.steps.map((step, idx) => (
-                      <div key={idx} className="flex items-start gap-3 rounded-xl p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 rounded-xl p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
+                      >
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 text-[11px] font-extrabold">
                           {idx + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">{step.instruction || "Đi tiếp theo đường"}</p>
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                            {step.instruction || "Đi tiếp theo đường"}
+                          </p>
                           {step.distance > 0 && (
                             <p className="mt-0.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                              {metersToKm(step.distance)} • {secondsToText(step.duration)}
+                              {metersToKm(step.distance)} •{" "}
+                              {secondsToText(step.duration)}
                             </p>
                           )}
                         </div>
@@ -1070,7 +1108,11 @@ export default function CustomerHomePage() {
       <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xs transition-colors duration-300">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex items-center gap-3">
-            <img src={logoUrl} alt="UGem" className="h-10 w-auto transition-transform hover:scale-105" />
+            <img
+              src={logoUrl}
+              alt="UGem"
+              className="h-10 w-auto transition-transform hover:scale-105"
+            />
           </Link>
 
           <div className="flex items-center gap-3">
@@ -1120,10 +1162,14 @@ export default function CustomerHomePage() {
               <Sparkles className="h-3.5 w-3.5" /> UGem Food Dashboard
             </span>
             <h1 className="editorial-heading mt-4 text-3xl font-black leading-tight sm:text-5xl">
-              Hôm nay bạn muốn <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">thưởng thức món gì?</span>
+              Hôm nay bạn muốn{" "}
+              <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">
+                thưởng thức món gì?
+              </span>
             </h1>
             <p className="mt-3 text-sm font-medium text-slate-300 sm:text-base">
-              Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin khoảng cách & thời gian giao chính xác.
+              Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin
+              khoảng cách & thời gian giao chính xác.
             </p>
           </div>
 
@@ -1133,7 +1179,10 @@ export default function CustomerHomePage() {
           </div>
 
           {/* Search Form */}
-          <form onSubmit={handleSearch} className="relative z-10 mt-5 flex flex-col sm:flex-row gap-3">
+          <form
+            onSubmit={handleSearch}
+            className="relative z-10 mt-5 flex flex-col sm:flex-row gap-3"
+          >
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <Input
@@ -1143,7 +1192,11 @@ export default function CustomerHomePage() {
                 className="h-14 rounded-2xl bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium pl-12 shadow-lg border-white/20 outline-none"
               />
               {keyword && (
-                <button type="button" onClick={() => setKeyword("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <button
+                  type="button"
+                  onClick={() => setKeyword("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
                   <X className="h-4 w-4" />
                 </button>
               )}
@@ -1163,7 +1216,8 @@ export default function CustomerHomePage() {
           <section className="mt-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5 text-cyan-600 dark:text-cyan-400" /> Danh mục phổ biến
+                <SlidersHorizontal className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />{" "}
+                Danh mục phổ biến
               </h2>
               {selectedCategoryId && (
                 <button
@@ -1212,8 +1266,12 @@ export default function CustomerHomePage() {
         <section className="mt-10">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">UGem Recommended</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">Địa điểm quanh bạn</h2>
+              <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                UGem Recommended
+              </p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+                Địa điểm quanh bạn
+              </h2>
             </div>
 
             {renderPriceRangeFilters()}

@@ -63,7 +63,13 @@ function formatDistance(distance: number) {
   return `${Math.round(distance)} km`;
 }
 
-function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number }) {
+function MerchantVisual({
+  merchant,
+  index,
+}: {
+  merchant: Merchant;
+  index: number;
+}) {
   const logoImage = merchant.logoUrl?.trim();
   const menuImage = merchant.menu
     ?.find((item) => item.imageUrl?.trim())
@@ -71,8 +77,7 @@ function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number
   const image = logoImage || menuImage;
   const [failedImage, setFailedImage] = useState(false);
   const underratedScore = getDisplayUnderratedScore(merchant);
-  const isHiddenGem =
-    underratedScore !== null && underratedScore.percent >= 80;
+  const isHiddenGem = underratedScore !== null && underratedScore.percent >= 80;
 
   const initials = useMemo(() => {
     const parts = (merchant.name || "").trim().split(/\s+/).filter(Boolean);
@@ -107,13 +112,15 @@ function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number
           <div className="grid h-13 w-13 place-items-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-lg">
             <Store className="h-6 w-6" />
           </div>
-          <span className="text-xs font-black tracking-widest uppercase text-white/90">{initials}</span>
+          <span className="text-xs font-black tracking-widest uppercase text-white/90">
+            {initials}
+          </span>
         </div>
       )}
-      
+
       {/* Soft dark bottom gradient overlay */}
       <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-      
+
       {isHiddenGem ? (
         <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-slate-950/60 px-3 py-1 text-[11px] font-extrabold text-white shadow-md backdrop-blur-md">
           <Sparkles className="h-3 w-3 text-cyan-300" />
@@ -213,7 +220,9 @@ export default function GuestExplorePage() {
       .catch(() => {
         if (active) {
           setMerchants([]);
-          setError("Chưa tải được danh sách quán. Hãy kiểm tra kết nối dịch vụ backend.");
+          setError(
+            "Chưa tải được danh sách quán. Hãy kiểm tra kết nối dịch vụ backend.",
+          );
         }
       })
       .finally(() => active && setLoading(false));
@@ -256,10 +265,10 @@ export default function GuestExplorePage() {
 
   const hasActiveFilters = Boolean(
     activeKeyword ||
-      selectedCategory ||
-      priceRange ||
-      restaurantFilter ||
-      distanceKm !== 15,
+    selectedCategory ||
+    priceRange ||
+    restaurantFilter ||
+    distanceKm !== 15,
   );
 
   function handleSearch(event: FormEvent) {
@@ -403,10 +412,18 @@ export default function GuestExplorePage() {
       {/* Sticky navigation surface keeps scrolled content from showing above it. */}
       <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-slate-50/90 px-4 py-3 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 sm:px-6 lg:px-8">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/85 px-4 shadow-lg transition-colors duration-300 dark:border-white/10 dark:bg-slate-900/85 sm:px-6">
-          <Link to="/explore" className="flex items-center gap-3" aria-label="UGem Guest Explore">
-            <img src={logoUrl} alt="UGem" className="h-8 w-auto transition-transform hover:scale-105" />
+          <Link
+            to="/explore"
+            className="flex items-center gap-3"
+            aria-label="UGem Guest Explore"
+          >
+            <img
+              src={logoUrl}
+              alt="UGem"
+              className="h-8 w-auto transition-transform hover:scale-105"
+            />
           </Link>
-          
+
           <nav className="flex items-center gap-3" aria-label="Tài khoản">
             <ModeToggle />
             <Link
@@ -436,11 +453,15 @@ export default function GuestExplorePage() {
           </h1>
 
           <p className="mt-4 max-w-2xl mx-auto text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
-            Tra cứu vị trí, khoảng cách và thực đơn công khai của các địa điểm nổi tiếng ngay tức thì.
+            Tra cứu vị trí, khoảng cách và thực đơn công khai của các địa điểm
+            nổi tiếng ngay tức thì.
           </p>
 
           {/* Floating Search Bar */}
-          <form onSubmit={handleSearch} className="mt-8 mx-auto max-w-3xl flex flex-col sm:flex-row gap-3 p-2.5 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 shadow-2xl transition-colors duration-300">
+          <form
+            onSubmit={handleSearch}
+            className="mt-8 mx-auto max-w-3xl flex flex-col sm:flex-row gap-3 p-2.5 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 shadow-2xl transition-colors duration-300"
+          >
             <label className="flex h-14 flex-1 items-center gap-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 px-5 transition focus-within:ring-2 focus-within:ring-cyan-500/40">
               <Search className="h-5 w-5 text-cyan-500 dark:text-cyan-400 shrink-0" />
               <input
@@ -451,7 +472,12 @@ export default function GuestExplorePage() {
                 className="h-full w-full bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:text-sm"
               />
               {keyword && (
-                <button type="button" onClick={() => setKeyword("")} aria-label="Xóa từ khóa" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-950 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-white">
+                <button
+                  type="button"
+                  onClick={() => setKeyword("")}
+                  aria-label="Xóa từ khóa"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-950 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-white"
+                >
                   <X className="h-4 w-4" />
                 </button>
               )}
@@ -463,7 +489,6 @@ export default function GuestExplorePage() {
               Tìm ngay <ArrowRight className="h-4 w-4" />
             </button>
           </form>
-
         </div>
       </section>
 
@@ -664,16 +689,21 @@ export default function GuestExplorePage() {
           ) : null}
 
           {locationError ? (
-            <p className="mt-3 text-xs font-semibold text-rose-600 dark:text-rose-400" role="alert">
+            <p
+              className="mt-3 text-xs font-semibold text-rose-600 dark:text-rose-400"
+              role="alert"
+            >
               {locationError}
             </p>
           ) : null}
-
         </div>
 
         {/* Categories Bar */}
         {categories.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-none" aria-label="Danh mục quán">
+          <div
+            className="flex gap-3 overflow-x-auto pb-4 scrollbar-none"
+            aria-label="Danh mục quán"
+          >
             <button
               type="button"
               onClick={() => chooseCategory("")}
@@ -707,10 +737,17 @@ export default function GuestExplorePage() {
         {/* Results Header */}
         <div className="mb-6 mt-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">Địa điểm gợi ý</h2>
+            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+              Địa điểm gợi ý
+            </h2>
           </div>
           <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-            <p className="text-left text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 sm:text-right sm:text-xs" aria-live="polite">{resultLabel}</p>
+            <p
+              className="text-left text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 sm:text-right sm:text-xs"
+              aria-live="polite"
+            >
+              {resultLabel}
+            </p>
             {hasActiveFilters ? (
               <button
                 type="button"
@@ -729,7 +766,9 @@ export default function GuestExplorePage() {
           <div className="grid min-h-64 place-items-center rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-8">
             <div className="text-center text-slate-500 dark:text-slate-400">
               <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-cyan-500 dark:text-cyan-400" />
-              <p className="mt-3 text-xs font-bold font-mono">Đang tải địa điểm...</p>
+              <p className="mt-3 text-xs font-bold font-mono">
+                Đang tải địa điểm...
+              </p>
             </div>
           </div>
         ) : error ? (
@@ -741,8 +780,12 @@ export default function GuestExplorePage() {
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
               <Utensils className="h-6 w-6" />
             </div>
-            <h3 className="mt-4 text-base font-black text-slate-950 dark:text-white">Chưa tìm thấy địa điểm</h3>
-            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Thử thay đổi vị trí hoặc xóa các bộ lọc đang chọn.</p>
+            <h3 className="mt-4 text-base font-black text-slate-950 dark:text-white">
+              Chưa tìm thấy địa điểm
+            </h3>
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              Thử thay đổi vị trí hoặc xóa các bộ lọc đang chọn.
+            </p>
             {hasActiveFilters ? (
               <button
                 type="button"
@@ -774,7 +817,9 @@ export default function GuestExplorePage() {
                   {merchant.address ? (
                     <p className="mt-2 flex items-start gap-2 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-400">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-500 dark:text-cyan-400" />
-                      <span className="min-w-0 flex-1 wrap-break-word">{cleanAddress(merchant.address)}</span>
+                      <span className="min-w-0 flex-1 wrap-break-word">
+                        {cleanAddress(merchant.address)}
+                      </span>
                     </p>
                   ) : null}
 
@@ -823,7 +868,9 @@ export default function GuestExplorePage() {
                         {merchant.rating.toFixed(1)}
                       </span>
                     ) : (
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px]">ĐỊA ĐIỂM MỚI</span>
+                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px]">
+                        ĐỊA ĐIỂM MỚI
+                      </span>
                     )}
 
                     <span className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/10 px-3.5 py-1.5 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-slate-950 transition">
@@ -854,9 +901,13 @@ export default function GuestExplorePage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" /> Thông tin công khai
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />{" "}
+                  Thông tin công khai
                 </span>
-                <h2 id="guest-merchant-title" className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+                <h2
+                  id="guest-merchant-title"
+                  className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl"
+                >
                   {detail.name || "Quán trên UGem"}
                 </h2>
               </div>
@@ -884,15 +935,27 @@ export default function GuestExplorePage() {
 
             <div className="mt-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-black text-slate-950 dark:text-white">Thực đơn công khai</h3>
-                {detailLoading ? <LoaderCircle className="h-4 w-4 animate-spin text-cyan-500 dark:text-cyan-400" /> : null}
+                <h3 className="text-base font-black text-slate-950 dark:text-white">
+                  Thực đơn công khai
+                </h3>
+                {detailLoading ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin text-cyan-500 dark:text-cyan-400" />
+                ) : null}
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {(detail.foods ?? detail.menu ?? []).slice(0, 6).map((food) => (
-                  <div key={food.id} className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60 p-4">
-                    <p className="font-bold text-xs text-slate-950 dark:text-white">{food.name}</p>
+                  <div
+                    key={food.id}
+                    className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60 p-4"
+                  >
+                    <p className="font-bold text-xs text-slate-950 dark:text-white">
+                      {food.name}
+                    </p>
                     <p className="mt-1 text-xs font-mono font-black text-cyan-600 dark:text-cyan-400">
-                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(food.price)}
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(food.price)}
                     </p>
                   </div>
                 ))}
@@ -901,8 +964,12 @@ export default function GuestExplorePage() {
 
             <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-cyan-900 via-slate-900 to-indigo-950 p-6 text-white sm:flex-row sm:items-center sm:justify-between border border-cyan-500/20 shadow-xl">
               <div>
-                <p className="text-sm font-black">Đặt món & Trải nghiệm đầy đủ?</p>
-                <p className="mt-0.5 text-xs text-slate-300">Đăng nhập tài khoản UGem để bắt đầu ngay.</p>
+                <p className="text-sm font-black">
+                  Đặt món & Trải nghiệm đầy đủ?
+                </p>
+                <p className="mt-0.5 text-xs text-slate-300">
+                  Đăng nhập tài khoản UGem để bắt đầu ngay.
+                </p>
               </div>
               <Link
                 to={`/login?returnUrl=${encodeURIComponent(

@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Calendar, Users, Clock, XCircle, Loader2, Store, Heart, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  Clock,
+  XCircle,
+  Loader2,
+  Store,
+  Heart,
+  ShoppingBag,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { Button } from "@/shared/components/ui/button";
@@ -37,7 +47,8 @@ export default function CustomerBookingsPage() {
   }, []);
 
   const handleCancel = async (id: string) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy yêu cầu đặt bàn này?")) return;
+    if (!window.confirm("Bạn có chắc chắn muốn hủy yêu cầu đặt bàn này?"))
+      return;
 
     setCancellingId(id);
     try {
@@ -132,7 +143,9 @@ export default function CustomerBookingsPage() {
         {isLoading ? (
           <div className="py-20 text-center text-slate-400">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-cyan-500" />
-            <p className="mt-3 text-xs font-bold">Đang tải danh sách đặt bàn...</p>
+            <p className="mt-3 text-xs font-bold">
+              Đang tải danh sách đặt bàn...
+            </p>
           </div>
         ) : bookings.length === 0 ? (
           <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-12 text-center shadow-xl backdrop-blur-2xl">
