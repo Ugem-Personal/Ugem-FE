@@ -38,7 +38,11 @@ import {
   type Review,
 } from "@/features/review/services";
 import { findMerchantByFoodId } from "../services/merchantService";
-import { ImageWithFallback, ModeToggle, UserAccountMenu } from "@/shared/components";
+import {
+  ImageWithFallback,
+  ModeToggle,
+  UserAccountMenu,
+} from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import logoUrl from "@/assets/ugem-logo.png";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
@@ -64,8 +68,6 @@ function getPaymentBankInfo(value: unknown): PaymentBankInfo | null {
       typeof record.bankAccount === "string" ? record.bankAccount : undefined,
   };
 }
-
-
 
 const orderIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -108,9 +110,12 @@ export default function CustomerOrderDetailPage() {
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewContent, setReviewContent] = useState<string>("");
-  const [foodReviewDrafts, setFoodReviewDrafts] = useState<Record<string, { rating: number; content: string }>>({});
+  const [foodReviewDrafts, setFoodReviewDrafts] = useState<
+    Record<string, { rating: number; content: string }>
+  >({});
   const [, setActiveFoodReviewId] = useState<string | null>(null);
-  const [fetchedSummaryOrder, setFetchedSummaryOrder] = useState<CustomerOrderSummary | null>(summaryOrder);
+  const [fetchedSummaryOrder, setFetchedSummaryOrder] =
+    useState<CustomerOrderSummary | null>(summaryOrder);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [paymentBankInfo, setPaymentBankInfo] =
     useState<PaymentBankInfo | null>(null);
@@ -136,10 +141,14 @@ export default function CustomerOrderDetailPage() {
         let matchingSummaryOrder = summaryOrder;
 
         if (!hasRealOrderId) {
-          const ordersRes = await getCustomerOrders().catch(() => ({ data: [] }));
+          const ordersRes = await getCustomerOrders().catch(() => ({
+            data: [],
+          }));
           const orders = ordersRes.data ?? [];
           const refreshedSummaryOrder = summaryOrder
-            ? orders.find((order: CustomerOrderSummary) => matchesSummaryOrder(order, summaryOrder))
+            ? orders.find((order: CustomerOrderSummary) =>
+                matchesSummaryOrder(order, summaryOrder),
+              )
             : orders[0];
 
           matchingSummaryOrder =
@@ -174,18 +183,17 @@ export default function CustomerOrderDetailPage() {
           getBill(effectiveOrderId).catch(() => null),
         ]);
         const orders = ordersRes.data ?? [];
-        const refreshedSummary = orders.find(
-          (order: CustomerOrderSummary) =>
-            getCustomerOrderId(order) === effectiveOrderId,
-        ) ?? matchingSummaryOrder;
+        const refreshedSummary =
+          orders.find(
+            (order: CustomerOrderSummary) =>
+              getCustomerOrderId(order) === effectiveOrderId,
+          ) ?? matchingSummaryOrder;
 
         if (active) {
           setItems(data ?? []);
           setFetchedSummaryOrder(refreshedSummary);
           setPaymentBankInfo(getPaymentBankInfo(billPayload));
-          const refreshedStatus =
-            refreshedSummary?.status ??
-            null;
+          const refreshedStatus = refreshedSummary?.status ?? null;
           setOrderStatus(refreshedStatus);
           lastKnownStatusRef.current = refreshedStatus;
         }
@@ -327,7 +335,7 @@ export default function CustomerOrderDetailPage() {
       setHasReviewed(true);
     } catch (error) {
       console.error(error);
-      notify.error("Gửi đánh giá thất bại.");
+      notify.errorApi(error, "Gửi đánh giá thất bại.");
     } finally {
       setSubmittingReview(false);
     }
@@ -360,8 +368,6 @@ export default function CustomerOrderDetailPage() {
       setConfirmingDelivery(false);
     }
   }
-
-
 
   const currentSummaryOrder = fetchedSummaryOrder ?? summaryOrder;
   const itemsTotal = items.reduce((sum, item) => {
@@ -443,8 +449,9 @@ export default function CustomerOrderDetailPage() {
 
   const displayOrderStatus = orderStatus ?? currentSummaryOrder?.status ?? null;
   const normalizedOrderStatus = displayOrderStatus?.trim().toLowerCase();
-  const isPaid = currentSummaryOrder?.paymentStatus?.trim().toLowerCase() === "paid";
-  const isCompleted = normalizedOrderStatus === "completed" || isPaid;
+  const isPaid =
+    currentSummaryOrder?.paymentStatus?.trim().toLowerCase() === "paid";
+  const isCompleted = normalizedOrderStatus === "completed";
   const isOfflineOrder =
     currentSummaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
     normalizeString(currentSummaryOrder?.deliveryAddress) === "tai quan" ||
@@ -474,18 +481,32 @@ export default function CustomerOrderDetailPage() {
             <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/wishlist">
                 <Heart className="h-4 w-4 text-rose-500" />
                 <span className="hidden md:inline">Quán yêu thích</span>
               </Link>
             </Button>
-            <Button asChild type="button" className="h-11 gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-5 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              className="h-11 gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-5 sm:text-sm"
+            >
               <Link to="/customer/orders">
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/bookings">
                 <Calendar className="h-4 w-4 text-cyan-600" />
                 <span className="hidden sm:inline">Lịch đặt bàn</span>
@@ -547,17 +568,23 @@ export default function CustomerOrderDetailPage() {
                 <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
                   <Clock className="h-3.5 w-3.5" />
                   {currentSummaryOrder.orderedAt
-                    ? new Date(currentSummaryOrder.orderedAt).toLocaleString("vi-VN")
+                    ? new Date(currentSummaryOrder.orderedAt).toLocaleString(
+                        "vi-VN",
+                      )
                     : "Mới đây"}
                   {effectiveOrderId && (
-                    <span className="font-mono">#{effectiveOrderId.slice(0, 8)}</span>
+                    <span className="font-mono">
+                      #{effectiveOrderId.slice(0, 8)}
+                    </span>
                   )}
                 </p>
               )}
             </div>
 
             <div className="flex flex-col items-start sm:items-end gap-2">
-              <OrderStatusBadge status={isCompleted ? "Completed" : displayOrderStatus} />
+              <OrderStatusBadge
+                status={isCompleted ? "Completed" : displayOrderStatus}
+              />
               <p className="text-2xl font-black tracking-tight text-cyan-600 dark:text-cyan-400 font-mono">
                 {formatPrice(total)}
               </p>
@@ -571,8 +598,12 @@ export default function CustomerOrderDetailPage() {
                 <div className="flex items-start gap-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-950/50 p-3.5">
                   <MapPin className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
                   <div>
-                    <p className="font-bold text-slate-900 dark:text-white">Địa chỉ giao hàng</p>
-                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">{currentSummaryOrder.deliveryAddress}</p>
+                    <p className="font-bold text-slate-900 dark:text-white">
+                      Địa chỉ giao hàng
+                    </p>
+                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+                      {currentSummaryOrder.deliveryAddress}
+                    </p>
                   </div>
                 </div>
               )}
@@ -593,7 +624,9 @@ export default function CustomerOrderDetailPage() {
           {effectiveOrderId && isConfirmationReady ? (
             <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
               <div className="font-black text-slate-950 dark:text-white text-sm">
-                {isOfflineOrder ? "Món đã sẵn sàng tại bàn" : "Đơn đang được giao tới bạn"}
+                {isOfflineOrder
+                  ? "Món đã sẵn sàng tại bàn"
+                  : "Đơn đang được giao tới bạn"}
               </div>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
                 {isOfflineOrder
@@ -612,9 +645,12 @@ export default function CustomerOrderDetailPage() {
             </div>
           ) : isCompleted ? (
             <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 px-5 py-4 text-xs font-bold text-emerald-900 dark:text-emerald-200">
-              <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">🎉 Đơn hàng đã hoàn tất thành công!</p>
+              <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">
+                🎉 Đơn hàng đã hoàn tất thành công!
+              </p>
               <p className="text-xs font-medium mt-0.5 text-emerald-700 dark:text-emerald-300">
-                Cảm ơn bạn đã sử dụng dịch vụ. Vui lòng kéo xuống dưới để gửi đánh giá trải nghiệm nhé.
+                Cảm ơn bạn đã sử dụng dịch vụ. Vui lòng kéo xuống dưới để gửi
+                đánh giá trải nghiệm nhé.
               </p>
             </div>
           ) : effectiveOrderId ? (
@@ -629,8 +665,12 @@ export default function CustomerOrderDetailPage() {
           {!isPaid &&
             (currentSummaryOrder?.paymentMethod === "BankTransfer" ||
               currentSummaryOrder?.paymentMethod === "SePay" ||
-              currentSummaryOrder?.paymentMethod?.toLowerCase().includes("banktransfer") ||
-              currentSummaryOrder?.paymentMethod?.toLowerCase().includes("sepay")) &&
+              currentSummaryOrder?.paymentMethod
+                ?.toLowerCase()
+                .includes("banktransfer") ||
+              currentSummaryOrder?.paymentMethod
+                ?.toLowerCase()
+                .includes("sepay")) &&
             effectiveOrderId && (
               <div className="mt-6 rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-6 shadow-xl text-white">
                 <div className="flex items-center justify-between pb-4 border-b border-white/10">
@@ -639,8 +679,12 @@ export default function CustomerOrderDetailPage() {
                       <QrCode className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-black text-base text-white">Thanh toán Chuyển khoản (VietQR / SePay)</h3>
-                      <p className="text-xs text-slate-400 font-medium">Quét mã QR bằng App Ngân hàng bất kỳ để tự động xác nhận</p>
+                      <h3 className="font-black text-base text-white">
+                        Thanh toán Chuyển khoản (VietQR / SePay)
+                      </h3>
+                      <p className="text-xs text-slate-400 font-medium">
+                        Quét mã QR bằng App Ngân hàng bất kỳ để tự động xác nhận
+                      </p>
                     </div>
                   </div>
                   <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-[11px] font-black text-amber-400 animate-pulse">
@@ -671,7 +715,9 @@ export default function CustomerOrderDetailPage() {
                   <div className="space-y-3 text-xs">
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
                       <div>
-                        <p className="text-slate-400 font-medium text-[11px]">Ngân hàng</p>
+                        <p className="text-slate-400 font-medium text-[11px]">
+                          Ngân hàng
+                        </p>
                         <p className="font-black text-sm text-cyan-400">
                           {paymentBankCode || "Chưa cấu hình"}
                         </p>
@@ -680,41 +726,65 @@ export default function CustomerOrderDetailPage() {
 
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
                       <div>
-                        <p className="text-slate-400 font-medium text-[11px]">Số tài khoản nhận</p>
+                        <p className="text-slate-400 font-medium text-[11px]">
+                          Số tài khoản nhận
+                        </p>
                         <p className="font-mono font-black text-base text-white tracking-wider">
                           {paymentBankAccount || "Chưa cấu hình"}
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy(paymentBankAccount, "account")}
+                        onClick={() =>
+                          handleCopy(paymentBankAccount, "account")
+                        }
                         disabled={!paymentBankAccount}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 font-bold text-cyan-300 hover:bg-cyan-500/30 transition"
                       >
-                        {copiedField === "account" ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copiedField === "account" ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
                         {copiedField === "account" ? "Đã chép" : "Sao chép"}
                       </button>
                     </div>
 
                     <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 p-3.5 flex justify-between items-center">
                       <div>
-                        <p className="text-cyan-300 font-bold text-[11px]">Nội dung chuyển khoản (Bắt buộc)</p>
-                        <p className="font-mono font-black text-sm text-amber-300 tracking-wide">{effectiveOrderId}</p>
+                        <p className="text-cyan-300 font-bold text-[11px]">
+                          Nội dung chuyển khoản (Bắt buộc)
+                        </p>
+                        <p className="font-mono font-black text-sm text-amber-300 tracking-wide">
+                          {effectiveOrderId}
+                        </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy(effectiveOrderId, "description")}
+                        onClick={() =>
+                          handleCopy(effectiveOrderId, "description")
+                        }
                         className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 px-3 py-1.5 font-black text-slate-950 hover:bg-cyan-400 transition shadow-md"
                       >
-                        {copiedField === "description" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        {copiedField === "description" ? "Đã chép" : "Sao chép mã"}
+                        {copiedField === "description" ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        {copiedField === "description"
+                          ? "Đã chép"
+                          : "Sao chép mã"}
                       </button>
                     </div>
 
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 flex justify-between items-center">
                       <div>
-                        <p className="text-slate-400 font-medium text-[11px]">Số tiền cần thanh toán</p>
-                        <p className="font-mono font-black text-lg text-emerald-400">{formatPrice(total)}</p>
+                        <p className="text-slate-400 font-medium text-[11px]">
+                          Số tiền cần thanh toán
+                        </p>
+                        <p className="font-mono font-black text-lg text-emerald-400">
+                          {formatPrice(total)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -756,7 +826,10 @@ export default function CustomerOrderDetailPage() {
                       {item.name || "Món ăn"}
                     </p>
                     <p className="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Số lượng: <span className="font-black text-slate-800 dark:text-slate-200">{item.quantity}</span>
+                      Số lượng:{" "}
+                      <span className="font-black text-slate-800 dark:text-slate-200">
+                        {item.quantity}
+                      </span>
                     </p>
                     {item.toppings && item.toppings.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -779,7 +852,9 @@ export default function CustomerOrderDetailPage() {
                 </div>
 
                 <p className="shrink-0 text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">
-                  {formatPrice(Number(item.unitPrice || 0) * Number(item.quantity || 1))}
+                  {formatPrice(
+                    Number(item.unitPrice || 0) * Number(item.quantity || 1),
+                  )}
                 </p>
               </div>
             ))}
