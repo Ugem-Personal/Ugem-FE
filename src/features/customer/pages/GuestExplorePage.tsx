@@ -65,9 +65,11 @@ function formatDistance(distance: number) {
 }
 
 function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number }) {
-  const image =
-    merchant.logoUrl?.trim() ||
-    merchant.menu?.find((item) => item.imageUrl?.trim())?.imageUrl?.trim();
+  const logoImage = merchant.logoUrl?.trim();
+  const menuImage = merchant.menu
+    ?.find((item) => item.imageUrl?.trim())
+    ?.imageUrl?.trim();
+  const image = logoImage || menuImage;
   const [failedImage, setFailedImage] = useState(false);
   const underratedScore = getDisplayUnderratedScore(merchant);
   const isHiddenGem =
@@ -92,7 +94,11 @@ function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number
         <img
           src={image}
           alt={merchant.name || "Quán ăn trên UGem"}
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          className={
+            logoImage
+              ? "h-full w-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              : "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          }
           onError={() => setFailedImage(true)}
         />
       ) : (
