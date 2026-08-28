@@ -169,6 +169,7 @@ export default function ConfirmBillPage() {
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
+  const [paymentMethodSyncing, setPaymentMethodSyncing] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const [checkInVerified, setCheckInVerified] = useState<boolean>(false);
@@ -375,8 +376,9 @@ export default function ConfirmBillPage() {
 
   useEffect(() => {
     const shouldSyncPayment =
-      cashRequested ||
-      (billConfirmed && selectedPaymentMethod === "BankTransfer");
+      !paymentMethodSyncing &&
+      (cashRequested ||
+        (billConfirmed && selectedPaymentMethod === "BankTransfer"));
 
     if (!orderId || !shouldSyncPayment) return;
 
@@ -461,6 +463,7 @@ export default function ConfirmBillPage() {
     orderId,
     selectedPaymentMethod,
     checkInVerified,
+    paymentMethodSyncing,
   ]);
 
   async function handleConfirmBill() {
@@ -507,11 +510,36 @@ export default function ConfirmBillPage() {
     void handleCashPaymentRequested();
   }
 
-  function handleSelectPaymentMethod(method: BillPaymentMethod) {
-    if (cashRequested) return;
+  async function handleSelectPaymentMethod(method: BillPaymentMethod) {
+    if (cashRequested || method === selectedPaymentMethod) return;
 
     setError(null);
+    if (method === "Cash") {
+      setSelectedPaymentMethod(method);
+      return;
+    }
+
+    if (!orderId) return;
+
+    const previousMethod = selectedPaymentMethod;
     setSelectedPaymentMethod(method);
+    setPaymentMethodSyncing(true);
+
+    try {
+      await confirmBill(orderId, method);
+      setBillConfirmed(true);
+    } catch (error) {
+      console.error(error);
+      setSelectedPaymentMethod(previousMethod);
+      setError(
+        getServerMessage(
+          error,
+          "Không thể chuyển sang thanh toán chuyển khoản. Vui lòng thử lại.",
+        ),
+      );
+    } finally {
+      setPaymentMethodSyncing(false);
+    }
   }
 
   async function handleCashPaymentRequested() {
@@ -824,7 +852,7 @@ export default function ConfirmBillPage() {
                       <button
                         type="button"
                         onClick={() => handleSelectPaymentMethod("Cash")}
-                        disabled={cashRequested}
+                        disabled={cashRequested || paymentMethodSyncing}
                         className={`rounded-2xl border p-4 text-left transition ${
                           selectedPaymentMethod === "Cash"
                             ? "border-amber-400 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200"
@@ -845,7 +873,7 @@ export default function ConfirmBillPage() {
                         onClick={() =>
                           handleSelectPaymentMethod("BankTransfer")
                         }
-                        disabled={cashRequested}
+                        disabled={cashRequested || paymentMethodSyncing}
                         className={`rounded-2xl border p-4 text-left transition ${
                           selectedPaymentMethod === "BankTransfer"
                             ? "border-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-900 dark:text-cyan-200"
