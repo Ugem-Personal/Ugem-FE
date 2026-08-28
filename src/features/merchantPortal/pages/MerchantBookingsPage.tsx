@@ -298,13 +298,33 @@ export default function MerchantBookingsPage() {
               Vui lòng cung cấp lý do để gửi thông báo đến khách hàng.
             </p>
 
+            <label
+              htmlFor="booking-rejection-reason"
+              className="mb-2 block text-xs font-black text-slate-700 dark:text-slate-300"
+            >
+              Lý do từ chối <span className="text-rose-500">*</span>
+            </label>
+
             <textarea
+              id="booking-rejection-reason"
               rows={3}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
+              required
+              maxLength={500}
+              autoFocus
               placeholder="VD: Quán đã hết bàn vào khung giờ này..."
-              className="w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 p-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 mb-4"
+              className="w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 p-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
             />
+
+            <div className="mb-4 mt-1.5 flex items-center justify-between gap-3 text-[11px] font-semibold">
+              <span className="text-rose-500">
+                Khách hàng sẽ nhìn thấy lý do này.
+              </span>
+              <span className="text-slate-400">
+                {rejectionReason.length}/500
+              </span>
+            </div>
 
             <div className="flex justify-end gap-3">
               <Button
@@ -322,7 +342,7 @@ export default function MerchantBookingsPage() {
               <Button
                 type="button"
                 onClick={handleRejectSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !rejectionReason.trim()}
                 className="h-10 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Xác nhận từ chối"}
