@@ -303,14 +303,16 @@ export default function ConfirmBillPage() {
           (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
         const persistedCashRequest = getPersistedCashRequest(orderId);
         const isOfflineOrder =
-          nextBill.orderType?.trim().toLowerCase() === "offline";
+          (nextBill.orderType ?? currentOrder?.orderType)
+            ?.trim()
+            .toLowerCase() === "offline";
         const isCheckInComplete =
           !isOfflineOrder || nextBill.checkInStatus === "Verified";
+        const isPaymentComplete =
+          currentPaymentStatus === "paid" ||
+          (!isOfflineOrder && currentStatus === "completed");
 
-        if (
-          isCheckInComplete &&
-          (currentStatus === "completed" || currentPaymentStatus === "paid")
-        ) {
+        if (isCheckInComplete && isPaymentComplete) {
           const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
           if (cashPaymentKey && typeof window !== "undefined") {
@@ -397,16 +399,17 @@ export default function ConfirmBillPage() {
       const currentPaymentStatus =
         (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
       const isOfflineOrder =
-        bill?.orderType?.trim().toLowerCase() === "offline";
+        (bill?.orderType ?? currentOrder?.orderType)?.trim().toLowerCase() ===
+        "offline";
       const isCheckInComplete =
         !isOfflineOrder ||
         checkInVerified ||
         bill?.checkInStatus === "Verified";
+      const isPaymentComplete =
+        currentPaymentStatus === "paid" ||
+        (!isOfflineOrder && currentStatus === "completed");
 
-      if (
-        isCheckInComplete &&
-        (currentStatus === "completed" || currentPaymentStatus === "paid")
-      ) {
+      if (isCheckInComplete && isPaymentComplete) {
         const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
         if (cashPaymentKey && typeof window !== "undefined") {
@@ -478,11 +481,11 @@ export default function ConfirmBillPage() {
         msg.includes("đã được thanh toán")
       ) {
         setBillConfirmed(true);
-        notify.success("Đơn hàng này đã được thanh toán thành công!");
         if (
           bill?.orderType?.trim().toLowerCase() !== "offline" ||
           checkInVerified
         ) {
+          notify.success("Đơn hàng này đã được thanh toán thành công!");
           navigate(
             `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
             { replace: true },
@@ -528,11 +531,11 @@ export default function ConfirmBillPage() {
         msg.includes("Order đã được thanh toán") ||
         msg.includes("đã được thanh toán")
       ) {
-        notify.success("Đơn hàng này đã được thanh toán thành công!");
         if (
           bill?.orderType?.trim().toLowerCase() !== "offline" ||
           checkInVerified
         ) {
+          notify.success("Đơn hàng này đã được thanh toán thành công!");
           navigate(
             `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
             { replace: true },
