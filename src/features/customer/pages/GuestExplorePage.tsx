@@ -774,7 +774,7 @@ export default function GuestExplorePage() {
                   {merchant.address ? (
                     <p className="mt-2 flex items-start gap-2 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-400">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-500 dark:text-cyan-400" />
-                      <span className="line-clamp-2">{cleanAddress(merchant.address)}</span>
+                      <span className="min-w-0 flex-1 wrap-break-word">{cleanAddress(merchant.address)}</span>
                     </p>
                   ) : null}
 

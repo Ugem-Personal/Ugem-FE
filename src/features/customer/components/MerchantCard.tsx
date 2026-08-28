@@ -271,12 +271,12 @@ export default function MerchantCard({
             {merchant.address && (
               <p
                 className={cn(
-                  "flex min-w-0 items-center gap-1.5 font-semibold text-slate-500 dark:text-slate-400 transition-colors group-hover:text-slate-700 dark:group-hover:text-slate-200",
+                  "flex min-w-0 items-start gap-1.5 font-semibold text-slate-500 dark:text-slate-400 transition-colors group-hover:text-slate-700 dark:group-hover:text-slate-200",
                   compact ? "mt-2 text-xs" : "mt-2.5 text-xs sm:text-sm",
                 )}
               >
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                <span className="line-clamp-2">{cleanAddress(merchant.address)}</span>
+                <span className="min-w-0 flex-1 wrap-break-word">{cleanAddress(merchant.address)}</span>
               </p>
             )}
 
