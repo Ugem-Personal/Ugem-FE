@@ -1154,20 +1154,20 @@ export default function CustomerHomePage() {
       {/* Main Container */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Main Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-cyan-950 to-blue-950 p-6 text-white shadow-2xl sm:p-10 border border-white/10">
-          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.3),transparent_50%)] pointer-events-none" />
+        <section className="relative overflow-hidden rounded-3xl border border-cyan-100 bg-gradient-to-r from-white via-cyan-50 to-blue-100 p-6 text-slate-950 shadow-2xl sm:p-10 dark:border-white/10 dark:from-slate-950 dark:via-cyan-950 dark:to-blue-950 dark:text-white">
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.18),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.3),transparent_50%)]" />
 
           <div className="relative z-10 max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-300 shadow-xs backdrop-blur-md">
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-600/25 bg-cyan-500/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-700 shadow-xs backdrop-blur-md dark:border-cyan-400/30 dark:text-cyan-300">
               <Sparkles className="h-3.5 w-3.5" /> UGem Food Dashboard
             </span>
             <h1 className="editorial-heading mt-4 text-3xl font-black leading-tight sm:text-5xl">
               Hôm nay bạn muốn{" "}
-              <span className="bg-gradient-to-r from-cyan-300 to-teal-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent dark:from-cyan-300 dark:to-teal-200">
                 thưởng thức món gì?
               </span>
             </h1>
-            <p className="mt-3 text-sm font-medium text-slate-300 sm:text-base">
+            <p className="mt-3 text-sm font-medium text-slate-600 sm:text-base dark:text-slate-300">
               Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin
               khoảng cách & thời gian giao chính xác.
             </p>
