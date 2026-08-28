@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Calendar,
   CheckCircle2,
@@ -17,9 +18,14 @@ import {
 } from "@/features/booking/services/bookingService";
 
 export default function MerchantBookingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"All" | "Pending" | "Accepted" | "Rejected">("All");
+  const tabParam = searchParams.get("status");
+  const activeTab: "All" | "Pending" | "Accepted" | "Rejected" =
+    tabParam === "Pending" || tabParam === "Accepted" || tabParam === "Rejected"
+      ? tabParam
+      : "All";
 
   // Rejection modal state
   const [rejectingBookingId, setRejectingBookingId] = useState<string | null>(null);
@@ -128,7 +134,17 @@ export default function MerchantBookingsPage() {
             <button
               key={tab}
               type="button"
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setSearchParams(
+                  (previous) => {
+                    const next = new URLSearchParams(previous);
+                    if (tab === "All") next.delete("status");
+                    else next.set("status", tab);
+                    return next;
+                  },
+                  { replace: true },
+                );
+              }}
               className={`px-4 py-2 rounded-2xl text-xs font-bold transition ${
                 active
                   ? "bg-cyan-500 text-slate-950 shadow-md"

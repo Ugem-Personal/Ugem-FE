@@ -1,11 +1,75 @@
 import axios from "axios";
 import { API_V1_BASE_URL } from "./env";
-import { clearAuth, getAccessToken } from "../features/auth/store";
+import {
+  clearAuth,
+  getAccessToken,
+  getRefreshToken,
+  saveAuthToken,
+} from "../features/auth/store";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
     skipAuthRedirect?: boolean;
+    _retryAfterRefresh?: boolean;
   }
+}
+
+type RefreshResponse = {
+  data?: {
+    accessToken?: string;
+    refreshToken?: string;
+    refreshTokenExpiresAtUtc?: string;
+  };
+};
+
+let refreshPromise: Promise<string> | null = null;
+
+function getCurrentReturnUrl() {
+  if (typeof window === "undefined") return "/";
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+function redirectToLogin() {
+  if (typeof window === "undefined" || window.location.pathname === "/login") {
+    return;
+  }
+
+  const returnUrl = encodeURIComponent(getCurrentReturnUrl());
+  window.location.replace(`/login?returnUrl=${returnUrl}`);
+}
+
+async function refreshAccessToken() {
+  if (!refreshPromise) {
+    const accessToken = getAccessToken();
+    const refreshToken = getRefreshToken();
+
+    refreshPromise = axios
+      .post<RefreshResponse>(
+        `${API_V1_BASE_URL}/auth/refresh-token`,
+        {
+          accessToken,
+          refreshToken: refreshToken || undefined,
+        },
+        { withCredentials: true },
+      )
+      .then(({ data }) => {
+        const session = data.data;
+        if (!session?.accessToken) {
+          throw new Error("Missing refreshed access token");
+        }
+
+        saveAuthToken(session.accessToken, {
+          refreshToken: session.refreshToken,
+          refreshTokenExpiresAtUtc: session.refreshTokenExpiresAtUtc,
+        });
+        return session.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
 }
 
 export const api = axios.create({
@@ -42,7 +106,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error.response?.status;
     const responseErrors = error.response?.data?.errors;
     const fieldError = Array.isArray(responseErrors)
@@ -63,7 +127,6 @@ api.interceptors.response.use(
       "Có lỗi xảy ra.";
 
     if (status === 401) {
-      clearAuth();
       console.error("[AXIOS 401] Unauthorized", {
         url: error.config?.url,
         message,
@@ -80,9 +143,21 @@ api.interceptors.response.use(
         return Promise.reject(normalizedError);
       }
 
-      if (typeof globalThis !== "undefined" && "location" in globalThis) {
-        globalThis.location.href = "/login";
+      const originalRequest = error.config;
+      if (getAccessToken() && originalRequest && !originalRequest._retryAfterRefresh) {
+        originalRequest._retryAfterRefresh = true;
+
+        try {
+          const accessToken = await refreshAccessToken();
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.error("[AUTH] Session refresh failed", refreshError);
+        }
       }
+
+      clearAuth();
+      redirectToLogin();
 
       return Promise.reject(
         new Error(

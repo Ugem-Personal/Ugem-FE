@@ -16,7 +16,7 @@ import {
   X,
   Gift,
 } from "lucide-react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import logoUrl from "@/assets/ugem-logo.png";
 import { ModeToggle } from "@/shared/components";
@@ -33,7 +33,6 @@ import {
 } from "../services/merchantService";
 import type { Merchant, MerchantDetail } from "../types";
 import { getDisplayUnderratedScore } from "../utils/underratedScore";
-import { getCurrentUser } from "@/features/auth";
 import {
   type GeocodeResult,
   reverseGeocode,
@@ -126,7 +125,6 @@ function MerchantVisual({ merchant, index }: { merchant: Merchant; index: number
 }
 
 export default function GuestExplorePage() {
-  const authenticatedUser = getCurrentUser();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
@@ -391,21 +389,6 @@ export default function GuestExplorePage() {
     } finally {
       setDetailLoading(false);
     }
-  }
-
-  if (authenticatedUser) {
-    const destination =
-      authenticatedUser.Role === "Merchant"
-        ? "/merchant"
-        : authenticatedUser.Role === "Staff"
-          ? "/staff/dashboard"
-          : authenticatedUser.Role === "Admin"
-            ? "/admin/dashboard"
-            : authenticatedUser.Role === "Reviewer"
-              ? "/affiliate-links"
-              : "/customer";
-
-    return <Navigate to={destination} replace />;
   }
 
   return (

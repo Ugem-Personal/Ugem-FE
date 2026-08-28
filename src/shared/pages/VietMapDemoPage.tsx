@@ -8,6 +8,7 @@
  *  4. Route: vẽ đường đi giữa 2 điểm
  */
 import { useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import VietMapGL from "@/shared/components/VietMapGL";
 import { useVietMapRoute } from "@/shared/hooks/useVietMapRoute";
 import {
@@ -19,7 +20,10 @@ import {
 type Tab = "markers" | "geocode" | "route";
 
 export default function VietMapDemoPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("markers");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab: Tab =
+    tabParam === "geocode" || tabParam === "route" ? tabParam : "markers";
 
   const [routeCoords, setRouteCoords] = useState<
     [number, number][] | undefined
@@ -123,7 +127,17 @@ export default function VietMapDemoPage() {
             ).map((t) => (
               <button
                 key={t.key}
-                onClick={() => setActiveTab(t.key)}
+                onClick={() => {
+                  setSearchParams(
+                    (previous) => {
+                      const next = new URLSearchParams(previous);
+                      if (t.key === "markers") next.delete("tab");
+                      else next.set("tab", t.key);
+                      return next;
+                    },
+                    { replace: true },
+                  );
+                }}
                 className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${
                   activeTab === t.key
                     ? "border-cyan-600 text-cyan-700"
