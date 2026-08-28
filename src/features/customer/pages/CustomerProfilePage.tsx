@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import {
   ArrowLeft,
   AlertCircle,
   ImagePlus,
+  Instagram,
   Loader2,
   Mail,
   Phone,
@@ -98,30 +105,31 @@ export default function CustomerProfilePage() {
   const roleLabel = baseRoleLabel;
   const canEditReviewer = !reviewerApp || isReviewerPending;
 
-  const refreshReviewerSessionIfNeeded = useCallback(async (
-    application: ReviewerApplication | null,
-  ) => {
-    const status = application?.status?.toLowerCase() ?? "";
-    const isAccepted =
-      application &&
-      (status === "accept" || status === "accepted" || status === "approved");
+  const refreshReviewerSessionIfNeeded = useCallback(
+    async (application: ReviewerApplication | null) => {
+      const status = application?.status?.toLowerCase() ?? "";
+      const isAccepted =
+        application &&
+        (status === "accept" || status === "accepted" || status === "approved");
 
-    if (!isAccepted || currentUser?.Role === "Reviewer") return;
+      if (!isAccepted || currentUser?.Role === "Reviewer") return;
 
-    try {
-      const refreshed = await refreshCurrentSession();
+      try {
+        const refreshed = await refreshCurrentSession();
 
-      if (refreshed.user.Role === "Reviewer") {
-        setProfile((current) => ({
-          ...(current ?? {}),
-          role: "Reviewer",
-        }));
-        notify.success("Tài khoản đã được cập nhật thành Reviewer.");
+        if (refreshed.user.Role === "Reviewer") {
+          setProfile((current) => ({
+            ...(current ?? {}),
+            role: "Reviewer",
+          }));
+          notify.success("Tài khoản đã được cập nhật thành Reviewer.");
+        }
+      } catch (error) {
+        console.error(error);
       }
-    } catch (error) {
-      console.error(error);
-    }
-  }, [currentUser?.Role]);
+    },
+    [currentUser?.Role],
+  );
 
   const loadProfile = useCallback(async () => {
     setIsLoading(true);
@@ -299,6 +307,16 @@ export default function CustomerProfilePage() {
       return;
     }
 
+    const invalidSocialLink = socialLinks.find(
+      (value) => value && !/^https?:\/\/\S+$/i.test(value),
+    );
+    if (invalidSocialLink) {
+      notify.error(
+        "Liên kết mạng xã hội phải bắt đầu bằng http:// hoặc https://.",
+      );
+      return;
+    }
+
     setIsSubmittingReviewerApp(true);
 
     try {
@@ -365,7 +383,9 @@ export default function CustomerProfilePage() {
               disabled={isLoading}
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
               Làm mới
             </button>
             <UserAccountMenu
@@ -405,16 +425,15 @@ export default function CustomerProfilePage() {
                 <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
                   {displayName}
                 </h2>
-                <p className="mt-1 font-mono text-xs text-slate-300">
-                  {email}
-                </p>
+                <p className="mt-1 font-mono text-xs text-slate-300">{email}</p>
               </div>
             </div>
 
             {profile?.createdAt && (
               <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-300">
                 <Calendar className="h-4 w-4 text-cyan-400" />
-                Tham gia: {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
+                Tham gia:{" "}
+                {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
               </div>
             )}
           </div>
@@ -429,8 +448,17 @@ export default function CustomerProfilePage() {
                 Thông tin hệ thống
               </h3>
               <div className="space-y-4">
-                <BentoStatCard icon={ShieldCheck} label="Quyền tài khoản" value={roleLabel} />
-                <BentoStatCard icon={Mail} label="Email (Cố định)" value={email} isReadOnly />
+                <BentoStatCard
+                  icon={ShieldCheck}
+                  label="Quyền tài khoản"
+                  value={roleLabel}
+                />
+                <BentoStatCard
+                  icon={Mail}
+                  label="Email (Cố định)"
+                  value={email}
+                  isReadOnly
+                />
                 <BentoStatCard
                   icon={Phone}
                   label="Số điện thoại"
@@ -442,10 +470,13 @@ export default function CustomerProfilePage() {
             <div className="rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-50/80 via-white to-white dark:from-cyan-950/40 dark:via-slate-900 dark:to-slate-900 p-6 shadow-xl backdrop-blur-2xl">
               <div className="flex items-center gap-3 mb-3 text-cyan-600 dark:text-cyan-300">
                 <ShieldCheck className="h-5 w-5" />
-                <h4 className="font-black text-sm text-slate-900 dark:text-white">UGem Account Security</h4>
+                <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                  UGem Account Security
+                </h4>
               </div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-                Tài khoản được đồng bộ trực tiếp với hệ thống OAuth & JWT Token của UGem. Email của bạn là thông tin nhận dạng chính thức.
+                Tài khoản được đồng bộ trực tiếp với hệ thống OAuth & JWT Token
+                của UGem. Email của bạn là thông tin nhận dạng chính thức.
               </p>
             </div>
           </div>
@@ -458,8 +489,12 @@ export default function CustomerProfilePage() {
                   <UserRound className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Chỉnh sửa hồ sơ cá nhân</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Cập nhật họ tên, số điện thoại và ảnh đại diện</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    Chỉnh sửa hồ sơ cá nhân
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Cập nhật họ tên, số điện thoại và ảnh đại diện
+                  </p>
                 </div>
               </div>
 
@@ -563,9 +598,12 @@ export default function CustomerProfilePage() {
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">Đơn Reviewer đã được chấp nhận!</h3>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      Đơn Reviewer đã được chấp nhận!
+                    </h3>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                      Tài khoản của bạn đã được nâng cấp chính thức thành Reviewer trên UGem.
+                      Tài khoản của bạn đã được nâng cấp chính thức thành
+                      Reviewer trên UGem.
                     </p>
                   </div>
                 </div>
@@ -583,10 +621,13 @@ export default function CustomerProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                      {reviewerApp ? "Hồ sơ Reviewer (Đang chờ duyệt)" : "Trở thành Reviewer chính thức"}
+                      {reviewerApp
+                        ? "Hồ sơ Reviewer (Đang chờ duyệt)"
+                        : "Trở thành Reviewer chính thức"}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-                      Đánh giá món ăn, nhận mã giới thiệu Affiliate và tích lũy phần thưởng độc quyền từ UGem.
+                      Đánh giá món ăn, nhận mã giới thiệu Affiliate và tích lũy
+                      phần thưởng độc quyền từ UGem.
                     </p>
                   </div>
                 </div>
@@ -603,9 +644,17 @@ export default function CustomerProfilePage() {
           )}
 
           {canEditReviewer && showReviewerForm && (
-            <div className="col-span-12 rounded-3xl border border-violet-500/30 bg-white/90 dark:bg-slate-900/80 p-8 shadow-2xl backdrop-blur-3xl">
+            <div className="col-span-12 rounded-3xl border border-cyan-500/30 bg-white/90 p-8 shadow-2xl backdrop-blur-3xl dark:bg-slate-900/80">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Đơn đăng ký Reviewer</h3>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    Đơn đăng ký Reviewer
+                  </h3>
+                  <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Chia sẻ lý do và ít nhất một kênh mạng xã hội để Staff xét
+                    duyệt hồ sơ.
+                  </p>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -616,7 +665,10 @@ export default function CustomerProfilePage() {
                 </Button>
               </div>
 
-              <form onSubmit={handleReviewerApplicationSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form
+                onSubmit={handleReviewerApplicationSubmit}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              >
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Động lực đăng ký *
@@ -629,24 +681,83 @@ export default function CustomerProfilePage() {
                         motivation: event.target.value,
                       }))
                     }
-                    className="min-h-24 w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-                    placeholder="Lý do bạn muốn tham gia chương trình..."
+                    id="reviewer-motivation"
+                    maxLength={3000}
+                    className="min-h-24 w-full rounded-2xl border border-slate-300 bg-white p-4 text-sm font-semibold text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950/60 dark:text-white"
+                    placeholder="Ví dụ: Tôi thường chia sẻ trải nghiệm món ăn và muốn đóng góp các đánh giá hữu ích cho cộng đồng..."
+                    aria-describedby="reviewer-motivation-hint"
                     disabled={isSubmittingReviewerApp}
                   />
+                  <p
+                    id="reviewer-motivation-hint"
+                    className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                  >
+                    Tối đa 3.000 ký tự.
+                  </p>
                 </div>
 
-                <ReviewerInput label="Kinh nghiệm" value={reviewerForm.experience} onChange={(v) => setReviewerForm((p) => ({ ...p, experience: v }))} disabled={isSubmittingReviewerApp} />
-                <ReviewerInput label="Facebook Link" value={reviewerForm.facebookUrl} onChange={(v) => setReviewerForm((p) => ({ ...p, facebookUrl: v }))} disabled={isSubmittingReviewerApp} />
-                <ReviewerInput label="TikTok Link" value={reviewerForm.tiktokUrl} onChange={(v) => setReviewerForm((p) => ({ ...p, tiktokUrl: v }))} disabled={isSubmittingReviewerApp} />
-                <ReviewerInput label="YouTube Link" value={reviewerForm.youtubeUrl} onChange={(v) => setReviewerForm((p) => ({ ...p, youtubeUrl: v }))} disabled={isSubmittingReviewerApp} />
+                <ReviewerInput
+                  label="Kinh nghiệm (không bắt buộc)"
+                  placeholder="Ví dụ: 2 năm viết review ẩm thực"
+                  value={reviewerForm.experience}
+                  onChange={(v) =>
+                    setReviewerForm((p) => ({ ...p, experience: v }))
+                  }
+                  disabled={isSubmittingReviewerApp}
+                />
+                <ReviewerInput
+                  label="Liên kết Facebook"
+                  placeholder="https://facebook.com/ten-cua-ban"
+                  type="url"
+                  value={reviewerForm.facebookUrl}
+                  onChange={(v) =>
+                    setReviewerForm((p) => ({ ...p, facebookUrl: v }))
+                  }
+                  disabled={isSubmittingReviewerApp}
+                />
+                <ReviewerInput
+                  label="Liên kết TikTok"
+                  placeholder="https://tiktok.com/@ten-cua-ban"
+                  type="url"
+                  value={reviewerForm.tiktokUrl}
+                  onChange={(v) =>
+                    setReviewerForm((p) => ({ ...p, tiktokUrl: v }))
+                  }
+                  disabled={isSubmittingReviewerApp}
+                />
+                <ReviewerInput
+                  label="Liên kết YouTube"
+                  placeholder="https://youtube.com/@kenh-cua-ban"
+                  type="url"
+                  value={reviewerForm.youtubeUrl}
+                  onChange={(v) =>
+                    setReviewerForm((p) => ({ ...p, youtubeUrl: v }))
+                  }
+                  disabled={isSubmittingReviewerApp}
+                />
+                <ReviewerInput
+                  label="Liên kết khác"
+                  placeholder="https://instagram.com/ten-cua-ban"
+                  type="url"
+                  icon={<Instagram className="h-4 w-4" />}
+                  value={reviewerForm.otherSocialUrl}
+                  onChange={(v) =>
+                    setReviewerForm((p) => ({ ...p, otherSocialUrl: v }))
+                  }
+                  disabled={isSubmittingReviewerApp}
+                />
 
                 <div className="sm:col-span-2 flex justify-end mt-4">
                   <Button
                     type="submit"
                     disabled={isSubmittingReviewerApp}
-                    className="h-12 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 font-black text-white shadow-lg shadow-violet-600/25 hover:from-violet-500 hover:to-indigo-500"
+                    className="h-12 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-8 font-black text-white shadow-lg shadow-cyan-600/25 hover:from-cyan-500 hover:to-blue-500"
                   >
-                    {isSubmittingReviewerApp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                    {isSubmittingReviewerApp ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4" />
+                    )}
                     Gửi đơn xét duyệt
                   </Button>
                 </div>
@@ -677,10 +788,14 @@ function BentoStatCard({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            {label}
+          </p>
           {isReadOnly && <Lock className="h-3 w-3 text-slate-400" />}
         </div>
-        <p className="text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">{value}</p>
+        <p className="text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -688,11 +803,17 @@ function BentoStatCard({
 
 function ReviewerInput({
   label,
+  placeholder,
+  type = "text",
+  icon,
   value,
   onChange,
   disabled,
 }: {
   label: string;
+  placeholder: string;
+  type?: "text" | "url";
+  icon?: ReactNode;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -702,14 +823,21 @@ function ReviewerInput({
       <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
         {label}
       </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-12 w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-        placeholder={label}
-        disabled={disabled}
-      />
+      <div className="relative">
+        {icon ? (
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-600 dark:text-cyan-400">
+            {icon}
+          </span>
+        ) : null}
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={`h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950/60 dark:text-white ${icon ? "pl-11" : ""}`}
+          placeholder={placeholder}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
 }
@@ -965,12 +1093,15 @@ function DiningPreferencesCard() {
             </label>
             <div className="flex flex-wrap gap-2.5">
               {discoveryOptions.restaurantTypes.map((option) => {
-                const checked = preferences.preferredRestaurantTypes.includes(option);
+                const checked =
+                  preferences.preferredRestaurantTypes.includes(option);
                 return (
                   <button
                     key={option}
                     type="button"
-                    onClick={() => toggleItem("preferredRestaurantTypes", option)}
+                    onClick={() =>
+                      toggleItem("preferredRestaurantTypes", option)
+                    }
                     aria-pressed={checked}
                     className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition ${
                       checked
@@ -1005,7 +1136,8 @@ function DiningPreferencesCard() {
                       Chưa tải được nhóm món
                     </p>
                     <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      Các lựa chọn sẽ xuất hiện sau khi hệ thống đồng bộ danh mục.
+                      Các lựa chọn sẽ xuất hiện sau khi hệ thống đồng bộ danh
+                      mục.
                     </p>
                   </div>
                 </div>
@@ -1056,7 +1188,8 @@ function DiningPreferencesCard() {
             </label>
             <div className="flex flex-wrap gap-2.5">
               {discoveryOptions.priceRanges.map((option) => {
-                const checked = preferences.preferredPriceRanges.includes(option);
+                const checked =
+                  preferences.preferredPriceRanges.includes(option);
                 return (
                   <button
                     key={option}
