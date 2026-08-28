@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";
+import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
+import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import {
   getMerchantBookings,
   reviewBooking,
@@ -96,7 +98,19 @@ export default function MerchantBookingsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <main className="merchant-portal-layout min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative flex">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/5 dark:bg-cyan-600/10 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/5 dark:bg-indigo-600/10 blur-[140px]" />
+      </div>
+
+      <MerchantSidebar />
+
+      <section className="merchant-main flex-1 min-w-0 relative z-10 flex flex-col min-h-screen">
+        <MerchantHeader />
+
+        <div className="merchant-content w-full max-w-[1240px] mx-auto p-4 sm:p-6 lg:p-8 flex-1">
+          <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -317,7 +331,10 @@ export default function MerchantBookingsPage() {
           </div>
         </div>
       )}
-    </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 
