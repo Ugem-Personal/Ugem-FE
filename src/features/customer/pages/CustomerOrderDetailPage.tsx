@@ -89,6 +89,11 @@ function formatPrice(value: number) {
   return `${value.toLocaleString("vi-VN")}đ`;
 }
 
+function getBankTransferDescription(orderId?: string | null) {
+  if (!orderId) return "UGEM CHUYEN TIEN";
+  return `UGEM DON ${orderId.split("-")[0].toUpperCase()}`;
+}
+
 export default function CustomerOrderDetailPage() {
   const { id } = useParams();
   const location = useLocation();
@@ -376,11 +381,12 @@ export default function CustomerOrderDetailPage() {
   const total =
     itemsTotal > 0 ? itemsTotal : Number(currentSummaryOrder?.finalPrice || 0);
   const effectiveOrderId = hasRealOrderId ? id : resolvedOrderId;
+  const paymentDescription = getBankTransferDescription(effectiveOrderId);
   const paymentBankCode = paymentBankInfo?.bankName?.trim() ?? "";
   const paymentBankAccount = paymentBankInfo?.bankAccount?.trim() ?? "";
   const paymentQrCode =
     effectiveOrderId && paymentBankCode && paymentBankAccount
-      ? `https://qr.sepay.vn/img?acc=${encodeURIComponent(paymentBankAccount)}&bank=${encodeURIComponent(paymentBankCode)}&amount=${Math.round(total)}&des=${encodeURIComponent(effectiveOrderId)}&template=qronly`
+      ? `https://qr.sepay.vn/img?acc=${encodeURIComponent(paymentBankAccount)}&bank=${encodeURIComponent(paymentBankCode)}&amount=${Math.round(total)}&des=${encodeURIComponent(paymentDescription)}&template=qronly`
       : "";
   const title =
     currentSummaryOrder?.name ||
@@ -756,13 +762,13 @@ export default function CustomerOrderDetailPage() {
                           Nội dung chuyển khoản (Bắt buộc)
                         </p>
                         <p className="font-mono font-black text-sm text-amber-300 tracking-wide">
-                          {effectiveOrderId}
+                          {paymentDescription}
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() =>
-                          handleCopy(effectiveOrderId, "description")
+                          handleCopy(paymentDescription, "description")
                         }
                         className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 px-3 py-1.5 font-black text-slate-950 hover:bg-cyan-400 transition shadow-md"
                       >
