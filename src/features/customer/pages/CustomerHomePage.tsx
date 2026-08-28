@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   Clock,
   Calendar,
   Heart,
@@ -865,6 +866,16 @@ export default function CustomerHomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-52 bg-linear-to-b from-white/90 dark:from-slate-950/90 via-white/60 dark:via-slate-950/60 to-transparent" />
 
         <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex items-start justify-between gap-4 p-4 lg:p-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleServiceModeChange("delivery")}
+            aria-label="Quay lại trang giao tận nơi"
+            className="pointer-events-auto h-11 gap-2 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-3 text-slate-800 dark:text-slate-100 font-black shadow-xs backdrop-blur-lg hover:bg-white dark:hover:bg-slate-800"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Quay lại</span>
+          </Button>
           <div className="pointer-events-auto ml-auto flex max-w-full flex-wrap items-center justify-end gap-2.5">
             <Button
               type="button"
