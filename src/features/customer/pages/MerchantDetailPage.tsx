@@ -13,7 +13,12 @@ import {
   Calendar,
   ShoppingBag,
 } from "lucide-react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import {
@@ -48,8 +53,6 @@ import {
   type CheckoutFormData,
 } from "../components/CheckoutDialog";
 import { BookingModal } from "@/features/booking/components/BookingModal";
-
-
 
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
@@ -342,7 +345,6 @@ export default function MerchantDetailPage() {
     }
   }, [checkoutOpen, cart.length, CHECKOUT_STORAGE_KEY]);
 
-
   const total = useMemo(() => {
     return cart.reduce((sum, item) => {
       const toppingTotal = (item.toppings ?? []).reduce(
@@ -374,8 +376,12 @@ export default function MerchantDetailPage() {
     return menuItems.filter((food) => {
       const matchesKeyword =
         !foodSearchKeyword.trim() ||
-        food.name.toLowerCase().includes(foodSearchKeyword.trim().toLowerCase()) ||
-        (food.description ?? "").toLowerCase().includes(foodSearchKeyword.trim().toLowerCase());
+        food.name
+          .toLowerCase()
+          .includes(foodSearchKeyword.trim().toLowerCase()) ||
+        (food.description ?? "")
+          .toLowerCase()
+          .includes(foodSearchKeyword.trim().toLowerCase());
 
       const matchesCategory =
         !selectedFoodCategory ||
@@ -422,7 +428,6 @@ export default function MerchantDetailPage() {
       })
       .catch(() => undefined);
   }, [id, currentUser]);
-
 
   useEffect(() => {
     if (!affiliateRef || !currentUser || currentUser.Role === "Customer") {
@@ -493,7 +498,8 @@ export default function MerchantDetailPage() {
       );
 
       if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
-      if (CART_OPEN_STORAGE_KEY) sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
+      if (CART_OPEN_STORAGE_KEY)
+        sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
       if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
       setCart([]);
       setCartOpen(false);
@@ -707,19 +713,33 @@ export default function MerchantDetailPage() {
             <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
           </Link>
           <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/wishlist" aria-label="Quán yêu thích">
                 <Heart className="h-4 w-4 text-rose-500" />
                 <span className="hidden md:inline">Quán yêu thích</span>
               </Link>
             </Button>
-            <Button asChild type="button" className="h-11 gap-2 rounded-xl bg-slate-900 px-3 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              className="h-11 gap-2 rounded-xl bg-slate-900 px-3 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/orders" aria-label="Đơn hàng của tôi">
                 <ShoppingBag className="h-4 w-4" />
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/bookings" aria-label="Lịch đặt bàn">
                 <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                 <span className="hidden sm:inline">Lịch đặt bàn</span>
@@ -838,7 +858,9 @@ export default function MerchantDetailPage() {
               <button
                 type="button"
                 onClick={() => {
-                  document.getElementById("menu-section")?.scrollIntoView({ behavior: "smooth" });
+                  document
+                    .getElementById("menu-section")
+                    ?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 hover:bg-cyan-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-95 transition"
               >
@@ -915,7 +937,12 @@ export default function MerchantDetailPage() {
             <div className="mb-6 flex items-center gap-3 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/30 px-5 py-4 text-sm font-bold text-cyan-900 dark:text-cyan-300 shadow-2xs">
               <Store className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
               <span>
-                Chế độ <strong className="font-black text-cyan-950 dark:text-cyan-100">Đặt món trước (Ghé lấy)</strong>: Thêm món vào giỏ ➔ Đặt đơn để quán chế biến sẵn, tới nơi nhận món ngay không cần chờ!
+                Chế độ{" "}
+                <strong className="font-black text-cyan-950 dark:text-cyan-100">
+                  Đặt món trước (Ghé lấy)
+                </strong>
+                : Thêm món vào giỏ ➔ Đặt đơn để quán chế biến sẵn, tới nơi nhận
+                món ngay không cần chờ!
               </span>
             </div>
           )}
@@ -924,7 +951,11 @@ export default function MerchantDetailPage() {
             <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
               <Utensils className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
               <span>
-                Đang ở chế độ <strong className="font-black text-amber-950 dark:text-amber-100">Ăn tại quán (Xem Menu)</strong>: Gọi món trực tiếp với nhân viên hoặc quét mã QR dán tại bàn.
+                Đang ở chế độ{" "}
+                <strong className="font-black text-amber-950 dark:text-amber-100">
+                  Ăn tại quán (Xem Menu)
+                </strong>
+                : Gọi món trực tiếp với nhân viên hoặc quét mã QR dán tại bàn.
               </span>
             </div>
           )}
@@ -1005,7 +1036,11 @@ export default function MerchantDetailPage() {
                     {review.rating && review.rating > 0 ? (
                       <div className="mb-2 flex items-center gap-1 text-amber-500">
                         {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                          <Star
+                            key={i}
+                            size={14}
+                            className="fill-amber-400 text-amber-400"
+                          />
                         ))}
                       </div>
                     ) : null}
@@ -1043,13 +1078,23 @@ export default function MerchantDetailPage() {
             }}
             onConfirm={() => {
               const isEditing = pendingMode === "edit";
-              const selectedToppings = (pendingFood.toppings ?? []).filter((topping) =>
-                pendingToppingIds.includes(topping.id),
+              const selectedToppings = (pendingFood.toppings ?? []).filter(
+                (topping) => pendingToppingIds.includes(topping.id),
               );
               if (isEditing) {
-                updateCartItem(pendingFood.id, pendingQuantity, pendingNotes, selectedToppings);
+                updateCartItem(
+                  pendingFood.id,
+                  pendingQuantity,
+                  pendingNotes,
+                  selectedToppings,
+                );
               } else {
-                addToCart(pendingFood, pendingQuantity, pendingNotes, selectedToppings);
+                addToCart(
+                  pendingFood,
+                  pendingQuantity,
+                  pendingNotes,
+                  selectedToppings,
+                );
               }
               closeAddFoodModal();
               if (isEditing) {
