@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Calendar, Users, X, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";
@@ -12,6 +12,33 @@ interface BookingModalProps {
   onSuccess?: () => void;
 }
 
+type BookingDraft = {
+  bookingDate: string;
+  bookingTime: string;
+  partySize: number;
+  note: string;
+};
+
+function getBookingDraft(merchantId: string): BookingDraft {
+  try {
+    const saved = JSON.parse(
+      sessionStorage.getItem(`ugem_booking_draft_${merchantId}`) || "null",
+    ) as Partial<BookingDraft> | null;
+
+    return {
+      bookingDate: typeof saved?.bookingDate === "string" ? saved.bookingDate : "",
+      bookingTime: typeof saved?.bookingTime === "string" ? saved.bookingTime : "",
+      partySize:
+        typeof saved?.partySize === "number" && saved.partySize >= 1
+          ? saved.partySize
+          : 2,
+      note: typeof saved?.note === "string" ? saved.note : "",
+    };
+  } catch {
+    return { bookingDate: "", bookingTime: "", partySize: 2, note: "" };
+  }
+}
+
 export function BookingModal({
   merchantId,
   merchantName,
@@ -19,11 +46,28 @@ export function BookingModal({
   onClose,
   onSuccess,
 }: BookingModalProps) {
-  const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
-  const [partySize, setPartySize] = useState(2);
-  const [note, setNote] = useState("");
+  const initialDraft = getBookingDraft(merchantId);
+  const [bookingDate, setBookingDate] = useState(initialDraft.bookingDate);
+  const [bookingTime, setBookingTime] = useState(initialDraft.bookingTime);
+  const [partySize, setPartySize] = useState(initialDraft.partySize);
+  const [note, setNote] = useState(initialDraft.note);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const draftKey = `ugem_booking_draft_${merchantId}`;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    sessionStorage.setItem(
+      draftKey,
+      JSON.stringify({ bookingDate, bookingTime, partySize, note }),
+    );
+  }, [bookingDate, bookingTime, draftKey, isOpen, note, partySize]);
+
+  function closeAndDiscardDraft() {
+    sessionStorage.removeItem(draftKey);
+    onClose();
+  }
 
   if (!isOpen) return null;
 
@@ -53,6 +97,7 @@ export function BookingModal({
       });
 
       notify.success("Đặt bàn thành công! Nhà hàng sẽ sớm xác nhận.");
+      sessionStorage.removeItem(draftKey);
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
@@ -82,7 +127,7 @@ export function BookingModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeAndDiscardDraft}
             className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition"
           >
             <X className="h-5 w-5" />
@@ -156,7 +201,7 @@ export function BookingModal({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={closeAndDiscardDraft}
               disabled={isSubmitting}
               className="h-11 rounded-2xl border-slate-200 dark:border-white/10 text-xs font-bold"
             >

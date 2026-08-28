@@ -27,6 +27,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
+import { useSearchParams } from "react-router-dom";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -278,14 +279,14 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
 // MODULE 1: Merchant Campaign Management
 export function MerchantCampaignPage() {
   const handleBack = useSafeBack("/merchant");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCampaignId = searchParams.get("campaignId");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired" | "inactive">("all");
   const [form, setForm] = useState<CampaignFormState>(() =>
@@ -334,6 +335,24 @@ export function MerchantCampaignPage() {
       });
   }, [campaigns, searchTerm, statusFilter]);
 
+  const selectedCampaign = useMemo(
+    () =>
+      campaigns.find((campaign) => campaign.id === selectedCampaignId) ?? null,
+    [campaigns, selectedCampaignId],
+  );
+  const detailOpen = Boolean(selectedCampaignId);
+
+  function setDetailOpen(open: boolean) {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (!open) next.delete("campaignId");
+        return next;
+      },
+      { replace: true },
+    );
+  }
+
   const stats = useMemo(() => {
     const total = campaigns.length;
     const active = campaigns.filter(
@@ -355,8 +374,14 @@ export function MerchantCampaignPage() {
   }
 
   function openCampaignDetail(campaign: Campaign) {
-    setSelectedCampaign(campaign);
-    setDetailOpen(true);
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.set("campaignId", campaign.id);
+        return next;
+      },
+      { replace: true },
+    );
   }
 
   async function confirmDelete() {
@@ -370,7 +395,6 @@ export function MerchantCampaignPage() {
 
       if (selectedCampaign?.id === campaignToDelete.id) {
         setDetailOpen(false);
-        setSelectedCampaign(null);
       }
 
       if (form.id === campaignToDelete.id) {
@@ -399,9 +423,6 @@ export function MerchantCampaignPage() {
       const updated = await updateCampaignStatus(campaign.id, nextStatus);
       setCampaigns((current) =>
         current.map((item) => (item.id === campaign.id ? updated : item)),
-      );
-      setSelectedCampaign((current) =>
-        current?.id === campaign.id ? updated : current,
       );
       setForm((current) =>
         current.id === campaign.id

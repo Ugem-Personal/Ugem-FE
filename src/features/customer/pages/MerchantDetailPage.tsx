@@ -212,7 +212,7 @@ function getStoredAffiliateRef(merchantId: string) {
 
 export default function MerchantDetailPage() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const safeBack = useSafeBack("/customer");
@@ -286,7 +286,19 @@ export default function MerchantDetailPage() {
   });
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const bookingModalOpen = searchParams.get("dialog") === "booking";
+
+  function setBookingModalOpen(open: boolean) {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (open) next.set("dialog", "booking");
+        else next.delete("dialog");
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   useEffect(() => {
     if (!CART_STORAGE_KEY) return;
