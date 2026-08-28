@@ -75,7 +75,8 @@ function getCampaignEligibilityError(
 ) {
   const now = Date.now();
   if (!campaign.isActive) return "Ưu đãi đang tạm dừng";
-  if (now < new Date(campaign.startDate).getTime()) return "Ưu đãi chưa bắt đầu";
+  if (now < new Date(campaign.startDate).getTime())
+    return "Ưu đãi chưa bắt đầu";
   if (now > new Date(campaign.endDate).getTime()) return "Ưu đãi đã hết hạn";
   if (
     campaign.quantity != null &&
@@ -108,8 +109,9 @@ export function CheckoutDialog({
   });
   const [orderType, setOrderType] =
     useState<CustomerOrderType>(defaultOrderType);
-  const [paymentMethod, setPaymentMethod] =
-    useState<CheckoutPaymentMethod>(defaultOrderType === "Online" ? "COD" : "Cash");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>(
+    defaultOrderType === "Online" ? "COD" : "Cash",
+  );
   const [campaignCode, setCampaignCode] = useState("");
   const [appliedCampaign, setAppliedCampaign] =
     useState<CheckoutCampaign | null>(null);
@@ -234,7 +236,8 @@ export function CheckoutDialog({
     if (Object.keys(nextErrors).length > 0) return;
 
     const campaign = campaignCode.trim()
-      ? appliedCampaign?.code.toUpperCase() === campaignCode.trim().toUpperCase()
+      ? appliedCampaign?.code.toUpperCase() ===
+        campaignCode.trim().toUpperCase()
         ? appliedCampaign
         : await resolveCampaign()
       : null;
@@ -257,7 +260,10 @@ export function CheckoutDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !submitting && onOpenChange(nextOpen)}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => !submitting && onOpenChange(nextOpen)}
+    >
       <DialogContent className="max-w-3xl border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
         <DialogHeader>
           <DialogTitle className="text-slate-950 dark:text-white">
@@ -326,7 +332,10 @@ export function CheckoutDialog({
           ) : (
             <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
               <Store className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-              <span>Đơn hàng sẽ được chuẩn bị tại quán. Quý khách vui lòng nhận món và thanh toán trực tiếp tại quán.</span>
+              <span>
+                Đơn hàng sẽ được chuẩn bị tại quán. Quý khách vui lòng nhận món
+                và thanh toán trực tiếp tại quán.
+              </span>
             </div>
           )}
 
@@ -442,53 +451,65 @@ export function CheckoutDialog({
                 Nhập mã ưu đãi khác
               </summary>
               <div className="mt-3">
-            <label htmlFor="campaign-code" className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-              <Tag className="h-4 w-4 text-cyan-600" /> Mã giảm giá
-            </label>
-            <div className="mt-2 flex gap-2">
-              <input
-                id="campaign-code"
-                value={campaignCode}
-                onChange={(event) => {
-                  setCampaignCode(event.target.value.toUpperCase());
-                  setAppliedCampaign(null);
-                  setCampaignMessage("");
-                }}
-                placeholder="Ví dụ: UAT10"
-                className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 font-mono font-black uppercase outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950"
-              />
-              <button
-                type="button"
-                onClick={() => void resolveCampaign()}
-                disabled={checkingCampaign || !campaignCode.trim()}
-                className="h-12 min-w-24 rounded-xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300"
-              >
-                {checkingCampaign ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Áp dụng"}
-              </button>
-            </div>
-            {campaignMessage ? (
-              <p
-                className={`text-xs font-bold ${appliedCampaign ? "text-emerald-600" : "text-rose-600"}`}
-                role="status"
-              >
-                {campaignMessage}
-              </p>
-            ) : null}
+                <label
+                  htmlFor="campaign-code"
+                  className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200"
+                >
+                  <Tag className="h-4 w-4 text-cyan-600" /> Mã giảm giá
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    id="campaign-code"
+                    value={campaignCode}
+                    onChange={(event) => {
+                      setCampaignCode(event.target.value.toUpperCase());
+                      setAppliedCampaign(null);
+                      setCampaignMessage("");
+                    }}
+                    placeholder="Ví dụ: UAT10"
+                    className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 font-mono font-black uppercase outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void resolveCampaign()}
+                    disabled={checkingCampaign || !campaignCode.trim()}
+                    className="h-12 min-w-24 rounded-xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300"
+                  >
+                    {checkingCampaign ? (
+                      <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                    ) : (
+                      "Áp dụng"
+                    )}
+                  </button>
+                </div>
+                {campaignMessage ? (
+                  <p
+                    className={`text-xs font-bold ${appliedCampaign ? "text-emerald-600" : "text-rose-600"}`}
+                    role="status"
+                  >
+                    {campaignMessage}
+                  </p>
+                ) : null}
               </div>
             </details>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-950/60">
             <div className="flex justify-between text-sm font-semibold text-slate-600 dark:text-slate-300">
-              <span>Tạm tính</span><span>{formatPrice(total)}</span>
+              <span>Tạm tính</span>
+              <span>{formatPrice(total)}</span>
             </div>
             {discount > 0 ? (
               <div className="mt-2 flex justify-between text-sm font-bold text-emerald-600">
-                <span>Giảm giá</span><span>-{formatPrice(discount)}</span>
+                <span>Giảm giá</span>
+                <span>-{formatPrice(discount)}</span>
               </div>
             ) : null}
             <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950 dark:border-white/10 dark:text-white">
-              <span>Tổng thanh toán</span><span className="text-cyan-600">{formatPrice(total - discount)}</span>
+              <span>Tổng thanh toán</span>
+              <span className="text-cyan-600">
+                {formatPrice(total - discount)}
+              </span>
             </div>
           </div>
 

@@ -62,7 +62,10 @@ export default function CustomerOrdersPage() {
     setLoading(true);
 
     try {
-      const statusFilter = (activeTab === "all" || activeTab === "Cancelled") ? undefined : activeTab;
+      const statusFilter =
+        activeTab === "all" || activeTab === "Cancelled"
+          ? undefined
+          : activeTab;
 
       const res = await getCustomerOrders({
         pageIndex,
@@ -77,8 +80,9 @@ export default function CustomerOrdersPage() {
       setPaginationMeta(res.meta ?? null);
     } catch (error: unknown) {
       console.error("Lỗi khi tải lịch sử đơn hàng:", error);
-      const apiMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const apiMessage = (
+        error as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
       setOrders([]);
       setPaginationMeta(null);
       notify.error(apiMessage || "Không tải được lịch sử đơn hàng.");
@@ -175,19 +179,33 @@ export default function CustomerOrdersPage() {
             <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/wishlist">
                 <Heart className="h-4 w-4 text-rose-500" />
                 <span className="hidden md:inline">Quán yêu thích</span>
               </Link>
             </Button>
-            <Button asChild type="button" className="h-11 gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-5 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              className="h-11 gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-5 sm:text-sm"
+            >
               <Link to="/customer/orders">
                 <ShoppingBag className="h-4 w-4" />
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
-            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+            >
               <Link to="/customer/bookings">
                 <Calendar className="h-4 w-4 text-cyan-600" />
                 <span className="hidden sm:inline">Lịch đặt bàn</span>
@@ -222,7 +240,9 @@ export default function CustomerOrdersPage() {
               disabled={loading}
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
               Làm mới
             </button>
             <ModeToggle />
@@ -262,7 +282,10 @@ export default function CustomerOrdersPage() {
                   const nextTab = tab.key as OrderFilterTab;
                   setActiveTab(nextTab);
                   setPageIndex(1);
-                  setSearchParams({ status: nextTab, page: "1" }, { replace: true });
+                  setSearchParams(
+                    { status: nextTab, page: "1" },
+                    { replace: true },
+                  );
                 }}
                 className={`rounded-xl px-4 py-2 text-xs font-black transition ${
                   activeTab === tab.key
@@ -340,7 +363,10 @@ export default function CustomerOrdersPage() {
               onClick={() => {
                 const nextP = Math.max(1, pageIndex - 1);
                 setPageIndex(nextP);
-                setSearchParams({ status: activeTab, page: String(nextP) }, { replace: true });
+                setSearchParams(
+                  { status: activeTab, page: String(nextP) },
+                  { replace: true },
+                );
               }}
               disabled={pageIndex <= 1 || loading}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40"
@@ -348,14 +374,21 @@ export default function CustomerOrdersPage() {
               <ChevronLeft className="h-4 w-4" /> Trang trước
             </button>
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-              Trang {paginationMeta.pageIndex} / {paginationMeta.totalPages} ({paginationMeta.totalItems} đơn hàng)
+              Trang {paginationMeta.pageIndex} / {paginationMeta.totalPages} (
+              {paginationMeta.totalItems} đơn hàng)
             </span>
             <button
               type="button"
               onClick={() => {
-                const nextP = Math.min(paginationMeta.totalPages, pageIndex + 1);
+                const nextP = Math.min(
+                  paginationMeta.totalPages,
+                  pageIndex + 1,
+                );
                 setPageIndex(nextP);
-                setSearchParams({ status: activeTab, page: String(nextP) }, { replace: true });
+                setSearchParams(
+                  { status: activeTab, page: String(nextP) },
+                  { replace: true },
+                );
               }}
               disabled={pageIndex >= paginationMeta.totalPages || loading}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40"

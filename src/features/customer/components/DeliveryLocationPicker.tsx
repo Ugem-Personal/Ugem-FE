@@ -396,7 +396,10 @@ export function DeliveryLocationPicker({
           {error}
         </p>
       ) : statusMessage ? (
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400" role="status">
+        <p
+          className="text-xs font-semibold text-slate-500 dark:text-slate-400"
+          role="status"
+        >
           {statusMessage}
         </p>
       ) : (
