@@ -180,7 +180,7 @@ export default function MerchantCard({
             <div className="flex min-w-0 items-start justify-between gap-2">
               <h3
                 className={cn(
-                  "line-clamp-1 font-black leading-snug tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400",
+                  "min-w-0 flex-1 line-clamp-2 font-black leading-snug tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400",
                   compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
                 )}
               >
@@ -269,7 +269,7 @@ export default function MerchantCard({
             {merchant.featuredFoods && merchant.featuredFoods.length > 0 && (
               <div className="mt-2.5 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-white/5 px-2.5 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
                 <Utensils className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
-                <span className="line-clamp-1 font-medium">
+                <span className="line-clamp-2 font-medium">
                   {merchant.featuredFoods.join(" • ")}
                 </span>
               </div>
@@ -283,7 +283,7 @@ export default function MerchantCard({
                 )}
               >
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                <span className="line-clamp-1">{cleanAddress(merchant.address)}</span>
+                <span className="line-clamp-2">{cleanAddress(merchant.address)}</span>
               </p>
             )}
           </div>
