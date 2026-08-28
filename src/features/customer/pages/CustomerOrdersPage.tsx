@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Calendar,
+  Heart,
   ShoppingBag,
   Search,
   RefreshCw,
@@ -15,7 +17,9 @@ import {
 } from "../services/orderService";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
-import { ModeToggle } from "@/shared/components";
+import { UserAccountMenu, ModeToggle } from "@/shared/components";
+import { Button } from "@/shared/components/ui/button";
+import logoUrl from "@/assets/ugem-logo.png";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
 
@@ -165,13 +169,41 @@ export default function CustomerOrdersPage() {
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/85 shadow-xs backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex items-center gap-3">
+            <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
+          </Link>
+          <div className="flex items-center gap-3">
+            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+              <Link to="/customer/wishlist">
+                <Heart className="h-4 w-4 text-rose-500" />
+                <span className="hidden md:inline">Quán yêu thích</span>
+              </Link>
+            </Button>
+            <Button asChild type="button" className="h-11 gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-5 sm:text-sm">
+              <Link to="/customer/orders">
+                <ShoppingBag className="h-4 w-4" />
+                <span className="hidden sm:inline">Đơn hàng của tôi</span>
+              </Link>
+            </Button>
+            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+              <Link to="/customer/bookings">
+                <Calendar className="h-4 w-4 text-cyan-600" />
+                <span className="hidden sm:inline">Lịch đặt bàn</span>
+              </Link>
+            </Button>
+            <UserAccountMenu fallbackName="Customer" />
+          </div>
+        </div>
+      </header>
       {/* Glow Effects */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/10 blur-[140px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
 
-      <div className="relative mx-auto max-w-4xl">
+      <div className="relative mx-auto max-w-4xl pt-20">
         {/* Top Navbar */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
