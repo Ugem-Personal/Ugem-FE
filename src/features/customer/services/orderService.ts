@@ -136,9 +136,9 @@ function normalizeOrderId(value: unknown) {
 }
 
 export async function getCustomerOrderDetail(orderId: string) {
-  const res = await api.get<
-    ApiResponse<{ foods: CustomerOrderDetailItem[] }>
-  >(`/orders/${orderId}`);
+  const res = await api.get<ApiResponse<{ foods: CustomerOrderDetailItem[] }>>(
+    `/orders/${orderId}`,
+  );
 
   return res.data.data.foods;
 }
@@ -181,9 +181,13 @@ export async function getBill(orderId: string) {
   return payload;
 }
 
-export async function confirmBill(orderId: string) {
+export async function confirmBill(
+  orderId: string,
+  paymentMethod?: "Cash" | "BankTransfer",
+) {
   const res = await api.post<ApiResponse<null>>("/orders/bill/confirm", {
     orderId,
+    paymentMethod,
   });
 
   return res.data;

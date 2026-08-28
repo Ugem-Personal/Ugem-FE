@@ -468,7 +468,7 @@ export default function ConfirmBillPage() {
     setCashRequested(false);
 
     try {
-      await confirmBill(orderId);
+      await confirmBill(orderId, selectedPaymentMethod);
       setBillConfirmed(true);
     } catch (err) {
       console.error(err);
