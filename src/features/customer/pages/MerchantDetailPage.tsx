@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Heart,
   Star,
   MapPin,
   Phone,
@@ -12,7 +13,7 @@ import {
   Calendar,
   ShoppingBag,
 } from "lucide-react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import {
@@ -35,7 +36,9 @@ import { getWishlist } from "../services/wishlistService";
 import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
 import { clearAuth, getCurrentUser } from "@/features/auth";
-import { ModeToggle } from "@/shared/components";
+import { ModeToggle, UserAccountMenu } from "@/shared/components";
+import { Button } from "@/shared/components/ui/button";
+import logoUrl from "@/assets/ugem-logo.png";
 import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
 import { FoodOptionModal } from "../components/FoodOptionModal";
@@ -698,6 +701,35 @@ export default function MerchantDetailPage() {
         cart.length > 0 ? "pb-28" : "pb-12"
       }`}
     >
+      <header className="sticky top-0 z-40 -mx-4 -mt-6 mb-6 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex shrink-0 items-center">
+            <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
+          </Link>
+          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+              <Link to="/customer/wishlist" aria-label="Quán yêu thích">
+                <Heart className="h-4 w-4 text-rose-500" />
+                <span className="hidden md:inline">Quán yêu thích</span>
+              </Link>
+            </Button>
+            <Button asChild type="button" className="h-11 gap-2 rounded-xl bg-slate-900 px-3 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-4 sm:text-sm">
+              <Link to="/customer/orders" aria-label="Đơn hàng của tôi">
+                <ShoppingBag className="h-4 w-4" />
+                <span className="hidden sm:inline">Đơn hàng của tôi</span>
+              </Link>
+            </Button>
+            <Button asChild type="button" variant="outline" className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm">
+              <Link to="/customer/bookings" aria-label="Lịch đặt bàn">
+                <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                <span className="hidden sm:inline">Lịch đặt bàn</span>
+              </Link>
+            </Button>
+            <UserAccountMenu fallbackName="Customer" />
+          </div>
+        </div>
+      </header>
+
       {/* Background glow effects */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
