@@ -10,6 +10,9 @@ import {
   Zap,
   HelpCircle,
   ChevronRight,
+  CalendarCheck2,
+  ShoppingBag,
+  UtensilsCrossed,
 } from "lucide-react";
 
 import { getCurrentUser } from "@/features/auth";
@@ -35,6 +38,23 @@ const merchantMenuItems: MerchantNavItem[] = [
     label: "Nhà hàng của bạn",
     icon: Store,
     path: "/merchant/restaurant",
+  },
+  {
+    label: "Quản lý món ăn",
+    icon: UtensilsCrossed,
+    path: "/merchant/foods",
+  },
+  {
+    label: "Đơn hàng",
+    icon: ShoppingBag,
+    path: "/merchant/orders",
+  },
+  {
+    label: "Lịch đặt bàn",
+    icon: CalendarCheck2,
+    path: "/merchant/bookings",
+    badge: "NEW",
+    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   },
   {
     label: "Tạo đơn tại quán",
