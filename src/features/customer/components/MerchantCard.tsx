@@ -177,21 +177,14 @@ export default function MerchantCard({
         {/* Content */}
         <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch pt-1 sm:pt-0">
           <div>
-            <div className="flex min-w-0 items-start justify-between gap-2">
-              <h3
-                className={cn(
-                  "min-w-0 flex-1 line-clamp-2 font-black leading-snug tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400",
-                  compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
-                )}
-              >
-                {name}
-              </h3>
-
-              <span className="hidden shrink-0 items-center gap-1 rounded-full bg-slate-100/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-1 text-xs font-black text-slate-700 dark:text-slate-300 transition-all duration-300 group-hover:bg-cyan-500 group-hover:border-cyan-500 group-hover:text-slate-950 sm:inline-flex shadow-2xs">
-                Xem quán
-                <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-              </span>
-            </div>
+            <h3
+              className={cn(
+                "min-w-0 font-black leading-snug tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400",
+                compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
+              )}
+            >
+              {name}
+            </h3>
 
             {!compact && descriptionPreview.summary && (
               <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400 sm:text-sm">
@@ -286,6 +279,11 @@ export default function MerchantCard({
                 <span className="line-clamp-2">{cleanAddress(merchant.address)}</span>
               </p>
             )}
+
+            <span className="mt-3 hidden w-fit shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 px-3 py-1 text-xs font-black text-slate-700 shadow-2xs transition-all duration-300 group-hover:border-cyan-500 group-hover:bg-cyan-500 group-hover:text-slate-950 sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+              Xem quán
+              <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </span>
           </div>
         </div>
       </div>
