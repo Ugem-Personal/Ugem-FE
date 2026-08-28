@@ -357,7 +357,7 @@ export function DeliveryLocationPicker({
           >
             {hasStreetAddress
               ? "Đã xác định tên đường và tọa độ giao hàng"
-              : "Chưa xác định được tên đường — hãy chọn địa chỉ gợi ý"}
+              : "Đã lưu vị trí giao hàng theo tọa độ — địa chỉ chưa có tên đường cụ thể"}
           </span>
           <button
             type="button"

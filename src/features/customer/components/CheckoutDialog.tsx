@@ -25,7 +25,6 @@ import {
   DeliveryLocationPicker,
   type DeliveryLocation,
 } from "./DeliveryLocationPicker";
-import { hasStreetLevelAddress } from "@/shared/utils/address";
 
 export type CheckoutPaymentMethod = "COD" | "Cash" | "BankTransfer";
 
@@ -229,12 +228,6 @@ export function CheckoutDialog({
     ) {
       nextErrors.deliveryAddress =
         "Hãy chọn một gợi ý hoặc dùng vị trí hiện tại để xác định tọa độ.";
-    } else if (
-      orderType === "Online" &&
-      !hasStreetLevelAddress(deliveryLocation.address)
-    ) {
-      nextErrors.deliveryAddress =
-        "Địa chỉ mới xác định đến khu vực. Hãy nhập số nhà hoặc tên đường và chọn một gợi ý VietMap.";
     }
     setErrors(nextErrors);
 
