@@ -599,7 +599,10 @@ export function AddressLocationStep({
       )}
 
       {/* Map */}
-      <div ref={mapContainer} className="address-map-shell">
+      <div
+        ref={mapContainer}
+        className="address-map-shell dark:[&_.vietmapgl-canvas]:brightness-90 dark:[&_.vietmapgl-canvas]:contrast-[1.15] dark:[&_.vietmapgl-canvas]:hue-rotate-180 dark:[&_.vietmapgl-canvas]:invert"
+      >
         {!HAS_VIETMAP_KEY && (
           <div className="address-map-unavailable">
             Chưa cấu hình VietMap API key

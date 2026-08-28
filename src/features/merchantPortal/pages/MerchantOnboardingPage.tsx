@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,6 +32,18 @@ import { notify } from "@/shared/lib/notify";
 import { getCurrentUser } from "@/features/auth";
 
 const DRAFT_KEY = "ugem_merchant_application_draft";
+const DRAFT_STEP_KEY = "ugem_merchant_application_draft_step";
+
+function getDraftStep() {
+  try {
+    const savedStep = Number(localStorage.getItem(DRAFT_STEP_KEY));
+    return Number.isInteger(savedStep) && savedStep >= 1 && savedStep <= 4
+      ? savedStep
+      : 1;
+  } catch {
+    return 1;
+  }
+}
 
 function getDraftValues(): Partial<OnboardingFormValues> {
   try {
@@ -158,7 +170,15 @@ export function MerchantOnboardingPage() {
       ? "/customer"
       : "/merchant";
   const createMutation = useCreateApplication();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(getDraftStep);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_STEP_KEY, String(currentStep));
+    } catch {
+      // The form remains usable when browser storage is unavailable.
+    }
+  }, [currentStep]);
 
   // Check whether this user should create, resubmit, or only view status.
   const { data: applications = [], isLoading: isLoadingApps } =
@@ -305,6 +325,7 @@ export function MerchantOnboardingPage() {
       {
         onSuccess: () => {
           localStorage.removeItem(DRAFT_KEY);
+          localStorage.removeItem(DRAFT_STEP_KEY);
           notify.success(
             isRejected
               ? "Đã gửi lại hồ sơ quán thành công"
