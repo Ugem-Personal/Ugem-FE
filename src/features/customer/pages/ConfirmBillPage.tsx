@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, CheckCircle2, CreditCard, ArrowLeft, Receipt, Copy, Check, MapPin, Loader2 } from "lucide-react";
+import {
+  Banknote,
+  CheckCircle2,
+  CreditCard,
+  ArrowLeft,
+  Receipt,
+  Copy,
+  Check,
+  MapPin,
+  Loader2,
+} from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { getCurrentUser } from "@/features/auth";
@@ -121,15 +131,12 @@ function getBankTransferInfo(
   const bankAccount = bill?.bankAccount ?? "";
   const description = getBankTransferDescription(orderId);
 
-  const amount = Math.round(
-    Number(bill?.totalAmount ?? finalPrice ?? 0),
-  );
-  const qrCode =
-    `https://qr.sepay.vn/img?acc=${encodeURIComponent(
-      bankAccount,
-    )}&bank=${encodeURIComponent(bankName)}&amount=${amount}&des=${encodeURIComponent(
-      description,
-    )}&template=qronly`;
+  const amount = Math.round(Number(bill?.totalAmount ?? finalPrice ?? 0));
+  const qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(
+    bankAccount,
+  )}&bank=${encodeURIComponent(bankName)}&amount=${amount}&des=${encodeURIComponent(
+    description,
+  )}&template=qronly`;
 
   return {
     bankName,
@@ -220,7 +227,10 @@ export default function ConfirmBillPage() {
       notify.success("Xác thực check-in tại quán thành công!");
     } catch (err) {
       console.error("Check-in error:", err);
-      const msg = getServerMessage(err, "Không thể lấy vị trí GPS để xác thực check-in.");
+      const msg = getServerMessage(
+        err,
+        "Không thể lấy vị trí GPS để xác thực check-in.",
+      );
       setCheckInError(msg);
       notify.error(msg);
     } finally {
@@ -266,12 +276,15 @@ export default function ConfirmBillPage() {
         }
 
         if (!nextBill.items || nextBill.items.length === 0) {
-          const detailItems = await getCustomerOrderDetail(orderId).catch(() => []);
+          const detailItems = await getCustomerOrderDetail(orderId).catch(
+            () => [],
+          );
           if (detailItems && detailItems.length > 0) {
             nextBill.items = detailItems.map((f: any) => ({
               name: f.foodNameSnapshot || f.foodName || f.name,
               quantity: f.quantity,
-              subTotal: f.lineTotal ?? (f.unitPrice ? f.unitPrice * f.quantity : 0),
+              subTotal:
+                f.lineTotal ?? (f.unitPrice ? f.unitPrice * f.quantity : 0),
               notes: f.notes,
               toppings: f.toppings,
             }));
@@ -282,20 +295,32 @@ export default function ConfirmBillPage() {
         setSelectedPaymentMethod(getBillPaymentMethod(nextBill));
 
         const currentOrder = orders.find(
-          (order: CustomerOrderSummary) => getCustomerOrderId(order) === orderId,
+          (order: CustomerOrderSummary) =>
+            getCustomerOrderId(order) === orderId,
         );
         const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
-        const currentPaymentStatus = (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
+        const currentPaymentStatus =
+          (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
         const persistedCashRequest = getPersistedCashRequest(orderId);
+        const isOfflineOrder =
+          nextBill.orderType?.trim().toLowerCase() === "offline";
+        const isCheckInComplete =
+          !isOfflineOrder || nextBill.checkInStatus === "Verified";
 
-        if (currentStatus === "completed" || currentPaymentStatus === "paid") {
+        if (
+          isCheckInComplete &&
+          (currentStatus === "completed" || currentPaymentStatus === "paid")
+        ) {
           const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
           if (cashPaymentKey && typeof window !== "undefined") {
             window.localStorage.removeItem(cashPaymentKey);
           }
 
-          navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
+          navigate(
+            `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
+            { replace: true },
+          );
           return;
         }
 
@@ -317,7 +342,9 @@ export default function ConfirmBillPage() {
       .catch((err) => {
         console.error(err);
         if (!active) return;
-        setError(getServerMessage(err, "Không thể tải hóa đơn. Vui lòng thử lại."));
+        setError(
+          getServerMessage(err, "Không thể tải hóa đơn. Vui lòng thử lại."),
+        );
       })
       .finally(() => {
         if (!active) return;
@@ -367,11 +394,18 @@ export default function ConfirmBillPage() {
         (order: CustomerOrderSummary) => getCustomerOrderId(order) === orderId,
       );
       const currentStatus = currentOrder?.status?.trim().toLowerCase() ?? "";
-      const currentPaymentStatus = (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
+      const currentPaymentStatus =
+        (currentOrder as any)?.paymentStatus?.trim().toLowerCase() ?? "";
+      const isOfflineOrder =
+        bill?.orderType?.trim().toLowerCase() === "offline";
+      const isCheckInComplete =
+        !isOfflineOrder ||
+        checkInVerified ||
+        bill?.checkInStatus === "Verified";
 
       if (
-        currentStatus === "completed" ||
-        currentPaymentStatus === "paid"
+        isCheckInComplete &&
+        (currentStatus === "completed" || currentPaymentStatus === "paid")
       ) {
         const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
@@ -383,7 +417,9 @@ export default function ConfirmBillPage() {
           notify.success("Hệ thống đã nhận được tiền chuyển khoản thành công!");
         }
 
-        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
+        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, {
+          replace: true,
+        });
         return;
       }
 
@@ -415,10 +451,13 @@ export default function ConfirmBillPage() {
     };
   }, [
     billConfirmed,
+    bill?.checkInStatus,
+    bill?.orderType,
     cashRequested,
     navigate,
     orderId,
     selectedPaymentMethod,
+    checkInVerified,
   ]);
 
   async function handleConfirmBill() {
@@ -434,10 +473,21 @@ export default function ConfirmBillPage() {
     } catch (err) {
       console.error(err);
       const msg = getServerMessage(err, "");
-      if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
+      if (
+        msg.includes("Order đã được thanh toán") ||
+        msg.includes("đã được thanh toán")
+      ) {
         setBillConfirmed(true);
         notify.success("Đơn hàng này đã được thanh toán thành công!");
-        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
+        if (
+          bill?.orderType?.trim().toLowerCase() !== "offline" ||
+          checkInVerified
+        ) {
+          navigate(
+            `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
+            { replace: true },
+          );
+        }
         return;
       }
       setBillConfirmed(false);
@@ -474,9 +524,20 @@ export default function ConfirmBillPage() {
     } catch (err) {
       console.error(err);
       const msg = getServerMessage(err, "");
-      if (msg.includes("Order đã được thanh toán") || msg.includes("đã được thanh toán")) {
+      if (
+        msg.includes("Order đã được thanh toán") ||
+        msg.includes("đã được thanh toán")
+      ) {
         notify.success("Đơn hàng này đã được thanh toán thành công!");
-        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, { replace: true });
+        if (
+          bill?.orderType?.trim().toLowerCase() !== "offline" ||
+          checkInVerified
+        ) {
+          navigate(
+            `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
+            { replace: true },
+          );
+        }
         return;
       }
       setError(
@@ -535,7 +596,8 @@ export default function ConfirmBillPage() {
         {/* Digital Receipt Container */}
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
-            <Receipt className="h-3.5 w-3.5" /> Digital Bill & Payment Confirmation
+            <Receipt className="h-3.5 w-3.5" /> Digital Bill & Payment
+            Confirmation
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
@@ -587,16 +649,32 @@ export default function ConfirmBillPage() {
 
                   <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
                     <p className="flex items-center gap-2">
-                      <span className={checkInToken ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                      <span
+                        className={
+                          checkInToken
+                            ? "text-emerald-500 font-bold"
+                            : "text-slate-400"
+                        }
+                      >
                         {checkInToken ? "✓" : "○"}
                       </span>
-                      {checkInToken ? "Mã QR Check-in hợp lệ" : "Thiếu mã QR check-in"}
+                      {checkInToken
+                        ? "Mã QR Check-in hợp lệ"
+                        : "Thiếu mã QR check-in"}
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className={checkInVerified ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                      <span
+                        className={
+                          checkInVerified
+                            ? "text-emerald-500 font-bold"
+                            : "text-slate-400"
+                        }
+                      >
                         {checkInVerified ? "✓" : "○"}
                       </span>
-                      {checkInVerified ? "Bạn đang trong phạm vi quán (Geofence OK)" : "Định vị vị trí GPS trong bán kính quán"}
+                      {checkInVerified
+                        ? "Bạn đang trong phạm vi quán (Geofence OK)"
+                        : "Định vị vị trí GPS trong bán kính quán"}
                     </p>
                   </div>
 
@@ -615,7 +693,8 @@ export default function ConfirmBillPage() {
                     >
                       {verifyingCheckIn ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Đang xác thực vị trí GPS...
+                          <Loader2 className="h-4 w-4 animate-spin" /> Đang xác
+                          thực vị trí GPS...
                         </>
                       ) : (
                         "Xác thực Check-in ngay"
@@ -648,7 +727,10 @@ export default function ConfirmBillPage() {
                             {name}
                           </div>
                           <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                            Số lượng: <span className="font-black text-slate-800 dark:text-slate-200">{quantity}</span>
+                            Số lượng:{" "}
+                            <span className="font-black text-slate-800 dark:text-slate-200">
+                              {quantity}
+                            </span>
                           </div>
                           {toppings.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap gap-1">
@@ -693,7 +775,10 @@ export default function ConfirmBillPage() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
-                      disabled={submitting || (bill.orderType === "Offline" && !checkInVerified)}
+                      disabled={
+                        submitting ||
+                        (bill.orderType === "Offline" && !checkInVerified)
+                      }
                       onClick={handleConfirmBill}
                       className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
                     >
@@ -710,7 +795,8 @@ export default function ConfirmBillPage() {
                   </div>
                   {bill.orderType === "Offline" && !checkInVerified && (
                     <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 text-center">
-                      * Vui lòng hoàn tất Xác thực Check-in tại quán ở trên trước khi bấm Xác nhận hóa đơn.
+                      * Vui lòng hoàn tất Xác thực Check-in tại quán ở trên
+                      trước khi bấm Xác nhận hóa đơn.
                     </p>
                   )}
                 </div>
@@ -753,7 +839,9 @@ export default function ConfirmBillPage() {
 
                       <button
                         type="button"
-                        onClick={() => handleSelectPaymentMethod("BankTransfer")}
+                        onClick={() =>
+                          handleSelectPaymentMethod("BankTransfer")
+                        }
                         disabled={cashRequested}
                         className={`rounded-2xl border p-4 text-left transition ${
                           selectedPaymentMethod === "BankTransfer"
@@ -779,7 +867,9 @@ export default function ConfirmBillPage() {
                         Thanh toán tiền mặt
                       </div>
                       <p className="font-medium text-amber-800 dark:text-amber-300/80 leading-relaxed">
-                        Vui lòng gửi tiền mặt trực tiếp cho nhân viên quán. Sau khi đã thanh toán, bấm nút Đã thanh toán tiền mặt bên dưới.
+                        Vui lòng gửi tiền mặt trực tiếp cho nhân viên quán. Sau
+                        khi đã thanh toán, bấm nút Đã thanh toán tiền mặt bên
+                        dưới.
                       </p>
                     </div>
                   ) : (
@@ -799,44 +889,78 @@ export default function ConfirmBillPage() {
 
                         <div className="space-y-2 text-xs font-semibold text-cyan-950 dark:text-cyan-100 flex-1 w-full">
                           <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
-                            <span className="text-slate-500 dark:text-slate-400">Ngân hàng</span>
-                            <span className="font-bold">{bankTransferInfo.bankName}</span>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Ngân hàng
+                            </span>
+                            <span className="font-bold">
+                              {bankTransferInfo.bankName}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
-                            <span className="text-slate-500 dark:text-slate-400">Số tài khoản</span>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Số tài khoản
+                            </span>
                             <div className="flex items-center gap-2">
-                              <span className="font-mono font-black text-sm">{bankTransferInfo.bankAccount}</span>
+                              <span className="font-mono font-black text-sm">
+                                {bankTransferInfo.bankAccount}
+                              </span>
                               <button
                                 type="button"
-                                onClick={() => copyToClipboard(bankTransferInfo.bankAccount, "account")}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    bankTransferInfo.bankAccount,
+                                    "account",
+                                  )
+                                }
                                 className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
                                 title="Sao chép số tài khoản"
                               >
-                                {copiedField === "account" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                {copiedField === "account" ? "Đã chép" : "Sao chép"}
+                                {copiedField === "account" ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                                {copiedField === "account"
+                                  ? "Đã chép"
+                                  : "Sao chép"}
                               </button>
                             </div>
                           </div>
                           <div className="flex justify-between items-center border-b border-cyan-200/50 dark:border-cyan-800/50 pb-1.5">
-                            <span className="text-slate-500 dark:text-slate-400">Số tiền</span>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Số tiền
+                            </span>
                             <span className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
                               {formatCurrency(bankTransferInfo.amount)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-500 dark:text-slate-400">Nội dung</span>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Nội dung
+                            </span>
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-black text-slate-900 dark:text-white">
                                 {bankTransferInfo.description}
                               </span>
                               <button
                                 type="button"
-                                onClick={() => copyToClipboard(bankTransferInfo.description, "description")}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    bankTransferInfo.description,
+                                    "description",
+                                  )
+                                }
                                 className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
                                 title="Sao chép nội dung chuyển khoản"
                               >
-                                {copiedField === "description" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                {copiedField === "description" ? "Đã chép" : "Sao chép"}
+                                {copiedField === "description" ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                                {copiedField === "description"
+                                  ? "Đã chép"
+                                  : "Sao chép"}
                               </button>
                             </div>
                           </div>
