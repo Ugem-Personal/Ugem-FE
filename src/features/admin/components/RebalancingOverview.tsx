@@ -13,27 +13,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { notify } from "@/shared/lib/notify";
-import { api } from "@/lib/axios";
-
-interface MerchantRankItem {
-  id: string;
-  name: string;
-  rating: number;
-  strengthIndex: number;
-  underratedScore: number;
-  recommendationRank: number | null;
-  lastRebalancedAt: string | null;
-}
-
-interface RebalancingStatusData {
-  lastUpdatedAt: string | null;
-  status: string;
-  merchantCount: number;
-  increasedVisibility: number;
-  decreasedVisibility: number;
-  unchangedVisibility: number;
-  merchants: MerchantRankItem[];
-}
+import {
+  getRebalancingStatus,
+  runManualRebalancing,
+  type RebalancingStatusData,
+} from "@/shared/services/rebalancingService";
 
 export function RebalancingOverview() {
   const [data, setData] = useState<RebalancingStatusData | null>(null);
@@ -43,9 +27,8 @@ export function RebalancingOverview() {
   const fetchStatus = async () => {
     setIsLoading(true);
     try {
-      const res = await api.get("/staff/dashboard/rebalancing");
-      setData(res.data?.data || null);
-    } catch (err: any) {
+      setData(await getRebalancingStatus());
+    } catch (err: unknown) {
       console.error(err);
       notify.error("Không thể tải thông tin Rebalancing.");
     } finally {
@@ -60,14 +43,12 @@ export function RebalancingOverview() {
   const handleManualTrigger = async () => {
     setIsTriggering(true);
     try {
-      await api.post("/rebalancing/run");
+      await runManualRebalancing();
       notify.success("Đã chạy thành công Rebalancing hệ thống!");
       await fetchStatus();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      notify.error(
-        err?.response?.data?.message || "Kích hoạt Rebalancing thất bại.",
-      );
+      notify.error("Kích hoạt Rebalancing thất bại.");
     } finally {
       setIsTriggering(false);
     }
