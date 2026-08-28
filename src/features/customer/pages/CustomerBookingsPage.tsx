@@ -93,6 +93,18 @@ export default function CustomerBookingsPage() {
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              aria-label="Xem lịch sử đặt bàn"
+              className="h-11 gap-2 rounded-xl border-cyan-200 dark:border-cyan-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-cyan-50 dark:hover:bg-cyan-500/10"
+            >
+              <Link to="/customer/bookings">
+                <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                <span className="hidden sm:inline">Lịch đặt bàn</span>
+              </Link>
+            </Button>
 
             <UserAccountMenu fallbackName="Customer" />
           </div>
