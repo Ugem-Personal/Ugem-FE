@@ -235,7 +235,10 @@ function canConfirmPayment(
   status?: string | null,
   paymentStatus?: string | null,
   billStatus?: string | null,
+  paymentMethod?: string | null,
 ) {
+  if (paymentMethod?.trim().toLowerCase() !== "cash") return false;
+
   const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   if (isPaid) return false;
 
@@ -900,6 +903,7 @@ export default function MerchantOrdersPage() {
                         order.status,
                         order.paymentStatus,
                         order.bill?.status,
+                        order.paymentMethod,
                       ) ? (
                         <button
                           type="button"
@@ -1275,6 +1279,7 @@ export default function MerchantOrdersPage() {
                         selectedOrder.status,
                         selectedOrder.paymentStatus,
                         selectedOrder.bill?.status,
+                        selectedOrder.paymentMethod,
                       ) ? (
                         <button
                           type="button"
