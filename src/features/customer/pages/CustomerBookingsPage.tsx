@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Calendar, Users, Clock, XCircle, Loader2, Store } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Calendar, Users, Clock, XCircle, Loader2, Store, Heart, ShoppingBag } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { Button } from "@/shared/components/ui/button";
+import { UserAccountMenu } from "@/shared/components";
 import { notify } from "@/shared/lib/notify";
+import logoUrl from "@/assets/ugem-logo.png";
 import {
   cancelBooking,
   getMyBookings,
@@ -51,14 +53,53 @@ export default function CustomerBookingsPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
       {/* Background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
         <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-amber-500/10 dark:bg-amber-600/15 blur-[140px]" />
       </div>
 
-      <div className="relative mx-auto max-w-4xl">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xs transition-colors duration-300">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex items-center gap-3">
+            <img
+              src={logoUrl}
+              alt="UGem"
+              className="h-10 w-auto transition-transform hover:scale-105"
+            />
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
+            >
+              <Link to="/customer/wishlist">
+                <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
+                <span className="hidden md:inline">Quán yêu thích</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              type="button"
+              className="h-11 gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400"
+            >
+              <Link to="/customer/orders">
+                <ShoppingBag className="h-4 w-4" />
+                <span className="hidden sm:inline">Đơn hàng của tôi</span>
+              </Link>
+            </Button>
+
+            <UserAccountMenu fallbackName="Customer" />
+          </div>
+        </div>
+      </header>
+
+      <main className="relative mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <button
@@ -175,7 +216,7 @@ export default function CustomerBookingsPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
