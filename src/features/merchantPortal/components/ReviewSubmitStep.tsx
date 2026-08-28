@@ -100,7 +100,7 @@ export function ReviewSubmitStep({
                 <article key={index} className="review-menu-card">
                   <div className="review-menu-header">
                     <strong>
-                      Món #{index + 1}: {menuItem.name || "Chưa nhập"}
+                      Món {index + 1}: {menuItem.name || "Chưa nhập"}
                     </strong>
                     <span>{formatMoney(menuItem.price)}</span>
                   </div>
@@ -122,7 +122,7 @@ export function ReviewSubmitStep({
                     <div className="menu-image-preview">
                       <img
                         src={imageSrc}
-                        alt={`Ảnh món #${index + 1}`}
+                        alt={`Ảnh món ${index + 1}`}
                         loading="lazy"
                       />
                     </div>
