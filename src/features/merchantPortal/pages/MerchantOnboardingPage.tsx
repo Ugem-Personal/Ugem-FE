@@ -36,6 +36,15 @@ const DRAFT_STEP_KEY = "ugem_merchant_application_draft_step";
 
 function getDraftStep() {
   try {
+    const savedDraft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}");
+    if (
+      !savedDraft ||
+      typeof savedDraft !== "object" ||
+      Object.keys(savedDraft).length === 0
+    ) {
+      return 1;
+    }
+
     const savedStep = Number(localStorage.getItem(DRAFT_STEP_KEY));
     return Number.isInteger(savedStep) && savedStep >= 1 && savedStep <= 4
       ? savedStep
@@ -233,11 +242,25 @@ export function MerchantOnboardingPage() {
     setValue,
     trigger,
     handleSubmit,
+    subscribe,
     formState: { errors },
   } = methods;
   const watchedAddress = useWatch({ control, name: "address" });
   const watchedLat = useWatch({ control, name: "latitude" });
   const watchedLng = useWatch({ control, name: "longitude" });
+
+  useEffect(() => {
+    return subscribe({
+      formState: { values: true },
+      callback: ({ values }) => {
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(values));
+        } catch {
+          // The form remains usable when browser storage is unavailable or full.
+        }
+      },
+    });
+  }, [subscribe]);
 
   // Show blocked UI when the current application should not be submitted again.
   if (showBlockedUI) {
