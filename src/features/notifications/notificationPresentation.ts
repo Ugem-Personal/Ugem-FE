@@ -146,11 +146,19 @@ function resolveReferenceAction(item: NotificationItem) {
     return role === "Admin" ? "/admin/staff" : "/staff/profile";
   }
 
+  if (reference.type === "SupportTicket" && reference.id) {
+    return role === "Admin" || role === "Staff"
+      ? `/staff/support/${reference.id}`
+      : "/merchant/support";
+  }
+
   return null;
 }
 
 function getExplicitRouteFromText(text: string) {
-  const match = text.match(/\/(?:admin|staff|merchant|customer|notifications|reviews|affiliate-links)[^\s)]*/i);
+  const match = text.match(
+    /\/(?:admin|staff|merchant|customer|notifications|reviews|affiliate-links)[^\s)]*/i,
+  );
   return match?.[0];
 }
 
@@ -210,10 +218,13 @@ export function getNotificationTitle(item: NotificationItem) {
     return "Đơn có vấn đề";
   }
   if (includesAny(text, ["order completed"])) return "Đơn hoàn tất";
-  if (includesAny(text, ["new review received"])) return "Customer đánh giá quán";
-  if (includesAny(text, ["review updated"])) return "Customer cập nhật đánh giá";
+  if (includesAny(text, ["new review received"]))
+    return "Customer đánh giá quán";
+  if (includesAny(text, ["review updated"]))
+    return "Customer cập nhật đánh giá";
   if (includesAny(text, ["staff account created"])) return "Staff mới được tạo";
-  if (includesAny(text, ["staff account deactivated"])) return "Staff bị vô hiệu hóa";
+  if (includesAny(text, ["staff account deactivated"]))
+    return "Staff bị vô hiệu hóa";
   if (includesAny(text, ["commission"])) return "Commission affiliate";
 
   return rawTitle;
@@ -232,7 +243,11 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
   if (
     referenceType === "Application" ||
     explicitType.includes("merchantapplication") ||
-    includesAny(text, ["merchant application", "application has been approved", "application has been reject"])
+    includesAny(text, [
+      "merchant application",
+      "application has been approved",
+      "application has been reject",
+    ])
   ) {
     category = "merchant-application";
     categoryLabel = "Merchant application";
@@ -260,13 +275,24 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
       : includesAny(text, ["accept", "confirm", "xác nhận"])
         ? "emerald"
         : "amber";
-  } else if (explicitType.includes("order") || includesAny(text, ["order", "bill", "cash payment"])) {
+  } else if (
+    explicitType.includes("order") ||
+    includesAny(text, ["order", "bill", "cash payment"])
+  ) {
     category = "order";
     categoryLabel = "Đơn hàng";
     icon = ShoppingBag;
     tone = "cyan";
 
-    if (includesAny(text, ["issue", "rejected", "not received", "expired", "failed"])) {
+    if (
+      includesAny(text, [
+        "issue",
+        "rejected",
+        "not received",
+        "expired",
+        "failed",
+      ])
+    ) {
       icon = ShieldAlert;
       tone = "amber";
     } else if (includesAny(text, ["completed", "confirmed"])) {
@@ -314,7 +340,9 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
   const categoryAction = resolveActionTo(category, text);
   const actionTo =
     referenceAction ||
-    (category === "booking" ? categoryAction : item.actionUrl || categoryAction);
+    (category === "booking"
+      ? categoryAction
+      : item.actionUrl || categoryAction);
 
   return {
     actionLabel: getActionLabel(category),
@@ -342,7 +370,8 @@ function getActionLabel(category: NotificationCategory) {
 export function getToneClasses(tone: NotificationTone) {
   if (tone === "emerald") {
     return {
-      badge: "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-800",
+      badge:
+        "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-800",
       border: "border-emerald-200 dark:border-emerald-800/60",
       icon: "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-800",
       panel: "bg-emerald-50/70 dark:bg-emerald-950/40",
@@ -351,7 +380,8 @@ export function getToneClasses(tone: NotificationTone) {
 
   if (tone === "amber") {
     return {
-      badge: "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-800",
+      badge:
+        "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-800",
       border: "border-amber-200 dark:border-amber-800/60",
       icon: "bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-800",
       panel: "bg-amber-50/70 dark:bg-amber-950/40",
@@ -360,7 +390,8 @@ export function getToneClasses(tone: NotificationTone) {
 
   if (tone === "rose") {
     return {
-      badge: "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 ring-rose-200 dark:ring-rose-800",
+      badge:
+        "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 ring-rose-200 dark:ring-rose-800",
       border: "border-rose-200 dark:border-rose-800/60",
       icon: "bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 ring-rose-200 dark:ring-rose-800",
       panel: "bg-rose-50/70 dark:bg-rose-950/40",
@@ -369,7 +400,8 @@ export function getToneClasses(tone: NotificationTone) {
 
   if (tone === "violet") {
     return {
-      badge: "bg-violet-50 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-800",
+      badge:
+        "bg-violet-50 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-800",
       border: "border-violet-200 dark:border-violet-800/60",
       icon: "bg-violet-50 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-800",
       panel: "bg-violet-50/70 dark:bg-violet-950/40",
@@ -378,7 +410,8 @@ export function getToneClasses(tone: NotificationTone) {
 
   if (tone === "slate") {
     return {
-      badge: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-slate-200 dark:ring-slate-700",
+      badge:
+        "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-slate-200 dark:ring-slate-700",
       border: "border-slate-200 dark:border-slate-800",
       icon: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 ring-slate-200 dark:ring-slate-700",
       panel: "bg-slate-50 dark:bg-slate-900/60",
@@ -386,7 +419,8 @@ export function getToneClasses(tone: NotificationTone) {
   }
 
   return {
-    badge: "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-cyan-200 dark:ring-cyan-800",
+    badge:
+      "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-cyan-200 dark:ring-cyan-800",
     border: "border-cyan-200 dark:border-cyan-800/60",
     icon: "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 ring-cyan-200 dark:ring-cyan-800",
     panel: "bg-cyan-50/70 dark:bg-cyan-950/40",

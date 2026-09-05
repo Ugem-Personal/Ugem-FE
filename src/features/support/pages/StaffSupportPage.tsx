@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   CheckCircle2,
   Inbox,
@@ -37,6 +38,7 @@ const priorityLabels = {
 };
 
 export default function StaffSupportPage() {
+  const { id: routeTicketId } = useParams<{ id?: string }>();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selected, setSelected] = useState<SupportTicket | null>(null);
   const [message, setMessage] = useState("");
@@ -47,7 +49,7 @@ export default function StaffSupportPage() {
     try {
       const next = await getStaffSupportTickets();
       setTickets(next);
-      const id = selectId ?? selected?.id ?? next[0]?.id;
+      const id = selectId ?? routeTicketId ?? selected?.id ?? next[0]?.id;
       if (id) {
         const ticket = await getStaffSupportTicket(id);
         setSelected(ticket);
@@ -61,7 +63,7 @@ export default function StaffSupportPage() {
 
   useEffect(() => {
     void loadTickets();
-  }, []);
+  }, [routeTicketId]);
 
   async function refresh(id = selected?.id) {
     await loadTickets(id);

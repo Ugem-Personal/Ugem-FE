@@ -132,15 +132,10 @@ export default function NotificationsPage() {
         void loadNotifications(false);
       }
     };
-    const interval = window.setInterval(() => {
-      void loadNotifications(false);
-    }, 10000);
-
     window.addEventListener("focus", refreshWhenVisible);
     document.addEventListener("visibilitychange", refreshWhenVisible);
 
     return () => {
-      window.clearInterval(interval);
       window.removeEventListener("focus", refreshWhenVisible);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };

@@ -433,6 +433,14 @@ const routers = createBrowserRouter([
         ),
       },
       {
+        path: "/staff/support/:id",
+        element: (
+          <ProtectedRoute allowedRoles={["Staff", "Admin"]}>
+            <StaffSupportPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/admin/dashboard",
         element: (
           <ProtectedRoute allowedRoles={["Admin"]}>
