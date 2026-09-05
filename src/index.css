@@ -61,8 +61,8 @@
     --accent-foreground: oklch(0.22 0.05 195);
     --destructive: oklch(0.65 0.22 25);
     --border: oklch(0.91 0.015 245);
-    --input: oklch(0.90 0.02 245);
-    --ring: oklch(0.60 0.18 220);
+    --input: oklch(0.9 0.02 245);
+    --ring: oklch(0.6 0.18 220);
 
     /* Merchant Portal Semantic Theme Tokens - Light Mode */
     --color-page-bg: #f8fafc;
@@ -85,8 +85,10 @@
     --color-error: #ef4444;
     --color-info: #3b82f6;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --shadow-md:
+      0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+      0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 
     --chart-1: oklch(0.74 0.18 236);
     --chart-2: oklch(0.79 0.16 178);
@@ -95,9 +97,15 @@
     --chart-5: oklch(0.63 0.14 12);
     --radius: 0.875rem;
     --radius-card: 1.25rem;
-    --shadow-soft: 0 10px 30px -15px rgba(14, 116, 144, 0.12), 0 4px 12px -5px rgba(15, 23, 42, 0.05);
-    --shadow-lift: 0 20px 40px -20px rgba(14, 116, 144, 0.22), 0 8px 16px -6px rgba(15, 23, 42, 0.08);
-    --shadow-panel: 0 25px 65px -30px rgba(14, 116, 144, 0.25), 0 10px 25px -10px rgba(15, 23, 42, 0.1);
+    --shadow-soft:
+      0 10px 30px -15px rgba(14, 116, 144, 0.12),
+      0 4px 12px -5px rgba(15, 23, 42, 0.05);
+    --shadow-lift:
+      0 20px 40px -20px rgba(14, 116, 144, 0.22),
+      0 8px 16px -6px rgba(15, 23, 42, 0.08);
+    --shadow-panel:
+      0 25px 65px -30px rgba(14, 116, 144, 0.25),
+      0 10px 25px -10px rgba(15, 23, 42, 0.1);
     --ring-strong: 0 0 0 3px rgba(14, 116, 144, 0.25);
     --sidebar: oklch(0.99 0.01 255);
     --sidebar-foreground: oklch(0.22 0.035 255);
@@ -257,7 +265,7 @@
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 20px 50px -15px rgba(14, 116, 144, 0.08);
   }
-  
+
   .dark-glass-panel {
     background: rgba(15, 23, 42, 0.65);
     backdrop-filter: blur(20px);
@@ -299,26 +307,35 @@
   .app-page {
     min-height: 100dvh;
     background:
-      radial-gradient(circle at 10% 0%, rgba(6, 182, 212, 0.1), transparent 32rem),
-      radial-gradient(circle at 90% 40%, rgba(14, 165, 233, 0.06), transparent 28rem),
+      radial-gradient(
+        circle at 10% 0%,
+        rgba(6, 182, 212, 0.1),
+        transparent 32rem
+      ),
+      radial-gradient(
+        circle at 90% 40%,
+        rgba(14, 165, 233, 0.06),
+        transparent 28rem
+      ),
       linear-gradient(180deg, #ffffff 0%, #f4f8f9 35%, #f1f5f9 100%);
     color: #0f172a;
-    transition: background-color 300ms ease, color 300ms ease;
-  }
-  .app-page.affiliate-page {
-    background:
-      linear-gradient(180deg, #ffffff 0%, #f8fafc 42%, #eef0f2 100%);
-    color: #0f172a;
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
   }
   .dark .app-page {
     background:
-      radial-gradient(circle at 10% 0%, rgba(6, 182, 212, 0.12), transparent 32rem),
-      radial-gradient(circle at 90% 40%, rgba(14, 165, 233, 0.06), transparent 28rem),
+      radial-gradient(
+        circle at 10% 0%,
+        rgba(6, 182, 212, 0.12),
+        transparent 32rem
+      ),
+      radial-gradient(
+        circle at 90% 40%,
+        rgba(14, 165, 233, 0.06),
+        transparent 28rem
+      ),
       linear-gradient(180deg, #020617 0%, #0b1329 35%, #020617 100%);
-    color: #f8fafc;
-  }
-  .dark .app-page.affiliate-page {
-    background: linear-gradient(180deg, #111111 0%, #1f1f1f 42%, #080808 100%);
     color: #f8fafc;
   }
   .app-container {
@@ -416,4 +433,3 @@
     }
   }
 }
-
