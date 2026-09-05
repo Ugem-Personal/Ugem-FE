@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { notify } from "@/shared/lib/notify";
@@ -175,18 +174,6 @@ export default function NotificationsPage() {
         <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/10 blur-[140px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
-
-      <header className="relative -mx-4 -mt-8 mb-8 border-b border-slate-200/80 bg-white/85 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div>
-            <h1 className="text-3xl font-black">UGem</h1>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              Khám phá các quán ăn gần bạn
-            </p>
-          </div>
-          <UserAccountMenu fallbackName="UGem" />
-        </div>
-      </header>
 
       <main className="relative mx-auto max-w-6xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-xl transition-colors">
