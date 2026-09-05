@@ -135,6 +135,9 @@ export default function AdminDashboardPage() {
 
   const dashboard = dashboardQuery.data ?? DEFAULT_DASHBOARD;
   const merchantRevenues = merchantRevenueQuery.data ?? [];
+  const rankedMerchantRevenues = [...merchantRevenues].sort(
+    (left, right) => toNumber(right.totalRevenue) - toNumber(left.totalRevenue),
+  );
   const completedOrders =
     dashboard.totalCompletedOrders ?? dashboard.totalOrders ?? 0;
   const totalRevenue = toNumber(dashboard.totalRevenue);
@@ -144,7 +147,7 @@ export default function AdminDashboardPage() {
     0,
     totalRevenue - totalPlatformFee - totalReviewerFee,
   );
-  const topMerchant = merchantRevenues.find(
+  const topMerchant = rankedMerchantRevenues.find(
     (merchant) => toNumber(merchant.totalRevenue) > 0,
   );
   const hasNextPage = merchantRevenues.length === pageSize;
@@ -199,7 +202,8 @@ export default function AdminDashboardPage() {
               Tổng Quan Doanh Thu & Hệ Thống
             </h1>
             <p className="mt-1.5 text-sm font-medium text-muted-foreground max-w-2xl">
-              Theo dõi doanh thu đơn hàng, phí nền tảng, hoa hồng reviewer và hiệu năng vận hành real-time từ API.
+              Theo dõi doanh thu đơn hàng, phí nền tảng, hoa hồng reviewer và
+              hiệu năng vận hành real-time từ API.
             </p>
           </div>
 
@@ -212,10 +216,7 @@ export default function AdminDashboardPage() {
               className="h-11 rounded-xl font-bold"
             >
               <RefreshCw
-                className={cn(
-                  "h-4 w-4 mr-2",
-                  isRefreshing && "animate-spin",
-                )}
+                className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")}
               />
               {isRefreshing ? "Đang cập nhật..." : "Làm mới"}
             </Button>
@@ -226,7 +227,10 @@ export default function AdminDashboardPage() {
       {dashboardQuery.isError ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-bold text-destructive flex items-center gap-3">
           <ShieldAlert className="h-5 w-5 shrink-0" />
-          <span>Không tải được dashboard Admin. {getErrorMessage(dashboardQuery.error)}</span>
+          <span>
+            Không tải được dashboard Admin.{" "}
+            {getErrorMessage(dashboardQuery.error)}
+          </span>
         </div>
       ) : null}
 
@@ -249,7 +253,7 @@ export default function AdminDashboardPage() {
       {/* 3. Top Merchant Ranking Leaderboard Chart & KPI Summary Grid */}
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
         <TopMerchantsRankChart
-          merchantRevenues={merchantRevenues}
+          merchantRevenues={rankedMerchantRevenues}
           isLoading={merchantRevenueQuery.isLoading}
         />
 
@@ -258,7 +262,9 @@ export default function AdminDashboardPage() {
             <h2 className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
               Tổng Quan KPIs
             </h2>
-            <span className="text-xs font-semibold text-muted-foreground">Theo thời gian thực</span>
+            <span className="text-xs font-semibold text-muted-foreground">
+              Theo thời gian thực
+            </span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -307,7 +313,9 @@ export default function AdminDashboardPage() {
 
       {/* 4. Quick Actions for Admin Role */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-xs dark:bg-slate-900/90">
-        <h2 className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Thao tác nhanh (Admin Actions)</h2>
+        <h2 className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+          Thao tác nhanh (Admin Actions)
+        </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             to="/admin/staff"
@@ -317,7 +325,9 @@ export default function AdminDashboardPage() {
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
                 <Users className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold text-foreground">Quản trị Staff</span>
+              <span className="text-xs font-bold text-foreground">
+                Quản trị Staff
+              </span>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </Link>
@@ -330,9 +340,13 @@ export default function AdminDashboardPage() {
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
                 <CalendarPlus className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold text-foreground">Duyệt Merchant</span>
+              <span className="text-xs font-bold text-foreground">
+                Duyệt Merchant
+              </span>
             </div>
-            <Badge variant="warning" className="text-[10px]">{dashboard.pendingApplications}</Badge>
+            <Badge variant="warning" className="text-[10px]">
+              {dashboard.pendingApplications}
+            </Badge>
           </Link>
 
           <Link
@@ -343,9 +357,13 @@ export default function AdminDashboardPage() {
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                 <FileCheck2 className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold text-foreground">Duyệt Reviewer</span>
+              <span className="text-xs font-bold text-foreground">
+                Duyệt Reviewer
+              </span>
             </div>
-            <Badge variant="success" className="text-[10px]">{dashboard.pendingReviewerApplications}</Badge>
+            <Badge variant="success" className="text-[10px]">
+              {dashboard.pendingReviewerApplications}
+            </Badge>
           </Link>
 
           <Link
@@ -356,7 +374,9 @@ export default function AdminDashboardPage() {
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                 <Clock3 className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold text-foreground">Audit Logs</span>
+              <span className="text-xs font-bold text-foreground">
+                Audit Logs
+              </span>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </Link>
@@ -401,8 +421,8 @@ function RevenueHeroCard({
   }
 
   return (
-    <article className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-2xl ring-1 ring-white/10 sm:p-8">
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-slate-950 to-emerald-600/20 pointer-events-none" />
+    <article className="relative overflow-hidden rounded-3xl border border-border bg-white p-6 text-slate-950 shadow-2xl ring-1 ring-slate-950/5 dark:border-white/10 dark:bg-slate-950 dark:text-white dark:ring-white/10 sm:p-8">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-white to-emerald-500/10 dark:from-cyan-600/30 dark:via-slate-950 dark:to-emerald-600/20" />
 
       <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0">
@@ -410,20 +430,23 @@ function RevenueHeroCard({
             <BarChart3 className="h-3.5 w-3.5" />
             <span>Revenue Command Center</span>
           </div>
-          <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cyan-300">
+          <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
             Tổng doanh thu Completed
           </p>
-          <p className="mt-1 break-words text-4xl sm:text-5xl font-black leading-tight text-white">
+          <p className="mt-1 break-words text-4xl sm:text-5xl font-black leading-tight text-slate-950 dark:text-white">
             {formatCurrency(totalRevenue)}
           </p>
-          <p className="mt-3 text-xs font-medium text-slate-300 max-w-lg leading-relaxed">
-            Tổng giá trị giao dịch các đơn hàng đã hoàn thành trên toàn hệ thống UGem.
+          <p className="mt-3 max-w-lg text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+            Tổng giá trị giao dịch các đơn hàng đã hoàn thành trên toàn hệ thống
+            UGem.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 backdrop-blur-md dark:border-white/10 dark:bg-white/5">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-bold text-white">Top Merchant</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-white">
+              Top Merchant
+            </p>
             <Badge className="border-0 bg-cyan-400 text-slate-950 font-bold text-[10px]">
               Live API
             </Badge>
@@ -432,7 +455,7 @@ function RevenueHeroCard({
           {topMerchant ? (
             <div className="mt-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-xs font-bold text-slate-950 shadow-sm">
+                <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-200 text-xs font-bold text-slate-950 shadow-sm dark:bg-white">
                   {topMerchant.logoUrl ? (
                     <img
                       src={topMerchant.logoUrl}
@@ -444,23 +467,23 @@ function RevenueHeroCard({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-white">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
                     {topMerchant.merchantName}
                   </p>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {formatNumber(topMerchant.completedOrders)} đơn completed
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-2xl font-black text-cyan-300">
+              <p className="mt-3 text-2xl font-black text-cyan-700 dark:text-cyan-300">
                 {formatCurrency(topMerchant.totalRevenue)}
               </p>
-              <p className="mt-0.5 text-[11px] font-medium text-slate-300">
+              <p className="mt-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                 AOV {formatCurrency(topMerchant.averageOrderValue)}
               </p>
             </div>
           ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-white/15 p-4 text-xs font-medium text-slate-400">
+            <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-4 text-xs font-medium text-slate-500 dark:border-white/15 dark:text-slate-400">
               Chưa có merchant phát sinh doanh thu.
             </div>
           )}
@@ -483,8 +506,10 @@ function RevenueDistributionDonutChart({
 }) {
   const safeTotal = Math.max(totalRevenue, 1);
   const netPct = totalRevenue > 0 ? (merchantNetRevenue / safeTotal) * 100 : 0;
-  const platformPct = totalRevenue > 0 ? (totalPlatformFee / safeTotal) * 100 : 0;
-  const reviewerPct = totalRevenue > 0 ? (totalReviewerFee / safeTotal) * 100 : 0;
+  const platformPct =
+    totalRevenue > 0 ? (totalPlatformFee / safeTotal) * 100 : 0;
+  const reviewerPct =
+    totalRevenue > 0 ? (totalReviewerFee / safeTotal) * 100 : 0;
 
   const radius = 36;
   const circumference = 2 * Math.PI * radius; // ~226.19
@@ -504,7 +529,9 @@ function RevenueDistributionDonutChart({
           <span className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
             Financial Breakdown
           </span>
-          <h2 className="text-lg font-black text-foreground mt-0.5">Biểu Đồ Phân Bổ Doanh Thu</h2>
+          <h2 className="text-lg font-black text-foreground mt-0.5">
+            Biểu Đồ Phân Bổ Doanh Thu
+          </h2>
         </div>
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
           <PieChart className="h-4 w-4" />
@@ -563,7 +590,9 @@ function RevenueDistributionDonutChart({
             )}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gross</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Gross
+            </span>
             <span className="text-base font-black text-foreground tabular-nums leading-none mt-0.5">
               {totalRevenue > 0 ? "100%" : "0%"}
             </span>
@@ -632,10 +661,25 @@ function TopMerchantsRankChart({
   const maxRev = Math.max(...topList.map((m) => toNumber(m.totalRevenue)), 1);
 
   const getRankMedal = (index: number) => {
-    if (index === 0) return { label: "🥇 #1", cls: "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700" };
-    if (index === 1) return { label: "🥈 #2", cls: "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700" };
-    if (index === 2) return { label: "🥉 #3", cls: "bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700" };
-    return { label: `#${index + 1}`, cls: "bg-muted text-muted-foreground border-border" };
+    if (index === 0)
+      return {
+        label: "🥇 #1",
+        cls: "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700",
+      };
+    if (index === 1)
+      return {
+        label: "🥈 #2",
+        cls: "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700",
+      };
+    if (index === 2)
+      return {
+        label: "🥉 #3",
+        cls: "bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-700",
+      };
+    return {
+      label: `#${index + 1}`,
+      cls: "bg-muted text-muted-foreground border-border",
+    };
   };
 
   return (
@@ -645,7 +689,9 @@ function TopMerchantsRankChart({
           <span className="text-xs font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
             Leaderboard Chart
           </span>
-          <h2 className="text-lg font-black text-foreground mt-0.5">Biểu Đồ Xếp Hạng Top Merchant</h2>
+          <h2 className="text-lg font-black text-foreground mt-0.5">
+            Biểu Đồ Xếp Hạng Top Merchant
+          </h2>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 px-3 py-1 text-xs font-bold text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50">
           <BarChart3 className="h-3.5 w-3.5" />
@@ -674,17 +720,26 @@ function TopMerchantsRankChart({
               <div key={merchant.merchantId || index} className="group">
                 <div className="flex items-center justify-between gap-3 text-xs font-bold mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black border", medal.cls)}>
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black border",
+                        medal.cls,
+                      )}
+                    >
                       {medal.label}
                     </span>
-                    <span className="truncate text-foreground font-black text-xs sm:text-sm">{merchant.merchantName}</span>
+                    <span className="truncate text-foreground font-black text-xs sm:text-sm">
+                      {merchant.merchantName}
+                    </span>
                     <span className="hidden sm:inline-block rounded-md bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                       {formatNumber(merchant.completedOrders)} đơn
                     </span>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="font-black text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm">{formatCurrency(rev)}</span>
+                    <span className="font-black text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm">
+                      {formatCurrency(rev)}
+                    </span>
                   </div>
                 </div>
 
@@ -702,7 +757,6 @@ function TopMerchantsRankChart({
     </article>
   );
 }
-
 
 function KpiCard({
   title,
@@ -723,11 +777,16 @@ function KpiCard({
         <span
           className={cn(
             "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-            tone === "cyan" && "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300",
-            tone === "slate" && "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",
-            tone === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
-            tone === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
-            tone === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
+            tone === "cyan" &&
+              "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300",
+            tone === "slate" &&
+              "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",
+            tone === "emerald" &&
+              "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+            tone === "amber" &&
+              "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
+            tone === "rose" &&
+              "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
           )}
         >
           <Icon className="h-4 w-4" />
@@ -813,7 +872,8 @@ function MerchantRevenuePanel({
 
       {merchantRevenueQuery.isError ? (
         <div className="m-5 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs font-bold text-destructive">
-          Không tải được bảng doanh thu merchant. {getErrorMessage(merchantRevenueQuery.error)}
+          Không tải được bảng doanh thu merchant.{" "}
+          {getErrorMessage(merchantRevenueQuery.error)}
         </div>
       ) : null}
 
@@ -831,15 +891,29 @@ function MerchantRevenuePanel({
           <Table>
             <TableHeader>
               <TableRow className="border-border bg-muted/40 hover:bg-muted/40">
-                <TableHead className="min-w-[200px] font-bold">Merchant</TableHead>
-                <TableHead className="text-right font-bold">Completed</TableHead>
-                <TableHead className="text-right font-bold">Gross Revenue</TableHead>
-                <TableHead className="text-right font-bold">Platform Fee</TableHead>
-                <TableHead className="text-right font-bold">Reviewer Fee</TableHead>
-                <TableHead className="text-right font-bold">Net Merchant</TableHead>
+                <TableHead className="min-w-[200px] font-bold">
+                  Merchant
+                </TableHead>
+                <TableHead className="text-right font-bold">
+                  Completed
+                </TableHead>
+                <TableHead className="text-right font-bold">
+                  Gross Revenue
+                </TableHead>
+                <TableHead className="text-right font-bold">
+                  Platform Fee
+                </TableHead>
+                <TableHead className="text-right font-bold">
+                  Reviewer Fee
+                </TableHead>
+                <TableHead className="text-right font-bold">
+                  Net Merchant
+                </TableHead>
                 <TableHead className="text-right font-bold">AOV</TableHead>
                 <TableHead className="font-bold">Đơn gần nhất</TableHead>
-                <TableHead className="text-right font-bold">Tăng/Giảm</TableHead>
+                <TableHead className="text-right font-bold">
+                  Tăng/Giảm
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -863,7 +937,10 @@ function MerchantRevenuePanel({
       {/* Pagination Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
         <p className="text-xs font-medium text-muted-foreground">
-          Trang {pageIndex} {merchantRevenues.length > 0 ? `(${merchantRevenues.length} merchant)` : ""}
+          Trang {pageIndex}{" "}
+          {merchantRevenues.length > 0
+            ? `(${merchantRevenues.length} merchant)`
+            : ""}
         </p>
 
         <div className="flex items-center gap-2">
@@ -966,8 +1043,10 @@ function GrowthBadge({ value }: { value?: number | null }) {
     <span
       className={cn(
         "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums",
-        isPositive && "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
-        isNegative && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
+        isPositive &&
+          "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+        isNegative &&
+          "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
         !isPositive && !isNegative && "bg-muted text-muted-foreground",
       )}
     >
@@ -1050,9 +1129,13 @@ function MetricCard({
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {label}
+          </p>
           <p className="mt-0.5 text-xl font-black text-foreground">{value}</p>
-          <p className="text-[11px] font-medium text-muted-foreground">{description}</p>
+          <p className="text-[11px] font-medium text-muted-foreground">
+            {description}
+          </p>
         </div>
       </div>
     </div>
