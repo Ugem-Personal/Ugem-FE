@@ -56,17 +56,55 @@ function getActionTone(action: string) {
   return "border-cyan-200 bg-cyan-50 text-cyan-700";
 }
 
+function formatMetadataLabel(key: string) {
+  const labels: Record<string, string> = {
+    status: "Trạng thái",
+    rejectionReason: "Lý do từ chối",
+    applicationId: "Mã hồ sơ",
+    reason: "Lý do",
+  };
+
+  return (
+    labels[key] ??
+    key.replace(/([A-Z])/g, " $1").replace(/^./, (value) => value.toUpperCase())
+  );
+}
+
+function formatMetadataValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Có" : "Không";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 function MetadataDetails({ log }: { log: AuditLog }) {
   if (!log.metadata) return null;
+
+  const entries =
+    typeof log.metadata === "object" && log.metadata !== null
+      ? Object.entries(log.metadata as Record<string, unknown>)
+      : [["Thông tin", log.metadata] as [string, unknown]];
 
   return (
     <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-white/10 dark:bg-slate-950 dark:text-slate-300">
       <summary className="min-h-8 cursor-pointer py-1 font-bold text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:text-slate-200">
-        Dữ liệu kỹ thuật
+        Chi tiết thao tác
       </summary>
-      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-white/70 p-2 font-mono leading-5 dark:bg-slate-900">
-        {JSON.stringify(log.metadata, null, 2)}
-      </pre>
+      <dl className="mt-2 space-y-2 rounded-lg bg-white/70 p-2 dark:bg-slate-900">
+        {entries.map(([key, value]) => (
+          <div
+            key={key}
+            className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3 border-b border-slate-200/70 py-1.5 last:border-0 dark:border-white/10"
+          >
+            <dt className="font-bold text-slate-500 dark:text-slate-400">
+              {formatMetadataLabel(key)}
+            </dt>
+            <dd className="break-words font-mono text-slate-800 dark:text-slate-200">
+              {formatMetadataValue(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </details>
   );
 }
