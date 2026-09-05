@@ -13,6 +13,7 @@ import {
   CalendarCheck2,
   ShoppingBag,
   UtensilsCrossed,
+  LifeBuoy,
 } from "lucide-react";
 
 import { getCurrentUser } from "@/features/auth";
@@ -79,6 +80,11 @@ const merchantMenuItems: MerchantNavItem[] = [
     label: "Thống kê lượt xem",
     icon: BarChart3,
     path: "/merchant/view-statistics",
+  },
+  {
+    label: "Trung tâm hỗ trợ",
+    icon: LifeBuoy,
+    path: "/merchant/support",
   },
 ];
 
@@ -186,18 +192,18 @@ export function MerchantSidebar() {
       {/* Pro Widget & Footer */}
       <div className="space-y-4 pt-4">
         {/* Support Banner */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-white/5 p-3.5 transition hover:border-cyan-500/40">
+        <NavLink to="/merchant/support" className="block rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-white/5 p-3.5 transition hover:border-cyan-500/40">
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               <HelpCircle className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Trợ giúp 24/7</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Hotline: 1900 1234</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Trung tâm hỗ trợ</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Xem hướng dẫn hoặc gửi yêu cầu</p>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-400" />
           </div>
-        </div>
+        </NavLink>
 
         <div className="border-t border-slate-200/80 dark:border-white/10 pt-3 text-center">
           <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">

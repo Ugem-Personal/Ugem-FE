@@ -43,6 +43,9 @@ const StaffMerchantsPage = lazy(
 const StaffUserProfilePage = lazy(
   () => import("@/features/admin/pages/StaffUserProfilePage"),
 );
+const StaffSupportPage = lazy(
+  () => import("@/features/support/pages/StaffSupportPage"),
+);
 const AffiliateLinkPage = lazy(
   () => import("@/features/affiliateLink/pages/AffiliateLinkPage"),
 );
@@ -120,6 +123,9 @@ const MerchantRestaurantPage = lazyNamed(
 const MerchantViewStatisticsPage = lazyNamed(
   () => import("@/features/merchantPortal/pages/MerchantViewStatisticsPage"),
   "MerchantViewStatisticsPage",
+);
+const MerchantSupportPage = lazy(
+  () => import("@/features/support/pages/MerchantSupportPage"),
 );
 const MerchantOrdersPage = lazy(
   () => import("@/features/merchantPortal/pages/MerchantOrdersPage"),
@@ -343,6 +349,14 @@ const routers = createBrowserRouter([
         ),
       },
       {
+        path: "/merchant/support",
+        element: (
+          <ProtectedRoute allowedRoles={["Merchant"]}>
+            <MerchantSupportPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/staff",
         element: <Navigate to="/staff/dashboard" replace />,
       },
@@ -407,6 +421,14 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Staff"]}>
             <StaffReviewerApplicationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/staff/support",
+        element: (
+          <ProtectedRoute allowedRoles={["Staff", "Admin"]}>
+            <StaffSupportPage />
           </ProtectedRoute>
         ),
       },

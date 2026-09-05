@@ -9,6 +9,7 @@ import {
   Sparkles,
   Store,
   UserCheck,
+  LifeBuoy,
 } from "lucide-react";
 
 import { UserAccountMenu } from "@/shared/components";
@@ -21,7 +22,8 @@ export type StaffNavItemKey =
   | "approved"
   | "merchants"
   | "profile"
-  | "reviewer-applications";
+  | "reviewer-applications"
+  | "support";
 
 type StaffShellProps = {
   activeItem: StaffNavItemKey;
@@ -71,6 +73,13 @@ const staffNavItems = [
     to: "/staff/reviewer-applications",
     icon: UserCheck,
   },
+  {
+    key: "support",
+    label: "Hỗ trợ Merchant",
+    description: "Xử lý yêu cầu từ quán",
+    to: "/staff/support",
+    icon: LifeBuoy,
+  },
 ] satisfies {
   key: StaffNavItemKey;
   label: string;
@@ -106,6 +115,10 @@ const staffPageTitles: Record<
   "reviewer-applications": {
     eyebrow: "Reviewer review",
     title: "Đơn đăng ký Reviewer",
+  },
+  support: {
+    eyebrow: "Support operations",
+    title: "Hỗ trợ Merchant",
   },
 };
 

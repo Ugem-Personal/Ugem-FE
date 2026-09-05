@@ -6,6 +6,7 @@ import {
   PhoneCall,
   CheckCircle2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function PartnerBenefitCard() {
   return (
@@ -83,22 +84,21 @@ export function PartnerBenefitCard() {
           </li>
         </ul>
 
-        {/* Contact Hotline */}
-        <div className="mt-6 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-transparent p-4">
+        <Link to="/merchant/support" className="mt-6 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-transparent p-4 transition hover:border-cyan-500/60">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-500 text-slate-950 shadow-md">
               <PhoneCall className="h-4 w-4" />
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                Tổng đài hỗ trợ
+                Trung tâm hỗ trợ
               </span>
               <strong className="text-sm font-black text-cyan-600 dark:text-cyan-400">
-                1900 1234
+                Xem hướng dẫn và gửi yêu cầu
               </strong>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
   );
