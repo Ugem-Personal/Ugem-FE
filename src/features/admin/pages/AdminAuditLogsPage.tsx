@@ -60,11 +60,11 @@ function MetadataDetails({ log }: { log: AuditLog }) {
   if (!log.metadata) return null;
 
   return (
-    <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-      <summary className="min-h-8 cursor-pointer py-1 font-bold text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500">
-        Xem dữ liệu kèm theo
+    <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-white/10 dark:bg-slate-950 dark:text-slate-300">
+      <summary className="min-h-8 cursor-pointer py-1 font-bold text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:text-slate-200">
+        Dữ liệu kỹ thuật
       </summary>
-      <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all font-mono leading-5">
+      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-white/70 p-2 font-mono leading-5 dark:bg-slate-900">
         {JSON.stringify(log.metadata, null, 2)}
       </pre>
     </details>
@@ -77,8 +77,7 @@ export default function AdminAuditLogsPage() {
   const [search, setSearch] = useState("");
   const auditLogsQuery = useQuery({
     queryKey: ["admin", "audit-logs", search, pageIndex],
-    queryFn: () =>
-      getAdminAuditLogs({ search, pageIndex, pageSize: 20 }),
+    queryFn: () => getAdminAuditLogs({ search, pageIndex, pageSize: 20 }),
     placeholderData: (previousData) => previousData,
   });
   const page = auditLogsQuery.data ?? EMPTY_PAGE;
@@ -142,7 +141,7 @@ export default function AdminAuditLogsPage() {
         </form>
 
         <div className="mt-6 flex items-center justify-between gap-4">
-          <p className="text-sm font-bold text-slate-600">
+          <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
             {page.totalItems.toLocaleString("vi-VN")} sự kiện
           </p>
           {search ? (
@@ -161,38 +160,61 @@ export default function AdminAuditLogsPage() {
         </div>
 
         {auditLogsQuery.isError ? (
-          <div role="alert" className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-semibold text-rose-800">
+          <div
+            role="alert"
+            className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-semibold text-rose-800"
+          >
             Không tải được nhật ký. Hãy kiểm tra kết nối rồi thử lại.
           </div>
         ) : loading && page.items.length === 0 ? (
           <div className="mt-5 grid gap-3" aria-label="Đang tải nhật ký">
             {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-24 animate-pulse rounded-2xl bg-slate-200/70" />
+              <div
+                key={index}
+                className="h-24 animate-pulse rounded-2xl bg-slate-200/70"
+              />
             ))}
           </div>
         ) : page.items.length === 0 ? (
           <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white/70 p-10 text-center dark:border-white/10 dark:bg-slate-900/70">
             <FileClock className="mx-auto h-10 w-10 text-slate-400" />
-            <h2 className="mt-4 text-lg font-black text-slate-900">Chưa có sự kiện phù hợp</h2>
-            <p className="mt-1 text-sm text-slate-500">Thử xóa từ khóa hoặc thực hiện một thao tác quản trị mới.</p>
+            <h2 className="mt-4 text-lg font-black text-slate-900 dark:text-white">
+              Chưa có sự kiện phù hợp
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Thử xóa từ khóa hoặc thực hiện một thao tác quản trị mới.
+            </p>
           </div>
         ) : (
           <>
             <div className="mt-5 grid gap-3 md:hidden">
               {page.items.map((log) => (
-                <article key={log.id} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <article
+                  key={log.id}
+                  className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <span className={`rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}>
+                    <span
+                      className={`rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}
+                    >
                       {getActionLabel(log.action)}
                     </span>
-                    <time className="text-xs font-semibold text-slate-500" dateTime={log.createdAt}>
+                    <time
+                      className="text-xs font-semibold text-slate-500"
+                      dateTime={log.createdAt}
+                    >
                       {formatDateTime(log.createdAt)}
                     </time>
                   </div>
-                  <p className="mt-4 font-black text-slate-900 dark:text-white">{log.actor?.fullName || "Hệ thống"}</p>
-                  <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">{log.actor?.email || log.actorRole || "Không xác định"}</p>
+                  <p className="mt-4 font-black text-slate-900 dark:text-white">
+                    {log.actor?.fullName || "Hệ thống"}
+                  </p>
+                  <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">
+                    {log.actor?.email || log.actorRole || "Không xác định"}
+                  </p>
                   <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
-                    <span className="font-bold">Đối tượng:</span> {log.entityType}
+                    <span className="font-bold">Đối tượng:</span>{" "}
+                    {log.entityType}
                     {log.entityId ? ` · ${log.entityId}` : ""}
                   </p>
                   <MetadataDetails log={log} />
@@ -212,26 +234,44 @@ export default function AdminAuditLogsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {page.items.map((log) => (
-                    <tr key={log.id} className="align-top transition hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr
+                      key={log.id}
+                      className="align-top transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    >
                       <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}>
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}
+                        >
                           {getActionLabel(log.action)}
                         </span>
                         <MetadataDetails log={log} />
                       </td>
                       <td className="px-5 py-4">
-                        <p className="font-bold text-slate-900 dark:text-white">{log.actor?.fullName || "Hệ thống"}</p>
-                        <p className="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">{log.actor?.email || log.actorRole || "—"}</p>
+                        <p className="font-bold text-slate-900 dark:text-white">
+                          {log.actor?.fullName || "Hệ thống"}
+                        </p>
+                        <p className="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">
+                          {log.actor?.email || log.actorRole || "—"}
+                        </p>
                       </td>
                       <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
                         <p className="font-bold">{log.entityType}</p>
-                        <p className="mt-1 break-all font-mono text-xs text-slate-500 dark:text-slate-400">{log.entityId || "—"}</p>
+                        <p className="mt-1 break-all font-mono text-xs text-slate-500 dark:text-slate-400">
+                          {log.entityId || "—"}
+                        </p>
                       </td>
                       <td className="px-5 py-4">
-                        <time className="font-semibold text-slate-700 dark:text-slate-300" dateTime={log.createdAt}>
+                        <time
+                          className="font-semibold text-slate-700 dark:text-slate-300"
+                          dateTime={log.createdAt}
+                        >
                           {formatDateTime(log.createdAt)}
                         </time>
-                        {log.ipAddress ? <p className="mt-1 font-mono text-xs text-slate-400 dark:text-slate-500">IP {log.ipAddress}</p> : null}
+                        {log.ipAddress ? (
+                          <p className="mt-1 font-mono text-xs text-slate-400 dark:text-slate-500">
+                            IP {log.ipAddress}
+                          </p>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
@@ -242,7 +282,10 @@ export default function AdminAuditLogsPage() {
         )}
 
         {page.totalPages > 1 ? (
-          <nav className="mt-6 flex items-center justify-between gap-4" aria-label="Phân trang nhật ký">
+          <nav
+            className="mt-6 flex items-center justify-between gap-4"
+            aria-label="Phân trang nhật ký"
+          >
             <button
               type="button"
               onClick={() => setPageIndex((value) => Math.max(1, value - 1))}
@@ -251,10 +294,14 @@ export default function AdminAuditLogsPage() {
             >
               <ChevronLeft className="h-4 w-4" /> Trang trước
             </button>
-            <span className="text-sm font-bold text-slate-600">Trang {page.pageIndex}/{page.totalPages}</span>
+            <span className="text-sm font-bold text-slate-600">
+              Trang {page.pageIndex}/{page.totalPages}
+            </span>
             <button
               type="button"
-              onClick={() => setPageIndex((value) => Math.min(page.totalPages, value + 1))}
+              onClick={() =>
+                setPageIndex((value) => Math.min(page.totalPages, value + 1))
+              }
               disabled={pageIndex >= page.totalPages || loading}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >

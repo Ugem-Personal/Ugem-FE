@@ -123,7 +123,10 @@ function ApplicationTable({
             const isPending = normalizeStatus(app.status) === "pending";
 
             return (
-              <tr key={app.id} className="group transition hover:bg-cyan-50/50 dark:hover:bg-slate-800/50">
+              <tr
+                key={app.id}
+                className="group transition hover:bg-cyan-50/50 dark:hover:bg-slate-800/50"
+              >
                 <td className="px-5 py-4">
                   <p className="max-w-72 truncate font-black text-slate-950 dark:text-white">
                     {app.name || "Không tên"}
@@ -211,7 +214,8 @@ export default function AdminApplicationsPage({
   const initialParamTab =
     (searchParams.get("tab") as ApplicationTab) || initialTab;
 
-  const [selectedTab, setSelectedTab] = useState<ApplicationTab>(initialParamTab);
+  const [selectedTab, setSelectedTab] =
+    useState<ApplicationTab>(initialParamTab);
   const [searchTerm, setSearchTerm] = useState("");
   const activeTab = showTabs ? selectedTab : initialTab;
 

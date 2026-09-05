@@ -97,17 +97,19 @@ function StatCard({
   }[tone];
 
   return (
-    <article className="rounded-3xl border border-white/70 bg-white/75 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+    <article className="rounded-3xl border border-slate-200/80 bg-white/75 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">
+          <p className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white">
             {value}
           </p>
         </div>
-        <span className={`grid h-11 w-11 place-items-center rounded-2xl ring-1 ${toneClass}`}>
+        <span
+          className={`grid h-11 w-11 place-items-center rounded-2xl ring-1 ${toneClass}`}
+        >
           <Icon className="h-5 w-5" />
         </span>
       </div>
@@ -189,47 +191,72 @@ export default function StaffReviewerApplicationsPage({
   const reviewed = apps.filter(
     (a) => a.status && a.status.toLowerCase() !== "pending",
   );
-  const approvedCount = apps.filter((app) => isApprovedStatus(app.status)).length;
-  const rejectedCount = apps.filter((app) => isRejectedStatus(app.status)).length;
+  const approvedCount = apps.filter((app) =>
+    isApprovedStatus(app.status),
+  ).length;
+  const rejectedCount = apps.filter((app) =>
+    isRejectedStatus(app.status),
+  ).length;
   const reviewerContent: ReactNode = (
     <>
       <div className="relative">
-        <div className="mb-5 overflow-hidden rounded-[32px] border border-white/70 bg-white/75 p-5 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+        <div className="mb-5 overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/75 p-5 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
           <div className="pointer-events-none absolute right-8 top-6 h-32 w-32 rounded-full bg-violet-300/20 blur-3xl" />
           <div className="relative flex flex-wrap items-center justify-between gap-5">
-          <div className="min-w-0">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/80 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-violet-700 shadow-sm">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Reviewer Applications
+            <div className="min-w-0">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/80 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-violet-700 shadow-sm">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Reviewer Applications
+              </div>
+              <h1 className="wrap-break-word text-3xl font-black tracking-tight text-slate-950 dark:text-white">
+                Đơn đăng ký Reviewer
+              </h1>
+              <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                Xét duyệt đơn đăng ký làm Reviewer từ các Customer.
+              </p>
             </div>
-            <h1 className="wrap-break-word text-3xl font-black tracking-tight text-slate-950">
-              Đơn đăng ký Reviewer
-            </h1>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Xét duyệt đơn đăng ký làm Reviewer từ các Customer.
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isFetching}
-              onClick={refresh}
-              className="h-10 gap-2 rounded-2xl border-white/70 bg-white/80 px-4 font-black shadow-sm ring-1 ring-slate-950/5"
-            >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-              {isFetching ? "Đang tải..." : "Làm mới"}
-            </Button>
-
-          </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isFetching}
+                onClick={refresh}
+                className="h-10 gap-2 rounded-2xl border-slate-200 bg-white/80 px-4 font-black shadow-sm ring-1 ring-slate-950/5 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+                />
+                {isFetching ? "Đang tải..." : "Làm mới"}
+              </Button>
+            </div>
           </div>
         </div>
 
         <section className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={UsersRound} label="Tổng đơn" value={apps.length} tone="violet" />
-          <StatCard icon={Hourglass} label="Chờ duyệt" value={pending.length} tone="amber" />
-          <StatCard icon={BadgeCheck} label="Đã duyệt" value={approvedCount} tone="emerald" />
-          <StatCard icon={XCircle} label="Từ chối" value={rejectedCount} tone="rose" />
+          <StatCard
+            icon={UsersRound}
+            label="Tổng đơn"
+            value={apps.length}
+            tone="violet"
+          />
+          <StatCard
+            icon={Hourglass}
+            label="Chờ duyệt"
+            value={pending.length}
+            tone="amber"
+          />
+          <StatCard
+            icon={BadgeCheck}
+            label="Đã duyệt"
+            value={approvedCount}
+            tone="emerald"
+          />
+          <StatCard
+            icon={XCircle}
+            label="Từ chối"
+            value={rejectedCount}
+            tone="rose"
+          />
         </section>
 
         {isError && (
@@ -244,13 +271,13 @@ export default function StaffReviewerApplicationsPage({
           </div>
         ) : (
           <div className="space-y-8">
-            <section className="rounded-[28px] border border-white/70 bg-white/55 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="rounded-[28px] border border-slate-200/80 bg-white/55 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70">
               <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-100">
                 <Hourglass className="h-3.5 w-3.5" />
                 Chờ duyệt ({pending.length})
               </p>
               {pending.length === 0 ? (
-                <p className="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm font-semibold text-slate-500 ring-1 ring-slate-950/5">
+                <p className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-sm font-semibold text-slate-500 ring-1 ring-slate-950/5 dark:border-white/10 dark:bg-slate-800/70 dark:text-slate-400">
                   Không có đơn nào đang chờ duyệt.
                 </p>
               ) : (
@@ -273,13 +300,13 @@ export default function StaffReviewerApplicationsPage({
               )}
             </section>
 
-            <section className="rounded-[28px] border border-white/70 bg-white/55 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="rounded-[28px] border border-slate-200/80 bg-white/55 p-4 shadow-xl shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70">
               <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
                 <BadgeCheck className="h-3.5 w-3.5" />
                 Đã xử lý ({reviewed.length})
               </p>
               {reviewed.length === 0 ? (
-                <p className="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm font-semibold text-slate-500 ring-1 ring-slate-950/5">
+                <p className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-sm font-semibold text-slate-500 ring-1 ring-slate-950/5 dark:border-white/10 dark:bg-slate-800/70 dark:text-slate-400">
                   Chưa có đơn nào được xử lý.
                 </p>
               ) : (
@@ -302,9 +329,9 @@ export default function StaffReviewerApplicationsPage({
       {/* Reject modal */}
       {canReview && rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-2xl ring-1 ring-slate-950/5 backdrop-blur-2xl">
-            <div className="border-b border-white/70 p-6">
-              <h2 className="text-xl font-black text-slate-950">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-2xl ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95">
+            <div className="border-b border-slate-200/80 p-6 dark:border-white/10">
+              <h2 className="text-xl font-black text-slate-950 dark:text-white">
                 Lý do từ chối
               </h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -319,12 +346,12 @@ export default function StaffReviewerApplicationsPage({
                   setRejectModal({ ...rejectModal, reason: e.target.value })
                 }
                 rows={4}
-                className="w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-950 shadow-sm ring-1 ring-slate-950/5 outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15"
+                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-950 shadow-sm ring-1 ring-slate-950/5 outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                 placeholder="Ví dụ: Thông tin chưa đầy đủ, chưa có kinh nghiệm thực tế..."
               />
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-white/70 p-4">
+            <div className="flex justify-end gap-3 border-t border-slate-200/80 p-4 dark:border-white/10">
               <Button
                 variant="outline"
                 onClick={() => setRejectModal(null)}
@@ -411,7 +438,9 @@ function ReviewerAppCard({
 
       {app.motivation && (
         <p className="relative mt-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-4 py-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          <span className="font-black text-slate-800 dark:text-white">Động lực: </span>
+          <span className="font-black text-slate-800 dark:text-white">
+            Động lực:{" "}
+          </span>
           {app.motivation}
         </p>
       )}
