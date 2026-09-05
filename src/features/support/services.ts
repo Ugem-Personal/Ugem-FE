@@ -21,6 +21,7 @@ export type SupportMessage = {
   id: string;
   message: string;
   attachmentUrl?: string | null;
+  isInternal?: boolean;
   createdAt: string;
   sender?: { id: string; fullName: string; email: string; role: string };
 };
@@ -87,10 +88,7 @@ export async function replyMerchantSupportTicket(id: string, message: string) {
   return unwrap(response.data);
 }
 
-export async function updateMerchantSupportStatus(
-  id: string,
-  status: "Open",
-) {
+export async function updateMerchantSupportStatus(id: string, status: "Open") {
   const response = await api.patch<ApiResponse<SupportTicket>>(
     `/merchant/support/${id}/status`,
     { status },
@@ -118,10 +116,14 @@ export async function assignStaffSupportTicket(id: string) {
   return unwrap(response.data);
 }
 
-export async function replyStaffSupportTicket(id: string, message: string) {
+export async function replyStaffSupportTicket(
+  id: string,
+  message: string,
+  isInternal = false,
+) {
   const response = await api.post<ApiResponse<SupportTicket>>(
     `/staff/support/${id}/messages`,
-    { message },
+    { message, isInternal },
   );
   return unwrap(response.data);
 }

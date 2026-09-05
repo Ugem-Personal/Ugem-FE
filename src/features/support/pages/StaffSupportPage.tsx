@@ -41,6 +41,7 @@ export default function StaffSupportPage() {
   const [selected, setSelected] = useState<SupportTicket | null>(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<SupportStatus | "">("");
+  const [isInternalNote, setIsInternalNote] = useState(false);
 
   async function loadTickets(selectId?: string) {
     try {
@@ -97,7 +98,11 @@ export default function StaffSupportPage() {
     event.preventDefault();
     if (!selected || !message.trim()) return;
     try {
-      const ticket = await replyStaffSupportTicket(selected.id, message.trim());
+      const ticket = await replyStaffSupportTicket(
+        selected.id,
+        message.trim(),
+        isInternalNote,
+      );
       setMessage("");
       setSelected(ticket);
       setStatus(ticket.status);
@@ -223,26 +228,43 @@ export default function StaffSupportPage() {
                 {selected.messages.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-slate-200 p-3 dark:border-white/10"
+                    className={`rounded-xl border p-3 ${item.isInternal ? "border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-950/20" : "border-slate-200 dark:border-white/10"}`}
                   >
-                    <p className="text-xs font-black">
-                      {item.sender?.fullName || "Người dùng"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-black">
+                        {item.sender?.fullName || "Người dùng"}
+                      </p>
+                      {item.isInternal ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                          Nội bộ
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                       {item.message}
                     </p>
                   </div>
                 ))}
               </div>
-              <form onSubmit={handleReply} className="mt-4 flex gap-2">
+              <form onSubmit={handleReply} className="mt-4 space-y-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={isInternalNote}
+                    onChange={(event) => setIsInternalNote(event.target.checked)}
+                  />
+                  Ghi chú nội bộ, Merchant sẽ không nhìn thấy
+                </label>
+                <div className="flex gap-2">
                 <Input
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
-                  placeholder="Phản hồi cho Merchant..."
+                  placeholder={isInternalNote ? "Ghi chú cho Staff/Admin..." : "Phản hồi cho Merchant..."}
                 />
                 <Button type="submit" size="icon">
                   <Send className="h-4 w-4" />
                 </Button>
+                </div>
               </form>
               <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                 <MessageSquare className="h-4 w-4" />
