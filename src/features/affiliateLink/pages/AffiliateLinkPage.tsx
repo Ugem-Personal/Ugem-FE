@@ -184,8 +184,8 @@ export default function AffiliateLinkPage() {
   }
 
   return (
-    <div className="app-page">
-      <header className="border-b border-white/80 bg-white/75 shadow-sm shadow-cyan-950/5 backdrop-blur-xl">
+    <div className="app-page affiliate-page">
+      <header className="border-b border-slate-200 bg-white/90 shadow-sm shadow-slate-950/5 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
             <h1 className="text-3xl font-black">UGem</h1>
@@ -202,16 +202,16 @@ export default function AffiliateLinkPage() {
         <button
           type="button"
           onClick={handleBack}
-          className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-600 shadow-sm transition hover:bg-cyan-50 hover:text-cyan-800"
+          className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-600 shadow-sm transition hover:bg-slate-100 hover:text-slate-950"
         >
           <ArrowLeft className="h-4 w-4" />
           Quay lại
         </button>
 
-        <section className="rounded-lg border border-white/80 bg-white/90 p-5 shadow-xl shadow-cyan-950/10 backdrop-blur-xl">
+        <section className="rounded-lg border border-slate-200 bg-white/95 p-5 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-black uppercase text-cyan-700">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-900">
                 <Link2 className="h-3.5 w-3.5" />
                 Reviewer affiliate
               </div>
@@ -224,7 +224,7 @@ export default function AffiliateLinkPage() {
               </p>
             </div>
 
-            <span className="w-fit rounded-md border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-sm font-black text-cyan-800">
+            <span className="w-fit rounded-md border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm font-black text-slate-900">
               Reviewer
             </span>
           </div>
@@ -288,10 +288,10 @@ export default function AffiliateLinkPage() {
         </section>
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <section className="rounded-lg border border-white/80 bg-white/90 p-5 shadow-xl shadow-cyan-950/10 backdrop-blur-xl">
+          <section className="rounded-lg border border-slate-200 bg-white/95 p-5 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-900">
                   Merchant
                 </p>
                 <h2 className="mt-2 text-xl font-black text-slate-950">
@@ -300,7 +300,7 @@ export default function AffiliateLinkPage() {
               </div>
 
               {selectedMerchant ? (
-                <span className="rounded-md border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">
+                <span className="rounded-md border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-900">
                   Đã chọn
                 </span>
               ) : null}
@@ -364,12 +364,12 @@ export default function AffiliateLinkPage() {
             </Button>
           </section>
 
-          <div className="rounded-lg border border-white/80 bg-white/90 p-5 shadow-xl shadow-cyan-950/10 backdrop-blur-xl">
+          <div className="rounded-lg border border-slate-200 bg-white/95 p-5 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
             {affiliateLink ? (
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-900">
                       Link code
                     </p>
                     <h2 className="mt-1 text-2xl font-black text-slate-950">
@@ -385,7 +385,7 @@ export default function AffiliateLinkPage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
                       affiliateLink.isActive
-                        ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                        ? "bg-slate-950 text-white ring-slate-950"
                         : "bg-slate-100 text-slate-500 ring-slate-200"
                     }`}
                   >
@@ -454,11 +454,11 @@ function MerchantSelectCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full gap-3 rounded-lg border bg-white dark:bg-slate-900 p-3 text-left shadow-sm transition hover:border-cyan-200 dark:hover:border-cyan-800 hover:bg-cyan-50/50 dark:hover:bg-slate-800/50 ${
-        selected ? "border-cyan-300 dark:border-cyan-600 ring-2 ring-cyan-100 dark:ring-cyan-900" : "border-slate-200 dark:border-slate-800"
+      className={`flex w-full gap-3 rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50 ${
+        selected ? "border-slate-950 ring-2 ring-slate-300" : "border-slate-200"
       }`}
     >
-      <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
+      <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-100 text-slate-700">
         {image ? (
           <img src={image} alt={name} className="h-full w-full object-cover" />
         ) : (
@@ -472,7 +472,7 @@ function MerchantSelectCard({
             {name}
           </h3>
           {selected ? (
-            <span className="rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-black text-white">
+            <span className="rounded-full bg-slate-950 px-2 py-0.5 text-[10px] font-black text-white">
               Chọn
             </span>
           ) : null}
@@ -480,7 +480,7 @@ function MerchantSelectCard({
 
         {merchant.address ? (
           <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-700" />
             <span className="line-clamp-1">{cleanAddress(merchant.address)}</span>
           </p>
         ) : null}
@@ -510,7 +510,7 @@ function LinkBlock({
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold text-cyan-700 dark:text-cyan-400 ring-1 ring-slate-100 dark:ring-slate-800 hover:underline"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-950 ring-1 ring-slate-200 hover:underline"
         >
           <ExternalLink className="h-4 w-4 shrink-0" />
           <span className="truncate">{value}</span>
@@ -549,17 +549,17 @@ function EarningsCard({
 }) {
   return (
     <article
-      className={`rounded-lg border p-4 shadow-lg shadow-cyan-950/7 ${
+      className={`rounded-lg border p-4 shadow-lg shadow-slate-950/7 ${
         strong
-          ? "border-cyan-100 dark:border-cyan-900 bg-cyan-950 text-white"
-          : "border-white/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-slate-950 dark:text-white"
+          ? "border-slate-950 bg-slate-950 text-white"
+          : "border-slate-200 bg-white text-slate-950"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
             className={`text-xs font-black uppercase tracking-[0.14em] ${
-              strong ? "text-cyan-100" : "text-slate-500 dark:text-slate-400"
+              strong ? "text-slate-300" : "text-slate-500"
             }`}
           >
             {title}
@@ -574,7 +574,7 @@ function EarningsCard({
         {Icon ? (
           <span
             className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
-              strong ? "bg-white/10 text-cyan-100" : "bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300"
+              strong ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -586,7 +586,7 @@ function EarningsCard({
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-cyan-100 transition hover:bg-white/15 disabled:opacity-60"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white transition hover:bg-white/15 disabled:opacity-60"
             aria-label="Làm mới tiền affiliate"
             title="Làm mới"
           >
@@ -596,7 +596,7 @@ function EarningsCard({
       </div>
       <p
         className={`mt-3 text-xs font-semibold leading-5 ${
-          strong ? "text-cyan-100/80" : "text-slate-500 dark:text-slate-400"
+          strong ? "text-slate-300" : "text-slate-500"
         }`}
       >
         {description}

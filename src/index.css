@@ -305,11 +305,20 @@
     color: #0f172a;
     transition: background-color 300ms ease, color 300ms ease;
   }
+  .app-page.affiliate-page {
+    background:
+      linear-gradient(180deg, #ffffff 0%, #f8fafc 42%, #eef0f2 100%);
+    color: #0f172a;
+  }
   .dark .app-page {
     background:
       radial-gradient(circle at 10% 0%, rgba(6, 182, 212, 0.12), transparent 32rem),
       radial-gradient(circle at 90% 40%, rgba(14, 165, 233, 0.06), transparent 28rem),
       linear-gradient(180deg, #020617 0%, #0b1329 35%, #020617 100%);
+    color: #f8fafc;
+  }
+  .dark .app-page.affiliate-page {
+    background: linear-gradient(180deg, #111111 0%, #1f1f1f 42%, #080808 100%);
     color: #f8fafc;
   }
   .app-container {
