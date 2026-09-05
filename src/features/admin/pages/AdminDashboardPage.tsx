@@ -392,7 +392,7 @@ export default function AdminDashboardPage() {
           clearSearch={clearSearch}
           hasNextPage={hasNextPage}
           merchantRevenueQuery={merchantRevenueQuery}
-          merchantRevenues={merchantRevenues}
+          merchantRevenues={rankedMerchantRevenues}
           pageIndex={pageIndex}
           searchInput={searchInput}
           setPageIndex={setPageIndex}

@@ -45,8 +45,8 @@ function AdminBrand({ collapsed }: { collapsed?: boolean }) {
       </div>
       {!collapsed && (
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">UGem Admin</p>
-          <p className="truncate text-base font-black text-white">Control center</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">UGem Admin</p>
+              <p className="truncate text-base font-black text-slate-900 dark:text-white">Control center</p>
         </div>
       )}
     </div>
@@ -69,20 +69,20 @@ function AdminNavigation({ onNavigate, collapsed }: { onNavigate?: () => void; c
                 "group flex min-h-12 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
                 isActive
                   ? "bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20"
-                  : "text-slate-300 hover:bg-white/10 hover:text-white",
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white",
                 collapsed && "justify-center px-2"
               )
             }
           >
             {({ isActive }) => (
               <>
-                <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors", isActive ? "bg-slate-950/20 text-slate-950" : "bg-white/8 text-slate-300 group-hover:bg-white/12")}>
+                <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors", isActive ? "bg-slate-950/20 text-slate-950" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200 dark:bg-white/8 dark:text-slate-300 dark:group-hover:bg-white/12")}>
                   <Icon className="h-4.5 w-4.5" />
                 </span>
                 {!collapsed && (
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-bold">{item.label}</span>
-                    <span className={cn("block truncate text-[11px] font-medium opacity-80", isActive ? "text-slate-950/80" : "text-slate-400")}>
+                    <span className={cn("block truncate text-[11px] font-medium opacity-80", isActive ? "text-slate-950/80" : "text-slate-500 dark:text-slate-400")}>
                       {item.description}
                     </span>
                   </span>
@@ -105,9 +105,9 @@ function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; co
       <AdminBrand collapsed={collapsed} />
       <AdminNavigation onNavigate={onNavigate} collapsed={collapsed} />
       {!collapsed && (
-        <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
-          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Workspace Status</p>
-          <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-300">
+        <div className="mt-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">Workspace Status</p>
+          <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
             Quản lý doanh thu, duyệt merchant và kiểm soát vận hành real-time.
           </p>
         </div>
@@ -166,7 +166,7 @@ export function AdminShell({ children }: AdminShellProps) {
       {/* Main Grid Layout */}
       <div className={cn("grid min-h-dvh transition-all duration-300", sidebarCollapsed ? "lg:grid-cols-[80px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)]")}>
         {/* Desktop Sidebar */}
-        <aside className="sticky top-0 hidden h-dvh bg-slate-950 px-4 py-5 text-white shadow-2xl shadow-slate-950/20 lg:flex lg:flex-col justify-between">
+        <aside className="sticky top-0 hidden h-dvh border-r border-slate-200 bg-white px-4 py-5 text-slate-900 shadow-2xl shadow-slate-950/10 dark:border-transparent dark:bg-slate-950 dark:text-white dark:shadow-slate-950/20 lg:flex lg:flex-col justify-between">
           <SidebarContent collapsed={sidebarCollapsed} />
           <button
             type="button"
@@ -190,7 +190,6 @@ export function AdminShell({ children }: AdminShellProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <ModeToggle />
               <UserAccountMenu fallbackName="Admin" />
             </div>
           </header>
@@ -216,7 +215,7 @@ export function AdminShell({ children }: AdminShellProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Menu quản trị"
-            className="absolute inset-y-0 left-0 w-[min(85vw,20rem)] overflow-y-auto bg-slate-950 p-5 text-white shadow-2xl animate-in slide-in-from-left duration-200 flex flex-col justify-between"
+            className="absolute inset-y-0 left-0 w-[min(85vw,20rem)] overflow-y-auto bg-white p-5 text-slate-900 shadow-2xl animate-in slide-in-from-left duration-200 flex flex-col justify-between dark:bg-slate-950 dark:text-white"
           >
             <div>
               <div className="mb-4 flex items-center justify-between">
