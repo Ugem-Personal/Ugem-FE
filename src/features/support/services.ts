@@ -39,7 +39,12 @@ export type SupportTicket = {
   updatedAt: string;
   merchant?: { id: string; name: string } | null;
   createdBy?: { id: string; fullName: string; email: string; role: string };
-  assignedStaff?: { id: string; fullName: string; email: string; role: string } | null;
+  assignedStaff?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+  } | null;
   messages: SupportMessage[];
 };
 
@@ -48,12 +53,15 @@ function unwrap<T>(response: ApiResponse<T>) {
 }
 
 export async function getMerchantSupportTickets() {
-  const response = await api.get<ApiResponse<SupportTicket[]>>("/merchant/support");
+  const response =
+    await api.get<ApiResponse<SupportTicket[]>>("/merchant/support");
   return unwrap(response.data);
 }
 
 export async function getMerchantSupportTicket(id: string) {
-  const response = await api.get<ApiResponse<SupportTicket>>(`/merchant/support/${id}`);
+  const response = await api.get<ApiResponse<SupportTicket>>(
+    `/merchant/support/${id}`,
+  );
   return unwrap(response.data);
 }
 
@@ -64,7 +72,10 @@ export async function createMerchantSupportTicket(payload: {
   description: string;
   orderId?: string;
 }) {
-  const response = await api.post<ApiResponse<SupportTicket>>("/merchant/support", payload);
+  const response = await api.post<ApiResponse<SupportTicket>>(
+    "/merchant/support",
+    payload,
+  );
   return unwrap(response.data);
 }
 
@@ -76,7 +87,10 @@ export async function replyMerchantSupportTicket(id: string, message: string) {
   return unwrap(response.data);
 }
 
-export async function updateMerchantSupportStatus(id: string, status: "Open" | "Resolved") {
+export async function updateMerchantSupportStatus(
+  id: string,
+  status: "Open",
+) {
   const response = await api.patch<ApiResponse<SupportTicket>>(
     `/merchant/support/${id}/status`,
     { status },
@@ -85,17 +99,22 @@ export async function updateMerchantSupportStatus(id: string, status: "Open" | "
 }
 
 export async function getStaffSupportTickets() {
-  const response = await api.get<ApiResponse<SupportTicket[]>>("/staff/support");
+  const response =
+    await api.get<ApiResponse<SupportTicket[]>>("/staff/support");
   return unwrap(response.data);
 }
 
 export async function getStaffSupportTicket(id: string) {
-  const response = await api.get<ApiResponse<SupportTicket>>(`/staff/support/${id}`);
+  const response = await api.get<ApiResponse<SupportTicket>>(
+    `/staff/support/${id}`,
+  );
   return unwrap(response.data);
 }
 
 export async function assignStaffSupportTicket(id: string) {
-  const response = await api.post<ApiResponse<SupportTicket>>(`/staff/support/${id}/assign`);
+  const response = await api.post<ApiResponse<SupportTicket>>(
+    `/staff/support/${id}/assign`,
+  );
   return unwrap(response.data);
 }
 
@@ -107,7 +126,10 @@ export async function replyStaffSupportTicket(id: string, message: string) {
   return unwrap(response.data);
 }
 
-export async function updateStaffSupportStatus(id: string, status: SupportStatus) {
+export async function updateStaffSupportStatus(
+  id: string,
+  status: SupportStatus,
+) {
   const response = await api.patch<ApiResponse<SupportTicket>>(
     `/staff/support/${id}/status`,
     { status },
