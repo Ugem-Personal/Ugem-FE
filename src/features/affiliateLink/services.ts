@@ -15,6 +15,24 @@ export type AffiliateLink = {
   isActive: boolean;
 };
 
+export type AffiliateTrackResult = {
+  affiliateLinkId: string;
+  linkCode: string;
+  url: string;
+  merchantId: string;
+  merchant: {
+    id: string;
+    name: string;
+    logoUrl?: string | null;
+    address?: string | null;
+    rating?: number;
+    reviewCount?: number;
+    status?: string;
+  };
+  tracked?: boolean;
+  deduplicated?: boolean;
+};
+
 export type ReviewerAffiliateEarningTransaction = {
   transactionId: string;
   orderId: string;
@@ -63,9 +81,7 @@ export type CreateAffiliateLinkPayload = {
   merchantId: string;
 };
 
-export async function createAffiliateLink(
-  payload: CreateAffiliateLinkPayload,
-) {
+export async function createAffiliateLink(payload: CreateAffiliateLinkPayload) {
   const { data } = await api.post<ApiResponse<AffiliateLink>>(
     "/affiliate-links",
     payload,
@@ -82,15 +98,21 @@ export async function getReviewerAffiliateEarnings() {
   return unwrapData(data);
 }
 
+export async function trackAffiliateLink(linkCode: string) {
+  const { data } = await api.get<ApiResponse<AffiliateTrackResult>>(
+    `/affiliate-links/${encodeURIComponent(linkCode)}/track`,
+  );
+
+  return data.data;
+}
+
 export function getAffiliateTrackUrl(linkCode: string) {
   const baseUrl =
     API_V1_BASE_URL.startsWith("http") || typeof window === "undefined"
       ? API_V1_BASE_URL
       : `${window.location.origin}${API_V1_BASE_URL}`;
 
-  return `${baseUrl}/affiliate-links/${encodeURIComponent(
-    linkCode,
-  )}/track`;
+  return `${baseUrl}/affiliate-links/${encodeURIComponent(linkCode)}/track`;
 }
 
 export function getAffiliateShareUrl(linkCode: string) {
