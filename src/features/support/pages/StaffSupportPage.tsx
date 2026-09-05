@@ -251,19 +251,25 @@ export default function StaffSupportPage() {
                   <input
                     type="checkbox"
                     checked={isInternalNote}
-                    onChange={(event) => setIsInternalNote(event.target.checked)}
+                    onChange={(event) =>
+                      setIsInternalNote(event.target.checked)
+                    }
                   />
                   Ghi chú nội bộ, Merchant sẽ không nhìn thấy
                 </label>
                 <div className="flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  placeholder={isInternalNote ? "Ghi chú cho Staff/Admin..." : "Phản hồi cho Merchant..."}
-                />
-                <Button type="submit" size="icon">
-                  <Send className="h-4 w-4" />
-                </Button>
+                  <Input
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    placeholder={
+                      isInternalNote
+                        ? "Ghi chú cho Staff/Admin..."
+                        : "Phản hồi cho Merchant..."
+                    }
+                  />
+                  <Button type="submit" size="icon">
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
               </form>
               <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">

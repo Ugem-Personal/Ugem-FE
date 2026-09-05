@@ -84,7 +84,10 @@ export function PartnerBenefitCard() {
           </li>
         </ul>
 
-        <Link to="/merchant/support" className="mt-6 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-transparent p-4 transition hover:border-cyan-500/60">
+        <Link
+          to="/merchant/support"
+          className="mt-6 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-transparent p-4 transition hover:border-cyan-500/60"
+        >
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-500 text-slate-950 shadow-md">
               <PhoneCall className="h-4 w-4" />

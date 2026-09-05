@@ -55,14 +55,16 @@ const merchantMenuItems: MerchantNavItem[] = [
     icon: CalendarCheck2,
     path: "/merchant/bookings",
     badge: "NEW",
-    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    badgeColor:
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   },
   {
     label: "Tạo đơn tại quán",
     icon: ClipboardPlus,
     path: "/merchant/create-order",
     badge: "POS",
-    badgeColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    badgeColor:
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   },
   {
     label: "Trạng thái xét duyệt",
@@ -74,7 +76,8 @@ const merchantMenuItems: MerchantNavItem[] = [
     icon: Megaphone,
     path: "/merchant/campaigns",
     badge: "PROMO",
-    badgeColor: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    badgeColor:
+      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
   },
   {
     label: "Thống kê lượt xem",
@@ -94,7 +97,8 @@ const customerMerchantMenuItems: MerchantNavItem[] = [
     icon: Store,
     path: "/merchant/application/create",
     badge: "HOT",
-    badgeColor: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+    badgeColor:
+      "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
   {
     label: "Trạng thái xét duyệt",
@@ -141,65 +145,75 @@ export function MerchantSidebar() {
             <Zap className="h-3 w-3 text-cyan-500" />
           </p>
 
-          {visibleMenuItems.map(({ label, icon: Icon, path, end, badge, badgeColor }) => (
-            <NavLink
-              key={label}
-              to={path}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  "group relative flex min-h-11 min-w-0 items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-                  isActive
-                    ? "bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-transparent border-l-4 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-black shadow-xs pl-3"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={cn(
-                      "grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-all duration-200",
-                      isActive
-                        ? "bg-gradient-to-br from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-500/25 ring-2 ring-cyan-400/20"
-                        : "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 group-hover:bg-slate-200/70 dark:group-hover:bg-white/10 group-hover:text-slate-900 dark:group-hover:text-white"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-
-                  <span className="min-w-0 flex-1 truncate text-xs font-bold">
-                    {label}
-                  </span>
-
-                  {badge && (
+          {visibleMenuItems.map(
+            ({ label, icon: Icon, path, end, badge, badgeColor }) => (
+              <NavLink
+                key={label}
+                to={path}
+                end={end}
+                className={({ isActive }) =>
+                  cn(
+                    "group relative flex min-h-11 min-w-0 items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                    isActive
+                      ? "bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-transparent border-l-4 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-black shadow-xs pl-3"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white",
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
                     <span
                       className={cn(
-                        "rounded-full border px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider",
-                        badgeColor || "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20"
+                        "grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-all duration-200",
+                        isActive
+                          ? "bg-gradient-to-br from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-500/25 ring-2 ring-cyan-400/20"
+                          : "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 group-hover:bg-slate-200/70 dark:group-hover:bg-white/10 group-hover:text-slate-900 dark:group-hover:text-white",
                       )}
                     >
-                      {badge}
+                      <Icon className="h-4 w-4" />
                     </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
+
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold">
+                      {label}
+                    </span>
+
+                    {badge && (
+                      <span
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider",
+                          badgeColor ||
+                            "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+                        )}
+                      >
+                        {badge}
+                      </span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ),
+          )}
         </nav>
       </div>
 
       {/* Pro Widget & Footer */}
       <div className="space-y-4 pt-4">
         {/* Support Banner */}
-        <NavLink to="/merchant/support" className="block rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-white/5 p-3.5 transition hover:border-cyan-500/40">
+        <NavLink
+          to="/merchant/support"
+          className="block rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-white/5 p-3.5 transition hover:border-cyan-500/40"
+        >
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               <HelpCircle className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Trung tâm hỗ trợ</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Xem hướng dẫn hoặc gửi yêu cầu</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                Trung tâm hỗ trợ
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                Xem hướng dẫn hoặc gửi yêu cầu
+              </p>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-400" />
           </div>

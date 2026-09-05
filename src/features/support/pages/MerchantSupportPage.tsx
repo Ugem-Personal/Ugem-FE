@@ -311,7 +311,8 @@ export default function MerchantSupportPage() {
                           {selected.subject}
                         </h3>
                       </div>
-                      {selected.status === "Resolved" || selected.status === "Closed" ? (
+                      {selected.status === "Resolved" ||
+                      selected.status === "Closed" ? (
                         <Button
                           type="button"
                           variant="outline"
