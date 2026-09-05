@@ -181,6 +181,18 @@ export default function NotificationsPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
 
+      <header className="relative -mx-4 -mt-8 mb-8 border-b border-slate-200/80 bg-white/85 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+          <div>
+            <h1 className="text-3xl font-black">UGem</h1>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Khám phá các quán ăn gần bạn
+            </p>
+          </div>
+          <UserAccountMenu fallbackName="UGem" />
+        </div>
+      </header>
+
       <main className="relative mx-auto max-w-6xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-6 shadow-xl backdrop-blur-xl transition-colors">
           <div className="flex min-w-0 items-center gap-4">
@@ -224,7 +236,6 @@ export default function NotificationsPage() {
               )}
               {refreshing ? "Đang tải..." : "Làm mới"}
             </Button>
-            <UserAccountMenu fallbackName="UGem" />
           </div>
         </header>
 
@@ -244,7 +255,11 @@ export default function NotificationsPage() {
           <OverviewCard
             icon={CheckCircle2}
             label="Đã phân loại"
-            value={notifications.filter((item) => getNotificationMeta(item).category !== "general").length}
+            value={
+              notifications.filter(
+                (item) => getNotificationMeta(item).category !== "general",
+              ).length
+            }
             description="Order, application, staff, review..."
           />
         </section>
@@ -332,14 +347,20 @@ function OverviewCard({
     <article className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-5 shadow-xl backdrop-blur-xl transition-all hover:translate-y-[-2px]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
-          <p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">{value}</p>
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+          <p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
+            {value}
+          </p>
         </div>
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/20">
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-3 text-xs leading-5 font-semibold text-slate-500 dark:text-slate-400">{description}</p>
+      <p className="mt-3 text-xs leading-5 font-semibold text-slate-500 dark:text-slate-400">
+        {description}
+      </p>
     </article>
   );
 }
@@ -362,9 +383,7 @@ function NotificationCard({
       getNotificationText(item).includes(value),
     );
 
-  const handleActionClick = async (
-    event: MouseEvent<HTMLAnchorElement>,
-  ) => {
+  const handleActionClick = async (event: MouseEvent<HTMLAnchorElement>) => {
     if (!item.isRead) {
       onMarkAsRead(item.id);
     }
@@ -376,7 +395,9 @@ function NotificationCard({
     try {
       const refreshed = await refreshCurrentSession();
       window.location.assign(
-        refreshed.user.Role === "Reviewer" ? "/affiliate-links" : meta.actionTo!,
+        refreshed.user.Role === "Reviewer"
+          ? "/affiliate-links"
+          : meta.actionTo!,
       );
     } catch (error) {
       console.error(error);
@@ -406,7 +427,10 @@ function NotificationCard({
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
-                className={cn("border-0 px-2.5 py-1 font-black ring-1", tone.badge)}
+                className={cn(
+                  "border-0 px-2.5 py-1 font-black ring-1",
+                  tone.badge,
+                )}
               >
                 {meta.categoryLabel}
               </Badge>
@@ -429,7 +453,9 @@ function NotificationCard({
             </h2>
 
             {body ? (
-              <p className="mt-2 text-xs sm:text-sm leading-6 font-semibold text-slate-600 dark:text-slate-300">{body}</p>
+              <p className="mt-2 text-xs sm:text-sm leading-6 font-semibold text-slate-600 dark:text-slate-300">
+                {body}
+              </p>
             ) : null}
 
             <p className="mt-3 text-xs font-semibold text-slate-400 dark:text-slate-500">

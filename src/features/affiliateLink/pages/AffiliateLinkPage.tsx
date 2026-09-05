@@ -563,7 +563,7 @@ function EarningsCard({
     <article
       className={`rounded-lg border p-4 shadow-lg shadow-slate-950/7 ${
         strong
-          ? "border-slate-950 bg-slate-950 text-white"
+          ? "border-slate-200 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-950 dark:text-white"
           : "border-slate-200 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900/90 dark:text-white"
       }`}
     >
@@ -571,7 +571,9 @@ function EarningsCard({
         <div className="min-w-0">
           <p
             className={`text-xs font-black uppercase tracking-[0.14em] ${
-              strong ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
+              strong
+                ? "text-slate-500 dark:text-slate-300"
+                : "text-slate-500 dark:text-slate-400"
             }`}
           >
             {title}
@@ -587,7 +589,7 @@ function EarningsCard({
           <span
             className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
               strong
-                ? "bg-white/10 text-white"
+                ? "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-white"
                 : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
@@ -600,7 +602,7 @@ function EarningsCard({
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white transition hover:bg-white/15 disabled:opacity-60"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 disabled:opacity-60"
             aria-label="Làm mới tiền affiliate"
             title="Làm mới"
           >
@@ -610,7 +612,9 @@ function EarningsCard({
       </div>
       <p
         className={`mt-3 text-xs font-semibold leading-5 ${
-          strong ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
+          strong
+            ? "text-slate-500 dark:text-slate-300"
+            : "text-slate-500 dark:text-slate-400"
         }`}
       >
         {description}
