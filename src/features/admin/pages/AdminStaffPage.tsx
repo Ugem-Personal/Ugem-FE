@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserAccountMenu } from "@/shared/components";
 import { notify } from "@/shared/lib/notify";
 import {
   createStaff,
@@ -104,7 +103,7 @@ export default function AdminStaffPage() {
               Staff Management
             </div>
 
-            <h1 className="wrap-break-word text-3xl font-black tracking-tight text-slate-950">
+            <h1 className="wrap-break-word text-3xl font-black tracking-tight text-slate-950 dark:text-white">
               Quản lý nhân viên
             </h1>
 
@@ -112,14 +111,12 @@ export default function AdminStaffPage() {
               Theo dõi danh sách Staff đang tham gia vận hành hồ sơ merchant.
             </p>
           </div>
-
-          <UserAccountMenu fallbackName="Admin" />
         </div>
 
         {isLoading ? (
           <div className="space-y-4">
-            <div className="h-10 w-72 animate-pulse rounded-2xl bg-white/70" />
-            <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/75 p-5 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <div className="h-10 w-72 animate-pulse rounded-2xl bg-white/70 dark:bg-slate-900/70" />
+            <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/75 p-5 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div
@@ -149,17 +146,17 @@ export default function AdminStaffPage() {
           </div>
         ) : (
           <div className="space-y-5">
-            <section className="overflow-hidden rounded-3xl border border-white/70 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
-              <div className="relative overflow-hidden border-b border-white/70 p-5">
+            <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
+              <div className="relative overflow-hidden border-b border-slate-200/80 p-5 dark:border-white/10">
                 <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-300/25 blur-2xl" />
                 <div className="absolute -bottom-14 -left-10 h-32 w-32 rounded-full bg-amber-300/25 blur-2xl" />
 
                 <div className="relative flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-950">
+                    <h2 className="text-xl font-black tracking-tight text-slate-950 dark:text-white">
                       Thêm Staff mới
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Tạo tài khoản Staff để tham gia xử lý hồ sơ merchant.
                     </p>
                   </div>
@@ -168,7 +165,7 @@ export default function AdminStaffPage() {
 
               <div className="grid gap-4 p-5 md:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-black text-slate-700">
+                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">
                     Họ và tên
                   </span>
                   <input
@@ -179,14 +176,14 @@ export default function AdminStaffPage() {
                         fullName: event.target.value,
                       }))
                     }
-                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                     placeholder="Nhập họ tên Staff"
                     disabled={saving}
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-black text-slate-700">
+                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">
                     Email
                   </span>
                   <input
@@ -197,14 +194,14 @@ export default function AdminStaffPage() {
                         email: event.target.value,
                       }))
                     }
-                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                     placeholder="staff@example.com"
                     disabled={saving}
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-black text-slate-700">
+                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">
                     Mật khẩu
                   </span>
                   <input
@@ -216,14 +213,14 @@ export default function AdminStaffPage() {
                         password: event.target.value,
                       }))
                     }
-                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                     placeholder="Nhập mật khẩu"
                     disabled={saving}
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-black text-slate-700">
+                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">
                     Số điện thoại
                   </span>
                   <input
@@ -234,7 +231,7 @@ export default function AdminStaffPage() {
                         phoneNumber: event.target.value,
                       }))
                     }
-                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                     placeholder="0xxxxxxxxx"
                     disabled={saving}
                   />
@@ -253,22 +250,22 @@ export default function AdminStaffPage() {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-3xl border border-white/70 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
-              <div className="relative overflow-hidden border-b border-white/70 p-5">
+            <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
+              <div className="relative overflow-hidden border-b border-slate-200/80 p-5 dark:border-white/10">
                 <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-300/25 blur-2xl" />
                 <div className="absolute -bottom-14 -left-10 h-32 w-32 rounded-full bg-amber-300/25 blur-2xl" />
 
                 <div className="relative flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-950">
+                    <h2 className="text-xl font-black tracking-tight text-slate-950 dark:text-white">
                       Danh sách Staff
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Tổng cộng {staffList.length} nhân viên trong hệ thống.
                     </p>
                   </div>
 
-                  <span className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-sm font-black text-cyan-800 shadow-sm">
+                  <span className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-sm font-black text-cyan-800 shadow-sm dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-300">
                     {staffList.length} staff
                   </span>
                 </div>
