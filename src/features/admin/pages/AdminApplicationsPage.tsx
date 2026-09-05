@@ -326,19 +326,19 @@ export default function AdminApplicationsPage({
             </div>
 
             <h1
-              className={`${embedded ? "text-2xl" : "text-3xl"} break-words font-black tracking-tight text-slate-950`}
+              className={`${embedded ? "text-2xl" : "text-3xl"} break-words font-black tracking-tight text-slate-950 dark:text-white`}
             >
               {title}
             </h1>
 
             <p
-              className={`${embedded ? "mt-0.5 text-xs leading-5" : "mt-1 text-sm leading-6"} text-slate-600`}
+              className={`${embedded ? "mt-0.5 text-xs leading-5" : "mt-1 text-sm leading-6"} text-slate-600 dark:text-slate-400`}
             >
               {subtitle}
             </p>
 
             <p
-              className={`${embedded ? "mt-0.5" : "mt-1"} text-xs font-semibold text-slate-500`}
+              className={`${embedded ? "mt-0.5" : "mt-1"} text-xs font-semibold text-slate-500 dark:text-slate-400`}
             >
               Cập nhật lần cuối: {formatDate(dataUpdatedAt, "Chưa tải")}
             </p>

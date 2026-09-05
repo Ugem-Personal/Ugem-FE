@@ -91,7 +91,7 @@ export default function AdminAuditLogsPage() {
   }
 
   return (
-    <section className="min-h-dvh px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+    <section className="min-h-dvh px-4 py-6 text-slate-950 dark:text-slate-100 sm:px-6 lg:px-10 lg:py-10">
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -99,10 +99,10 @@ export default function AdminAuditLogsPage() {
               <ShieldCheck className="h-4 w-4" />
               Security & governance
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">
               Nhật ký hệ thống
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400 sm:text-base">
               Theo dõi ai đã thực hiện thao tác quản trị nào, trên đối tượng nào
               và vào thời điểm nào.
             </p>
@@ -112,7 +112,7 @@ export default function AdminAuditLogsPage() {
             type="button"
             onClick={() => void auditLogsQuery.refetch()}
             disabled={loading}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Làm mới
@@ -121,7 +121,7 @@ export default function AdminAuditLogsPage() {
 
         <form
           onSubmit={handleSearch}
-          className="mt-8 flex flex-col gap-3 rounded-2xl border border-white bg-white/90 p-3 shadow-sm sm:flex-row"
+          className="mt-8 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-white/10 dark:bg-slate-900/90 sm:flex-row"
         >
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">Tìm trong nhật ký</span>
@@ -130,7 +130,7 @@ export default function AdminAuditLogsPage() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Tìm người thực hiện, hành động hoặc mã đối tượng"
-              className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+              className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white"
             />
           </label>
           <button
@@ -171,7 +171,7 @@ export default function AdminAuditLogsPage() {
             ))}
           </div>
         ) : page.items.length === 0 ? (
-          <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white/70 p-10 text-center">
+          <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white/70 p-10 text-center dark:border-white/10 dark:bg-slate-900/70">
             <FileClock className="mx-auto h-10 w-10 text-slate-400" />
             <h2 className="mt-4 text-lg font-black text-slate-900">Chưa có sự kiện phù hợp</h2>
             <p className="mt-1 text-sm text-slate-500">Thử xóa từ khóa hoặc thực hiện một thao tác quản trị mới.</p>
@@ -180,7 +180,7 @@ export default function AdminAuditLogsPage() {
           <>
             <div className="mt-5 grid gap-3 md:hidden">
               {page.items.map((log) => (
-                <article key={log.id} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                <article key={log.id} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <span className={`rounded-full border px-3 py-1 text-xs font-black ${getActionTone(log.action)}`}>
                       {getActionLabel(log.action)}
@@ -189,9 +189,9 @@ export default function AdminAuditLogsPage() {
                       {formatDateTime(log.createdAt)}
                     </time>
                   </div>
-                  <p className="mt-4 font-black text-slate-900">{log.actor?.fullName || "Hệ thống"}</p>
-                  <p className="mt-1 break-all text-sm text-slate-500">{log.actor?.email || log.actorRole || "Không xác định"}</p>
-                  <p className="mt-3 text-sm text-slate-700">
+                  <p className="mt-4 font-black text-slate-900 dark:text-white">{log.actor?.fullName || "Hệ thống"}</p>
+                  <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">{log.actor?.email || log.actorRole || "Không xác định"}</p>
+                  <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
                     <span className="font-bold">Đối tượng:</span> {log.entityType}
                     {log.entityId ? ` · ${log.entityId}` : ""}
                   </p>
@@ -247,7 +247,7 @@ export default function AdminAuditLogsPage() {
               type="button"
               onClick={() => setPageIndex((value) => Math.max(1, value - 1))}
               disabled={pageIndex <= 1 || loading}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <ChevronLeft className="h-4 w-4" /> Trang trước
             </button>
@@ -256,7 +256,7 @@ export default function AdminAuditLogsPage() {
               type="button"
               onClick={() => setPageIndex((value) => Math.min(page.totalPages, value + 1))}
               disabled={pageIndex >= page.totalPages || loading}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Trang sau <ChevronRight className="h-4 w-4" />
             </button>

@@ -463,6 +463,7 @@ const routers = createBrowserRouter([
                 subtitle="Theo dõi và xử lý hồ sơ merchant trong hệ thống."
                 fallbackName="Admin"
                 canReview
+                embedded
               />
             </AdminShell>
           </ProtectedRoute>

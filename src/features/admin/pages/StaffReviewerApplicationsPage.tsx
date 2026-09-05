@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { UserAccountMenu } from "@/shared/components";
 import { notify } from "@/shared/lib/notify";
 import {
   getReviewerApplications,
@@ -120,7 +119,6 @@ const REVIEWER_APPS_QK = ["reviewer-applications", "staff"] as const;
 
 export default function StaffReviewerApplicationsPage({
   shell = "staff",
-  fallbackName = "Staff",
   canReview = true,
 }: StaffReviewerApplicationsPageProps) {
   const queryClient = useQueryClient();
@@ -223,9 +221,6 @@ export default function StaffReviewerApplicationsPage({
               {isFetching ? "Đang tải..." : "Làm mới"}
             </Button>
 
-            {shell === "admin" ? (
-              <UserAccountMenu fallbackName={fallbackName} />
-            ) : null}
           </div>
           </div>
         </div>
