@@ -24,21 +24,21 @@ export type RealtimeEventType =
   | "booking:status_changed"
   | "support:new_message";
 
-export interface RealtimeMessage<T = any> {
+export interface RealtimeMessage<T = unknown> {
   type: RealtimeEventType;
   payload: T;
   timestamp: string;
 }
 
-type EventCallback = (payload: any) => void;
+export type EventCallback<T = unknown> = (payload: T) => void;
 
-interface RealtimeContextType {
+export interface RealtimeContextType {
   isConnected: boolean;
-  subscribe: (event: RealtimeEventType, callback: EventCallback) => () => void;
-  subscribeToOrder: (orderId: string, callback: EventCallback) => () => void;
+  subscribe: (event: RealtimeEventType, callback: EventCallback<any>) => () => void;
+  subscribeToOrder: (orderId: string, callback: EventCallback<any>) => () => void;
 }
 
-const RealtimeContext = createContext<RealtimeContextType>({
+export const RealtimeContext = createContext<RealtimeContextType>({
   isConnected: false,
   subscribe: () => () => {},
   subscribeToOrder: () => () => {},
@@ -138,8 +138,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
       // Handle custom events
       const handleEvent = (type: RealtimeEventType, event: MessageEvent) => {
         try {
-          const message: RealtimeMessage = JSON.parse(event.data);
-          const payload = message.payload;
+          const message: RealtimeMessage<Record<string, any>> = JSON.parse(event.data);
+          const payload = message.payload || {};
 
           // Call registered listeners
           const globalListeners = listenersRef.current.get(type);

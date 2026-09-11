@@ -14,7 +14,10 @@ export function getErrorMessage(
   if (!error) return fallback;
   if (typeof error === "string") return error;
   if (error && typeof error === "object") {
-    const err = error as any;
+    const err = error as {
+      response?: { data?: { message?: string | string[]; error?: string } };
+      message?: string;
+    };
     const responseMsg = err.response?.data?.message;
     if (Array.isArray(responseMsg)) return responseMsg.join(", ");
     if (typeof responseMsg === "string" && responseMsg.trim()) return responseMsg;
