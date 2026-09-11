@@ -31,10 +31,10 @@ export function AuthLayout({
       <div className="pointer-events-none fixed bottom-0 right-1/4 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
 
       {/* Main Grid Wrapper */}
-      <div className="relative z-10 grid min-h-[calc(100dvh-2.5rem)] lg:min-h-0 lg:h-[calc(100dvh-3rem)] max-h-[960px] w-full max-w-[1420px] grid-cols-1 lg:grid-cols-[52%_48%] gap-5 xl:gap-6 items-stretch overflow-hidden">
+      <div className="relative z-10 grid min-h-[calc(100dvh-2.5rem)] lg:min-h-0 lg:h-[calc(100dvh-3rem)] max-h-[960px] w-full max-w-[1420px] grid-cols-1 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] gap-5 xl:gap-6 items-stretch overflow-hidden">
         {/* Brand Hero Section (Left Column) */}
         <section className="relative hidden lg:flex lg:h-full lg:min-h-0 overflow-hidden rounded-[28px] shadow-2xl">
-          <HeroCarousel images={HERO_IMAGES} intervalMs={4000} onChange={setSlide} />
+          <HeroCarousel images={HERO_IMAGES} onChange={setSlide} />
         </section>
 
         {/* Auth Form Section (Right Column) */}

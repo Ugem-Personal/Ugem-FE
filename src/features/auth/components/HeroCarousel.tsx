@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
   MapPin,
-  Pause,
-  Play,
   ShieldCheck,
   Sparkles,
   Store,
@@ -18,7 +14,6 @@ import securityImage from "@/assets/auth/ugem-login-security.jpg";
 
 type Props = {
   images: string[];
-  intervalMs?: number;
   onChange?: (...args: [number]) => void;
 };
 
@@ -61,23 +56,10 @@ const STORIES = [
   },
 ];
 
-export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
+export function HeroCarousel({ images, onChange }: Props) {
   const storyCount = Math.max(1, Math.min(images.length || 1, STORIES.length));
   const stories = useMemo(() => STORIES.slice(0, storyCount), [storyCount]);
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  // Continuous auto-slide timer
-  useEffect(() => {
-    if (paused || stories.length <= 1) return;
-
-    const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % stories.length);
-    }, intervalMs);
-
-    return () => window.clearInterval(timer);
-  }, [index, intervalMs, paused, stories.length]);
-
   useEffect(() => {
     onChange?.(index);
   }, [index, onChange]);
@@ -98,7 +80,7 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
             src={item.image}
             alt={storyIndex === index ? item.alt : ""}
             aria-hidden={storyIndex !== index}
-            className={`absolute inset-0 h-full w-full object-cover object-center transition-all duration-1000 ease-out ${
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
               storyIndex === index
                 ? "scale-100 opacity-100 z-10"
                 : "scale-[1.03] opacity-0 z-0"
@@ -128,24 +110,13 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
                 key={storyIndex}
                 type="button"
                 onClick={() => go(storyIndex)}
-                className={`relative h-2 overflow-hidden rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                  isActive ? "w-8 bg-white/20" : "w-2 bg-white/30 hover:bg-white/50"
+                className={`relative flex h-8 items-center justify-center rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                  isActive ? "w-10" : "w-8 hover:bg-white/10"
                 }`}
                 aria-label={`Chuyển đến slide ${storyIndex + 1}`}
                 aria-current={isActive ? "true" : "false"}
               >
-                {isActive ? (
-                  <div
-                    key={`${index}-${paused}`}
-                    className="h-full bg-cyan-400 rounded-full"
-                    style={{
-                      animation: paused
-                        ? "none"
-                        : `carouselProgress ${intervalMs}ms linear forwards`,
-                      width: paused ? "100%" : "0%",
-                    }}
-                  />
-                ) : null}
+                <span className={`block h-2 rounded-full ${isActive ? "w-8 bg-cyan-400" : "w-2 bg-white/40"}`} />
               </button>
             );
           })}
@@ -177,44 +148,10 @@ export function HeroCarousel({ images, intervalMs = 4000, onChange }: Props) {
             Khám phá · Vận hành · Tăng trưởng
           </p>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => go(index - 1)}
-              aria-label="Nội dung trước"
-              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
 
-            <button
-              type="button"
-              onClick={() => setPaused((value) => !value)}
-              aria-label={paused ? "Tiếp tục trình chiếu" : "Tạm dừng trình chiếu"}
-              aria-pressed={paused}
-              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-            >
-              {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => go(index + 1)}
-              aria-label="Nội dung tiếp theo"
-              className="grid h-9.5 w-9.5 place-items-center rounded-xl border border-white/20 bg-slate-950/40 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </footer>
       ) : null}
 
-      <style>{`
-        @keyframes carouselProgress {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-      `}</style>
     </section>
   );
 }

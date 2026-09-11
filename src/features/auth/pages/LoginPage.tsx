@@ -133,13 +133,20 @@ export function LoginPage() {
         },
       });
 
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
+      renderButtonAppearance();
+    }
+
+    function renderButtonAppearance() {
+      const container = googleButtonRef.current;
+      if (cancelled || !container || !window.google?.accounts?.id) return;
+      container.innerHTML = "";
+      window.google.accounts.id.renderButton(container, {
         type: "standard",
-        theme: "outline",
+        theme: document.documentElement.classList.contains("dark") ? "filled_black" : "outline",
         size: "large",
         shape: "pill",
         text: "continue_with",
-        width: 380,
+        width: Math.min(400, Math.floor(container.clientWidth)),
       });
     }
 
@@ -162,8 +169,21 @@ export function LoginPage() {
       }
     }
 
+    const themeObserver = new MutationObserver(renderButtonAppearance);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    let lastWidth = googleButtonRef.current?.clientWidth;
+    const resizeObserver = new ResizeObserver(() => {
+      const width = googleButtonRef.current?.clientWidth;
+      if (width === lastWidth) return;
+      lastWidth = width;
+      renderButtonAppearance();
+    });
+    if (googleButtonRef.current) resizeObserver.observe(googleButtonRef.current);
+
     return () => {
       cancelled = true;
+      themeObserver.disconnect();
+      resizeObserver.disconnect();
     };
   }, [navigate]);
 
@@ -179,7 +199,7 @@ export function LoginPage() {
             <div className="flex justify-center">
               <div
                 ref={googleButtonRef}
-                className="min-h-12 w-full max-w-[460px] flex justify-center items-center overflow-hidden rounded-xl border border-slate-200/80 dark:border-white/10 shadow-2xs hover:border-slate-300 transition-colors"
+                className="min-h-11 w-full max-w-[400px] flex justify-center items-center [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
 
