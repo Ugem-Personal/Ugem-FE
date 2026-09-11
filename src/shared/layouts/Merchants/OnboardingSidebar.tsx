@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import {
   BookOpen,
   Building2,
@@ -47,12 +49,13 @@ const items = [
 
 export function OnboardingSidebar() {
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside className="onboarding-sidebar">
-      <strong className="onboarding-brand">UGem Merchants</strong>
+    <aside className="onboarding-sidebar" data-collapsed={collapsed}>
+      <strong className="onboarding-brand">{collapsed ? "UG" : "UGem Merchants"}</strong>
 
-      <div className="onboarding-progress">
+      <div className="onboarding-progress" hidden={collapsed}>
         <span>Onboarding</span>
         <small>65% Complete</small>
         <div>
@@ -63,7 +66,7 @@ export function OnboardingSidebar() {
       <nav>
         {items.map(({ label, icon: Icon, active, disabled, path }) => (
           <button
-            key={label}
+            key={label} title={label} aria-label={label}
             type="button"
             className={active ? "active" : ""}
             disabled={disabled}
@@ -74,11 +77,12 @@ export function OnboardingSidebar() {
             }}
           >
             <Icon size={17} />
-            {label}
-            {disabled && <em>UI</em>}
+            {!collapsed && label}
+            {!collapsed && disabled && <em>UI</em>}
           </button>
         ))}
       </nav>
+      <div className="mt-6"><SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} /></div>
     </aside>
   );
 }

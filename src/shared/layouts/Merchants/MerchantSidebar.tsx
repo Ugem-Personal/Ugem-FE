@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
@@ -108,6 +110,7 @@ const customerMerchantMenuItems: MerchantNavItem[] = [
 ];
 
 export function MerchantSidebar() {
+  const [collapsed, setCollapsed] = useState(false);
   const user = getCurrentUser();
   const visibleMenuItems =
     user?.Role === "Customer" || user?.Role === "Reviewer"
@@ -115,16 +118,16 @@ export function MerchantSidebar() {
       : merchantMenuItems;
 
   return (
-    <aside className="sticky top-0 z-20 hidden h-dvh w-[250px] shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-4 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5">
-      <div className="flex flex-col gap-6">
+    <aside className={cn("sticky top-0 z-20 hidden h-dvh shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-4 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5", collapsed ? "w-[80px]" : "w-[250px]")}>
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
         {/* Brand Header */}
-        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-3.5 shadow-xl text-white">
+        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-xl text-white" style={{ padding: collapsed ? "12px 3px" : "14px" }}>
           <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-cyan-500/20 blur-xl pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 text-white shadow-lg shadow-cyan-500/25 ring-2 ring-white/20">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className={cn("min-w-0 flex-1", collapsed && "hidden")}>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-400">
@@ -140,7 +143,7 @@ export function MerchantSidebar() {
 
         {/* Navigation Section */}
         <nav aria-label="Điều hướng Merchant" className="space-y-1.5">
-          <p className="px-2 pb-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center justify-between">
+          <p className={cn("px-2 pb-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 items-center justify-between", collapsed ? "hidden" : "flex")}>
             <span>Quản lý cửa hàng</span>
             <Zap className="h-3 w-3 text-cyan-500" />
           </p>
@@ -150,13 +153,14 @@ export function MerchantSidebar() {
               <NavLink
                 key={label}
                 to={path}
-                end={end}
+                end={end} title={label} aria-label={label}
                 className={({ isActive }) =>
                   cn(
                     "group relative flex min-h-11 min-w-0 items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
                     isActive
                       ? "bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-transparent border-l-4 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-black shadow-xs pl-3"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white",
+                    collapsed && "justify-center px-0 pl-0",
                   )
                 }
               >
@@ -173,11 +177,11 @@ export function MerchantSidebar() {
                       <Icon className="h-4 w-4" />
                     </span>
 
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold">
+                    <span className={cn("min-w-0 flex-1 truncate text-xs font-bold", collapsed && "hidden")}>
                       {label}
                     </span>
 
-                    {badge && (
+                    {!collapsed && badge && (
                       <span
                         className={cn(
                           "rounded-full border px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider",
@@ -197,7 +201,9 @@ export function MerchantSidebar() {
       </div>
 
       {/* Pro Widget & Footer */}
-      <div className="space-y-4 pt-4">
+      <div className="space-y-4 pt-4 shrink-0">
+        <SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
+        {!collapsed && <>
         {/* Support Banner */}
         <NavLink
           to="/merchant/support"
@@ -224,6 +230,7 @@ export function MerchantSidebar() {
             UGem Business v2.5 Premium
           </p>
         </div>
+        </>}
       </div>
     </aside>
   );

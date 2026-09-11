@@ -2437,3 +2437,9 @@
     padding: 24px 18px;
   }
 }
+
+@media (min-width: 1025px) {
+  .merchant-onboarding-layout:has(.onboarding-sidebar[data-collapsed="true"]) { grid-template-columns: 80px minmax(0, 1fr); }
+  .onboarding-sidebar[data-collapsed="true"] { padding: 28px 12px; }
+  .onboarding-sidebar[data-collapsed="true"] nav button { justify-content: center; padding-inline: 0; }
+}

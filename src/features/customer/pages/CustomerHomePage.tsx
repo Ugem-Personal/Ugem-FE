@@ -1,3 +1,4 @@
+import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -967,6 +968,7 @@ export default function CustomerHomePage() {
             <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
               {renderMerchantListContent(true, true)}
             </div>
+            <div className="shrink-0 px-4 pb-4"><SidebarToggle collapsed={false} onToggle={() => setShowMerchantPanel(false)} /></div>
           </aside>
         )}
 

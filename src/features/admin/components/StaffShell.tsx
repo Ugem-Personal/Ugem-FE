@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -127,6 +129,7 @@ function isPendingStatus(status?: string) {
 }
 
 export function StaffShell({ activeItem, children }: StaffShellProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const { data: applications = [] } = useStaffApplications();
   const pendingCount = applications.filter((item) =>
     isPendingStatus(item.status),
@@ -136,15 +139,15 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-100 transition-colors duration-300">
-      <div className="relative grid min-h-screen lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className={cn("relative grid min-h-screen transition-all duration-300", collapsed ? "lg:grid-cols-[80px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)]")}>
         {/* Desktop Sidebar */}
         <aside className="sticky top-0 hidden h-dvh bg-slate-950 px-4 py-5 text-white shadow-2xl shadow-slate-950/20 lg:flex lg:flex-col justify-between">
-          <div className="flex h-full min-h-0 flex-col gap-4">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+            <div className={cn("flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md", collapsed ? "justify-center py-3" : "p-3")}>
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-600 text-white shadow-md">
                 <Sparkles className="h-5 w-5" />
               </div>
-              <div className="min-w-0">
+              <div className={cn("min-w-0", collapsed && "hidden")}>
                 <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
                   UGem Staff
                 </p>
@@ -154,7 +157,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className={cn("grid grid-cols-2 gap-2", collapsed && "hidden")}>
               <div className="min-w-0 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
                 <p className="truncate text-[10px] font-bold text-amber-400">
                   Chờ duyệt
@@ -188,9 +191,9 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                 return (
                   <Link
                     key={item.key}
-                    to={item.to}
+                    to={item.to} title={item.label} aria-label={item.label}
                     className={cn(
-                      "group flex min-h-12 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
+                      "group flex min-h-12 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200", collapsed && "justify-center px-0",
                       isActive
                         ? "bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20"
                         : "text-slate-300 hover:bg-white/10 hover:text-white",
@@ -207,7 +210,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                       <Icon className="h-4.5 w-4.5" />
                     </span>
 
-                    <span className="min-w-0 flex-1">
+                    <span className={cn("min-w-0 flex-1", collapsed && "hidden")}>
                       <span className="block truncate text-xs font-bold">
                         {item.label}
                       </span>
@@ -221,7 +224,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                       </span>
                     </span>
 
-                    {typeof count === "number" ? (
+                    {!collapsed && typeof count === "number" ? (
                       <span
                         className={cn(
                           "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black",
@@ -238,6 +241,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
               })}
             </nav>
           </div>
+          <div className="pt-4"><SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} /></div>
         </aside>
 
         {/* Main Content Area */}
