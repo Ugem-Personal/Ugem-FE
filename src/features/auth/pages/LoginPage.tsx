@@ -144,9 +144,10 @@ export function LoginPage() {
         type: "standard",
         theme: document.documentElement.classList.contains("dark") ? "filled_black" : "outline",
         size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: Math.min(400, Math.floor(container.clientWidth)),
+        shape: "rectangular",
+        text: "signin_with",
+        logo_alignment: "left",
+        width: Math.min(400, Math.max(240, Math.floor(container.clientWidth || 380))),
       });
     }
 

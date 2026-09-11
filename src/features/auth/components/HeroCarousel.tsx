@@ -14,6 +14,7 @@ import securityImage from "@/assets/auth/ugem-login-security.jpg";
 
 type Props = {
   images: string[];
+  intervalMs?: number;
   onChange?: (...args: [number]) => void;
 };
 
@@ -56,10 +57,21 @@ const STORIES = [
   },
 ];
 
-export function HeroCarousel({ images, onChange }: Props) {
+export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
   const storyCount = Math.max(1, Math.min(images.length || 1, STORIES.length));
   const stories = useMemo(() => STORIES.slice(0, storyCount), [storyCount]);
   const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (stories.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % stories.length);
+    }, intervalMs);
+
+    return () => window.clearInterval(timer);
+  }, [index, intervalMs, stories.length]);
+
   useEffect(() => {
     onChange?.(index);
   }, [index, onChange]);
