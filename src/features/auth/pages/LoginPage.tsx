@@ -140,10 +140,9 @@ export function LoginPage() {
       const container = googleButtonRef.current;
       if (cancelled || !container || !window.google?.accounts?.id) return;
       container.innerHTML = "";
-      const isDark = document.documentElement.classList.contains("dark");
       window.google.accounts.id.renderButton(container, {
         type: "standard",
-        theme: isDark ? "filled_black" : "outline",
+        theme: "outline",
         size: "large",
         shape: "rectangular",
         text: "signin_with",
