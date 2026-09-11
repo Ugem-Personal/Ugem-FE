@@ -140,13 +140,15 @@ export function LoginPage() {
       const container = googleButtonRef.current;
       if (cancelled || !container || !window.google?.accounts?.id) return;
       container.innerHTML = "";
+      const isDark = document.documentElement.classList.contains("dark");
       window.google.accounts.id.renderButton(container, {
         type: "standard",
-        theme: "outline",
+        theme: isDark ? "filled_black" : "outline",
         size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: Math.min(380, Math.max(240, Math.floor(container.clientWidth || 380))),
+        shape: "rectangular",
+        text: "signin_with",
+        logo_alignment: "left",
+        width: Math.min(400, Math.max(280, Math.floor(container.clientWidth || 380))),
       });
     }
 
@@ -169,6 +171,12 @@ export function LoginPage() {
       }
     }
 
+    const themeObserver = new MutationObserver(renderButtonAppearance);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
     let lastWidth = googleButtonRef.current?.clientWidth;
     const resizeObserver = new ResizeObserver(() => {
       const width = googleButtonRef.current?.clientWidth;
@@ -180,6 +188,7 @@ export function LoginPage() {
 
     return () => {
       cancelled = true;
+      themeObserver.disconnect();
       resizeObserver.disconnect();
     };
   }, [navigate]);
@@ -196,7 +205,7 @@ export function LoginPage() {
             <div className="flex justify-center w-full">
               <div
                 ref={googleButtonRef}
-                className="min-h-[44px] w-full max-w-[380px] flex justify-center items-center"
+                className="min-h-[44px] w-full max-w-[400px] flex justify-center items-center rounded-lg overflow-hidden"
               />
             </div>
 
