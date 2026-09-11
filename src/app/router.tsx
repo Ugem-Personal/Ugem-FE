@@ -486,6 +486,7 @@ const routers = createBrowserRouter([
                 basePath="/admin/applications"
                 fallbackName="Admin"
                 canReview
+                embedded
               />
             </AdminShell>
           </ProtectedRoute>
