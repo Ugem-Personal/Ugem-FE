@@ -47,6 +47,7 @@ import { Button } from "@/shared/components/ui/button";
 import logoUrl from "@/assets/ugem-logo.png";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { OrderStatusTimeline } from "../components/OrderStatusTimeline";
+import { useRealtime } from "@/shared/contexts/RealtimeContext";
 
 type OrderDetailLocationState = {
   order?: CustomerOrderSummary;
@@ -131,6 +132,33 @@ export default function CustomerOrderDetailPage() {
     notify.success("Đã sao chép vào bộ nhớ tạm!");
     setTimeout(() => setCopiedField(null), 2000);
   };
+
+  const { subscribeToOrder } = useRealtime();
+
+  useEffect(() => {
+    const currentOrderId = resolvedOrderId || (hasRealOrderId ? id : null);
+    if (!currentOrderId) return;
+
+    const unsubscribe = subscribeToOrder(currentOrderId, (updatedOrder) => {
+      if (updatedOrder?.status) {
+        setOrderStatus(updatedOrder.status);
+        lastKnownStatusRef.current = updatedOrder.status;
+        setFetchedSummaryOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: updatedOrder.status,
+                paymentStatus: updatedOrder.paymentStatus ?? prev.paymentStatus,
+              }
+            : prev,
+        );
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [resolvedOrderId, hasRealOrderId, id, subscribeToOrder]);
 
   useEffect(() => {
     let active = true;

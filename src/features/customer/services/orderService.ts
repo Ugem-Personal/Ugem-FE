@@ -25,31 +25,45 @@ export async function createOrder(payload: {
   finalPrice: number;
   affiliateLinkCode?: string;
   campaignId?: string;
+  idempotencyKey?: string;
   foods: CreateOrderItem[];
 }) {
   const orderType = payload.orderType ?? "Online";
+  const idempotencyKey =
+    payload.idempotencyKey ||
+    (typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `ord_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
 
-  const res = await api.post<ApiResponse<null>>("/orders", {
-    name: payload.name,
-    paymentMethod:
-      payload.paymentMethod ?? (orderType === "Online" ? "COD" : "Cash"),
-    orderType,
-    deliveryAddress:
-      orderType === "Online" ? payload.deliveryAddress : "Tại quán",
-    deliveryLatitude:
-      orderType === "Online" ? payload.deliveryLatitude : undefined,
-    deliveryLongitude:
-      orderType === "Online" ? payload.deliveryLongitude : undefined,
-    notes: payload.notes || "",
-    affiliateLinkCode: payload.affiliateLinkCode,
-    campaignId: payload.campaignId,
-    foods: payload.foods.map((f) => ({
-      foodId: f.foodId,
-      quantity: f.quantity,
-      notes: f.notes ?? undefined,
-      foodToppingIds: f.foodToppingIds ?? undefined,
-    })),
-  });
+  const res = await api.post<ApiResponse<null>>(
+    "/orders",
+    {
+      name: payload.name,
+      paymentMethod:
+        payload.paymentMethod ?? (orderType === "Online" ? "COD" : "Cash"),
+      orderType,
+      deliveryAddress:
+        orderType === "Online" ? payload.deliveryAddress : "Tại quán",
+      deliveryLatitude:
+        orderType === "Online" ? payload.deliveryLatitude : undefined,
+      deliveryLongitude:
+        orderType === "Online" ? payload.deliveryLongitude : undefined,
+      notes: payload.notes || "",
+      affiliateLinkCode: payload.affiliateLinkCode,
+      campaignId: payload.campaignId,
+      foods: payload.foods.map((f) => ({
+        foodId: f.foodId,
+        quantity: f.quantity,
+        notes: f.notes ?? undefined,
+        foodToppingIds: f.foodToppingIds ?? undefined,
+      })),
+    },
+    {
+      headers: {
+        "Idempotency-Key": idempotencyKey,
+      },
+    },
+  );
 
   return res.data;
 }

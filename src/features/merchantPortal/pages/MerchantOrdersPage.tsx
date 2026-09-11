@@ -44,6 +44,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import VietMapGL from "@/shared/components/VietMapGL";
+import { useRealtime } from "@/shared/contexts/RealtimeContext";
 
 type OrderItemTopping = {
   id?: string;
@@ -367,6 +368,8 @@ export default function MerchantOrdersPage() {
     }
   }
 
+  const { subscribe } = useRealtime();
+
   useEffect(() => {
     let active = true;
 
@@ -374,17 +377,31 @@ export default function MerchantOrdersPage() {
       void loadOrders(() => active);
     });
 
+    const unsubNew = subscribe("order:new", () => {
+      if (active) {
+        void loadOrders(() => active, { silent: true });
+      }
+    });
+
+    const unsubStatus = subscribe("order:status_changed", () => {
+      if (active) {
+        void loadOrders(() => active, { silent: true });
+      }
+    });
+
     const pollId = window.setInterval(() => {
       if (!detailOpen) {
         void loadOrders(() => active, { silent: true });
       }
-    }, 4000);
+    }, 15000);
 
     return () => {
       active = false;
+      unsubNew();
+      unsubStatus();
       window.clearInterval(pollId);
     };
-  }, [detailOpen]);
+  }, [detailOpen, subscribe]);
 
   useEffect(() => {
     if (!detailOpen || !selectedOrderId) {
