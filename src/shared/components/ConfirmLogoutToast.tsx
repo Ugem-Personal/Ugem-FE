@@ -1,56 +1,38 @@
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 export function showLogoutConfirmToast(onConfirm: () => void) {
-  const LOGOUT_CONFIRM_TOAST_ID = "logout-confirm";
-
   toast.custom(
-    (t) => (
-      <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 p-4.5 shadow-2xl backdrop-blur-2xl text-slate-900 dark:text-white transition-all duration-300 ring-1 ring-slate-950/5 dark:ring-white/10">
-        <div className="flex items-start gap-3.5">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-500/15 to-amber-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 shadow-xs">
-            <LogOut className="h-5 w-5" />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-black tracking-tight text-slate-950 dark:text-white">
-                Xác nhận đăng xuất?
-              </h4>
+    (id) => (
+      <AlertDialog.Root defaultOpen onOpenChange={(open) => {
+        if (!open) toast.dismiss(id);
+      }}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[101] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-2xl dark:border-white/15 dark:bg-slate-900 dark:text-white">
+            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-rose-500/10 text-rose-500">
+              <LogOut className="h-6 w-6" />
             </div>
-            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+            <AlertDialog.Title className="text-lg font-black">
+              Xác nhận đăng xuất?
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               Phiên làm việc hiện tại sẽ kết thúc. Bạn có chắc chắn muốn thoát khỏi hệ thống UGem?
-            </p>
-
-            <div className="mt-4 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => toast.dismiss(t)}
-                className="h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/80 dark:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95 cursor-pointer"
-              >
+            </AlertDialog.Description>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <AlertDialog.Cancel className="h-10 rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 Hủy bỏ
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  toast.dismiss(t);
-                  onConfirm();
-                }}
-                className="h-9 px-4.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-xs font-black text-white shadow-md shadow-rose-500/25 transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
-              >
-                <LogOut className="h-3.5 w-3.5" />
+              </AlertDialog.Cancel>
+              <AlertDialog.Action onClick={onConfirm} className="flex h-10 items-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-500">
+                <LogOut className="h-4 w-4" />
                 Đăng xuất
-              </button>
+              </AlertDialog.Action>
             </div>
-          </div>
-        </div>
-      </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     ),
-    {
-      id: LOGOUT_CONFIRM_TOAST_ID,
-      duration: 12000,
-      position: "bottom-right",
-    }
+    { id: "logout-confirm", duration: Infinity },
   );
 }

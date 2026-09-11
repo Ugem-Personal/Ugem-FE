@@ -10,8 +10,6 @@ import {
   Timer,
   Sparkles,
   Zap,
-  HelpCircle,
-  ChevronRight,
   CalendarCheck2,
   ShoppingBag,
   UtensilsCrossed,
@@ -119,9 +117,9 @@ export function MerchantSidebar() {
 
   return (
     <aside className={cn("sticky top-0 z-20 hidden h-dvh shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-4 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5", collapsed ? "w-[80px]" : "w-[250px]")}>
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
         {/* Brand Header */}
-        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-xl text-white" style={{ padding: collapsed ? "12px 3px" : "14px" }}>
+        <div className="relative shrink-0 overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-xl text-white" style={{ padding: collapsed ? "12px 3px" : "14px" }}>
           <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-cyan-500/20 blur-xl pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 text-white shadow-lg shadow-cyan-500/25 ring-2 ring-white/20">
@@ -142,7 +140,7 @@ export function MerchantSidebar() {
         </div>
 
         {/* Navigation Section */}
-        <nav aria-label="Điều hướng Merchant" className="space-y-1.5">
+        <nav aria-label="Điều hướng Merchant" className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
           <p className={cn("px-2 pb-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 items-center justify-between", collapsed ? "hidden" : "flex")}>
             <span>Quản lý cửa hàng</span>
             <Zap className="h-3 w-3 text-cyan-500" />
@@ -204,27 +202,6 @@ export function MerchantSidebar() {
       <div className="space-y-4 pt-4 shrink-0">
         <SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
         {!collapsed && <>
-        {/* Support Banner */}
-        <NavLink
-          to="/merchant/support"
-          className="block rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-white/5 p-3.5 transition hover:border-cyan-500/40"
-        >
-          <div className="flex items-center gap-3">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-              <HelpCircle className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                Trung tâm hỗ trợ
-              </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                Xem hướng dẫn hoặc gửi yêu cầu
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </div>
-        </NavLink>
-
         <div className="border-t border-slate-200/80 dark:border-white/10 pt-3 text-center">
           <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
             UGem Business v2.5 Premium
