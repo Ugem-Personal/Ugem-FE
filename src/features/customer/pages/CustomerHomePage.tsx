@@ -1,9 +1,7 @@
 import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   Clock,
-  Calendar,
   Heart,
   List,
   Loader2,
@@ -669,7 +667,7 @@ export default function CustomerHomePage() {
           "grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-100/80 dark:bg-slate-900/80 p-1.5 backdrop-blur-md shadow-inner",
           className,
         )}
-        aria-label="Chọn kiểu sử dụng dịch vụ"
+        aria-label="Chọn chế độ khám phá"
       >
         <button
           type="button"
@@ -690,9 +688,9 @@ export default function CustomerHomePage() {
                 : "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400",
             )}
           >
-            <Navigation className="h-4 w-4" />
+            <List className="h-4 w-4" />
           </span>
-          Giao tận nơi
+          Danh sách quán
         </button>
         <button
           type="button"
@@ -715,7 +713,7 @@ export default function CustomerHomePage() {
           >
             <MapIcon className="h-4 w-4" />
           </span>
-          Ăn tại quán / Bản đồ
+          Radar Bản đồ
         </button>
       </div>
     );
@@ -891,11 +889,11 @@ export default function CustomerHomePage() {
             type="button"
             variant="outline"
             onClick={() => handleServiceModeChange("delivery")}
-            aria-label="Quay lại trang giao tận nơi"
+            aria-label="Xem dạng danh sách quán"
             className="pointer-events-auto h-11 gap-2 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-3 text-slate-800 dark:text-slate-100 font-black shadow-xs backdrop-blur-lg hover:bg-white dark:hover:bg-slate-800"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Quay lại</span>
+            <List className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+            <span className="hidden sm:inline">Danh sách quán</span>
           </Button>
           <div className="pointer-events-auto ml-auto flex max-w-full flex-wrap items-center justify-end gap-2.5">
             <Button
@@ -1136,18 +1134,6 @@ export default function CustomerHomePage() {
               <ShoppingBag className="h-4 w-4" />
               <span className="hidden sm:inline">Đơn hàng của tôi</span>
             </Button>
-            <Button
-              asChild
-              type="button"
-              variant="outline"
-              aria-label="Xem lịch sử đặt bàn"
-              className="h-11 gap-2 rounded-xl border-cyan-200 dark:border-cyan-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-cyan-50 dark:hover:bg-cyan-500/10"
-            >
-              <Link to="/customer/bookings">
-                <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                <span className="hidden sm:inline">Lịch đặt bàn</span>
-              </Link>
-            </Button>
             <UserAccountMenu fallbackName="Customer" />
           </div>
         </div>
@@ -1171,7 +1157,7 @@ export default function CustomerHomePage() {
             </h1>
             <p className="mt-3 text-sm font-medium text-slate-600 sm:text-base dark:text-slate-300">
               Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin
-              khoảng cách & thời gian giao chính xác.
+              khoảng cách & thời gian di chuyển chính xác.
             </p>
           </div>
 

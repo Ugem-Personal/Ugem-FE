@@ -10,7 +10,7 @@ import {
   Search,
   Store,
   Utensils,
-  Calendar,
+  Navigation,
   ShoppingBag,
 } from "lucide-react";
 import {
@@ -52,7 +52,6 @@ import {
   CheckoutDialog,
   type CheckoutFormData,
 } from "../components/CheckoutDialog";
-import { BookingModal } from "@/features/booking/components/BookingModal";
 
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
@@ -218,7 +217,7 @@ function getStoredAffiliateRef(merchantId: string) {
 
 export default function MerchantDetailPage() {
   const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const safeBack = useSafeBack("/customer");
@@ -292,19 +291,6 @@ export default function MerchantDetailPage() {
   });
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
-  const bookingModalOpen = searchParams.get("dialog") === "booking";
-
-  function setBookingModalOpen(open: boolean) {
-    setSearchParams(
-      (previous) => {
-        const next = new URLSearchParams(previous);
-        if (open) next.set("dialog", "booking");
-        else next.delete("dialog");
-        return next;
-      },
-      { replace: true },
-    );
-  }
 
   useEffect(() => {
     if (!CART_STORAGE_KEY) return;
@@ -734,17 +720,6 @@ export default function MerchantDetailPage() {
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
-            <Button
-              asChild
-              type="button"
-              variant="outline"
-              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
-            >
-              <Link to="/customer/bookings" aria-label="Lịch đặt bàn">
-                <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                <span className="hidden sm:inline">Lịch đặt bàn</span>
-              </Link>
-            </Button>
             <UserAccountMenu fallbackName="Customer" />
           </div>
         </div>
@@ -847,14 +822,21 @@ export default function MerchantDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setBookingModalOpen(true)}
-                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
-              >
-                <Calendar className="h-4 w-4" />
-                Đặt bàn (Ăn tại quán)
-              </button>
+              {(merchant.latitude && merchant.longitude) || merchant.address ? (
+                <a
+                  href={
+                    merchant.latitude && merchant.longitude
+                      ? `https://www.google.com/maps/dir/?api=1&destination=${merchant.latitude},${merchant.longitude}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(merchant.address || merchant.name || "")}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
+                >
+                  <Navigation className="h-4 w-4" />
+                  Chỉ đường đến quán
+                </a>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {
@@ -864,8 +846,8 @@ export default function MerchantDetailPage() {
                 }}
                 className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 hover:bg-cyan-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-95 transition"
               >
-                <ShoppingBag className="h-4 w-4" />
-                Đặt món giao về
+                <Utensils className="h-4 w-4" />
+                Xem thực đơn
               </button>
               <WishlistButton
                 merchantId={merchant.id}
@@ -1179,15 +1161,6 @@ export default function MerchantDetailPage() {
           </div>
         )}
       </div>
-
-      {merchant && (
-        <BookingModal
-          merchantId={merchant.id}
-          merchantName={merchant.name ?? ""}
-          isOpen={bookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
-        />
-      )}
     </div>
   );
 }

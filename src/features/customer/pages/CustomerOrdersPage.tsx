@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Calendar,
   Heart,
   ShoppingBag,
   Search,
@@ -198,17 +197,6 @@ export default function CustomerOrdersPage() {
               <Link to="/customer/orders">
                 <ShoppingBag className="h-4 w-4" />
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              type="button"
-              variant="outline"
-              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
-            >
-              <Link to="/customer/bookings">
-                <Calendar className="h-4 w-4 text-cyan-600" />
-                <span className="hidden sm:inline">Lịch đặt bàn</span>
               </Link>
             </Button>
             <UserAccountMenu fallbackName="Customer" />

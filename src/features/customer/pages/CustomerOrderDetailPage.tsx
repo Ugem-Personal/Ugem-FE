@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Calendar,
   Check,
   Heart,
   Star,
@@ -533,17 +532,6 @@ export default function CustomerOrderDetailPage() {
             >
               <Link to="/customer/orders">
                 <span className="hidden sm:inline">Đơn hàng của tôi</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              type="button"
-              variant="outline"
-              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
-            >
-              <Link to="/customer/bookings">
-                <Calendar className="h-4 w-4 text-cyan-600" />
-                <span className="hidden sm:inline">Lịch đặt bàn</span>
               </Link>
             </Button>
             <UserAccountMenu fallbackName="Customer" />
