@@ -20,8 +20,6 @@ export type RealtimeEventType =
   | "order:new"
   | "order:status_changed"
   | "order:bill_updated"
-  | "booking:new"
-  | "booking:status_changed"
   | "support:new_message";
 
 export interface RealtimeMessage<T = unknown> {
@@ -217,8 +215,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
         "order:new",
         "order:status_changed",
         "order:bill_updated",
-        "booking:new",
-        "booking:status_changed",
         "support:new_message",
       ];
 

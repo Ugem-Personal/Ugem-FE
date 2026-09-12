@@ -10,7 +10,6 @@ import {
   Timer,
   Sparkles,
   Zap,
-  CalendarCheck2,
   ShoppingBag,
   UtensilsCrossed,
   LifeBuoy,
@@ -49,14 +48,6 @@ const merchantMenuItems: MerchantNavItem[] = [
     label: "Đơn hàng",
     icon: ShoppingBag,
     path: "/merchant/orders",
-  },
-  {
-    label: "Lịch đặt bàn",
-    icon: CalendarCheck2,
-    path: "/merchant/bookings",
-    badge: "NEW",
-    badgeColor:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   },
   {
     label: "Tạo đơn tại quán",
