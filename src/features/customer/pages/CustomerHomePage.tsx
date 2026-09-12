@@ -258,12 +258,23 @@ export default function CustomerHomePage() {
   const [showMap, setShowMap] = useState(initialTabIsMap);
   const [showMerchantPanel, setShowMerchantPanel] = useState(true);
   const [showRoutePanel, setShowRoutePanel] = useState(true);
+  const initialMerchantId = searchParams.get("merchantId");
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(
-    null,
+    initialMerchantId || null,
   );
   const [routeLoadingMerchantId, setRouteLoadingMerchantId] = useState<
     string | null
   >(null);
+
+  useEffect(() => {
+    const targetMerchantId = searchParams.get("merchantId");
+    if (targetMerchantId) {
+      setSelectedMerchantId(targetMerchantId);
+      setShowMap(true);
+      setShowRoutePanel(true);
+      setServiceMode("dineIn");
+    }
+  }, [searchParams]);
 
   const { route, clearRoute, routeResult } = useVietMapRoute();
 

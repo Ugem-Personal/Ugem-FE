@@ -822,21 +822,14 @@ export default function MerchantDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
-              {(merchant.latitude && merchant.longitude) || merchant.address ? (
-                <a
-                  href={
-                    merchant.latitude && merchant.longitude
-                      ? `https://www.google.com/maps/dir/?api=1&destination=${merchant.latitude},${merchant.longitude}`
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(merchant.address || merchant.name || "")}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
-                >
-                  <Navigation className="h-4 w-4" />
-                  Chỉ đường đến quán
-                </a>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => navigate(`/customer?tab=map&merchantId=${merchant.id}`)}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
+              >
+                <Navigation className="h-4 w-4" />
+                Chỉ đường (VietMap)
+              </button>
               <button
                 type="button"
                 onClick={() => {
