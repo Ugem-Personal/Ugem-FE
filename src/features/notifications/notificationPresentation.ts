@@ -12,7 +12,6 @@ import {
   Store,
   UserCog,
   WalletCards,
-  CalendarCheck2,
 } from "lucide-react";
 
 import { getCurrentUser } from "@/features/auth";
@@ -28,7 +27,6 @@ export type NotificationTone =
 
 export type NotificationCategory =
   | "order"
-  | "booking"
   | "merchant-application"
   | "reviewer-application"
   | "review"
@@ -67,10 +65,6 @@ function resolveActionTo(category: NotificationCategory, text: string) {
 
   if (category === "order") {
     return role === "Merchant" ? "/merchant/orders" : "/customer/orders";
-  }
-
-  if (category === "booking") {
-    return role === "Merchant" ? "/merchant/bookings" : "/customer/bookings";
   }
 
   if (category === "merchant-application") {
@@ -116,10 +110,6 @@ function resolveReferenceAction(item: NotificationItem) {
     return role === "Merchant"
       ? "/merchant/orders"
       : `/customer/orders/${reference.id}`;
-  }
-
-  if (reference.type === "Booking") {
-    return role === "Merchant" ? "/merchant/bookings" : "/customer/bookings";
   }
 
   if (reference.type === "Application" && reference.id) {
@@ -263,19 +253,6 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
     icon = FileCheck2;
     tone = includesAny(text, ["reject", "từ chối"]) ? "rose" : "violet";
   } else if (
-    referenceType === "Booking" ||
-    explicitType.includes("booking") ||
-    includesAny(text, ["đặt bàn", "dat ban", "booking"])
-  ) {
-    category = "booking";
-    categoryLabel = "Đặt bàn";
-    icon = CalendarCheck2;
-    tone = includesAny(text, ["reject", "cancel", "từ chối", "hủy"])
-      ? "rose"
-      : includesAny(text, ["accept", "confirm", "xác nhận"])
-        ? "emerald"
-        : "amber";
-  } else if (
     explicitType.includes("order") ||
     includesAny(text, ["order", "bill", "cash payment"])
   ) {
@@ -338,11 +315,7 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
 
   const referenceAction = resolveReferenceAction(item);
   const categoryAction = resolveActionTo(category, text);
-  const actionTo =
-    referenceAction ||
-    (category === "booking"
-      ? categoryAction
-      : item.actionUrl || categoryAction);
+  const actionTo = referenceAction || item.actionUrl || categoryAction;
 
   return {
     actionLabel: getActionLabel(category),
@@ -356,7 +329,6 @@ export function getNotificationMeta(item: NotificationItem): NotificationMeta {
 
 function getActionLabel(category: NotificationCategory) {
   if (category === "order") return "Xem đơn hàng";
-  if (category === "booking") return "Xem lịch đặt bàn";
   if (category === "merchant-application") return "Xem hồ sơ merchant";
   if (category === "reviewer-application") return "Xem đơn Reviewer";
   if (category === "review") return "Xem đánh giá";

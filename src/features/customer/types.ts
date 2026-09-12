@@ -1,3 +1,21 @@
+export type MerchantFoodTopping = {
+  id: string;
+  name: string;
+  price: number;
+  isActive?: boolean;
+};
+
+export type MerchantMenuItem = {
+  id: string;
+  foodId?: string;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  categoryDetail?: string[];
+  toppings?: MerchantFoodTopping[];
+};
+
 export type Merchant = {
   id: string;
   name?: string;
@@ -23,28 +41,15 @@ export type Merchant = {
   lng?: number;
   status?: string;
   hasActiveCampaign?: boolean;
+  checkInCount?: number;
+  isFavorite?: boolean;
+  isFlop?: boolean;
+  isBoosted?: boolean;
+  checkInPerks?: string[];
   featuredFoods?: string[];
   preferenceScore?: number;
   recommendationScore?: number;
   menu?: MerchantMenuItem[];
-};
-
-export type MerchantMenuItem = {
-  id: string;
-  foodId?: string;
-  name: string;
-  description?: string;
-  price: number;
-  imageUrl?: string;
-  categoryDetail?: string[];
-  toppings?: MerchantFoodTopping[];
-};
-
-export type MerchantFoodTopping = {
-  id: string;
-  name: string;
-  price: number;
-  isActive?: boolean;
 };
 
 export type MerchantDetail = Merchant & {
@@ -58,6 +63,7 @@ export type CustomerProfile = {
   phoneNumber?: string;
   fullName?: string;
   avatarUrl?: string | null;
+  customerCode?: string;
 };
 
 export type CustomerOrderSummary = {

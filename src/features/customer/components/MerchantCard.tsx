@@ -167,7 +167,21 @@ export default function MerchantCard({
             </span>
           )}
 
-          {isHotUnderrated && !selected && (
+          {merchant.isFavorite && !selected && (
+            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-500/95 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md">
+              <Star className="h-3 w-3 fill-white text-white" />
+              Yêu thích
+            </span>
+          )}
+
+          {merchant.isBoosted && !selected && !merchant.isFavorite && (
+            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-fuchsia-300 bg-gradient-to-r from-fuchsia-600 to-rose-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md animate-pulse">
+              <Sparkles className="h-3 w-3 fill-white text-white" />
+              Ưu đãi kích cầu
+            </span>
+          )}
+
+          {isHotUnderrated && !selected && !merchant.isFavorite && !merchant.isBoosted && (
             <span className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-orange-200/80 bg-orange-500/95 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md">
               <Flame className="h-3 w-3 fill-white text-white animate-pulse" />
               Hot
@@ -202,12 +216,35 @@ export default function MerchantCard({
                 compact ? "mt-2 gap-1.5" : "mt-3 gap-2",
               )}
             >
+              <span
+                className="inline-flex items-center gap-1 rounded-xl border border-rose-200/80 dark:border-rose-500/20 bg-rose-50/90 dark:bg-rose-500/10 px-2.5 py-1 text-rose-700 dark:text-rose-300 shadow-2xs font-bold"
+                title="Số lượt check-in thực tế của khách tại quán"
+              >
+                <Flame className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+                {typeof merchant.checkInCount === "number"
+                  ? `${merchant.checkInCount} check-in`
+                  : "0 check-in"}
+              </span>
+
               {typeof merchant.rating === "number" && (
                 <span className="inline-flex items-center gap-1 rounded-xl border border-amber-200/80 dark:border-amber-500/20 bg-amber-50/90 dark:bg-amber-500/10 px-2.5 py-1 text-amber-800 dark:text-amber-300 shadow-2xs font-mono">
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 dark:text-amber-400" />
                   {formatRating(merchant.rating)}
+                  {typeof merchant.reviewCount === "number" && (
+                    <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80 font-normal">
+                      ({merchant.reviewCount})
+                    </span>
+                  )}
                 </span>
               )}
+
+              <span
+                className="inline-flex items-center gap-1 rounded-xl border border-teal-200/80 dark:border-teal-500/20 bg-teal-50/90 dark:bg-teal-500/10 px-2.5 py-1 text-teal-800 dark:text-teal-300 shadow-2xs font-bold"
+                title="Ưu đãi nhận được khi check-in tại quán"
+              >
+                <Gift className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                Check-in: -5% / Coca
+              </span>
 
               {typeof merchant.distance === "number" &&
                 Number.isFinite(merchant.distance) && (
@@ -219,8 +256,8 @@ export default function MerchantCard({
 
               {merchant.hasActiveCampaign && (
                 <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-emerald-50/90 dark:bg-emerald-500/10 px-2.5 py-1 text-emerald-800 dark:text-emerald-300 shadow-2xs font-bold">
-                  <Gift className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Khuyến mãi
+                  <Tag className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  {merchant.isBoosted ? "Voucher hời UGem" : "Khuyến mãi"}
                 </span>
               )}
 

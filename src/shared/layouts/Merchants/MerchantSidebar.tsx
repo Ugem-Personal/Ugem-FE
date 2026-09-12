@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   UtensilsCrossed,
   LifeBuoy,
+  QrCode,
 } from "lucide-react";
 
 import { getCurrentUser } from "@/features/auth";
@@ -48,6 +49,14 @@ const merchantMenuItems: MerchantNavItem[] = [
     label: "Đơn hàng",
     icon: ShoppingBag,
     path: "/merchant/orders",
+  },
+  {
+    label: "Check-in khách hàng",
+    icon: QrCode,
+    path: "/merchant/check-in",
+    badge: "HOT",
+    badgeColor:
+      "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
   {
     label: "Tạo đơn tại quán",

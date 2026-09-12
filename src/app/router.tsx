@@ -133,11 +133,13 @@ const MerchantCreateOrderPage = lazy(
 const MerchantProfilePage = lazy(
   () => import("@/features/merchantPortal/pages/MerchantProfilePage"),
 );
+const MerchantCheckInVerifyPage = lazy(
+  () => import("@/features/merchantPortal/pages/MerchantCheckInVerifyPage"),
+);
 const NotificationsPage = lazy(
   () => import("@/features/notifications/pages/NotificationsPage"),
 );
 const ReviewsPage = lazy(() => import("@/features/review/pages/ReviewsPage"));
-const VietMapDemoPage = lazy(() => import("@/shared/pages/VietMapDemoPage"));
 const UnauthorizedPage = lazy(() => import("@/shared/pages/UnauthorizedPage"));
 const NotFoundPage = lazyNamed(
   () => import("@/shared/pages/NotFoundPage"),
@@ -291,6 +293,14 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Merchant"]}>
             <MerchantOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/merchant/check-in",
+        element: (
+          <ProtectedRoute allowedRoles={["Merchant"]}>
+            <MerchantCheckInVerifyPage />
           </ProtectedRoute>
         ),
       },
@@ -531,10 +541,6 @@ const routers = createBrowserRouter([
       {
         path: "/r/:linkCode",
         element: <AffiliateRedirectPage />,
-      },
-      {
-        path: "/map-demo",
-        element: <VietMapDemoPage />,
       },
       {
         path: "*",

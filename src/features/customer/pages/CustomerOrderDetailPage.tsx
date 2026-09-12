@@ -11,6 +11,8 @@ import {
   Receipt,
   Copy,
   QrCode,
+  Coins,
+  Sparkles,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -907,6 +909,30 @@ export default function CustomerOrderDetailPage() {
             </div>
 
             <OrderStatusBadge status={displayOrderStatus} />
+          </div>
+
+          {/* Checkout Review Mission Banner */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/25">
+                <Coins className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  Nhiệm Vụ Đánh Giá Checkout
+                </span>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Đánh giá quán sau khi trải nghiệm nhận ngay{" "}
+                  <span className="text-amber-600 dark:text-amber-400 font-black">
+                    +20 điểm thưởng
+                  </span>{" "}
+                  vào ví UGem!
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/80 px-3 py-1 text-xs font-black text-amber-800 dark:text-amber-300 shadow-xs">
+              <Sparkles className="h-3.5 w-3.5" /> Thưởng ngay
+            </span>
           </div>
 
           {!effectiveOrderId ? (

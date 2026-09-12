@@ -8,6 +8,7 @@ import {
   Map as MapIcon,
   MapPin,
   Navigation,
+  QrCode,
   Route,
   Search,
   ShoppingBag,
@@ -35,6 +36,7 @@ import { getCategoryDisplayName } from "@/shared/utils/category";
 import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
 import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
+import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import { getNearbyMerchants } from "../services/merchantService";
 import { getWishlist } from "../services/wishlistService";
 import { getCurrentUser } from "@/features/auth";
@@ -235,6 +237,8 @@ export default function CustomerHomePage() {
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
+  const [selectedRadiusKm, setSelectedRadiusKm] = useState<number>(5);
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -298,6 +302,7 @@ export default function CustomerHomePage() {
       coordsToUse: Coords,
       categoryIdToUse?: string,
       priceRangeToUse?: string,
+      radiusKmToUse?: number,
     ) => {
       setLoading(true);
 
@@ -308,7 +313,7 @@ export default function CustomerHomePage() {
           keyword: searchKeyword,
           categoryId: categoryIdToUse || undefined,
           priceRange: priceRangeToUse || undefined,
-          radiusKm: 15,
+          radiusKm: radiusKmToUse ?? selectedRadiusKm,
         });
 
         setMerchants(data);
@@ -324,7 +329,7 @@ export default function CustomerHomePage() {
         setLoading(false);
       }
     },
-    [],
+    [selectedRadiusKm],
   );
 
   const applyCustomerOrigin = useCallback(
@@ -344,9 +349,10 @@ export default function CustomerHomePage() {
         nextCoords,
         selectedCategoryId,
         selectedPriceRange,
+        selectedRadiusKm,
       );
     },
-    [keyword, loadMerchants, selectedCategoryId, selectedPriceRange],
+    [keyword, loadMerchants, selectedCategoryId, selectedPriceRange, selectedRadiusKm],
   );
 
   useEffect(() => {
@@ -568,17 +574,46 @@ export default function CustomerHomePage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    loadMerchants(keyword, coords, selectedCategoryId, selectedPriceRange);
+    loadMerchants(
+      keyword,
+      coords,
+      selectedCategoryId,
+      selectedPriceRange,
+      selectedRadiusKm,
+    );
+  }
+
+  function handleRadiusChange(nextRadiusKm: number) {
+    setSelectedRadiusKm(nextRadiusKm);
+    void loadMerchants(
+      keyword,
+      coords,
+      selectedCategoryId,
+      selectedPriceRange,
+      nextRadiusKm,
+    );
   }
 
   function handleCategoryChange(nextCategoryId: string) {
     setSelectedCategoryId(nextCategoryId);
-    void loadMerchants(keyword, coords, nextCategoryId, selectedPriceRange);
+    void loadMerchants(
+      keyword,
+      coords,
+      nextCategoryId,
+      selectedPriceRange,
+      selectedRadiusKm,
+    );
   }
 
   function handlePriceRangeChange(nextPriceRange: string) {
     setSelectedPriceRange(nextPriceRange);
-    void loadMerchants(keyword, coords, selectedCategoryId, nextPriceRange);
+    void loadMerchants(
+      keyword,
+      coords,
+      selectedCategoryId,
+      nextPriceRange,
+      selectedRadiusKm,
+    );
   }
 
   function handleServiceModeChange(nextMode: CustomerServiceMode) {
@@ -797,6 +832,34 @@ export default function CustomerHomePage() {
             {label}
           </button>
         ))}
+      </div>
+    );
+  }
+
+  function renderRadiusFilters(className = "") {
+    const RADIUS_OPTIONS = [1, 3, 5, 10, 15];
+    return (
+      <div className={cn("flex flex-wrap items-center gap-2", className)}>
+        <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mr-1">
+          <MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+          Bán kính:
+        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {RADIUS_OPTIONS.map((km) => (
+            <button
+              key={km}
+              type="button"
+              onClick={() => handleRadiusChange(km)}
+              className={`h-8 rounded-full px-3 text-xs font-black transition ${
+                selectedRadiusKm === km
+                  ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/25 ring-2 ring-cyan-500/30"
+                  : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
+              }`}
+            >
+              {km} km
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -1130,6 +1193,16 @@ export default function CustomerHomePage() {
             <Button
               type="button"
               variant="outline"
+              onClick={() => setCheckInModalOpen(true)}
+              aria-label="Mã check-in tích điểm của tôi"
+              className="h-11 gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-3 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50"
+            >
+              <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+              <span>Mã Check-in</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               onClick={handleOpenWishlist}
               aria-label="Mở danh sách quán yêu thích"
               className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
@@ -1208,6 +1281,11 @@ export default function CustomerHomePage() {
               <Search className="h-4 w-4" /> Tìm quán
             </Button>
           </form>
+
+          {/* Radius Filter Pills */}
+          <div className="relative z-10 mt-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 p-3 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-xs">
+            {renderRadiusFilters()}
+          </div>
         </section>
 
         {/* Categories Bar */}
@@ -1279,6 +1357,11 @@ export default function CustomerHomePage() {
           {renderMerchantListContent(false)}
         </section>
       </main>
+
+      <CustomerCheckInCodeModal
+        open={checkInModalOpen}
+        onClose={() => setCheckInModalOpen(false)}
+      />
     </div>
   );
 }
