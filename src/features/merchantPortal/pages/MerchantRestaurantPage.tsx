@@ -19,8 +19,10 @@ import {
   DollarSign,
   Compass,
   MessageSquare,
+  QrCode,
 } from "lucide-react";
 
+import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
@@ -202,6 +204,7 @@ async function resolveMerchantFromApprovedApplication(
 
 export function MerchantRestaurantPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const reviewsRef = useRef<HTMLDivElement | null>(null);
@@ -419,6 +422,15 @@ export function MerchantRestaurantPage() {
                   >
                     {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                     {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa hồ sơ"}
+                  </button>
+                )}
+                {merchant && (
+                  <button
+                    type="button"
+                    onClick={() => setQrModalOpen(true)}
+                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 dark:bg-cyan-500/20 px-5 text-xs font-black text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/20 shadow-sm transition"
+                  >
+                    <QrCode className="h-4 w-4" /> In mã QR bàn
                   </button>
                 )}
                 <Link
@@ -804,6 +816,16 @@ export function MerchantRestaurantPage() {
           )}
         </div>
       </section>
+
+      {merchant && (
+        <TableQrGeneratorModal
+          open={qrModalOpen}
+          onOpenChange={setQrModalOpen}
+          merchantId={merchant.id}
+          merchantName={merchant.name || ""}
+          merchantAddress={merchant.address}
+        />
+      )}
     </main>
   );
 }

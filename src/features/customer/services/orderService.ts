@@ -25,6 +25,7 @@ export async function createOrder(payload: {
   finalPrice: number;
   affiliateLinkCode?: string;
   campaignId?: string;
+  pointsToRedeem?: number;
   idempotencyKey?: string;
   foods: CreateOrderItem[];
 }) {
@@ -51,6 +52,7 @@ export async function createOrder(payload: {
       notes: payload.notes || "",
       affiliateLinkCode: payload.affiliateLinkCode,
       campaignId: payload.campaignId,
+      pointsToRedeem: payload.pointsToRedeem || undefined,
       foods: payload.foods.map((f) => ({
         foodId: f.foodId,
         quantity: f.quantity,

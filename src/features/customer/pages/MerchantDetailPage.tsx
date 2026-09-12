@@ -469,6 +469,7 @@ export default function MerchantDetailPage() {
         finalPrice: total,
         affiliateLinkCode: affiliateRef || getStoredAffiliateRef(merchant.id),
         campaignId: checkout.campaignId,
+        pointsToRedeem: checkout.pointsToRedeem,
         foods: cart.map((item) => ({
           foodId: item.food.id,
           quantity: item.quantity,

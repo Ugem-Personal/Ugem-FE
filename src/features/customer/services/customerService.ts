@@ -44,3 +44,28 @@ export async function confirmOrderNotReceived(orderId: string) {
 
   return data;
 }
+
+export type PointTransaction = {
+  id: string;
+  reviewerId: string;
+  amount: number;
+  pointsAfter: number;
+  type: string;
+  reason: string | null;
+  referenceId: string | null;
+  createdAt: string;
+};
+
+export type ReviewerProfileData = {
+  reviewerPoints: number;
+  reviewerRank: string;
+  pointTransactions: PointTransaction[];
+};
+
+export async function getReviewerProfile() {
+  const { data } = await api.get<ApiResponse<ReviewerProfileData>>(
+    "/customers/reviewer-profile",
+  );
+  return data.data;
+}
+

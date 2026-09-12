@@ -14,6 +14,8 @@ export type Merchant = {
   reviewCount?: number;
   totalViews?: number;
   underratedScore?: number;
+  strengthIndex?: number;
+  isUnderrated?: boolean;
   distance?: number;
   latitude?: number;
   longitude?: number;

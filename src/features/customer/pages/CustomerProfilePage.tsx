@@ -20,6 +20,14 @@ import {
   Lock,
   Calendar,
   Check,
+  Coins,
+  Sparkles,
+  Gift,
+  History,
+  QrCode,
+  Star,
+  ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 
 import { getCurrentUser, refreshCurrentSession } from "@/features/auth";
@@ -49,6 +57,10 @@ import {
   updateReviewerApplication,
   type ReviewerApplication,
 } from "@/features/review/services";
+import {
+  getReviewerProfile,
+  type ReviewerProfileData,
+} from "../services/customerService";
 
 function getInitial(name?: string) {
   return (name || "C").trim().charAt(0).toUpperCase() || "C";
@@ -58,6 +70,82 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
     : "Có lỗi xảy ra, vui lòng thử lại.";
+}
+
+function getRankDetails(points: number, rankStr?: string) {
+  let currentTier = "Bronze";
+  let tierName = "Đồng";
+  let tierIcon = "🥉";
+  let nextTierName = "Bạc";
+  let minPoints = 0;
+  let nextTierPoints = 100;
+  let bgGradient =
+    "from-amber-950/90 via-stone-900 to-amber-900/70 border-amber-600/40 text-amber-100 shadow-amber-500/10";
+  let badgeColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+  let glowColor = "bg-amber-500/15";
+
+  if (points >= 1000 || rankStr === "Diamond") {
+    currentTier = "Diamond";
+    tierName = "Kim Cương";
+    tierIcon = "💎";
+    nextTierName = "Tối Cao";
+    minPoints = 1000;
+    nextTierPoints = 1000;
+    bgGradient =
+      "from-cyan-950 via-slate-950 to-indigo-950 border-cyan-400/50 text-cyan-100 shadow-cyan-500/20";
+    badgeColor = "bg-cyan-500/20 text-cyan-300 border-cyan-400/40";
+    glowColor = "bg-cyan-500/20";
+  } else if (points >= 300 || rankStr === "Gold") {
+    currentTier = "Gold";
+    tierName = "Vàng";
+    tierIcon = "🥇";
+    nextTierName = "Kim Cương";
+    minPoints = 300;
+    nextTierPoints = 1000;
+    bgGradient =
+      "from-amber-900/90 via-yellow-950 to-amber-800/80 border-amber-400/50 text-amber-100 shadow-amber-500/15";
+    badgeColor = "bg-amber-400/20 text-amber-300 border-amber-400/40";
+    glowColor = "bg-amber-400/20";
+  } else if (points >= 100 || rankStr === "Silver") {
+    currentTier = "Silver";
+    tierName = "Bạc";
+    tierIcon = "🥈";
+    nextTierName = "Vàng";
+    minPoints = 100;
+    nextTierPoints = 300;
+    bgGradient =
+      "from-slate-800 via-slate-900 to-zinc-800 border-slate-400/40 text-slate-100 shadow-slate-500/10";
+    badgeColor = "bg-slate-300/20 text-slate-200 border-slate-300/40";
+    glowColor = "bg-slate-400/15";
+  }
+
+  const isMaxTier = currentTier === "Diamond";
+  const progressPercent = isMaxTier
+    ? 100
+    : Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(
+            ((points - minPoints) / (nextTierPoints - minPoints)) * 100,
+          ),
+        ),
+      );
+  const pointsToNext = Math.max(0, nextTierPoints - points);
+
+  return {
+    currentTier,
+    tierName,
+    tierIcon,
+    nextTierName,
+    nextTierPoints,
+    progressPercent,
+    pointsToNext,
+    isMaxTier,
+    bgGradient,
+    badgeColor,
+    glowColor,
+  };
 }
 
 export default function CustomerProfilePage() {
@@ -73,9 +161,14 @@ export default function CustomerProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [reviewerApp, setReviewerApp] = useState<ReviewerApplication | null>(
-    null,
-  );
+
+  // Reviewer Points & Rank
+  const [reviewerProfile, setReviewerProfile] =
+    useState<ReviewerProfileData | null>(null);
+  const [isLoadingPoints, setIsLoadingPoints] = useState(false);
+
+  const [reviewerApp, setReviewerApp] =
+    useState<ReviewerApplication | null>(null);
   const [reviewerForm, setReviewerForm] = useState({
     motivation: "",
     experience: "",
@@ -110,7 +203,9 @@ export default function CustomerProfilePage() {
       const status = application?.status?.toLowerCase() ?? "";
       const isAccepted =
         application &&
-        (status === "accept" || status === "accepted" || status === "approved");
+        (status === "accept" ||
+          status === "accepted" ||
+          status === "approved");
 
       if (!isAccepted || currentUser?.Role === "Reviewer") return;
 
@@ -152,11 +247,25 @@ export default function CustomerProfilePage() {
     }
   }, [currentUser?.Name]);
 
+  const loadPoints = useCallback(async () => {
+    setIsLoadingPoints(true);
+    try {
+      const res = await getReviewerProfile();
+      if (res) {
+        setReviewerProfile(res);
+      }
+    } catch (error) {
+      console.error("Không thể tải điểm Reviewer:", error);
+    } finally {
+      setIsLoadingPoints(false);
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
 
     const loadData = async () => {
-      await loadProfile();
+      await Promise.all([loadProfile(), loadPoints()]);
 
       try {
         const data = await getMyReviewerApplication();
@@ -184,7 +293,7 @@ export default function CustomerProfilePage() {
     return () => {
       active = false;
     };
-  }, [loadProfile, refreshReviewerSessionIfNeeded]);
+  }, [loadProfile, loadPoints, refreshReviewerSessionIfNeeded]);
 
   async function handleAvatarUpload(file?: File) {
     if (!file) return;
@@ -355,6 +464,10 @@ export default function CustomerProfilePage() {
     }
   }
 
+  const currentPoints = reviewerProfile?.reviewerPoints ?? 0;
+  const currentRank = reviewerProfile?.reviewerRank || "Bronze";
+  const rankInfo = getRankDetails(currentPoints, currentRank);
+
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
       {/* Dynamic Glow Backdrops */}
@@ -379,12 +492,15 @@ export default function CustomerProfilePage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => void loadProfile()}
-              disabled={isLoading}
+              onClick={() => {
+                void loadProfile();
+                void loadPoints();
+              }}
+              disabled={isLoading || isLoadingPoints}
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-4 text-xs font-black text-slate-700 dark:text-slate-300 shadow-md backdrop-blur-xl transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               <RefreshCw
-                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isLoading || isLoadingPoints ? "animate-spin" : ""}`}
               />
               Làm mới
             </button>
@@ -589,7 +705,335 @@ export default function CustomerProfilePage() {
             <DiningPreferencesCard />
           </div>
 
-          {/* Column Bottom: Reviewer Program Section */}
+          {/* Reviewer Points & Rank Membership Section (FULL WIDTH) */}
+          <div className="col-span-12 space-y-6">
+            <div className="rounded-[32px] border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 p-6 md:p-8 shadow-2xl backdrop-blur-2xl">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/10 text-amber-500 border border-amber-500/30 shadow-inner">
+                    <Coins className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                      Thẻ Thành Viên & Điểm Thưởng UGem
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold">
+                        1 điểm = 1.000đ
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Tích lũy điểm khi Check-in tại bàn hoặc viết đánh giá để trừ trực tiếp vào hóa đơn ăn uống
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void loadPoints()}
+                    disabled={isLoadingPoints}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+                  >
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isLoadingPoints ? "animate-spin" : ""}`}
+                    />
+                    Cập nhật điểm
+                  </button>
+                </div>
+              </div>
+
+              {/* VIP Card + Stats Showcase */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                {/* Metallic VIP Card */}
+                <div className="lg:col-span-5 flex flex-col">
+                  <div
+                    className={`relative overflow-hidden rounded-3xl border p-6 md:p-7 shadow-2xl transition-all duration-300 flex-1 flex flex-col justify-between bg-gradient-to-br ${rankInfo.bgGradient}`}
+                  >
+                    {/* Atmospheric Glow */}
+                    <div
+                      className={`absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl ${rankInfo.glowColor}`}
+                    />
+
+                    {/* Card Header */}
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-10 rounded-lg bg-gradient-to-tr from-amber-300/40 via-yellow-200/60 to-amber-400/30 border border-yellow-200/50 flex items-center justify-center shadow-inner">
+                          <div className="h-4 w-6 border border-yellow-100/40 rounded-sm" />
+                        </div>
+                        <span className="font-mono text-xs font-black tracking-widest text-white/80 uppercase">
+                          UGEM PASS
+                        </span>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border backdrop-blur-md ${rankInfo.badgeColor}`}
+                      >
+                        <span>{rankInfo.tierIcon}</span>
+                        <span>Hạng {rankInfo.tierName}</span>
+                      </span>
+                    </div>
+
+                    {/* Card Body - Balance */}
+                    <div className="relative my-8">
+                      <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-300">
+                        Số dư khả dụng
+                      </p>
+                      <div className="mt-1 flex items-baseline gap-2">
+                        <span className="text-4xl sm:text-5xl font-black tracking-tight text-white drop-shadow-md">
+                          {currentPoints.toLocaleString("vi-VN")}
+                        </span>
+                        <span className="text-base font-bold text-amber-300">
+                          Điểm
+                        </span>
+                      </div>
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-black/40 border border-white/10 px-3 py-1 text-xs font-mono font-bold text-emerald-300 backdrop-blur-md">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                        Trừ ngay = {(currentPoints * 1000).toLocaleString("vi-VN")} đ khi gọi món
+                      </div>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className="relative flex items-end justify-between border-t border-white/10 pt-4">
+                      <div>
+                        <p className="text-[10px] font-mono text-slate-400 uppercase">
+                          Thành viên
+                        </p>
+                        <p className="text-xs font-black text-white tracking-wide truncate max-w-[180px]">
+                          {displayName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-mono text-slate-400 uppercase">
+                          Quy chuẩn
+                        </p>
+                        <p className="text-xs font-mono font-bold text-cyan-300">
+                          1 Point = 1.000 VNĐ
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rank Progression & Perks */}
+                <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                  {/* Progress to next Tier */}
+                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 p-5">
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <TrendingUp className="h-4 w-4 text-cyan-500" />
+                        Tiến trình lên hạng:{" "}
+                        <span className="text-cyan-600 dark:text-cyan-400 font-black">
+                          {rankInfo.tierName}
+                        </span>
+                        {!rankInfo.isMaxTier && (
+                          <>
+                            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-amber-500 font-black">
+                              {rankInfo.nextTierName}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                      <span className="font-mono font-black text-slate-900 dark:text-white">
+                        {rankInfo.isMaxTier
+                          ? "Hạng Tối Đa"
+                          : `${currentPoints} / ${rankInfo.nextTierPoints} Điểm`}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="h-3 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 via-amber-400 to-amber-500 rounded-full transition-all duration-700 shadow-sm"
+                        style={{ width: `${rankInfo.progressPercent}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      <span>
+                        {rankInfo.tierIcon} {rankInfo.tierName}
+                      </span>
+                      {!rankInfo.isMaxTier ? (
+                        <span>
+                          Cần thêm{" "}
+                          <strong className="text-amber-500">
+                            {rankInfo.pointsToNext} điểm
+                          </strong>{" "}
+                          để lên hạng {rankInfo.nextTierName}
+                        </span>
+                      ) : (
+                        <span className="text-cyan-400 font-bold">
+                          🎉 Đang sở hữu cấp bậc VIP Kim Cương
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3 Steps to Earn Points */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
+                      <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold text-xs mb-1">
+                        <QrCode className="h-4 w-4" />
+                        <span>Check-in Bàn</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Quét QR tại bàn ăn
+                      </p>
+                      <p className="mt-2 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        +10 Điểm
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
+                      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs mb-1">
+                        <Star className="h-4 w-4" />
+                        <span>Đánh giá quán</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Kèm ảnh chụp món ăn
+                      </p>
+                      <p className="mt-2 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        +15 ~ 20 Điểm
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
+                      <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs mb-1">
+                        <Gift className="h-4 w-4" />
+                        <span>Trừ tiền bill</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Chọn dùng điểm khi order
+                      </p>
+                      <p className="mt-2 text-xs font-black text-cyan-600 dark:text-cyan-400">
+                        1đ = 1.000 VNĐ
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Ledger Table */}
+              <div className="mt-8 border-t border-slate-200/80 dark:border-white/10 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <History className="h-4 w-4 text-slate-400" />
+                    Lịch sử giao dịch điểm thưởng
+                  </h4>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                    {reviewerProfile?.pointTransactions?.length ?? 0} giao dịch
+                    gần nhất
+                  </span>
+                </div>
+
+                {isLoadingPoints ? (
+                  <div className="py-8 text-center text-slate-400">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-cyan-500" />
+                    <p className="mt-2 text-xs font-bold">
+                      Đang tải lịch sử giao dịch...
+                    </p>
+                  </div>
+                ) : !reviewerProfile?.pointTransactions ||
+                  reviewerProfile.pointTransactions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-8 text-center">
+                    <Coins className="mx-auto h-8 w-8 text-slate-400/60 mb-2" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Chưa có lịch sử giao dịch điểm
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                      Hãy quét mã QR tại bàn khi ghé quán ăn hoặc viết đánh giá
+                      chân thực để nhận ngay những điểm thưởng đầu tiên!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-white/10 text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400">
+                          <th className="pb-3 font-bold">Loại giao dịch</th>
+                          <th className="pb-3 font-bold">Nội dung</th>
+                          <th className="pb-3 font-bold text-right">Số điểm</th>
+                          <th className="pb-3 font-bold text-right">
+                            Số dư sau
+                          </th>
+                          <th className="pb-3 font-bold text-right">
+                            Thời gian
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium">
+                        {reviewerProfile.pointTransactions.map((tx) => {
+                          const isPositive = tx.amount > 0;
+                          return (
+                            <tr
+                              key={tx.id}
+                              className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                            >
+                              <td className="py-3.5 pr-2">
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold font-mono ${
+                                    isPositive
+                                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                      : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                                  }`}
+                                >
+                                  {isPositive ? (
+                                    <Sparkles className="h-3 w-3" />
+                                  ) : (
+                                    <Gift className="h-3 w-3" />
+                                  )}
+                                  {tx.type === "CHECK_IN"
+                                    ? "CHECK-IN BÀN"
+                                    : tx.type === "REVIEW"
+                                      ? "ĐÁNH GIÁ QUÁN"
+                                      : tx.type === "REVIEW_PHOTO"
+                                        ? "REVIEW KÈM ẢNH"
+                                        : tx.type === "POINT_REDEMPTION"
+                                          ? "ĐỔI ĐIỂM TRỪ BILL"
+                                          : tx.type}
+                                </span>
+                              </td>
+                              <td className="py-3.5 pr-2 text-slate-700 dark:text-slate-200 font-bold max-w-xs truncate">
+                                {tx.reason ||
+                                  (isPositive
+                                    ? "Thưởng tương tác UGem"
+                                    : "Giảm giá hóa đơn món")}
+                              </td>
+                              <td
+                                className={`py-3.5 text-right font-black font-mono ${
+                                  isPositive
+                                    ? "text-emerald-600 dark:text-emerald-400"
+                                    : "text-rose-600 dark:text-rose-400"
+                                }`}
+                              >
+                                {isPositive ? `+${tx.amount}` : tx.amount} đ
+                              </td>
+                              <td className="py-3.5 text-right font-mono font-bold text-slate-500 dark:text-slate-400">
+                                {tx.pointsAfter?.toLocaleString("vi-VN") ?? "-"}{" "}
+                                đ
+                              </td>
+                              <td className="py-3.5 text-right font-mono text-[11px] text-slate-400">
+                                {new Date(tx.createdAt).toLocaleString(
+                                  "vi-VN",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  },
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Column Bottom: Reviewer Program Application Section */}
           {reviewerApp && isReviewerAccepted && (
             <div className="col-span-12 rounded-3xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 p-6 shadow-xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -626,8 +1070,8 @@ export default function CustomerProfilePage() {
                         : "Trở thành Reviewer chính thức"}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-                      Đánh giá món ăn, nhận mã giới thiệu Affiliate và tích lũy
-                      phần thưởng độc quyền từ UGem.
+                      Đánh giá món ăn, nhận mã giới thiệu và tích lũy phần thưởng
+                      độc quyền từ UGem.
                     </p>
                   </div>
                 </div>

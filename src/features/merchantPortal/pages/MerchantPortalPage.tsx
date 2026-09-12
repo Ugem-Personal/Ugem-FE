@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BarChart3,
+  CheckCircle2,
   Eye,
+  QrCode,
   ShoppingBag,
+  Sparkles,
   Store,
   UtensilsCrossed,
   Wallet,
   TrendingUp,
   UserCheck,
 } from "lucide-react";
+import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
 import { ApplicationStatusCard } from "../components/ApplicationStatusCard";
 import { TipsSection } from "../components/TipsSection";
 import { useMyApplications } from "../hooks/useMyApplications";
@@ -29,6 +33,7 @@ export function MerchantPortalPage() {
   const [stats, setStats] = useState<MerchantStatistics | null>(null);
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
   const latestApplication = applications[0];
 
@@ -106,7 +111,16 @@ export function MerchantPortalPage() {
                 </p>
               </div>
             </div>
-          </section>
+            {merchant && (
+          <TableQrGeneratorModal
+            open={qrModalOpen}
+            onOpenChange={setQrModalOpen}
+            merchantId={merchant.id}
+            merchantName={merchant.name || ""}
+            merchantAddress={merchant.address}
+          />
+        )}
+      </section>
 
           {/* Business KPI Statistics (Real Backend Data) */}
           {merchant && (
@@ -139,6 +153,96 @@ export function MerchantPortalPage() {
                 subtext="Doanh thu / số lượng đơn"
                 color="amber"
               />
+            </section>
+          )}
+
+          {/* Underrated Score & Rebalancing Radar Widget */}
+          {merchant && (
+            <section className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl backdrop-blur-xl">
+              <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-1/3 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-3 max-w-xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/20 px-3 py-1 text-xs font-mono font-black uppercase tracking-wider text-cyan-300">
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                      UGem Rebalancing Engine
+                    </span>
+                    {(merchant.underratedScore && Number(merchant.underratedScore) >= 3.0) || merchant.isUnderrated ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300">
+                        💎 Đang được đẩy ưu tiên trên Radar
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300">
+                        🌟 Quán Ẩm Thực Nổi Bật
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    Chỉ Số Radar & Điểm Tiềm Năng (US)
+                  </h2>
+
+                  <p className="text-xs sm:text-sm font-medium text-slate-300 leading-relaxed">
+                    Thuật toán UGem tính toán <strong className="text-cyan-300">Điểm Tiềm Năng (US)</strong> dựa trên Chất Lượng Đánh Giá và Chỉ Số Sức Mạnh (SI) để tự động đưa quán ngon núp hẻm tiếp cận hàng nghìn thực khách quanh khu vực.
+                  </p>
+                </div>
+
+                {/* Score Stats Badges */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Chất lượng
+                    </p>
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-amber-400">
+                      {merchant.rating ? Number(merchant.rating).toFixed(1) : "5.0"}★
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {merchant.reviewCount || 0} đánh giá
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Sức Mạnh (SI)
+                    </p>
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-indigo-400">
+                      {merchant.strengthIndex ? Number(merchant.strengthIndex).toFixed(1) : "12.5"}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Độ phủ & tương tác
+                    </p>
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300">
+                      Điểm Tiềm Năng (US)
+                    </p>
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-cyan-400">
+                      {merchant.underratedScore ? Number(merchant.underratedScore).toFixed(2) : "4.45"}
+                    </p>
+                    <p className="text-[10px] text-cyan-300/80 mt-0.5">
+                      Ưu tiên Radar
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Bar inside Widget */}
+              <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Mẹo: Nhắc khách quét QR bàn và đánh giá kèm ảnh (+20 điểm) để tối ưu điểm US.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQrModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-cyan-400 shadow-md transition"
+                >
+                  <QrCode className="h-4 w-4" /> Tạo & In mã QR bàn
+                </button>
+              </div>
             </section>
           )}
 

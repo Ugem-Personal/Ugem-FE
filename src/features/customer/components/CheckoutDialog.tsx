@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Banknote,
+  Coins,
   Loader2,
+  Sparkles,
   Store,
   Tag,
   Truck,
@@ -21,6 +23,7 @@ import {
   type CheckoutCampaign,
   type CustomerOrderType,
 } from "../services/orderService";
+import { getReviewerProfile } from "../services/customerService";
 import {
   DeliveryLocationPicker,
   type DeliveryLocation,
@@ -37,6 +40,7 @@ export type CheckoutFormData = {
   paymentMethod: CheckoutPaymentMethod;
   campaignId?: string;
   campaignCode?: string;
+  pointsToRedeem?: number;
 };
 
 type CheckoutDialogProps = {
@@ -122,6 +126,8 @@ export function CheckoutDialog({
   >([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customerPoints, setCustomerPoints] = useState<number>(0);
+  const [usePoints, setUsePoints] = useState<boolean>(false);
 
   const merchantProximity = useMemo(() => {
     if (
@@ -143,6 +149,17 @@ export function CheckoutDialog({
     setPaymentMethod(defaultOrderType === "Online" ? "COD" : "Cash");
     setErrors({});
   }, [open, defaultOrderType, defaultRecipientName]);
+
+  useEffect(() => {
+    if (!open) return;
+    void getReviewerProfile()
+      .then((res) => {
+        if (res && typeof res.reviewerPoints === "number") {
+          setCustomerPoints(res.reviewerPoints);
+        }
+      })
+      .catch(() => {});
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -171,6 +188,14 @@ export function CheckoutDialog({
     () => calculateDiscount(appliedCampaign, total),
     [appliedCampaign, total],
   );
+
+  const remainingBill = Math.max(0, total - discount);
+  const maxPointsPossible = Math.min(
+    customerPoints,
+    Math.floor(remainingBill / 1000),
+  );
+  const pointsDiscount = usePoints && maxPointsPossible > 0 ? maxPointsPossible * 1000 : 0;
+  const finalPayable = Math.max(0, remainingBill - pointsDiscount);
 
   async function resolveCampaign() {
     const normalizedCode = campaignCode.trim().toUpperCase();
@@ -256,6 +281,8 @@ export function CheckoutDialog({
       paymentMethod,
       campaignId: campaign?.id,
       campaignCode: campaign?.code,
+      pointsToRedeem:
+        usePoints && maxPointsPossible > 0 ? maxPointsPossible : undefined,
     });
   }
 
@@ -294,27 +321,37 @@ export function CheckoutDialog({
               ) : null}
             </label>
 
-            <div className="space-y-2">
-              <span className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-                {orderType === "Online" ? (
-                  <Truck className="h-4 w-4 text-cyan-600" />
-                ) : (
-                  <Store className="h-4 w-4 text-cyan-600" />
-                )}
-                Hình thức nhận món *
-              </span>
-              <div className="flex h-12 items-center gap-2.5 rounded-xl border border-cyan-200 bg-cyan-50/80 dark:border-cyan-500/30 dark:bg-cyan-500/10 px-4 text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-2xs">
-                {orderType === "Online" ? (
-                  <>
-                    <Truck className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                    <span>Giao hàng tận nơi</span>
-                  </>
-                ) : (
-                  <>
-                    <Store className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                    <span>Tự đến lấy / Ăn tại quán</span>
-                  </>
-                )}
+            <div className="space-y-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+              <span>Hình thức nhận món</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderType("Online");
+                    if (paymentMethod === "Cash") setPaymentMethod("COD");
+                  }}
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                    orderType === "Online"
+                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <Truck className="h-4 w-4" /> Giao tận nơi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderType("Offline");
+                    if (paymentMethod === "COD") setPaymentMethod("Cash");
+                  }}
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                    orderType === "Offline"
+                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <Store className="h-4 w-4" /> Ăn tại quán
+                </button>
               </div>
             </div>
           </div>
@@ -322,177 +359,178 @@ export function CheckoutDialog({
           {orderType === "Online" ? (
             <DeliveryLocationPicker
               value={deliveryLocation}
-              error={errors.deliveryAddress}
-              proximity={merchantProximity}
-              onChange={(location) => {
-                setDeliveryLocation(location);
-                setErrors((current) => ({ ...current, deliveryAddress: "" }));
+              onChange={(nextLocation) => {
+                setDeliveryLocation(nextLocation);
+                if (errors.deliveryAddress) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.deliveryAddress;
+                    return next;
+                  });
+                }
               }}
+              proximity={merchantProximity}
+              error={errors.deliveryAddress}
             />
           ) : (
-            <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
-              <Store className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-              <span>
-                Đơn hàng sẽ được chuẩn bị tại quán. Quý khách vui lòng nhận món
-                và thanh toán trực tiếp tại quán.
-              </span>
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+              Bạn đang chọn dùng món tại quán. Khi tới nơi, nhân viên sẽ phục vụ
+              món theo đúng thông tin đơn hàng này.
             </div>
           )}
 
-          <fieldset className="space-y-2">
-            <legend className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-              <WalletCards className="h-4 w-4 text-cyan-600" /> Thanh toán *
-            </legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {(orderType === "Online"
-                ? (["COD", "BankTransfer"] as const)
-                : (["Cash", "BankTransfer"] as const)
-              ).map((value) => (
+          <div className="space-y-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+            <span>Phương thức thanh toán</span>
+            <div
+              className={`grid gap-2 ${
+                orderType === "Online" ? "grid-cols-2" : "grid-cols-2"
+              }`}
+            >
+              {orderType === "Online" ? (
                 <button
-                  key={value}
                   type="button"
-                  aria-pressed={paymentMethod === value}
-                  onClick={() => setPaymentMethod(value)}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-black transition ${
-                    paymentMethod === value
-                      ? "border-cyan-500 bg-cyan-50 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
+                  onClick={() => setPaymentMethod("COD")}
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                    paymentMethod === "COD"
+                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
                   }`}
                 >
-                  <Banknote className="h-4 w-4" />
-                  {value === "COD"
-                    ? "COD - trả khi nhận"
-                    : value === "Cash"
-                      ? "Tiền mặt tại quán"
-                      : "Chuyển khoản"}
+                  <Banknote className="h-4 w-4" /> Tiền mặt (COD)
                 </button>
-              ))}
-            </div>
-          </fieldset>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("Cash")}
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                    paymentMethod === "Cash"
+                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <Banknote className="h-4 w-4" /> Tiền mặt tại quầy
+                </button>
+              )}
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
-                  <Tag className="h-4 w-4 text-cyan-600" /> Ưu đãi dành cho bạn
-                </h3>
-                <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Chọn ưu đãi đang có tại quán, không cần nhớ mã.
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("BankTransfer")}
+                className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                  paymentMethod === "BankTransfer"
+                    ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
+                }`}
+              >
+                <WalletCards className="h-4 w-4" /> VietQR / Chuyển khoản
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                <Tag className="h-4 w-4 text-cyan-600" /> Mã giảm giá của quán
+              </span>
               {loadingCampaigns ? (
-                <Loader2 className="h-4 w-4 animate-spin text-cyan-600" />
+                <span className="text-xs font-semibold text-slate-400">
+                  Đang tải ưu đãi...
+                </span>
               ) : null}
             </div>
 
-            {availableCampaigns.length > 0 ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {availableCampaigns.map((campaign) => {
-                  const eligibilityError = getCampaignEligibilityError(
-                    campaign,
-                    total,
-                  );
-                  const selected = appliedCampaign?.id === campaign.id;
+            <div className="flex gap-2">
+              <input
+                value={campaignCode}
+                onChange={(event) =>
+                  setCampaignCode(event.target.value.toUpperCase())
+                }
+                placeholder="Nhập mã ưu đãi..."
+                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs font-black tracking-wider uppercase outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950"
+              />
+              <button
+                type="button"
+                onClick={() => void resolveCampaign()}
+                disabled={checkingCampaign || !campaignCode.trim()}
+                className="h-11 rounded-xl bg-slate-900 px-4 text-xs font-black text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                {checkingCampaign ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "Áp dụng"
+                )}
+              </button>
+            </div>
 
-                  return (
-                    <button
-                      key={campaign.id}
-                      type="button"
-                      disabled={Boolean(eligibilityError)}
-                      aria-pressed={selected}
-                      onClick={() => {
-                        setCampaignCode(campaign.code);
-                        setAppliedCampaign(campaign);
-                        setCampaignMessage(`Đã áp dụng ${campaign.code}.`);
-                      }}
-                      className={`min-h-24 rounded-2xl border p-3 text-left transition ${
-                        selected
-                          ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/15 dark:bg-emerald-500/10"
-                          : eligibilityError
-                            ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-60 dark:border-white/10 dark:bg-white/5"
-                            : "border-cyan-200 bg-cyan-50/60 hover:border-cyan-400 hover:bg-cyan-50 dark:border-cyan-500/25 dark:bg-cyan-500/5"
-                      }`}
-                    >
-                      <span className="flex items-start justify-between gap-2">
-                        <span>
-                          <span className="block font-mono text-sm font-black text-cyan-700 dark:text-cyan-300">
-                            {campaign.code}
-                          </span>
-                          <span className="mt-0.5 block text-sm font-black text-slate-900 dark:text-white">
-                            {campaign.title}
-                          </span>
-                        </span>
-                        <span className="shrink-0 rounded-full bg-white px-2 py-1 text-xs font-black text-emerald-700 shadow-xs dark:bg-slate-900 dark:text-emerald-300">
-                          {campaign.isPercentage
-                            ? `-${campaign.discountValue}%`
-                            : `-${formatPrice(campaign.discountValue)}`}
-                        </span>
-                      </span>
-                      <span className="mt-2 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                        {eligibilityError ||
-                          `Đơn từ ${formatPrice(Number(campaign.minOrderAmount ?? 0))}${
-                            campaign.maxDiscountAmount
-                              ? ` • Giảm tối đa ${formatPrice(campaign.maxDiscountAmount)}`
-                              : ""
-                          }`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : !loadingCampaigns ? (
-              <div className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-xs font-semibold text-slate-500 dark:border-white/10 dark:text-slate-400">
-                Quán hiện chưa có ưu đãi khả dụng.
-              </div>
+            {campaignMessage ? (
+              <p
+                className={`text-xs font-semibold ${
+                  appliedCampaign ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {campaignMessage}
+              </p>
             ) : null}
 
-            <details className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-white/10 dark:bg-slate-950/50">
-              <summary className="cursor-pointer text-xs font-black text-slate-700 dark:text-slate-300">
-                Nhập mã ưu đãi khác
-              </summary>
-              <div className="mt-3">
-                <label
-                  htmlFor="campaign-code"
-                  className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200"
-                >
-                  <Tag className="h-4 w-4 text-cyan-600" /> Mã giảm giá
-                </label>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    id="campaign-code"
-                    value={campaignCode}
-                    onChange={(event) => {
-                      setCampaignCode(event.target.value.toUpperCase());
-                      setAppliedCampaign(null);
-                      setCampaignMessage("");
-                    }}
-                    placeholder="Ví dụ: UAT10"
-                    className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 font-mono font-black uppercase outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950"
-                  />
+            {availableCampaigns.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {availableCampaigns.map((campaign) => (
                   <button
+                    key={campaign.id}
                     type="button"
-                    onClick={() => void resolveCampaign()}
-                    disabled={checkingCampaign || !campaignCode.trim()}
-                    className="h-12 min-w-24 rounded-xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300"
+                    onClick={() => {
+                      setCampaignCode(campaign.code);
+                      setAppliedCampaign(campaign);
+                      setCampaignMessage(`Đã chọn ${campaign.code}.`);
+                    }}
+                    className="rounded-lg border border-cyan-500/30 bg-cyan-50/60 px-2.5 py-1 text-[11px] font-bold text-cyan-700 transition hover:bg-cyan-100 dark:border-cyan-400/20 dark:bg-cyan-950/40 dark:text-cyan-300"
                   >
-                    {checkingCampaign ? (
-                      <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-                    ) : (
-                      "Áp dụng"
-                    )}
+                    {campaign.code} ({campaign.isPercentage ? `${campaign.discountValue}%` : `${campaign.discountValue / 1000}k`})
                   </button>
-                </div>
-                {campaignMessage ? (
-                  <p
-                    className={`text-xs font-bold ${appliedCampaign ? "text-emerald-600" : "text-rose-600"}`}
-                    role="status"
-                  >
-                    {campaignMessage}
-                  </p>
-                ) : null}
+                ))}
               </div>
-            </details>
+            ) : null}
           </div>
+
+          {/* UGem Reviewer Points Redemption Switch */}
+          {customerPoints > 0 ? (
+            <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-500/20">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    <Coins className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Điểm thưởng UGem
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300">
+                        <Sparkles className="h-2.5 w-2.5" /> Có {customerPoints} điểm
+                      </span>
+                    </p>
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      1 điểm = 1.000đ (Dùng tối đa {maxPointsPossible} điểm = -{formatPrice(maxPointsPossible * 1000)})
+                    </p>
+                  </div>
+                </div>
+
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={usePoints}
+                    onChange={(e) => setUsePoints(e.target.checked)}
+                    className="peer sr-only"
+                    disabled={maxPointsPossible <= 0}
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-slate-600 dark:bg-slate-700" />
+                </label>
+              </div>
+              {usePoints && maxPointsPossible > 0 ? (
+                <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex justify-between text-xs font-bold text-amber-700 dark:text-amber-300">
+                  <span>Trừ điểm thưởng ({maxPointsPossible} điểm):</span>
+                  <span>-{formatPrice(pointsDiscount)}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-950/60">
             <div className="flex justify-between text-sm font-semibold text-slate-600 dark:text-slate-300">
@@ -501,14 +539,20 @@ export function CheckoutDialog({
             </div>
             {discount > 0 ? (
               <div className="mt-2 flex justify-between text-sm font-bold text-emerald-600">
-                <span>Giảm giá</span>
+                <span>Giảm giá mã khuyến mãi</span>
                 <span>-{formatPrice(discount)}</span>
+              </div>
+            ) : null}
+            {usePoints && pointsDiscount > 0 ? (
+              <div className="mt-2 flex justify-between text-sm font-bold text-amber-600">
+                <span>Trừ điểm UGem ({maxPointsPossible}đ)</span>
+                <span>-{formatPrice(pointsDiscount)}</span>
               </div>
             ) : null}
             <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950 dark:border-white/10 dark:text-white">
               <span>Tổng thanh toán</span>
               <span className="text-cyan-600">
-                {formatPrice(total - discount)}
+                {formatPrice(finalPayable)}
               </span>
             </div>
           </div>
