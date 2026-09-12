@@ -12,6 +12,7 @@ import {
   Utensils,
   Navigation,
   ShoppingBag,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Link,
@@ -997,9 +998,16 @@ export default function MerchantDetailPage() {
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-950 dark:text-white">
-                          {getReviewAuthorName(review)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-black text-slate-950 dark:text-white">
+                            {getReviewAuthorName(review)}
+                          </p>
+                          {review.isVerifiedDiner && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400">
+                              <CheckCircle2 className="h-3 w-3" /> Đã ăn tại quán
+                            </span>
+                          )}
+                        </div>
                         {review.createdAt ? (
                           <p className="text-xs font-semibold text-slate-400">
                             {new Date(review.createdAt).toLocaleString("vi-VN")}

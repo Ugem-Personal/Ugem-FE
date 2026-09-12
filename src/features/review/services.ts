@@ -27,6 +27,7 @@ export type Review = {
   createdAt?: string;
   customerName?: string | null;
   customerAvatarUrl?: string | null;
+  isVerifiedDiner?: boolean;
   details: ReviewDetail[];
 };
 
