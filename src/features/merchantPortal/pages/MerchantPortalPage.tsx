@@ -169,13 +169,17 @@ export function MerchantPortalPage() {
                       <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
                       UFind Rebalancing Engine
                     </span>
-                    {(merchant.underratedScore && Number(merchant.underratedScore) >= 3.0) || merchant.isUnderrated ? (
+                    {(merchant.underratedScore && Number(merchant.underratedScore) >= 0.5) || merchant.isUnderrated ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300">
                         💎 Đang được đẩy ưu tiên trên Radar
                       </span>
-                    ) : (
+                    ) : merchant.reviewCount && merchant.reviewCount > 0 ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300">
                         🌟 Quán Ẩm Thực Nổi Bật
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/20 px-3 py-1 text-xs font-bold text-cyan-300">
+                        🌱 Quán Mới Khởi Động
                       </span>
                     )}
                   </div>
@@ -196,7 +200,9 @@ export function MerchantPortalPage() {
                       Chất lượng
                     </p>
                     <p className="mt-1 text-xl sm:text-2xl font-black text-amber-400">
-                      {merchant.rating ? Number(merchant.rating).toFixed(1) : "5.0"}★
+                      {merchant.reviewCount && merchant.reviewCount > 0 && merchant.rating
+                        ? `${Number(merchant.rating).toFixed(1)}★`
+                        : "0.0★"}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       {merchant.reviewCount || 0} đánh giá
@@ -208,7 +214,7 @@ export function MerchantPortalPage() {
                       Sức Mạnh (SI)
                     </p>
                     <p className="mt-1 text-xl sm:text-2xl font-black text-indigo-400">
-                      {merchant.strengthIndex ? Number(merchant.strengthIndex).toFixed(1) : "12.5"}
+                      {Number(merchant.strengthIndex ?? 0).toFixed(1)}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Độ phủ & tương tác
@@ -220,7 +226,7 @@ export function MerchantPortalPage() {
                       Điểm Tiềm Năng (US)
                     </p>
                     <p className="mt-1 text-xl sm:text-2xl font-black text-cyan-400">
-                      {merchant.underratedScore ? Number(merchant.underratedScore).toFixed(2) : "4.45"}
+                      {Number(merchant.underratedScore ?? 0).toFixed(2)}
                     </p>
                     <p className="text-[10px] text-cyan-300/80 mt-0.5">
                       Ưu tiên Radar
