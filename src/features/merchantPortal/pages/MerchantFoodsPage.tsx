@@ -33,7 +33,6 @@ import type { Food } from "../types";
 import { getCategories } from "@/shared/services/categoryService";
 import type { Category } from "@/shared/types";
 import {
-  CUISINE_OPTIONS,
   getCategoryDisplayName,
   isFoodTypeCategoryName,
 } from "@/shared/utils/category";
@@ -145,10 +144,43 @@ export function MerchantFoodsPage() {
     });
   }, []);
 
-  const foodTypeCategories = useMemo(
-    () => categories.filter((category) => isFoodTypeCategoryName(category.name)),
-    [categories],
-  );
+  const foodTypeCategories = useMemo(() => {
+    const list = categories.filter((category) =>
+      isFoodTypeCategoryName(category.name),
+    );
+    const PRIORITY_ORDER = [
+      "Món chính",
+      "Đồ uống",
+      "Món ăn nhẹ",
+      "Món khai vị",
+      "Món tráng miệng",
+    ];
+    return list.sort((a, b) => {
+      const aName = getCategoryDisplayName(a.name);
+      const bName = getCategoryDisplayName(b.name);
+      const aIdx = PRIORITY_ORDER.indexOf(aName);
+      const bIdx = PRIORITY_ORDER.indexOf(bName);
+      return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+    });
+  }, [categories]);
+
+  const defaultMainDishCategoryId = useMemo(() => {
+    const mainDish = foodTypeCategories.find(
+      (cat) => getCategoryDisplayName(cat.name) === "Món chính",
+    );
+    return mainDish?.id ?? foodTypeCategories[0]?.id ?? "";
+  }, [foodTypeCategories]);
+
+  useEffect(() => {
+    if (!editingFoodId && defaultMainDishCategoryId) {
+      setForm((prev) => {
+        if (prev.categoryIds.length === 0) {
+          return { ...prev, categoryIds: [defaultMainDishCategoryId] };
+        }
+        return prev;
+      });
+    }
+  }, [defaultMainDishCategoryId, editingFoodId]);
 
   // Filtered foods calculation
   const filteredFoods = useMemo(() => {
@@ -233,18 +265,15 @@ export function MerchantFoodsPage() {
     setImageFileName("");
   }
 
-  // Mỗi món chỉ thuộc một loại món; nền ẩm thực được lưu riêng.
+  // Mỗi món chỉ thuộc một loại món
   function toggleCategorySelection(categoryId: string) {
-    setForm((prev) => {
-      const exists = prev.categoryIds.includes(categoryId);
-      const nextIds = exists ? [] : [categoryId];
-
-      if (nextIds.length > 0 && formErrors.categoryIds) {
-        setFormErrors((e) => ({ ...e, categoryIds: undefined }));
-      }
-
-      return { ...prev, categoryIds: nextIds };
-    });
+    setForm((prev) => ({
+      ...prev,
+      categoryIds: [categoryId],
+    }));
+    if (formErrors.categoryIds) {
+      setFormErrors((e) => ({ ...e, categoryIds: undefined }));
+    }
   }
 
   // Validate form inputs
@@ -266,7 +295,11 @@ export function MerchantFoodsPage() {
     }
 
     if (form.categoryIds.length === 0) {
-      errors.categoryIds = "Vui lòng chọn ít nhất 1 danh mục.";
+      if (defaultMainDishCategoryId) {
+        form.categoryIds = [defaultMainDishCategoryId];
+      } else {
+        errors.categoryIds = "Vui lòng chọn loại món.";
+      }
     }
 
     setFormErrors(errors);
@@ -331,7 +364,7 @@ export function MerchantFoodsPage() {
       price: "",
       imageUrl: "",
       cuisine: "",
-      categoryIds: [],
+      categoryIds: defaultMainDishCategoryId ? [defaultMainDishCategoryId] : [],
     });
     setFormErrors({});
     setImagePreview("");
@@ -726,8 +759,11 @@ export function MerchantFoodsPage() {
                 {/* Loại món */}
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                    <span>
-                      Loại món <span className="text-rose-500">*</span>
+                    <span className="flex items-center gap-2">
+                      <span>Loại món</span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 normal-case tracking-normal">
+                        Mặc định: Món chính
+                      </span>
                     </span>
                   </label>
 
@@ -763,30 +799,6 @@ export function MerchantFoodsPage() {
                     </p>
                   )}
                 </div>
-
-                {/* Nền ẩm thực */}
-                <label className="space-y-2 md:col-span-2">
-                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Nền ẩm thực <span className="font-semibold normal-case tracking-normal text-slate-400">(không bắt buộc)</span>
-                  </span>
-                  <select
-                    value={form.cuisine}
-                    onChange={(event) =>
-                      setForm((previous) => ({
-                        ...previous,
-                        cuisine: event.target.value,
-                      }))
-                    }
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white/70 px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
-                  >
-                    <option value="">Chọn nền ẩm thực</option>
-                    {CUISINE_OPTIONS.map((cuisine) => (
-                      <option key={cuisine} value={cuisine}>
-                        {cuisine}
-                      </option>
-                    ))}
-                  </select>
-                </label>
               </div>
 
               {/* Submit Buttons */}
