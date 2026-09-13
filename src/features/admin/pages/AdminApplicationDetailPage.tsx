@@ -7,7 +7,6 @@ import {
   Ban,
   CalendarClock,
   CheckCircle2,
-  ClipboardList,
   Clock3,
   FileText,
   ImageOff,
@@ -18,6 +17,12 @@ import {
   UserRound,
   Utensils,
   XCircle,
+  ShieldCheck,
+  IdCard,
+  Building2,
+  X,
+  ZoomIn,
+  UtensilsCrossed,
 } from "lucide-react";
 import {
   acceptApplication,
@@ -104,41 +109,76 @@ function parseApplicationDescription(description?: string) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const markerIndex = lines.findIndex((line) =>
-    line.toLowerCase().includes("thông tin ui bổ sung"),
-  );
-  const knownLabels = [
-    "Loại hình quán",
-    "Loại món chính",
-    "Khoảng giá trung bình",
-  ];
+  let representativeName = "";
+  let idCardNumber = "";
+  let idCardFrontUrl = "";
+  let idCardBackUrl = "";
+  let businessLicenseNumber = "";
+  let businessLicenseUrl = "";
+  let storePhoto2Url = "";
 
-  const metaLines =
-    markerIndex >= 0
-      ? lines.slice(markerIndex + 1)
-      : lines.filter((line) =>
-          knownLabels.some((label) => line.startsWith(`${label}:`)),
-        );
-  const summaryLines =
-    markerIndex >= 0
-      ? lines.slice(0, markerIndex)
-      : lines.filter(
-          (line) => !knownLabels.some((label) => line.startsWith(`${label}:`)),
-        );
+  const cleanSummaryLines: string[] = [];
+  const facts: { label: string; value: string }[] = [];
 
-  const facts = metaLines
-    .map((line) => {
-      const [label, ...valueParts] = line.split(":");
-      return {
-        label: label.trim(),
-        value: valueParts.join(":").trim(),
-      };
-    })
-    .filter((item) => item.label && item.value);
+  let inLegalSection = false;
+
+  for (const line of lines) {
+    if (line.includes("THÔNG TIN PHÁP LÝ") || line.includes("KYC")) {
+      inLegalSection = true;
+      continue;
+    }
+    if (line.startsWith("Người đại diện:")) {
+      representativeName = line.replace("Người đại diện:", "").trim();
+      continue;
+    }
+    if (line.startsWith("Số CCCD:")) {
+      idCardNumber = line.replace("Số CCCD:", "").trim();
+      continue;
+    }
+    if (line.startsWith("CCCD Mặt trước:")) {
+      idCardFrontUrl = line.replace("CCCD Mặt trước:", "").trim();
+      continue;
+    }
+    if (line.startsWith("CCCD Mặt sau:")) {
+      idCardBackUrl = line.replace("CCCD Mặt sau:", "").trim();
+      continue;
+    }
+    if (line.startsWith("Mã số GPKD:")) {
+      businessLicenseNumber = line.replace("Mã số GPKD:", "").trim();
+      continue;
+    }
+    if (line.startsWith("Giấy phép KD:")) {
+      businessLicenseUrl = line.replace("Giấy phép KD:", "").trim();
+      continue;
+    }
+    if (line.startsWith("Ảnh không gian quán:")) {
+      storePhoto2Url = line.replace("Ảnh không gian quán:", "").trim();
+      continue;
+    }
+
+    if (line.includes(":") && !inLegalSection) {
+      const [label, ...rest] = line.split(":");
+      facts.push({ label: label.trim(), value: rest.join(":").trim() });
+    } else if (!inLegalSection) {
+      cleanSummaryLines.push(line);
+    }
+  }
 
   return {
-    summary: summaryLines.join("\n") || "Chưa có mô tả quán.",
+    summary: cleanSummaryLines.join("\n") || "Chưa có mô tả quán.",
     facts,
+    legalDocs: {
+      representativeName,
+      idCardNumber,
+      idCardFrontUrl,
+      idCardBackUrl,
+      businessLicenseNumber,
+      businessLicenseUrl,
+      storePhoto2Url,
+      hasLegalDocs: Boolean(
+        idCardFrontUrl || idCardBackUrl || businessLicenseUrl || representativeName,
+      ),
+    },
   };
 }
 
@@ -188,6 +228,13 @@ export default function AdminApplicationDetailPage({
   const [submittingAction, setSubmittingAction] = useState<SubmitAction | null>(
     null,
   );
+  const [lightboxImage, setLightboxImage] = useState<{
+    src: string;
+    title: string;
+  } | null>(null);
+  const [checkMap, setCheckMap] = useState(false);
+  const [checkStorefront, setCheckStorefront] = useState(false);
+  const [checkLegalKyc, setCheckLegalKyc] = useState(false);
 
   const descriptionInfo = useMemo(
     () => parseApplicationDescription(application?.description),
@@ -451,7 +498,7 @@ export default function AdminApplicationDetailPage({
                     </span>
 
                     <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-black text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200">
-                      {application.type || "Merchant"}
+                      {application.restaurantType || application.type || "Quán ăn / Đồ uống"}
                     </span>
                   </div>
                 </div>
@@ -471,10 +518,10 @@ export default function AdminApplicationDetailPage({
                 </div>
 
                 <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-lg shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
-                  <ClipboardList className="mb-3 h-5 w-5 text-cyan-700 dark:text-cyan-400" />
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Menu</p>
-                  <p className="mt-1 text-sm font-black leading-5 text-slate-950 dark:text-white">
-                    {menuItems.length} món gửi kèm
+                  <UtensilsCrossed className="mb-3 h-5 w-5 text-cyan-700 dark:text-cyan-400" />
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Loại hình quán</p>
+                  <p className="mt-1 text-sm font-black leading-5 text-slate-950 dark:text-white truncate">
+                    {application.restaurantType || "Quán ăn / Đồ uống"}
                   </p>
                 </div>
 
@@ -533,6 +580,176 @@ export default function AdminApplicationDetailPage({
               )}
             </section>
 
+            {/* HỒ SƠ PHÁP LÝ & ĐỊNH DANH (BẮT BUỘC DUYỆT) */}
+            <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0 space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-800 shadow-sm ring-1 ring-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:ring-cyan-900">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="truncate text-lg font-black text-slate-950 dark:text-white">
+                      Hồ sơ pháp lý &amp; Định danh (KYC)
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Đối chiếu CCCD với Giấy phép KD để đảm bảo trách nhiệm pháp lý.
+                    </p>
+                  </div>
+                </div>
+
+                <span className="rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 px-3 py-1 text-xs font-black">
+                  Trọng tâm thẩm định
+                </span>
+              </div>
+
+              {/* Thông tin người đại diện */}
+              <div className="grid gap-3 sm:grid-cols-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/40 p-4 text-xs">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block">Họ và tên người đại diện:</span>
+                  <strong className="text-sm font-black text-slate-900 dark:text-white mt-0.5 block">
+                    {descriptionInfo.legalDocs.representativeName || applicant?.fullName || "Chưa ghi nhận"}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block">Số CCCD / CMND:</span>
+                  <span className="text-sm font-mono font-bold text-cyan-700 dark:text-cyan-400 mt-0.5 block">
+                    {descriptionInfo.legalDocs.idCardNumber || "Xem trực tiếp trên ảnh CCCD"}
+                  </span>
+                </div>
+                {descriptionInfo.legalDocs.businessLicenseNumber && (
+                  <div className="sm:col-span-2 pt-2 border-t border-slate-200/60 dark:border-white/10">
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold block">Số GPKD / Mã số thuế:</span>
+                    <span className="text-sm font-mono font-bold text-slate-900 dark:text-white mt-0.5 block">
+                      {descriptionInfo.legalDocs.businessLicenseNumber}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Grid các ảnh tài liệu pháp lý */}
+              <div className="grid gap-4 sm:grid-cols-3">
+                {/* Ảnh mặt trước CCCD */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <IdCard className="h-3.5 w-3.5 text-cyan-600" /> CCCD Mặt trước
+                  </span>
+                  {descriptionInfo.legalDocs.idCardFrontUrl ? (
+                    <div
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 aspect-[16/10] bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-sm hover:shadow-md transition"
+                      onClick={() =>
+                        setLightboxImage({
+                          src: descriptionInfo.legalDocs.idCardFrontUrl,
+                          title: "Căn cước công dân - Mặt trước",
+                        })
+                      }
+                    >
+                      <img
+                        src={descriptionInfo.legalDocs.idCardFrontUrl}
+                        alt="CCCD Mặt trước"
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                        <ZoomIn className="h-4 w-4" /> Phóng to
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-6 text-center text-xs text-slate-400 aspect-[16/10] flex items-center justify-center">
+                      Chưa có ảnh mặt trước
+                    </div>
+                  )}
+                </div>
+
+                {/* Ảnh mặt sau CCCD */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <IdCard className="h-3.5 w-3.5 text-cyan-600" /> CCCD Mặt sau
+                  </span>
+                  {descriptionInfo.legalDocs.idCardBackUrl ? (
+                    <div
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 aspect-[16/10] bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-sm hover:shadow-md transition"
+                      onClick={() =>
+                        setLightboxImage({
+                          src: descriptionInfo.legalDocs.idCardBackUrl,
+                          title: "Căn cước công dân - Mặt sau",
+                        })
+                      }
+                    >
+                      <img
+                        src={descriptionInfo.legalDocs.idCardBackUrl}
+                        alt="CCCD Mặt sau"
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                        <ZoomIn className="h-4 w-4" /> Phóng to
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-6 text-center text-xs text-slate-400 aspect-[16/10] flex items-center justify-center">
+                      Chưa có ảnh mặt sau
+                    </div>
+                  )}
+                </div>
+
+                {/* Giấy phép kinh doanh */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-cyan-600" /> Giấy phép KD (GPKD)
+                  </span>
+                  {descriptionInfo.legalDocs.businessLicenseUrl ? (
+                    <div
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 aspect-[16/10] bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-sm hover:shadow-md transition"
+                      onClick={() =>
+                        setLightboxImage({
+                          src: descriptionInfo.legalDocs.businessLicenseUrl,
+                          title: "Giấy phép kinh doanh (GPKD)",
+                        })
+                      }
+                    >
+                      <img
+                        src={descriptionInfo.legalDocs.businessLicenseUrl}
+                        alt="Giấy phép kinh doanh"
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                        <ZoomIn className="h-4 w-4" /> Phóng to
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-6 text-center text-xs text-slate-400 aspect-[16/10] flex items-center justify-center">
+                      Chưa có Giấy phép KD
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Nếu có ảnh không gian quán bổ sung */}
+              {descriptionInfo.legalDocs.storePhoto2Url && (
+                <div className="pt-3 border-t border-slate-200/60 dark:border-white/10">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
+                    Ảnh không gian quán bổ sung:
+                  </span>
+                  <div
+                    className="max-w-xs group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 aspect-video bg-slate-100 dark:bg-slate-800 cursor-pointer"
+                    onClick={() =>
+                      setLightboxImage({
+                        src: descriptionInfo.legalDocs.storePhoto2Url,
+                        title: "Ảnh không gian quán bổ sung",
+                      })
+                    }
+                  >
+                    <img
+                      src={descriptionInfo.legalDocs.storePhoto2Url}
+                      alt="Không gian quán"
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                      <ZoomIn className="h-4 w-4" /> Phóng to
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
             <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
               <div className="mb-5 flex items-center gap-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-amber-700 shadow-sm ring-1 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900">
@@ -544,7 +761,7 @@ export default function AdminApplicationDetailPage({
                     Menu gửi kèm
                   </h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Kiểm tra ảnh, giá, mô tả và danh mục món.
+                    Kiểm tra ảnh, giá, mô tả và danh mục món (nếu có).
                   </p>
                 </div>
               </div>
@@ -622,8 +839,13 @@ export default function AdminApplicationDetailPage({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white/65 p-8 text-center text-sm font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
-                  Không có menu gửi kèm.
+                <div className="rounded-2xl border border-cyan-500/20 bg-cyan-50/40 dark:bg-cyan-950/20 p-6 text-center">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    Quy trình tinh gọn: Quán chưa nộp menu trước
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                    Chủ quán sẽ chủ động tạo Menu món ăn, hình ảnh, giá bán và cài đặt Khung giờ mở cửa trong Dashboard sau khi được duyệt.
+                  </p>
                 </div>
               )}
             </section>
@@ -692,20 +914,58 @@ export default function AdminApplicationDetailPage({
               )}
             </section>
 
-            <section className="rounded-3xl border border-amber-200/80 bg-amber-50/60 p-5 shadow-sm ring-1 ring-amber-100 backdrop-blur-2xl dark:border-amber-900/50 dark:bg-amber-950/30">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                  <BadgeCheck className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-black text-slate-950 dark:text-white">
-                    Đánh giá tiêu chí UFind (Underrated Assessment)
-                  </h3>
-                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                    Kiểm tra thông tin quán, menu món ăn và category để đánh giá tiêu chí "underrated" trước khi phê duyệt.
-                  </p>
-                </div>
+            {/* Checklist Thẩm định 3 Bước của Staff */}
+            <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-50/90 to-white dark:from-cyan-950/40 dark:to-slate-900 p-5 shadow-sm ring-1 ring-cyan-500/20">
+              <div className="flex items-center gap-2.5 mb-3 text-cyan-700 dark:text-cyan-300">
+                <ShieldCheck className="h-5 w-5 shrink-0" />
+                <h3 className="text-sm font-black tracking-tight">
+                  Checklist Thẩm định 3 Bước (Staff)
+                </h3>
               </div>
+
+              <div className="space-y-2.5 text-xs">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-xl p-2 hover:bg-cyan-500/10 transition">
+                  <input
+                    type="checkbox"
+                    checked={checkMap}
+                    onChange={(e) => setCheckMap(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="leading-snug text-slate-700 dark:text-slate-300">
+                    <strong>Bước 1:</strong> Ghim bản đồ &amp; Địa chỉ quán ngoài đời thực rõ ràng, hợp lệ.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-xl p-2 hover:bg-cyan-500/10 transition">
+                  <input
+                    type="checkbox"
+                    checked={checkStorefront}
+                    onChange={(e) => setCheckStorefront(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="leading-snug text-slate-700 dark:text-slate-300">
+                    <strong>Bước 2:</strong> Ảnh biển hiệu / Mặt tiền có thật và khớp với tên quán đăng ký.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer select-none rounded-xl p-2 hover:bg-cyan-500/10 transition">
+                  <input
+                    type="checkbox"
+                    checked={checkLegalKyc}
+                    onChange={(e) => setCheckLegalKyc(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="leading-snug text-slate-700 dark:text-slate-300">
+                    <strong>Bước 3:</strong> Tên người đại diện trên CCCD trùng khớp với Giấy phép kinh doanh.
+                  </span>
+                </label>
+              </div>
+
+              {checkMap && checkStorefront && checkLegalKyc && (
+                <div className="mt-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-2 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1.5 animate-in fade-in">
+                  <CheckCircle2 className="h-4 w-4" /> Đạt đủ 3 tiêu chuẩn — Sẵn sàng phê duyệt!
+                </div>
+              )}
             </section>
 
             <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
@@ -803,6 +1063,37 @@ export default function AdminApplicationDetailPage({
           </aside>
         </div>
       </div>
+
+      {/* Image Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-3xl bg-slate-900 border border-white/20 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-white">
+              <span className="font-bold text-sm">{lightboxImage.title}</span>
+              <button
+                type="button"
+                onClick={() => setLightboxImage(null)}
+                className="rounded-full p-1.5 hover:bg-white/10 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[80vh] overflow-auto flex items-center justify-center">
+              <img
+                src={lightboxImage.src}
+                alt={lightboxImage.title}
+                className="max-h-[75vh] w-auto object-contain rounded-xl"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

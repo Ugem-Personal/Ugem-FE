@@ -6,7 +6,9 @@ function formatMoney(value?: number) {
   return `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 }
 
-function getMenuImageSrc(item?: OnboardingFormValues["menu"][number]) {
+function getMenuImageSrc(
+  item?: NonNullable<OnboardingFormValues["menu"]>[number],
+) {
   if (!item) return "";
   return (item.imageUploadDataUrl || item.imageUrl || "").trim();
 }
@@ -26,7 +28,7 @@ export function ReviewSubmitStep({
 
   return (
     <section className="onboarding-card">
-      <h2>Kiểm tra & gửi</h2>
+      <h2>Kiểm tra &amp; gửi</h2>
 
       <div className="review-grid">
         <article className="col-span-full mb-4 flex items-center gap-4">
@@ -64,18 +66,8 @@ export function ReviewSubmitStep({
         </article>
 
         <article>
-          <span>Giờ mở cửa</span>
-          <strong>{values.openingHours || "Chưa nhập"}</strong>
-        </article>
-
-        <article>
-          <span>Nhóm món chủ đạo</span>
-          <strong>{values.mainDishType || "Chưa chọn"}</strong>
-        </article>
-
-        <article>
-          <span>Khoảng giá</span>
-          <strong>{values.priceRange || "Chưa chọn"}</strong>
+          <span>Người đại diện</span>
+          <strong>{values.representativeName || "Chưa nhập"}</strong>
         </article>
 
         <article className="review-grid-wide">

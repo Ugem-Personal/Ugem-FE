@@ -9,12 +9,10 @@ import {
   Store,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { BusinessInfoStep } from "../components/BusinessInfoStep";
-import { AddressLocationStep } from "../components/AddressLocationStep";
-import { MenuDetailsStep } from "../components/MenuDetailsStep";
-
+import { StoreInfoLocationStep } from "../components/StoreInfoLocationStep";
+import { StorePhotoStep } from "../components/StorePhotoStep";
+import { LegalDocsStep } from "../components/LegalDocsStep";
 import { PartnerBenefitCard } from "../components/PartnerBenefitCard";
-import { ReviewSubmitStep } from "../components/ReviewSubmitStep";
 import {
   onboardingSchema,
   type OnboardingFormValues,
@@ -31,8 +29,8 @@ import { OnboardingStepper } from "../../../shared/layouts/Merchants/OnboardingS
 import { notify } from "@/shared/lib/notify";
 import { getCurrentUser } from "@/features/auth";
 
-const DRAFT_KEY = "ugem_merchant_application_draft";
-const DRAFT_STEP_KEY = "ugem_merchant_application_draft_step";
+const DRAFT_KEY = "ufind_merchant_application_draft";
+const DRAFT_STEP_KEY = "ufind_merchant_application_draft_step";
 
 function getDraftStep() {
   try {
@@ -46,7 +44,7 @@ function getDraftStep() {
     }
 
     const savedStep = Number(localStorage.getItem(DRAFT_STEP_KEY));
-    return Number.isInteger(savedStep) && savedStep >= 1 && savedStep <= 4
+    return Number.isInteger(savedStep) && savedStep >= 1 && savedStep <= 3
       ? savedStep
       : 1;
   } catch {
@@ -87,16 +85,6 @@ function getLatestApplication(
   })[0];
 }
 
-function getSubmittableImageUrl(imageUrl?: string) {
-  const trimmed = imageUrl?.trim() ?? "";
-
-  if (!trimmed || trimmed.startsWith("data:image/") || trimmed.length > 500) {
-    return "";
-  }
-
-  return trimmed;
-}
-
 function isApprovedStatus(status?: string) {
   return status === "Approved" || status === "Accepted" || status === "Accept";
 }
@@ -125,7 +113,7 @@ function BlockedStateUI({
 
   return (
     <main className="merchant-onboarding-layout">
-      <OnboardingSidebar />
+      <OnboardingSidebar currentStep={3} />
 
       <section className="onboarding-main">
         <OnboardingTopbar />
@@ -133,10 +121,9 @@ function BlockedStateUI({
         <div className="onboarding-content">
           <div className="onboarding-form-area">
             <div className="onboarding-heading">
-              <h1>Đăng ký đối tác mới</h1>
+              <h1>Đăng ký mở quán trên UFind</h1>
               <p>
-                Bắt đầu hành trình đưa món ngon ẩn mình của bạn đến với mọi
-                người.
+                Bắt đầu hành trình đưa món ngon đặc trưng của quán đến với mọi người.
               </p>
             </div>
 
@@ -147,16 +134,17 @@ function BlockedStateUI({
                 <Icon className={`h-10 w-10 ${iconClass}`} />
               </div>
 
-              <h2 className="mb-3 text-2xl font-bold text-slate-900">
+              <h2 className="mb-3 text-2xl font-bold text-slate-900 dark:text-white">
                 {title}
               </h2>
-
-              <p className="mb-8 max-w-md text-slate-600">{description}</p>
+              <p className="mb-8 max-w-md text-slate-600 dark:text-slate-300">
+                {description}
+              </p>
 
               <button
                 type="button"
+                className="btn btn-primary inline-flex items-center gap-2"
                 onClick={onNavigateToPortal}
-                className="next-button"
               >
                 <Store size={18} />
                 {buttonLabel}
@@ -185,7 +173,7 @@ export function MerchantOnboardingPage() {
     try {
       localStorage.setItem(DRAFT_STEP_KEY, String(currentStep));
     } catch {
-      // The form remains usable when browser storage is unavailable.
+      // Storage unavailable fallback
     }
   }, [currentStep]);
 
@@ -212,25 +200,23 @@ export function MerchantOnboardingPage() {
       restaurantName: "",
       email: "",
       phone: "",
-      restaurantType: "",
-      mainDishType: "",
-      priceRange: "",
-      openingHours: "08:00 - 22:00",
+      description: "",
       address: "",
       latitude: 0,
       longitude: 0,
       logoUrl: "",
-      menu: [
-        {
-          name: "",
-          description: "",
-          price: 0,
-          imageUrl: "",
-          imageUploadDataUrl: "",
-          category: "",
-          cuisine: "",
-        },
-      ],
+      storePhoto2Url: "",
+      representativeName: "",
+      idCardNumber: "",
+      idCardFrontUrl: "",
+      idCardBackUrl: "",
+      businessLicenseUrl: "",
+      businessLicenseNumber: "",
+      restaurantType: "Quán ăn / Đồ uống",
+      mainDishType: "Món đặc trưng",
+      priceRange: "Tự động theo menu",
+      openingHours: "Chưa thiết lập (Chủ quán cài đặt sau)",
+      menu: [],
       ...getDraftValues(),
     },
   });
@@ -245,6 +231,7 @@ export function MerchantOnboardingPage() {
     subscribe,
     formState: { errors },
   } = methods;
+
   const watchedAddress = useWatch({ control, name: "address" });
   const watchedLat = useWatch({ control, name: "latitude" });
   const watchedLng = useWatch({ control, name: "longitude" });
@@ -256,13 +243,12 @@ export function MerchantOnboardingPage() {
         try {
           localStorage.setItem(DRAFT_KEY, JSON.stringify(values));
         } catch {
-          // The form remains usable when browser storage is unavailable or full.
+          // Storage unavailable fallback
         }
       },
     });
   }, [subscribe]);
 
-  // Show blocked UI when the current application should not be submitted again.
   if (showBlockedUI) {
     return (
       <BlockedStateUI
@@ -276,26 +262,15 @@ export function MerchantOnboardingPage() {
 
   async function nextStep() {
     const fieldsByStep: Record<number, (keyof OnboardingFormValues)[]> = {
-      1: [
-        "restaurantName",
-        "email",
-        "phone",
-        "restaurantType",
-        "mainDishType",
-        "priceRange",
-        "openingHours",
-        "logoUrl",
-      ],
-      2: ["address", "latitude", "longitude"],
-      3: ["menu"],
-      4: [],
+      1: ["restaurantName", "email", "phone", "address", "latitude", "longitude"],
+      2: ["logoUrl"],
+      3: ["representativeName", "idCardFrontUrl", "idCardBackUrl", "businessLicenseUrl"],
     };
 
     const valid = await trigger(fieldsByStep[currentStep]);
-
     if (!valid) return;
 
-    setCurrentStep(Math.min(currentStep + 1, 4));
+    setCurrentStep(Math.min(currentStep + 1, 3));
   }
 
   function previousStep() {
@@ -303,47 +278,43 @@ export function MerchantOnboardingPage() {
   }
 
   async function onSubmit(values: OnboardingSchema) {
-    // Validate that all prices are valid numbers
-    const validMenu = values.menu.map((menuItem) => {
-      const price = Number(menuItem.price);
-      if (!Number.isFinite(price) || price <= 0) {
-        throw new Error("Giá món phải là số dương");
-      }
-      return {
-        ...menuItem,
-        price,
-      };
-    });
-
     const toastId = notify.loading(
-      isRejected ? "Đang gửi lại hồ sơ..." : "Đang gửi hồ sơ...",
+      isRejected ? "Đang gửi lại hồ sơ..." : "Đang gửi hồ sơ thẩm định...",
       {
-        description: "UFind đang chuyển hồ sơ của bạn đến staff xét duyệt.",
+        description: "UFind đang chuyển hồ sơ pháp lý của bạn đến Staff kiểm duyệt.",
       },
     );
+
+    // Format legal documents into description for structured review
+    const legalDocsSummary = [
+      values.description?.trim() || "",
+      "",
+      "--- THÔNG TIN PHÁP LÝ & ĐỊNH DANH (KYC) ---",
+      `Loại hình ẩm thực: ${values.restaurantType || "Quán ăn / Đồ uống"}`,
+      `Người đại diện: ${values.representativeName}`,
+      values.idCardNumber ? `Số CCCD: ${values.idCardNumber}` : "",
+      `CCCD Mặt trước: ${values.idCardFrontUrl}`,
+      `CCCD Mặt sau: ${values.idCardBackUrl}`,
+      values.businessLicenseNumber ? `Mã số GPKD: ${values.businessLicenseNumber}` : "",
+      `Giấy phép KD: ${values.businessLicenseUrl}`,
+      values.storePhoto2Url ? `Ảnh không gian quán: ${values.storePhoto2Url}` : "",
+    ].filter(Boolean).join("\n");
 
     submitMutation.mutate(
       {
         name: values.restaurantName,
         email: values.email,
-        description: values.description?.trim() || "",
-        restaurantType: values.restaurantType,
-        mainDishType: values.mainDishType,
-        priceRange: values.priceRange,
         phone: values.phone,
-        logoUrl: values.logoUrl || "",
-        openingHours: values.openingHours,
+        description: legalDocsSummary,
+        restaurantType: values.restaurantType || "Quán ăn / Đồ uống",
+        mainDishType: values.mainDishType || "Món đặc trưng",
+        priceRange: values.priceRange || "Tự động theo menu",
+        openingHours: values.openingHours || "Chưa thiết lập (Chủ quán cài đặt sau)",
         address: values.address,
         latitude: Number(values.latitude),
         longitude: Number(values.longitude),
-        menu: validMenu.map((menuItem) => ({
-          name: menuItem.name,
-          description: menuItem.description,
-          price: menuItem.price,
-          category: menuItem.category,
-          cuisine: menuItem.cuisine,
-          imageUrl: getSubmittableImageUrl(menuItem.imageUrl),
-        })),
+        logoUrl: values.logoUrl || "",
+        menu: [],
       },
       {
         onSuccess: () => {
@@ -356,7 +327,7 @@ export function MerchantOnboardingPage() {
             {
               id: toastId,
               description:
-                "Bạn có thể theo dõi trạng thái xét duyệt trong Merchant Portal.",
+                "Staff UFind sẽ tiến hành thẩm định và phản hồi trong thời gian sớm nhất.",
             },
           );
           navigate("/merchant/application/status");
@@ -378,62 +349,75 @@ export function MerchantOnboardingPage() {
   }
 
   function handleSubmitClick() {
-    void handleSubmit(onSubmit)();
+    trigger().then((valid) => {
+      if (valid) {
+        handleSubmit(onSubmit)();
+      }
+    });
   }
 
   return (
     <FormProvider {...methods}>
       <main className="merchant-onboarding-layout">
-        <OnboardingSidebar />
+        <OnboardingSidebar
+          currentStep={currentStep}
+          onStepClick={(step) => {
+            if (step <= currentStep) setCurrentStep(step);
+          }}
+        />
 
         <section className="onboarding-main">
           <OnboardingTopbar />
 
           <form
             className="onboarding-content"
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (currentStep < 3) {
+                void nextStep();
+              } else {
+                handleSubmitClick();
+              }
+            }}
           >
             <div className="onboarding-form-area">
               <OnboardingStepper currentStep={currentStep} />
 
               <div className="onboarding-heading">
-                <h1>Đăng ký đối tác mới</h1>
+                <h1>Đăng ký mở quán trên UFind</h1>
                 <p>
-                  Bắt đầu hành trình đưa món ngon ẩn mình của bạn đến với mọi
-                  người.
+                  Thủ tục tinh gọn: Chỉ cần thông tin quán, hình ảnh thực tế và hồ sơ pháp lý (CCCD &amp; GPKD).
                 </p>
               </div>
 
               {currentStep === 1 && (
-                <BusinessInfoStep
+                <StoreInfoLocationStep
                   register={register}
                   errors={errors}
                   setValue={setValue}
                   watch={watch}
-                />
-              )}
-
-              {currentStep === 2 && (
-                <AddressLocationStep
-                  register={register}
-                  errors={errors}
-                  setValue={setValue}
                   watchedAddress={watchedAddress}
                   watchedLat={watchedLat}
                   watchedLng={watchedLng}
                 />
               )}
 
-              {currentStep === 3 && (
-                <MenuDetailsStep
-                  control={control}
-                  register={register}
+              {currentStep === 2 && (
+                <StorePhotoStep
                   errors={errors}
                   setValue={setValue}
+                  watch={watch}
                 />
               )}
 
-              {currentStep === 4 && <ReviewSubmitStep watch={watch} />}
+              {currentStep === 3 && (
+                <LegalDocsStep
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                  watch={watch}
+                />
+              )}
 
               {submitMutation.isError && (
                 <p className="form-error">
@@ -456,7 +440,7 @@ export function MerchantOnboardingPage() {
                     </button>
                   )}
 
-                  {currentStep < 4 ? (
+                  {currentStep < 3 ? (
                     <button
                       type="button"
                       className="next-button"
@@ -473,10 +457,10 @@ export function MerchantOnboardingPage() {
                       onClick={handleSubmitClick}
                     >
                       {submitMutation.isPending
-                        ? "Đang gửi..."
+                        ? "Đang gửi hồ sơ..."
                         : isRejected
                           ? "Gửi lại hồ sơ"
-                          : "Gửi hồ sơ"}
+                          : "Gửi hồ sơ thẩm định"}
                       <ArrowRight size={18} />
                     </button>
                   )}

@@ -1,8 +1,9 @@
+import { Check } from "lucide-react";
+
 const steps = [
-  "Thông tin quán",
-  "Địa chỉ & vị trí",
-  "Thực đơn & hình ảnh",
-  "Kiểm tra & gửi",
+  "Thông tin & Vị trí quán",
+  "Hình ảnh thực tế",
+  "Hồ sơ pháp lý (CCCD & GPKD)",
 ];
 
 export function OnboardingStepper({ currentStep }: { currentStep: number }) {
@@ -20,7 +21,7 @@ export function OnboardingStepper({ currentStep }: { currentStep: number }) {
               done ? "done" : ""
             }`}
           >
-            <div>{number}</div>
+            <div>{done ? <Check className="h-4 w-4" /> : number}</div>
             <span>{step}</span>
           </div>
         );

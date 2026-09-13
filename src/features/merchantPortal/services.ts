@@ -85,7 +85,7 @@ function mapPayloadToFormData(payload: CreateApplicationPayload) {
   appendNumber(formData, "latitude", payload.latitude);
   appendNumber(formData, "longitude", payload.longitude);
 
-  payload.menu.forEach((menuItem, index) => {
+  (payload.menu ?? []).forEach((menuItem, index) => {
     const prefix = `menu[${index}]`;
     appendString(formData, `${prefix}.name`, menuItem.name);
     appendString(formData, `${prefix}.description`, menuItem.description);
@@ -113,7 +113,7 @@ function mapPayloadToJsonRequest(payload: CreateApplicationPayload) {
     address: payload.address,
     latitude: payload.latitude,
     longitude: payload.longitude,
-    menu: payload.menu.map((m) => ({
+    menu: (payload.menu ?? []).map((m) => ({
       name: m.name,
       description: m.description,
       price: m.price,

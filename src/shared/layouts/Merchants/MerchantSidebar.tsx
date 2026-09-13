@@ -30,23 +30,23 @@ type MerchantNavItem = {
 
 const merchantMenuItems: MerchantNavItem[] = [
   {
-    label: "Hồ sơ quán",
+    label: "Tổng quan quán",
     icon: Home,
     path: "/merchant",
     end: true,
   },
   {
-    label: "Nhà hàng của bạn",
+    label: "Thông tin nhà hàng",
     icon: Store,
     path: "/merchant/restaurant",
   },
   {
-    label: "Quản lý món ăn",
+    label: "Quản lý thực đơn",
     icon: UtensilsCrossed,
     path: "/merchant/foods",
   },
   {
-    label: "Đơn hàng",
+    label: "Quản lý đơn hàng",
     icon: ShoppingBag,
     path: "/merchant/orders",
   },
@@ -59,7 +59,7 @@ const merchantMenuItems: MerchantNavItem[] = [
       "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
   {
-    label: "Tạo đơn tại quán",
+    label: "Tạo đơn tại quán (POS)",
     icon: ClipboardPlus,
     path: "/merchant/create-order",
     badge: "POS",
@@ -72,7 +72,7 @@ const merchantMenuItems: MerchantNavItem[] = [
     path: "/merchant/application/status",
   },
   {
-    label: "Chiến dịch",
+    label: "Chiến dịch ưu đãi",
     icon: Megaphone,
     path: "/merchant/campaigns",
     badge: "PROMO",
@@ -93,10 +93,10 @@ const merchantMenuItems: MerchantNavItem[] = [
 
 const customerMerchantMenuItems: MerchantNavItem[] = [
   {
-    label: "Gửi hồ sơ quán",
+    label: "Gửi hồ sơ mở quán",
     icon: Store,
     path: "/merchant/application/create",
-    badge: "HOT",
+    badge: "MỚI",
     badgeColor:
       "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },

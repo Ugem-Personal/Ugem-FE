@@ -17,34 +17,7 @@ export type ApplicationMenuItem = {
 
 export type PriceRange = "Tiết kiệm" | "Bình dân" | "Tầm trung";
 
-export type OnboardingFormValues = {
-  restaurantName: string;
-  email: string;
-  phone: string;
-
-  restaurantType: string;
-  mainDishType: string;
-  priceRange: PriceRange | "";
-  openingHours: string;
-
-  description: string;
-
-  address: string;
-  latitude: number;
-  longitude: number;
-
-  logoUploadDataUrl?: string;
-  logoUrl: string;
-
-  menu: {
-    name: string;
-    description: string;
-    price: number;
-    imageUrl?: string;
-    category?: string;
-    cuisine?: string;
-  }[];
-};
+export type { OnboardingFormValues, OnboardingSchema } from "./schema";
 
 export type CreateApplicationPayload = {
   name: string;
