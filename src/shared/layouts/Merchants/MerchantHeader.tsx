@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
 import { cn } from "@/lib/utils";
-import { UserAccountMenu } from "@/shared/components";
+import { ModeToggle, UserAccountMenu } from "@/shared/components";
 
 const merchantItems = [
   ["Hồ sơ quán", "/merchant", Home],
@@ -71,6 +71,7 @@ export function MerchantHeader() {
       </div>
 
       <div className="flex items-center gap-3">
+        <ModeToggle />
         <UserAccountMenu fallbackName="Chủ quán" />
       </div>
 

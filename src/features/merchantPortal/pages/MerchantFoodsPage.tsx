@@ -381,7 +381,7 @@ export function MerchantFoodsPage() {
 
         notify.success(
           formToppings.length > 0
-            ? `Thêm món ăn và ${formToppings.length} món ăn kèm thành công!`
+            ? `Thêm món ăn và ${formToppings.length} món thêm / topping thành công!`
             : "Thêm món ăn thành công.",
         );
       }
@@ -458,11 +458,11 @@ export function MerchantFoodsPage() {
     const price = Number(newInlineTopping.price);
 
     if (!name) {
-      notify.error("Vui lòng nhập tên món ăn kèm.");
+      notify.error("Vui lòng nhập tên món thêm hoặc topping.");
       return;
     }
     if (isNaN(price) || price < 0) {
-      notify.error("Giá món ăn kèm không được âm.");
+      notify.error("Giá món thêm không được âm.");
       return;
     }
 
@@ -474,10 +474,10 @@ export function MerchantFoodsPage() {
     if (toppingId) {
       try {
         await deleteFoodTopping(toppingId);
-        notify.success("Đã xóa món ăn kèm.");
+        notify.success("Đã xóa lựa chọn món thêm / topping.");
       } catch (error) {
         console.error(error);
-        notify.error("Không thể xóa món ăn kèm.");
+        notify.error("Không thể xóa món thêm / topping.");
         return;
       }
     }
@@ -890,24 +890,24 @@ export function MerchantFoodsPage() {
                   )}
                 </div>
 
-                {/* Món ăn kèm / Đồ gọi thêm ngay trong form */}
+                {/* Món thêm / Topping ngay trong form */}
                 <div className="space-y-3 md:col-span-2 rounded-2xl border border-cyan-100 dark:border-cyan-900/40 bg-cyan-50/30 dark:bg-slate-900/50 p-4 sm:p-5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
                       <UtensilsCrossed size={14} className="text-cyan-600 dark:text-cyan-400" />
-                      <span>Món ăn kèm & Đồ gọi thêm</span>
+                      <span>Món thêm / Topping</span>
                       <span className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
-                        (không bắt buộc)
+                        (tùy chọn)
                       </span>
                     </label>
                     {formToppings.length > 0 && (
                       <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
-                        Đã thêm {formToppings.length} món kèm
+                        Đã thêm {formToppings.length} món thêm/topping
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Thêm sẵn các đồ ăn kèm có tính thêm tiền (ví dụ: Trứng ốp la, Chả thêm, Trân châu...) cho món này.
+                    Thêm danh sách món thêm (Trứng ốp la, Chả thêm, Sườn...) hoặc topping (Trân châu, Thạch...) kèm giá tiền để khách tick chọn như trên GrabFood.
                   </p>
 
                   {/* Ô nhập nhanh */}
@@ -922,7 +922,7 @@ export function MerchantFoodsPage() {
                           handleAddInlineTopping();
                         }
                       }}
-                      placeholder="Tên món kèm (vd: Trứng ốp la)"
+                      placeholder="Tên món thêm / Topping (vd: Trứng ốp la, Trân châu)"
                       className="h-10 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 shadow-2xs placeholder:text-slate-400"
                     />
                     <input
@@ -946,7 +946,7 @@ export function MerchantFoodsPage() {
                       className="h-10 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white px-4 text-xs font-black shadow-md shadow-cyan-600/20 transition"
                     >
                       <Plus size={13} />
-                      Thêm món kèm
+                      Thêm vào món
                     </button>
                   </div>
 
@@ -959,14 +959,14 @@ export function MerchantFoodsPage() {
                           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs"
                         >
                           <span>{item.name}</span>
-                          <span className="text-cyan-600 dark:text-cyan-400 font-extrabold">
+                          <span className="text-cyan-600 dark:text-cyan-400 font-extrabold font-mono">
                             +{Number(item.price).toLocaleString("vi-VN")} ₫
                           </span>
                           <button
                             type="button"
                             onClick={() => void handleRemoveInlineTopping(index, item.id)}
                             className="ml-1 text-slate-400 hover:text-rose-600 transition"
-                            title="Xóa món kèm này"
+                            title="Xóa lựa chọn này"
                           >
                             <X size={13} />
                           </button>
@@ -1323,7 +1323,7 @@ export function MerchantFoodsPage() {
                           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600"
                         >
                           <Layers size={13} />
-                          <span>Món ăn kèm & Đồ thêm</span>
+                          <span>Món thêm / Topping ({food.toppings?.length ?? 0})</span>
                         </button>
                       </div>
                     </div>
@@ -1373,35 +1373,37 @@ export function MerchantFoodsPage() {
 
       {/* Dialog Toppings / Add-ons Management */}
       <Dialog open={Boolean(toppingModalFood)} onOpenChange={(open) => !open && setToppingModalFood(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-white text-slate-900 border border-slate-200/90 shadow-2xl dark:bg-slate-900 dark:text-white dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-base font-black">
-              <UtensilsCrossed className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-              Món ăn kèm & Đồ gọi thêm
+            <DialogTitle className="flex items-center gap-2.5 text-slate-900 dark:text-white text-base font-black">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400 border border-cyan-200/60 dark:border-cyan-800/40">
+                <UtensilsCrossed className="h-4.5 w-4.5" />
+              </div>
+              <span>Món thêm / Topping</span>
             </DialogTitle>
-            <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Đang chỉnh cho món: <strong className="text-cyan-700 dark:text-cyan-300 font-bold">{toppingModalFood?.name}</strong>. Thêm các lựa chọn gọi thêm (ví dụ: Trứng ốp la, Chả thêm, Trân châu...) có tính thêm tiền.
+            <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed pt-1">
+              Món chính: <strong className="text-cyan-700 dark:text-cyan-300 font-bold">{toppingModalFood?.name}</strong>. Danh sách món thêm (Trứng ốp la, Chả thêm, Sườn...) hoặc topping (Trân châu, Thạch...) kèm giá tiền để khách tick chọn như trên GrabFood.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-2">
-            {/* Form thêm Món ăn kèm mới */}
-            <form onSubmit={handleAddTopping} className="rounded-2xl border border-cyan-100 dark:border-cyan-900/40 bg-cyan-50/40 dark:bg-slate-800/60 p-4 sm:p-4.5 space-y-3">
+            {/* Form thêm Món thêm / Topping mới */}
+            <form onSubmit={handleAddTopping} className="rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50/70 to-blue-50/40 dark:border-cyan-800/40 dark:bg-slate-800/60 p-4 sm:p-5 space-y-3 shadow-2xs">
               <span className="text-xs font-black uppercase tracking-wider text-cyan-900 dark:text-cyan-200 block">
-                Thêm món gọi thêm mới
+                Thêm Món thêm / Topping mới
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                 <div className="sm:col-span-7 space-y-1">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Tên món gọi thêm
+                    Tên món thêm / Topping
                   </label>
                   <input
                     type="text"
                     value={newToppingForm.name}
                     onChange={(e) => setNewToppingForm((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ví dụ: Trứng ốp la"
-                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
+                    placeholder="Ví dụ: Trứng ốp la, Trân châu..."
+                    className="h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-xs placeholder:text-slate-400 placeholder:font-normal"
                   />
                 </div>
 
@@ -1416,7 +1418,7 @@ export function MerchantFoodsPage() {
                     value={newToppingForm.price}
                     onChange={(e) => setNewToppingForm((prev) => ({ ...prev, price: e.target.value }))}
                     placeholder="Ví dụ: 5000"
-                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
+                    className="h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-xs placeholder:text-slate-400 placeholder:font-normal"
                   />
                 </div>
               </div>
@@ -1431,29 +1433,36 @@ export function MerchantFoodsPage() {
                 <button
                   type="submit"
                   disabled={savingTopping}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-5 py-2.5 text-xs font-black shadow-md shadow-cyan-600/20 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 text-xs font-black shadow-md shadow-cyan-600/25 disabled:opacity-50 transition active:scale-95"
                 >
                   {savingTopping ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                  {savingTopping ? "Đang thêm..." : "Thêm món gọi thêm"}
+                  {savingTopping ? "Đang thêm..." : "Thêm vào danh sách"}
                 </button>
               </div>
             </form>
 
-            {/* Danh sách Món ăn kèm hiện tại */}
-            <div className="space-y-2">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                Danh sách món gọi thêm hiện có ({toppings.length})
-              </span>
+            {/* Danh sách Món thêm / Topping hiện tại */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                  Danh sách Món thêm / Topping ({toppings.length})
+                </span>
+                {toppings.length > 0 && (
+                  <span className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
+                    Khách có thể chọn khi đặt món
+                  </span>
+                )}
+              </div>
 
               {loadingToppings && (
-                <div className="flex items-center justify-center py-6 text-xs text-slate-400 gap-2">
-                  <Loader2 size={16} className="animate-spin" /> Đang tải danh sách...
+                <div className="flex items-center justify-center py-6 text-xs text-slate-500 gap-2">
+                  <Loader2 size={16} className="animate-spin text-cyan-600" /> Đang tải danh sách...
                 </div>
               )}
 
               {!loadingToppings && toppings.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-400 font-medium">
-                  Món ăn này chưa có món ăn kèm hay đồ gọi thêm nào.
+                <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-6 text-center text-xs text-slate-500 font-medium">
+                  Món này chưa có món thêm hay topping nào. Thêm ở trên để khách có thể chọn kèm khi đặt món như trên Grab.
                 </div>
               )}
 
@@ -1462,31 +1471,35 @@ export function MerchantFoodsPage() {
                   {toppings.map((topping) => (
                     <div
                       key={topping.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-800/80 px-4 py-2.5 shadow-2xs hover:border-cyan-300 dark:hover:border-cyan-700 transition"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 px-4 py-3 shadow-2xs hover:border-cyan-300 dark:hover:border-cyan-600 hover:bg-white dark:hover:bg-slate-800 transition"
                     >
-                      <div>
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-2 w-2 rounded-full bg-cyan-500 shrink-0" />
+                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                           {topping.name}
-                        </span>
-                        <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
-                          + {Number(topping.price ?? 0).toLocaleString("vi-VN")} ₫
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        disabled={deletingToppingId === topping.id}
-                        onClick={() => void handleDeleteTopping(topping.id, topping.name)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition hover:bg-rose-100 disabled:opacity-50 shadow-2xs"
-                        aria-label={`Xóa món ăn kèm ${topping.name}`}
-                        title="Xóa món này"
-                      >
-                        {deletingToppingId === topping.id ? (
-                          <Loader2 size={12} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={12} />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-black text-cyan-700 dark:text-cyan-300 bg-cyan-100/70 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/50 px-2.5 py-1 rounded-lg font-mono">
+                          + {Number(topping.price ?? 0).toLocaleString("vi-VN")} ₫
+                        </span>
+
+                        <button
+                          type="button"
+                          disabled={deletingToppingId === topping.id}
+                          onClick={() => void handleDeleteTopping(topping.id, topping.name)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition hover:bg-rose-50 dark:hover:bg-rose-900/40 disabled:opacity-50 shadow-2xs"
+                          aria-label={`Xóa ${topping.name}`}
+                          title="Xóa lựa chọn này"
+                        >
+                          {deletingToppingId === topping.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={12} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1498,7 +1511,7 @@ export function MerchantFoodsPage() {
             <button
               type="button"
               onClick={() => setToppingModalFood(null)}
-              className="h-10 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-750 px-6 text-xs font-black text-slate-700 dark:text-slate-200 transition shadow-xs"
+              className="h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-6 text-xs font-black text-slate-700 dark:text-slate-200 transition shadow-xs"
             >
               Đóng
             </button>

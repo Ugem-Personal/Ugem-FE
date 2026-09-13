@@ -98,12 +98,17 @@ export function FoodOptionModal({
             </div>
           </div>
 
-          {/* Toppings list */}
+          {/* Toppings / Add-ons list */}
           {food.toppings && food.toppings.length > 0 && (
             <div>
-              <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">
-                Món ăn kèm / Gọi thêm tùy chọn
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                  Món thêm / Topping
+                </h3>
+                <span className="text-[11px] font-semibold text-slate-400">
+                  (Tùy chọn)
+                </span>
+              </div>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {food.toppings.map((topping) => {
                   const checked = toppingIds.includes(topping.id);
@@ -112,8 +117,8 @@ export function FoodOptionModal({
                       key={topping.id}
                       className={`flex items-center justify-between rounded-xl border p-3 text-xs font-bold cursor-pointer transition ${
                         checked
-                          ? "border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/40 text-cyan-900 dark:text-cyan-200"
-                          : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300"
+                          ? "border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/40 text-cyan-950 dark:text-cyan-200 shadow-2xs"
+                          : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-center gap-3">

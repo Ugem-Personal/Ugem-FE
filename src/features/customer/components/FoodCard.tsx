@@ -44,7 +44,7 @@ export function FoodCard({
 
           {hasToppings && (
             <span className="absolute left-2 top-2 rounded-lg bg-slate-950/80 dark:bg-slate-900/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur-md border border-white/10 shadow-md">
-              +{food.toppings?.length} Topping
+              +{food.toppings?.length} Món thêm
             </span>
           )}
         </div>
