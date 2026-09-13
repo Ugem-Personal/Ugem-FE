@@ -17,6 +17,7 @@ import { cleanAddress } from "@/shared/utils/address";
 import { ImageWithFallback } from "@/shared/components";
 import { WishlistButton } from "./WishlistButton";
 import { incrementMerchantView } from "../services/merchantService";
+import { getMerchantOpenStatus } from "@/shared/utils/openingHours";
 
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
@@ -96,6 +97,7 @@ export default function MerchantCard({
   const underratedScore = getDisplayUnderratedScore(merchant);
   const isHotUnderrated =
     underratedScore !== null && underratedScore.percent >= 80;
+  const openStatus = getMerchantOpenStatus(merchant.openingHours);
 
   const image =
     merchant.logoUrl?.trim() ||
@@ -115,6 +117,7 @@ export default function MerchantCard({
       aria-label={`Xem chi tiết quán ${name}`}
       className={cn(
         "group relative block overflow-hidden rounded-3xl border bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 shadow-xs transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:shadow-cyan-950/15 backdrop-blur-md",
+        !openStatus.isOpen && "opacity-85 hover:opacity-100",
         compact ? "p-3" : "p-4 sm:p-5",
         selected
           ? "border-cyan-500 bg-gradient-to-br from-cyan-50/90 via-white to-white dark:from-cyan-950/40 dark:via-slate-900 dark:to-slate-900 shadow-cyan-950/15 ring-2 ring-cyan-500/40"
@@ -187,6 +190,14 @@ export default function MerchantCard({
               Hot
             </span>
           )}
+
+          {!openStatus.isOpen && (
+            <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-[0.5px] flex items-center justify-center p-2 text-center pointer-events-none z-10">
+              <span className="rounded-xl border border-rose-500/40 bg-rose-950/90 px-2.5 py-1 text-[11px] font-black text-rose-200 shadow-xl backdrop-blur-md">
+                🔴 {openStatus.statusText}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -216,6 +227,24 @@ export default function MerchantCard({
                 compact ? "mt-2 gap-1.5" : "mt-3 gap-2",
               )}
             >
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold shadow-2xs",
+                  openStatus.isOpen
+                    ? "border-emerald-200/80 dark:border-emerald-500/20 bg-emerald-50/90 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                    : "border-rose-200/80 dark:border-rose-500/20 bg-rose-50/90 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 font-black",
+                )}
+                title={merchant.openingHours ? `Giờ mở cửa: ${merchant.openingHours}` : undefined}
+              >
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    openStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-rose-500",
+                  )}
+                />
+                {openStatus.statusText}
+              </span>
+
               <span
                 className="inline-flex items-center gap-1 rounded-xl border border-rose-200/80 dark:border-rose-500/20 bg-rose-50/90 dark:bg-rose-500/10 px-2.5 py-1 text-rose-700 dark:text-rose-300 shadow-2xs font-bold"
                 title="Số lượt check-in thực tế của khách tại quán"

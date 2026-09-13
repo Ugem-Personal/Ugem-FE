@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Clock,
   Heart,
   Star,
   MapPin,
@@ -20,6 +21,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 
 import {
@@ -42,6 +44,7 @@ import { getWishlist } from "../services/wishlistService";
 import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
 import { clearAuth, getCurrentUser } from "@/features/auth";
+import { getMerchantOpenStatus } from "@/shared/utils/openingHours";
 import { BrandLogo, ModeToggle, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { WishlistButton } from "../components/WishlistButton";
@@ -440,6 +443,14 @@ export default function MerchantDetailPage() {
   function handleOpenCheckout() {
     if (!merchant?.id || cart.length === 0) return;
 
+    const openStatus = getMerchantOpenStatus(merchant.openingHours);
+    if (!openStatus.isOpen) {
+      notify.error(
+        `Nhà hàng hiện đang đóng cửa (${merchant.openingHours || "Ngoài giờ phục vụ"}). Quán chưa thể nhận đơn lúc này.`,
+      );
+      return;
+    }
+
     if (affiliateRef && currentUser?.Role !== "Customer") {
       notify.error(
         "Vui lòng đăng nhập bằng tài khoản Customer khác để đặt món qua link affiliate.",
@@ -671,6 +682,7 @@ export default function MerchantDetailPage() {
   }
 
   const name = merchant.name || "Unnamed merchant";
+  const openStatus = getMerchantOpenStatus(merchant.openingHours);
   const descriptionInfo = parseMerchantDescription(merchant.description);
   const visibleFacts = descriptionInfo.facts.filter(
     (item) => item.label.toLowerCase() !== "địa chỉ",
@@ -800,6 +812,25 @@ export default function MerchantDetailPage() {
                     {merchant.email}
                   </span>
                 )}
+
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold backdrop-blur-md",
+                    openStatus.isOpen
+                      ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
+                      : "border-rose-400/50 bg-rose-500/20 text-rose-200",
+                  )}
+                  title={merchant.openingHours ? `Giờ mở cửa: ${merchant.openingHours}` : undefined}
+                >
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      openStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-rose-400",
+                    )}
+                  />
+                  {openStatus.statusText}
+                  {merchant.openingHours && ` (${merchant.openingHours})`}
+                </span>
               </div>
 
               {descriptionInfo.summary && (
@@ -853,6 +884,20 @@ export default function MerchantDetailPage() {
             </div>
           </div>
         </section>
+
+        {!openStatus.isOpen && (
+          <div className="mt-6 rounded-3xl border border-rose-300/80 dark:border-rose-900/50 bg-rose-50/90 dark:bg-rose-950/30 p-5 flex items-start gap-3.5 shadow-lg backdrop-blur-md">
+            <Clock className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-rose-950 dark:text-rose-200">
+                Nhà hàng hiện đang đóng cửa ({merchant.openingHours || "Ngoài giờ hoạt động"})
+              </h4>
+              <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed font-medium">
+                Quán hiện tại không nhận đơn đặt hàng trực tiếp. Bạn vẫn có thể xem trước thực đơn bên dưới để chuẩn bị cho bữa ăn khi quán mở cửa nhé!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Menu Section */}
         <section id="menu-section" className="mt-10">

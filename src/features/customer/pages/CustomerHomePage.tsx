@@ -41,6 +41,7 @@ import { getWishlist } from "../services/wishlistService";
 import { getCurrentUser } from "@/features/auth";
 import type { Merchant } from "../types";
 import { useVietMapRoute } from "@/shared/hooks/useVietMapRoute";
+import { isMerchantOpenNow } from "@/shared/utils/openingHours";
 import {
   metersToKm,
   secondsToText,
@@ -287,7 +288,20 @@ export default function CustomerHomePage() {
     [merchants, selectedMerchantId],
   );
 
-  const displayedMerchants = merchants;
+  const [onlyOpenNow, setOnlyOpenNow] = useState(false);
+
+  const displayedMerchants = useMemo(() => {
+    let list = merchants;
+    if (onlyOpenNow) {
+      list = list.filter((m) => isMerchantOpenNow(m.openingHours));
+    }
+    // Sắp xếp quán đang mở cửa lên đầu, quán đã đóng cửa xếp xuống dưới
+    return [...list].sort((a, b) => {
+      const aOpen = isMerchantOpenNow(a.openingHours) ? 1 : 0;
+      const bOpen = isMerchantOpenNow(b.openingHours) ? 1 : 0;
+      return bOpen - aOpen;
+    });
+  }, [merchants, onlyOpenNow]);
 
   const merchantCountText = useMemo(() => {
     if (loading) return "Đang tìm...";
@@ -802,6 +816,20 @@ export default function CustomerHomePage() {
   function renderPriceRangeFilters(className = "") {
     return (
       <div className={cn("flex flex-wrap items-center gap-2", className)}>
+        <button
+          type="button"
+          onClick={() => setOnlyOpenNow((prev) => !prev)}
+          className={`h-9 rounded-full px-3.5 text-xs font-black transition flex items-center gap-1.5 ${
+            onlyOpenNow
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/30"
+              : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-emerald-400"
+          }`}
+          title="Chỉ hiển thị các quán đang mở cửa phục vụ"
+        >
+          <span className={cn("h-2 w-2 rounded-full", onlyOpenNow ? "bg-white" : "bg-emerald-500 animate-pulse")} />
+          Đang mở cửa
+        </button>
+
         <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">
           Khoảng giá:
         </span>
