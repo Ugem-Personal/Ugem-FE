@@ -14,7 +14,6 @@ import {
   Sparkles,
   UtensilsCrossed,
   RefreshCw,
-  Tag,
   AlertTriangle,
   CheckCircle2,
   XCircle,
@@ -249,17 +248,6 @@ export function MerchantFoodsPage() {
     setImageFileName("");
   }
 
-  // Mỗi món chỉ thuộc một loại món
-  function toggleCategorySelection(categoryId: string) {
-    setForm((prev) => ({
-      ...prev,
-      categoryIds: [categoryId],
-    }));
-    if (formErrors.categoryIds) {
-      setFormErrors((e) => ({ ...e, categoryIds: undefined }));
-    }
-  }
-
   // Validate form inputs
   function validateForm() {
     const errors: typeof formErrors = {};
@@ -279,10 +267,9 @@ export function MerchantFoodsPage() {
     }
 
     if (form.categoryIds.length === 0) {
-      if (defaultMainDishCategoryId) {
-        form.categoryIds = [defaultMainDishCategoryId];
-      } else {
-        errors.categoryIds = "Vui lòng chọn loại món.";
+      const fallbackCatId = defaultMainDishCategoryId || foodTypeCategories[0]?.id || categories[0]?.id || "";
+      if (fallbackCatId) {
+        form.categoryIds = [fallbackCatId];
       }
     }
 
@@ -307,6 +294,11 @@ export function MerchantFoodsPage() {
     setSubmitting(true);
 
     try {
+      const fallbackCatId = defaultMainDishCategoryId || foodTypeCategories[0]?.id || categories[0]?.id || "";
+      const effectiveCategoryIds = form.categoryIds.length > 0
+        ? form.categoryIds
+        : (fallbackCatId ? [fallbackCatId] : []);
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || undefined,
@@ -314,7 +306,7 @@ export function MerchantFoodsPage() {
         imageUrl: form.imageUrl.trim() || undefined,
         cuisine: form.cuisine || undefined,
         isAvailable: true,
-        categoryIds: form.categoryIds,
+        categoryIds: effectiveCategoryIds,
       };
 
       if (editingFoodId) {
@@ -664,50 +656,6 @@ export function MerchantFoodsPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Loại món */}
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <span>Loại món</span>
-                      <span className="inline-flex items-center gap-1 rounded-md bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 normal-case tracking-normal">
-                        Mặc định: Món chính
-                      </span>
-                    </span>
-                  </label>
-
-                  {foodTypeCategories.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic">Chưa có loại món khả dụng nào.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {foodTypeCategories.map((cat) => {
-                        const selected = form.categoryIds.includes(cat.id);
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => toggleCategorySelection(cat.id)}
-                            className={`inline-flex items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-xs font-bold transition-all ${
-                              selected
-                                ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 shadow-xs ring-1 ring-cyan-500/20"
-                                : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-slate-600 dark:text-slate-400 hover:border-slate-300"
-                            }`}
-                          >
-                            <Tag size={13} className={selected ? "text-cyan-600" : "text-slate-400"} />
-                            {getCategoryDisplayName(cat.name)}
-                            {selected && <CheckCircle2 size={13} className="text-cyan-600 ml-0.5" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {formErrors.categoryIds && (
-                    <p className="text-xs font-medium text-rose-500 flex items-center gap-1">
-                      <AlertTriangle size={12} /> {formErrors.categoryIds}
-                    </p>
-                  )}
-                </div>
               </div>
 
               {/* Submit Buttons */}
@@ -933,9 +881,6 @@ export function MerchantFoodsPage() {
                 {filteredFoods.map((food) => {
                   const isAvail = food.isAvailable ?? true;
                   const isUpdatingAvail = updatingAvailabilityId === food.id;
-                  const foodTypeCategoriesForCard = (food.categories ?? []).filter(
-                    (category) => isFoodTypeCategoryName(category.name),
-                  );
 
                   return (
                     <div
@@ -1022,33 +967,6 @@ export function MerchantFoodsPage() {
                         </div>
                       </div>
 
-                      {/* Categories & Toppings Bar */}
-                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        {/* Categories Badges */}
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {foodTypeCategoriesForCard.length > 0 ? (
-                            foodTypeCategoriesForCard.map((c) => (
-                              <span
-                                key={c.id}
-                                className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300"
-                              >
-                                <Tag size={10} className="text-slate-400" />
-                                {getCategoryDisplayName(c.name)}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-[10px] font-semibold text-slate-400 italic">
-                              Chưa chọn loại món
-                            </span>
-                          )}
-                          {food.cuisine ? (
-                            <span className="inline-flex items-center gap-1 rounded-lg bg-cyan-50 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300">
-                              <Sparkles size={10} />
-                              {food.cuisine}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
                     </div>
                   );
                 })}
