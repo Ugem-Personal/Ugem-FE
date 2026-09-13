@@ -25,6 +25,7 @@ import {
   getGeocodePlaceDetails,
   reverseGeocode as vietmapReverseGeocode,
   searchGeocodeAddress as vietmapSearchGeocodeAddress,
+  HAS_VIETMAP_KEY,
   HAS_VIETMAP_SERVICE_KEY,
   VIETMAP_API_KEY,
 } from "@/shared/services/vietmapService";
@@ -236,17 +237,28 @@ export function StoreInfoLocationStep({
   );
 
   useEffect(() => {
-    if (!mapContainer.current || mapRef.current) return;
+    if (!mapContainer.current || mapRef.current || !HAS_VIETMAP_KEY) return;
 
     const validLocationCoords = getValidLocationCoords(watchedLat, watchedLng);
-    const initialCenter = validLocationCoords ?? DEFAULT_CENTER;
-    const initialZoom = validLocationCoords ? 15 : 12;
+    const initialCenter: [number, number] =
+      validLocationCoords ?? DEFAULT_CENTER;
+
+    const styleUrl = `https://maps.vietmap.vn/maps/styles/tm/style.json?apikey=${VIETMAP_API_KEY}`;
 
     const map = new vietmapgl.Map({
       container: mapContainer.current,
-      style: `https://maps.vietmap.vn/mt/style.json?apikey=${VIETMAP_API_KEY}`,
+      style: styleUrl,
       center: initialCenter,
-      zoom: initialZoom,
+      zoom: validLocationCoords ? 15 : 12,
+      transformRequest: (url) => {
+        if (HAS_VIETMAP_KEY && url.includes("vietmap.vn")) {
+          if (!url.includes("apikey=")) {
+            const separator = url.includes("?") ? "&" : "?";
+            return { url: `${url}${separator}apikey=${VIETMAP_API_KEY}` };
+          }
+        }
+        return { url };
+      },
     });
 
     map.addControl(new vietmapgl.NavigationControl(), "top-right");
@@ -259,23 +271,28 @@ export function StoreInfoLocationStep({
       );
     });
 
-    mapRef.current = map;
+    map.on("load", () => {
+      map.resize();
+      if (validLocationCoords) {
+        placeMarker(map, validLocationCoords);
+      }
+    });
 
-    if (validLocationCoords) {
-      map.on("load", () => placeMarker(map, validLocationCoords));
-    }
+    mapRef.current = map;
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [placeMarker, applyCoordinates, getValidLocationCoords, watchedLat, watchedLng]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placeMarker]);
 
   useEffect(() => {
     const map = mapRef.current;
     const validLocationCoords = getValidLocationCoords(watchedLat, watchedLng);
     if (!map || !validLocationCoords) return;
     placeMarker(map, validLocationCoords);
+    map.flyTo({ center: validLocationCoords, zoom: 15, duration: 800 });
   }, [watchedLat, watchedLng, placeMarker, getValidLocationCoords]);
 
   const geocodeAddress = useCallback(
