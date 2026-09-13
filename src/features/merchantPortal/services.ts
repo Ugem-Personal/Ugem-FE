@@ -425,6 +425,8 @@ export type UpdateMerchantPayload = {
   address?: string;
   openingHours?: string;
   logoUrl?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export async function updateMerchant(payload: UpdateMerchantPayload) {

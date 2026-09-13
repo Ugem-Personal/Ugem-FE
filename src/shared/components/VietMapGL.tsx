@@ -59,6 +59,8 @@ export interface VietMapGLProps {
   locateLoading?: boolean;
   editableUserMarker?: boolean;
   onUserMarkerDrag?: (lng: number, lat: number) => void;
+  /** Callback khi click bất kỳ đâu trên bản đồ */
+  onMapClick?: (lng: number, lat: number) => void;
   /** Class CSS cho container */
   className?: string;
 }
@@ -321,11 +323,14 @@ export default function VietMapGL({
   onLocateClick,
   locateLoading = false,
   onUserMarkerDrag,
+  onMapClick,
   className = "h-full w-full",
   styleName = "tm",
 }: Readonly<VietMapGLProps & { styleName?: string }>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<vietmapgl.Map | null>(null);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
   const markerMapRef = useRef<
     Map<string, { marker: vietmapgl.Marker; popup: vietmapgl.Popup }>
   >(new Map());
@@ -368,10 +373,16 @@ export default function VietMapGL({
 
     map.addControl(new vietmapgl.NavigationControl({}), "top-right");
 
+    const handleMapClick = (e: { lngLat: { lng: number; lat: number } }) => {
+      onMapClickRef.current?.(e.lngLat.lng, e.lngLat.lat);
+    };
+    map.on("click", handleMapClick);
+
     mapRef.current = map;
     const markersById = markerMapRef.current;
 
     return () => {
+      map.off("click", handleMapClick);
       markersById.forEach(({ marker }) => marker.remove());
       markersById.clear();
       if (routeFitTimerRef.current) {

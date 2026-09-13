@@ -81,6 +81,20 @@ function merchantMatchesKeyword(merchant: Merchant, keyword: string) {
     .includes(normalizedKeyword);
 }
 
+export function isMerchantClosedOrHoliday(merchant: {
+  openingHours?: string | null;
+  status?: string | null;
+}) {
+  if (merchant.status && merchant.status !== "Active") return true;
+  const hours = (merchant.openingHours || "").toLowerCase();
+  return (
+    hours.includes("nghỉ") ||
+    hours.includes("tạm đóng") ||
+    hours.includes("đóng cửa") ||
+    hours.includes("tạm nghỉ")
+  );
+}
+
 function mergeMerchantData(
   summary: Merchant,
   detail?: MerchantDetail | null,
@@ -174,8 +188,10 @@ export async function getNearbyMerchants(params: {
 
   return summaries
     .map((summary: Merchant) => mergeMerchantData(summary, detailById.get(summary.id)))
-    .filter((merchant: Merchant) =>
-      merchantMatchesKeyword(merchant, params.keyword ?? ""),
+    .filter(
+      (merchant: Merchant) =>
+        !isMerchantClosedOrHoliday(merchant) &&
+        merchantMatchesKeyword(merchant, params.keyword ?? ""),
     );
 }
 
@@ -194,7 +210,9 @@ export async function searchMerchants(params?: {
     },
   });
 
-  return unwrapMerchantList(res.data);
+  return unwrapMerchantList(res.data).filter(
+    (merchant: Merchant) => !isMerchantClosedOrHoliday(merchant),
+  );
 }
 
 export async function getMerchantDetail(id: string): Promise<MerchantDetail> {
@@ -236,7 +254,9 @@ export async function getMapMerchants(payload: unknown) {
     params: payload,
   });
 
-  return unwrapMerchantList(res.data);
+  return unwrapMerchantList(res.data).filter(
+    (merchant: Merchant) => !isMerchantClosedOrHoliday(merchant),
+  );
 }
 
 export async function getMerchantsByCategory(payload: unknown) {
@@ -246,7 +266,9 @@ export async function getMerchantsByCategory(payload: unknown) {
     params: payload,
   });
 
-  return unwrapMerchantList(res.data);
+  return unwrapMerchantList(res.data).filter(
+    (merchant: Merchant) => !isMerchantClosedOrHoliday(merchant),
+  );
 }
 
 export async function getMerchantMe() {

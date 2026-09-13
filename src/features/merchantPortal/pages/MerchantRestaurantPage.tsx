@@ -21,9 +21,11 @@ import {
   MessageSquare,
   QrCode,
   Trash2,
+  AlertCircle,
 } from "lucide-react";
 
 import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
+import { RestaurantAddressPicker } from "../components/RestaurantAddressPicker";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
@@ -55,6 +57,8 @@ type MerchantEditForm = {
   address: string;
   openingHours: string;
   logoUrl: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 const DESCRIPTION_META_LABELS = [
@@ -226,6 +230,8 @@ function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
     address: merchant?.address ?? "",
     openingHours: merchant?.openingHours ?? "",
     logoUrl: merchant?.logoUrl ?? "",
+    latitude: merchant?.latitude ?? (merchant?.lat ?? undefined),
+    longitude: merchant?.longitude ?? (merchant?.lng ?? undefined),
   };
 }
 
@@ -463,6 +469,8 @@ export function MerchantRestaurantPage() {
         address: form.address.trim() || undefined,
         openingHours: form.openingHours.trim() || undefined,
         logoUrl: form.logoUrl.trim() || undefined,
+        latitude: form.latitude ?? undefined,
+        longitude: form.longitude ?? undefined,
       });
 
       const nextMerchant = await getMyMerchantDetail();
@@ -661,12 +669,17 @@ export function MerchantRestaurantPage() {
                     onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
                     disabled={saving}
                   />
-                  <EditField
-                    label="Địa chỉ nhà hàng"
-                    value={form.address}
-                    onChange={(v) => setForm((p) => ({ ...p, address: v }))}
-                    disabled={saving}
-                  />
+                  <div className="md:col-span-2">
+                    <RestaurantAddressPicker
+                      address={form.address}
+                      latitude={form.latitude}
+                      longitude={form.longitude}
+                      disabled={saving}
+                      onChange={({ address, latitude, longitude }) =>
+                        setForm((p) => ({ ...p, address, latitude, longitude }))
+                      }
+                    />
+                  </div>
 
                   <div className="md:col-span-2">
                     <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
@@ -744,7 +757,24 @@ export function MerchantRestaurantPage() {
                 {/* Details Grid (8 cols) */}
                 <div className="lg:col-span-8 space-y-6">
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <InfoLine icon={<MapPin className="h-4 w-4" />} label="Địa chỉ" value={cleanAddress(merchant.address)} />
+                    <InfoLine
+                      icon={<MapPin className="h-4 w-4" />}
+                      label="Địa chỉ"
+                      value={
+                        merchant.address ? (
+                          <div className="space-y-0.5">
+                            <span>{cleanAddress(merchant.address)}</span>
+                            {merchant.latitude && merchant.longitude && (
+                              <span className="block text-[11px] font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                                📍 Tọa độ ghim: {Number(merchant.latitude).toFixed(5)}, {Number(merchant.longitude).toFixed(5)}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Chưa cập nhật</span>
+                        )
+                      }
+                    />
                     <InfoLine icon={<Phone className="h-4 w-4" />} label="Số điện thoại" value={merchant.phone} />
                     <InfoLine icon={<Mail className="h-4 w-4" />} label="Email nhà hàng" value={merchant.email} />
                     <InfoLine
@@ -1242,9 +1272,19 @@ function OpeningHoursEditor({
           🏖️ Nghỉ lễ / Tạm nghỉ
         </button>
       </div>
-      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-        💡 <strong>Mẹo cho ngày lễ/tết:</strong> Nếu quán nghỉ lễ, bấm nút <em>"🏖️ Nghỉ lễ / Tạm nghỉ"</em> và có thể tự gõ ngày mở bán lại (ví dụ: <em>Nghỉ lễ 30/4, mở lại ngày 02/05</em>) để thực khách nắm rõ thông tin.
-      </p>
+
+      {isHoliday ? (
+        <div className="rounded-xl border border-rose-300 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/30 p-2.5 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+          <p className="leading-relaxed">
+            <strong>Tự động ẩn quán:</strong> Khi chọn <em>Nghỉ lễ / Tạm nghỉ</em>, quán sẽ được tự động ẩn khỏi danh sách tìm kiếm và bản đồ trên UFind để tránh khách tìm đến vào ngày nghỉ. Khi mở bán lại, bạn chỉ cần chọn lại giờ mở cửa thông thường (VD: 07:00 - 22:00) và Lưu lại.
+          </p>
+        </div>
+      ) : (
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          💡 <strong>Mẹo cho ngày lễ/tết:</strong> Nếu quán nghỉ lễ, bấm nút <em>"🏖️ Nghỉ lễ / Tạm nghỉ"</em> và có thể tự gõ ngày mở bán lại (ví dụ: <em>Nghỉ lễ 30/4, mở lại ngày 02/05</em>) để thực khách nắm rõ thông tin.
+        </p>
+      )}
     </div>
   );
 }
