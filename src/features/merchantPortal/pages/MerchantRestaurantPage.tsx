@@ -41,12 +41,7 @@ import {
   uploadImage,
   validateImageFile,
 } from "@/shared/services/mediaService";
-import {
-  DEFAULT_DISCOVERY_OPTIONS,
-  getDiscoveryOptions,
-} from "@/shared/services/categoryService";
-import { getCategoryDisplayName } from "@/shared/utils/category";
-import type { DiscoveryOptions } from "@/shared/types";
+
 
 type MerchantEditForm = {
   merchantName: string;
@@ -158,13 +153,73 @@ function getInitials(name?: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+const STANDARD_RESTAURANT_TYPES = [
+  "Quán ăn bình dân",
+  "Quán ăn gia đình",
+  "Quán vỉa hè / Đường phố",
+  "Nhà hàng / Quán máy lạnh",
+  "Quán Cafe / Trà sữa / Đồ uống",
+  "Quán nhậu / Lai rai",
+  "Kiot / Xe đẩy / Bán mang đi",
+];
+
+const STANDARD_MAIN_DISH_TYPES = [
+  "Cơm (Cơm tấm, Cơm văn phòng, Cơm gà)",
+  "Bún, Phở, Mì & Hủ tiếu",
+  "Món Việt truyền thống (Mâm cơm, Đặc sản)",
+  "Bánh mì & Thức ăn nhanh (Xôi, Bánh mì, Burger)",
+  "Đồ ăn vặt & Tráng miệng (Chè, Bánh tráng, Kem)",
+  "Trà sữa, Cà phê & Đồ uống",
+  "Lẩu & Đồ nướng",
+  "Món Chay & Thực dưỡng",
+  "Món Hàn / Nhật / Thái",
+  "Món Âu (Pizza, Pasta, Steak)",
+  "Món khác",
+];
+
+const STANDARD_PRICE_RANGES = [
+  "Tự động tính theo giá thực đơn",
+  "Dưới 35.000đ (Bình dân / Học sinh, sinh viên)",
+  "35.000đ - 75.000đ (Phổ thông / Dân văn phòng)",
+  "75.000đ - 150.000đ (Tầm trung / Gia đình, họp mặt)",
+  "Trên 150.000đ (Cao cấp / Nhà hàng sang trọng)",
+];
+
 function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
+  let restaurantType = merchant?.restaurantType ?? "";
+  let mainDishType = merchant?.mainDishType ?? "";
+  let priceRange = merchant?.priceRange ?? "";
+
+  // Normalize if restaurantType was old cuisine like "Cơm & Món Việt"
+  if (
+    restaurantType === "Cơm & Món Việt" ||
+    restaurantType === "Cơm" ||
+    restaurantType.toLowerCase().includes("món việt")
+  ) {
+    if (!mainDishType || mainDishType === "Món đặc trưng" || mainDishType === "Món chính") {
+      mainDishType = "Cơm (Cơm tấm, Cơm văn phòng, Cơm gà)";
+    }
+    restaurantType = "Quán ăn bình dân";
+  } else if (!restaurantType) {
+    restaurantType = "Quán ăn bình dân";
+  }
+
+  // Normalize if mainDishType was "Món đặc trưng" or "Món chính"
+  if (mainDishType === "Món đặc trưng" || mainDishType === "Món chính") {
+    mainDishType = "Cơm (Cơm tấm, Cơm văn phòng, Cơm gà)";
+  }
+
+  // Normalize priceRange: if empty or includes "Tự động"
+  if (!priceRange || priceRange.toLowerCase().includes("tự động")) {
+    priceRange = "Tự động tính theo giá thực đơn";
+  }
+
   return {
     merchantName: merchant?.name ?? "",
     merchantDescription: getDisplayDescription(merchant?.description),
-    restaurantType: merchant?.restaurantType ?? "",
-    mainDishType: merchant?.mainDishType ?? "",
-    priceRange: merchant?.priceRange ?? "",
+    restaurantType,
+    mainDishType,
+    priceRange,
     email: merchant?.email ?? "",
     phone: merchant?.phone ?? "",
     address: merchant?.address ?? "",
@@ -262,9 +317,6 @@ export function MerchantRestaurantPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<MerchantEditForm>(() => toEditForm(null));
-  const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
-    DEFAULT_DISCOVERY_OPTIONS,
-  );
   const { data: applications = [], isLoading: isLoadingApplications } =
     useMyApplications();
 
@@ -279,23 +331,6 @@ export function MerchantRestaurantPage() {
     () => getDisplayDescription(merchant?.description),
     [merchant?.description],
   );
-  const mainDishOptions = useMemo(
-    () =>
-      discoveryOptions.foodCategories.map((category) =>
-        getCategoryDisplayName(category.name),
-      ),
-    [discoveryOptions.foodCategories],
-  );
-
-  useEffect(() => {
-    let active = true;
-    getDiscoveryOptions()
-      .then((options) => active && setDiscoveryOptions(options))
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -411,12 +446,17 @@ export function MerchantRestaurantPage() {
     const toastId = notify.loading("Đang cập nhật thông tin nhà hàng...");
 
     try {
+      const priceRangeToSave =
+        form.priceRange.trim() === "Tự động tính theo giá thực đơn"
+          ? undefined
+          : form.priceRange.trim() || undefined;
+
       await updateMerchant({
         name: form.merchantName.trim(),
         description: form.merchantDescription.trim() || undefined,
         restaurantType: form.restaurantType.trim() || undefined,
         mainDishType: form.mainDishType.trim() || undefined,
-        priceRange: form.priceRange.trim() || undefined,
+        priceRange: priceRangeToSave,
         email: form.email.trim() || undefined,
         phone: form.phone.trim() || undefined,
         address: form.address.trim() || undefined,
@@ -477,7 +517,11 @@ export function MerchantRestaurantPage() {
                       setForm(toEditForm(merchant));
                       setIsEditing((value) => !value);
                     }}
-                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 shadow-sm transition"
+                    className={`inline-flex h-11 items-center gap-2 rounded-2xl px-5 text-xs font-black shadow-sm transition ${
+                      isEditing
+                        ? "border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/60"
+                        : "border border-cyan-500/30 bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-slate-700 hover:border-cyan-400"
+                    }`}
                   >
                     {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                     {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa hồ sơ"}
@@ -603,23 +647,28 @@ export function MerchantRestaurantPage() {
                     value={form.restaurantType}
                     onChange={(v) => setForm((p) => ({ ...p, restaurantType: v }))}
                     disabled={saving}
-                    options={discoveryOptions.restaurantTypes}
+                    options={STANDARD_RESTAURANT_TYPES}
+                    helper="Mô hình kinh doanh và không gian phục vụ của quán."
                   />
                   <EditSelectField
                     label="Nhóm món chủ đạo"
                     value={form.mainDishType}
                     onChange={(v) => setForm((p) => ({ ...p, mainDishType: v }))}
                     disabled={saving}
-                    options={mainDishOptions}
-                    helper="Thể loại món chính (VD: Cơm tấm, Trà sữa...) giúp UFind phân loại và gợi ý quán chính xác khi khách tìm kiếm."
+                    options={STANDARD_MAIN_DISH_TYPES}
+                    helper="Thể loại món đặc trưng nhất giúp khách dễ tìm thấy quán khi lọc theo món ăn."
                   />
                   <EditSelectField
                     label="Khoảng giá trung bình"
                     value={form.priceRange}
                     onChange={(v) => setForm((p) => ({ ...p, priceRange: v }))}
                     disabled={saving}
-                    options={discoveryOptions.priceRanges}
-                    helper="Ước lượng chi phí bình quân mỗi bữa ăn (sẽ tự động tính theo menu nếu để trống)."
+                    options={STANDARD_PRICE_RANGES}
+                    helper={
+                      menuPriceRange
+                        ? `Mức giá ước lượng mỗi khách (Đang tự động theo menu: ${menuPriceRange}).`
+                        : "Mức giá ước lượng mỗi khách (chọn Tự động để hệ thống tính chuẩn theo menu)."
+                    }
                   />
                   <EditField
                     label="Email liên hệ nhà hàng"
@@ -723,18 +772,6 @@ export function MerchantRestaurantPage() {
                       icon={<Clock3 className="h-4 w-4" />}
                       label="Giờ mở cửa"
                       value={merchant.openingHours}
-                      action={
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setForm(toEditForm(merchant));
-                            setIsEditing(true);
-                          }}
-                          className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
-                        >
-                          {merchant.openingHours ? "Đổi giờ" : "+ Cài đặt ngay"}
-                        </button>
-                      }
                     />
                     <InfoLine icon={<Tag className="h-4 w-4" />} label="Loại hình quán" value={merchant.restaurantType} />
                     <InfoLine icon={<Compass className="h-4 w-4" />} label="Nhóm món chủ đạo" value={merchant.mainDishType} />
@@ -747,21 +784,10 @@ export function MerchantRestaurantPage() {
 
                   {displayDescription ? (
                     <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-6 shadow-lg backdrop-blur-2xl">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          <Store className="h-4 w-4 text-cyan-500" /> Mô tả & Giới thiệu nhà hàng
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setForm(toEditForm(merchant));
-                            setIsEditing(true);
-                          }}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
-                        >
-                          <Pencil className="h-3 w-3" /> Chỉnh sửa
-                        </button>
-                      </div>
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                        <Store className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                        Mô tả & Giới thiệu nhà hàng
+                      </p>
                       <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-white/[0.03] p-4 sm:p-5">
                         <p className="whitespace-pre-line text-xs sm:text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-200">
                           {displayDescription}
@@ -769,25 +795,14 @@ export function MerchantRestaurantPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 shadow-sm backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <span className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          <Store className="h-4 w-4 text-cyan-500" /> Mô tả & Giới thiệu nhà hàng
-                        </span>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Chưa có bài viết mô tả quán. Hãy thêm câu chuyện thương hiệu và phong cách ẩm thực để thu hút thực khách.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForm(toEditForm(merchant));
-                          setIsEditing(true);
-                        }}
-                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 dark:bg-cyan-500/20 px-3.5 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/20 transition"
-                      >
-                        <Pencil className="h-3.5 w-3.5" /> Thêm mô tả
-                      </button>
+                    <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 shadow-sm backdrop-blur-xl">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                        <Store className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                        Mô tả & Giới thiệu nhà hàng
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Chưa có bài viết mô tả quán. Nhấn nút "Chỉnh sửa hồ sơ" ở góc trên để bổ sung câu chuyện thương hiệu và phong cách ẩm thực.
+                      </p>
                     </div>
                   )}
                 </div>
