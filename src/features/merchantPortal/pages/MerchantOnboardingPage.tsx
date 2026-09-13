@@ -317,15 +317,23 @@ export function MerchantOnboardingPage() {
             if (hasConflict) {
               notify.error("Thông tin quán bị trùng lặp", {
                 description:
-                  result.conflicts.name ||
                   result.conflicts.phone ||
-                  result.conflicts.email,
+                  result.conflicts.email ||
+                  result.conflicts.name,
               });
               return;
             }
           }
-        } catch {
-          // If check fails due to network, proceed and let backend enforce on submit
+        } catch (error: any) {
+          console.error("Lỗi xác thực thông tin quán:", error);
+          const errMsg =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Không thể kiểm tra tính khả dụng của thông tin quán lúc này do máy chủ đang phản hồi chậm. Vui lòng thử lại trong giây lát!";
+          notify.error("Lỗi xác thực thông tin", {
+            description: errMsg,
+          });
+          return;
         } finally {
           setCheckingAvailability(false);
         }
