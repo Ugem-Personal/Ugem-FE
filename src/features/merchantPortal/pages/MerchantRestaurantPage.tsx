@@ -715,17 +715,13 @@ export function MerchantRestaurantPage() {
               <div className="grid gap-6 lg:grid-cols-12">
                 {/* Storefront / Signboard & Rating Box (4 cols) */}
                 <div className="lg:col-span-4 space-y-4">
-                  <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800 h-64 shadow-lg group">
+                  <div className="overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800 h-64 shadow-lg">
                     <ImageWithFallback
                       src={merchant.logoUrl}
                       alt={merchant.name || "Restaurant"}
                       fallbackIcon={<Store className="h-16 w-16 text-cyan-500" />}
                       className="h-full w-full object-cover"
                     />
-                    <div className="absolute bottom-3 left-3 right-3 rounded-2xl bg-slate-950/80 backdrop-blur-md px-3 py-2 text-white flex items-center gap-2 text-xs font-bold shadow-md">
-                      <Store className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-                      <span className="truncate">Ảnh biển hiệu &amp; nhận diện quán</span>
-                    </div>
                   </div>
 
                   <button
