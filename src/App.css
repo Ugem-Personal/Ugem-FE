@@ -209,6 +209,17 @@
   border-radius: 12px;
 }
 
+.google-btn-wrapper,
+.google-btn-wrapper > div,
+.google-btn-wrapper iframe {
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  clip-path: inset(0 round 9999px) !important;
+}
+
 .google-button {
   min-height: 44px;
   border: 0;

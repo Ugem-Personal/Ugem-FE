@@ -150,6 +150,14 @@ export function LoginPage() {
         logo_alignment: "left",
         width: Math.min(420, Math.max(280, Math.floor(container.clientWidth || 380))),
       });
+
+      // Remove any white background or square corners from Google wrapper/iframe
+      const elements = container.querySelectorAll<HTMLElement>("iframe, div");
+      elements.forEach((el) => {
+        el.style.borderRadius = "9999px";
+        el.style.overflow = "hidden";
+        el.style.backgroundColor = "transparent";
+      });
     }
 
     if (window.google?.accounts?.id) {
@@ -205,7 +213,13 @@ export function LoginPage() {
             <div className="flex justify-center w-full">
               <div
                 ref={googleButtonRef}
-                className="min-h-[44px] w-full max-w-[400px] flex justify-center items-center rounded-lg overflow-hidden"
+                className="google-btn-wrapper h-[40px] flex justify-center items-center rounded-full overflow-hidden bg-transparent"
+                style={{
+                  borderRadius: "9999px",
+                  overflow: "hidden",
+                  backgroundColor: "transparent",
+                  clipPath: "inset(0 round 9999px)",
+                }}
               />
             </div>
 
