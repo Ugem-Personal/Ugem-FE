@@ -20,6 +20,7 @@ import {
   Compass,
   MessageSquare,
   QrCode,
+  Trash2,
 } from "lucide-react";
 
 import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
@@ -559,20 +560,23 @@ export function MerchantRestaurantPage() {
             ) : isEditing ? (
               /* Edit Form */
               <form onSubmit={handleUpdateMerchant} className="space-y-6">
-                {/* Logo Upload Section */}
+                {/* Signboard / Storefront Photo Section */}
                 <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 flex flex-col sm:flex-row items-center gap-4">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800">
                     <ImageWithFallback
                       src={form.logoUrl}
-                      alt="Logo preview"
+                      alt="Biển hiệu quán"
                       fallbackIcon={<Store className="h-8 w-8 text-cyan-500" />}
                       className="h-full w-full object-cover"
                     />
                   </div>
                   <div className="flex-1 min-w-0 text-center sm:text-left">
                     <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                      Logo Đại Diện Nhà Hàng
+                      Ảnh Biển Hiệu &amp; Mặt Tiền Quán
                     </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
+                      Ảnh chụp trực diện biển hiệu, bảng tên quán hoặc mặt tiền cửa hàng giúp thực khách và shipper dễ dàng nhận diện khi ghé quán.
+                    </p>
                     <div className="flex items-center justify-center sm:justify-start gap-3">
                       <input
                         id="merchant-logo-upload"
@@ -594,54 +598,29 @@ export function MerchantRestaurantPage() {
                         ) : (
                           <ImagePlus className="h-3.5 w-3.5" />
                         )}
-                        {isUploadingLogo ? "Tải lên..." : "Chọn ảnh Logo mới"}
+                        {isUploadingLogo ? "Tải lên..." : "Đổi ảnh biển hiệu mới"}
                       </label>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <EditField
-                    label="Tên nhà hàng *"
-                    value={form.merchantName}
-                    onChange={(v) => setForm((p) => ({ ...p, merchantName: v }))}
-                    disabled={saving}
-                  />
-                  <EditField
-                    label="Giờ mở cửa"
-                    value={form.openingHours}
-                    onChange={(v) => setForm((p) => ({ ...p, openingHours: v }))}
-                    disabled={saving}
-                    placeholder="VD: 07:00 - 22:00 hoặc Cả ngày"
-                    hint={
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                        <button
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, openingHours: "07:00 - 22:00" }))}
-                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
-                        >
-                          07:00 - 22:00
-                        </button>
-                        <span className="text-slate-400">|</span>
-                        <button
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, openingHours: "06:00 - 21:00" }))}
-                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
-                        >
-                          06:00 - 21:00
-                        </button>
-                        <span className="text-slate-400">|</span>
-                        <button
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, openingHours: "Cả ngày (24/7)" }))}
-                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
-                        >
-                          24/7
-                        </button>
-                      </div>
-                    }
-                    helper="Thời gian quán mở cửa đón khách hoặc nhận đơn hàng."
-                  />
+                  <div className="md:col-span-2">
+                    <EditField
+                      label="Tên nhà hàng *"
+                      value={form.merchantName}
+                      onChange={(v) => setForm((p) => ({ ...p, merchantName: v }))}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <OpeningHoursEditor
+                      value={form.openingHours}
+                      onChange={(v) => setForm((p) => ({ ...p, openingHours: v }))}
+                      disabled={saving}
+                    />
+                  </div>
                   <EditSelectField
                     label="Loại hình nhà hàng"
                     value={form.restaurantType}
@@ -734,15 +713,19 @@ export function MerchantRestaurantPage() {
             ) : (
               /* View Mode */
               <div className="grid gap-6 lg:grid-cols-12">
-                {/* Logo & Rating Box (4 cols) */}
+                {/* Storefront / Signboard & Rating Box (4 cols) */}
                 <div className="lg:col-span-4 space-y-4">
-                  <div className="overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800 h-64 shadow-lg">
+                  <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800 h-64 shadow-lg group">
                     <ImageWithFallback
                       src={merchant.logoUrl}
                       alt={merchant.name || "Restaurant"}
                       fallbackIcon={<Store className="h-16 w-16 text-cyan-500" />}
                       className="h-full w-full object-cover"
                     />
+                    <div className="absolute bottom-3 left-3 right-3 rounded-2xl bg-slate-950/80 backdrop-blur-md px-3 py-2 text-white flex items-center gap-2 text-xs font-bold shadow-md">
+                      <Store className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                      <span className="truncate">Ảnh biển hiệu &amp; nhận diện quán</span>
+                    </div>
                   </div>
 
                   <button
@@ -771,7 +754,21 @@ export function MerchantRestaurantPage() {
                     <InfoLine
                       icon={<Clock3 className="h-4 w-4" />}
                       label="Giờ mở cửa"
-                      value={merchant.openingHours}
+                      value={
+                        merchant.openingHours ? (
+                          merchant.openingHours.toLowerCase().includes("nghỉ") ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-xs font-black text-rose-700 dark:text-rose-300">
+                              🏖️ {merchant.openingHours}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                              {merchant.openingHours}
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Chưa thiết lập (Chủ quán cài đặt sau)</span>
+                        )
+                      }
                     />
                     <InfoLine icon={<Tag className="h-4 w-4" />} label="Loại hình quán" value={merchant.restaurantType} />
                     <InfoLine icon={<Compass className="h-4 w-4" />} label="Nhóm món chủ đạo" value={merchant.mainDishType} />
@@ -1000,7 +997,7 @@ function InfoLine({
 }: {
   icon: ReactNode;
   label: string;
-  value?: string | null;
+  value?: ReactNode;
   action?: ReactNode;
 }) {
   return (
@@ -1105,6 +1102,153 @@ function EditSelectField({
           {helper}
         </p>
       )}
+    </div>
+  );
+}
+
+function OpeningHoursEditor({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}) {
+  const timeMatch = value.match(/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})$/);
+  const startTime = timeMatch ? timeMatch[1] : "07:00";
+  const endTime = timeMatch ? timeMatch[2] : "22:00";
+
+  const isHoliday = value.toLowerCase().includes("nghỉ");
+
+  const handleTimeChange = (newStart: string, newEnd: string) => {
+    if (newStart && newEnd) {
+      onChange(`${newStart} - ${newEnd}`);
+    }
+  };
+
+  return (
+    <div className="md:col-span-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] p-4 sm:p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <Clock3 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+          <span>Cài đặt giờ mở cửa &amp; Lịch hoạt động</span>
+        </label>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            disabled={disabled}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Xóa giờ (Chưa thiết lập)
+          </button>
+        ) : (
+          <span className="text-[11px] font-medium text-slate-400 italic">
+            Chưa thiết lập giờ mở cửa
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+        {/* Time Pickers */}
+        <div className="sm:col-span-6 flex items-center gap-2">
+          <div className="flex-1">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Giờ mở cửa
+            </span>
+            <input
+              type="time"
+              value={startTime}
+              disabled={disabled}
+              onChange={(e) => handleTimeChange(e.target.value, endTime)}
+              className="h-11 w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-3 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            />
+          </div>
+          <span className="text-slate-400 font-bold mb-3">-</span>
+          <div className="flex-1">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Giờ đóng cửa
+            </span>
+            <input
+              type="time"
+              value={endTime}
+              disabled={disabled}
+              onChange={(e) => handleTimeChange(startTime, e.target.value)}
+              className="h-11 w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-3 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            />
+          </div>
+        </div>
+
+        {/* Custom Text / Current Display */}
+        <div className="sm:col-span-6">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+            Hiển thị thực tế (Hoặc tự điền lịch ca gãy / nghỉ lễ)
+          </span>
+          <input
+            type="text"
+            value={value}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="VD: 07:00 - 22:00, hoặc Ca gãy: 06:00 - 13:30 & 16:30 - 21:00..."
+            className="h-11 w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 placeholder:text-slate-400"
+          />
+        </div>
+      </div>
+
+      {/* Preset Buttons & Holiday Option */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1">
+          Chọn nhanh:
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange("07:00 - 22:00")}
+          disabled={disabled}
+          className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition"
+        >
+          07:00 - 22:00
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("06:00 - 21:00")}
+          disabled={disabled}
+          className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition"
+        >
+          06:00 - 21:00
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("06:00 - 13:30 & 16:30 - 21:30 (Bán 2 ca)")}
+          disabled={disabled}
+          className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition"
+        >
+          Ca trưa &amp; tối (Ca gãy)
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("Cả ngày (24/7)")}
+          disabled={disabled}
+          className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition"
+        >
+          Mở 24/7
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("Tạm nghỉ lễ (Sẽ mở lại sau lễ)")}
+          disabled={disabled}
+          className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition flex items-center gap-1 ${
+            isHoliday
+              ? "border-amber-500 bg-amber-500/20 text-amber-800 dark:text-amber-300 shadow-xs"
+              : "border-amber-300 dark:border-amber-700/50 bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100"
+          }`}
+        >
+          🏖️ Nghỉ lễ / Tạm nghỉ
+        </button>
+      </div>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        💡 <strong>Mẹo cho ngày lễ/tết:</strong> Nếu quán nghỉ lễ, bấm nút <em>"🏖️ Nghỉ lễ / Tạm nghỉ"</em> và có thể tự gõ ngày mở bán lại (ví dụ: <em>Nghỉ lễ 30/4, mở lại ngày 02/05</em>) để thực khách nắm rõ thông tin.
+      </p>
     </div>
   );
 }
