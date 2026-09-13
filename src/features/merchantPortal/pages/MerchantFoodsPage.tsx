@@ -96,6 +96,15 @@ export function MerchantFoodsPage() {
     categoryIds?: string;
   }>({});
 
+  // Inline Add-ons / Toppings in main form
+  const [formToppings, setFormToppings] = useState<
+    { name: string; price: number; id?: string }[]
+  >([]);
+  const [newInlineTopping, setNewInlineTopping] = useState({
+    name: "",
+    price: "",
+  });
+
   // Image Upload state
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageFileName, setImageFileName] = useState("");
@@ -335,10 +344,46 @@ export function MerchantFoodsPage() {
 
       if (editingFoodId) {
         await updateFood(editingFoodId, payload);
+
+        // Tạo các món ăn kèm mới thêm chưa có id
+        const newToppings = formToppings.filter((t) => !t.id);
+        if (newToppings.length > 0) {
+          await Promise.all(
+            newToppings.map((t) =>
+              createFoodTopping({
+                foodId: editingFoodId,
+                name: t.name,
+                price: t.price,
+              }),
+            ),
+          );
+        }
         notify.success("Cập nhật món ăn thành công.");
       } else {
-        await createFood(payload);
-        notify.success("Thêm món ăn thành công.");
+        const createdRes = await createFood(payload);
+        const createdId =
+          (createdRes as any)?.data?.id ??
+          (createdRes as any)?.data?.foodId ??
+          (createdRes as any)?.id ??
+          (createdRes as any)?.foodId;
+
+        if (createdId && formToppings.length > 0) {
+          await Promise.all(
+            formToppings.map((t) =>
+              createFoodTopping({
+                foodId: createdId,
+                name: t.name,
+                price: t.price,
+              }),
+            ),
+          );
+        }
+
+        notify.success(
+          formToppings.length > 0
+            ? `Thêm món ăn và ${formToppings.length} món ăn kèm thành công!`
+            : "Thêm món ăn thành công.",
+        );
       }
 
       resetForm();
@@ -366,6 +411,8 @@ export function MerchantFoodsPage() {
       cuisine: "",
       categoryIds: defaultMainDishCategoryId ? [defaultMainDishCategoryId] : [],
     });
+    setFormToppings([]);
+    setNewInlineTopping({ name: "", price: "" });
     setFormErrors({});
     setImagePreview("");
     setImageFileName("");
@@ -391,10 +438,50 @@ export function MerchantFoodsPage() {
     setImagePreview(food.imageUrl ?? "");
     setImageFileName("");
 
+    // Load existing toppings
+    const existing = (food.toppings ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      price: t.price,
+    }));
+    setFormToppings(existing);
+    setNewInlineTopping({ name: "", price: "" });
+
     const formElement = document.getElementById("merchant-food-form");
     if (formElement) {
       formElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }
+
+  function handleAddInlineTopping() {
+    const name = newInlineTopping.name.trim();
+    const price = Number(newInlineTopping.price);
+
+    if (!name) {
+      notify.error("Vui lòng nhập tên món ăn kèm.");
+      return;
+    }
+    if (isNaN(price) || price < 0) {
+      notify.error("Giá món ăn kèm không được âm.");
+      return;
+    }
+
+    setFormToppings((prev) => [...prev, { name, price }]);
+    setNewInlineTopping({ name: "", price: "" });
+  }
+
+  async function handleRemoveInlineTopping(index: number, toppingId?: string) {
+    if (toppingId) {
+      try {
+        await deleteFoodTopping(toppingId);
+        notify.success("Đã xóa món ăn kèm.");
+      } catch (error) {
+        console.error(error);
+        notify.error("Không thể xóa món ăn kèm.");
+        return;
+      }
+    }
+    setFormToppings((prev) => prev.filter((_, i) => i !== index));
   }
 
   // Availability Toggle
@@ -800,6 +887,92 @@ export function MerchantFoodsPage() {
                     <p className="text-xs font-medium text-rose-500 flex items-center gap-1">
                       <AlertTriangle size={12} /> {formErrors.categoryIds}
                     </p>
+                  )}
+                </div>
+
+                {/* Món ăn kèm / Đồ gọi thêm ngay trong form */}
+                <div className="space-y-3 md:col-span-2 rounded-2xl border border-cyan-100 dark:border-cyan-900/40 bg-cyan-50/30 dark:bg-slate-900/50 p-4 sm:p-5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <UtensilsCrossed size={14} className="text-cyan-600 dark:text-cyan-400" />
+                      <span>Món ăn kèm & Đồ gọi thêm</span>
+                      <span className="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">
+                        (không bắt buộc)
+                      </span>
+                    </label>
+                    {formToppings.length > 0 && (
+                      <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
+                        Đã thêm {formToppings.length} món kèm
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Thêm sẵn các đồ ăn kèm có tính thêm tiền (ví dụ: Trứng ốp la, Chả thêm, Trân châu...) cho món này.
+                  </p>
+
+                  {/* Ô nhập nhanh */}
+                  <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+                    <input
+                      type="text"
+                      value={newInlineTopping.name}
+                      onChange={(e) => setNewInlineTopping((prev) => ({ ...prev, name: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddInlineTopping();
+                        }
+                      }}
+                      placeholder="Tên món kèm (vd: Trứng ốp la)"
+                      className="h-10 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 shadow-2xs placeholder:text-slate-400"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="500"
+                      value={newInlineTopping.price}
+                      onChange={(e) => setNewInlineTopping((prev) => ({ ...prev, price: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddInlineTopping();
+                        }
+                      }}
+                      placeholder="Giá thêm (vd: 5000)"
+                      className="h-10 sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 shadow-2xs placeholder:text-slate-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddInlineTopping}
+                      className="h-10 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white px-4 text-xs font-black shadow-md shadow-cyan-600/20 transition"
+                    >
+                      <Plus size={13} />
+                      Thêm món kèm
+                    </button>
+                  </div>
+
+                  {/* Danh sách các món ăn kèm đã thêm vào form */}
+                  {formToppings.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {formToppings.map((item, index) => (
+                        <span
+                          key={item.id ?? index}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs"
+                        >
+                          <span>{item.name}</span>
+                          <span className="text-cyan-600 dark:text-cyan-400 font-extrabold">
+                            +{Number(item.price).toLocaleString("vi-VN")} ₫
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void handleRemoveInlineTopping(index, item.id)}
+                            className="ml-1 text-slate-400 hover:text-rose-600 transition"
+                            title="Xóa món kèm này"
+                          >
+                            <X size={13} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
