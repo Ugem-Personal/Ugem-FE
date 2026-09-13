@@ -158,77 +158,77 @@ export function MerchantPortalPage() {
 
           {/* Underrated Score & Rebalancing Radar Widget */}
           {merchant && (
-            <section className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl backdrop-blur-xl">
-              <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-1/3 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
+            <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 text-slate-900 shadow-xl backdrop-blur-xl transition-colors duration-300 dark:border-cyan-500/30 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:text-white p-6 sm:p-8">
+              <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-cyan-500/10 dark:bg-cyan-500/15 blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-1/3 h-48 w-48 rounded-full bg-indigo-500/10 dark:bg-indigo-500/15 blur-3xl pointer-events-none" />
 
               <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-3 max-w-xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/20 px-3 py-1 text-xs font-mono font-black uppercase tracking-wider text-cyan-300">
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/25 bg-cyan-50 dark:border-cyan-400/30 dark:bg-cyan-500/20 px-3 py-1 text-xs font-mono font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
                       UFind Rebalancing Engine
                     </span>
                     {(merchant.underratedScore && Number(merchant.underratedScore) >= 0.5) || merchant.isUnderrated ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50 dark:border-emerald-400/30 dark:bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
                         💎 Đang được đẩy ưu tiên trên Radar
                       </span>
                     ) : merchant.reviewCount && merchant.reviewCount > 0 ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/25 bg-indigo-50 dark:border-indigo-400/30 dark:bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">
                         🌟 Quán Ẩm Thực Nổi Bật
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/20 px-3 py-1 text-xs font-bold text-cyan-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/25 bg-cyan-50 dark:border-cyan-400/30 dark:bg-cyan-500/20 px-3 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-300">
                         🌱 Quán Mới Khởi Động
                       </span>
                     )}
                   </div>
 
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950 dark:text-white">
                     Chỉ Số Radar & Điểm Tiềm Năng (US)
                   </h2>
 
-                  <p className="text-xs sm:text-sm font-medium text-slate-300 leading-relaxed">
-                    Thuật toán UFind tính toán <strong className="text-cyan-300">Điểm Tiềm Năng (US)</strong> dựa trên Chất Lượng Đánh Giá và Chỉ Số Sức Mạnh (SI) để tự động đưa quán ngon núp hẻm tiếp cận hàng nghìn thực khách quanh khu vực.
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Thuật toán UFind tính toán <strong className="text-cyan-700 dark:text-cyan-300">Điểm Tiềm Năng (US)</strong> dựa trên Chất Lượng Đánh Giá và Chỉ Số Sức Mạnh (SI) để tự động đưa quán ngon núp hẻm tiếp cận hàng nghìn thực khách quanh khu vực.
                   </p>
                 </div>
 
                 {/* Score Stats Badges */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-white/5 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Chất lượng
                     </p>
-                    <p className="mt-1 text-xl sm:text-2xl font-black text-amber-400">
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-amber-500 dark:text-amber-400">
                       {merchant.reviewCount && merchant.reviewCount > 0 && merchant.rating
                         ? `${Number(merchant.rating).toFixed(1)}★`
                         : "0.0★"}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {merchant.reviewCount || 0} đánh giá
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-white/5 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Sức Mạnh (SI)
                     </p>
-                    <p className="mt-1 text-xl sm:text-2xl font-black text-indigo-400">
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">
                       {Number(merchant.strengthIndex ?? 0).toFixed(1)}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Độ phủ & tương tác
                     </p>
                   </div>
 
-                  <div className="col-span-2 sm:col-span-1 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4 text-center backdrop-blur-md">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300">
+                  <div className="col-span-2 sm:col-span-1 rounded-2xl border border-cyan-500/30 bg-cyan-50 dark:border-cyan-400/30 dark:bg-cyan-500/10 p-4 text-center backdrop-blur-md">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
                       Điểm Tiềm Năng (US)
                     </p>
-                    <p className="mt-1 text-xl sm:text-2xl font-black text-cyan-400">
+                    <p className="mt-1 text-xl sm:text-2xl font-black text-cyan-600 dark:text-cyan-400">
                       {Number(merchant.underratedScore ?? 0).toFixed(2)}
                     </p>
-                    <p className="text-[10px] text-cyan-300/80 mt-0.5">
+                    <p className="text-[10px] text-cyan-700/80 dark:text-cyan-300/80 mt-0.5">
                       Ưu tiên Radar
                     </p>
                   </div>
@@ -236,9 +236,9 @@ export function MerchantPortalPage() {
               </div>
 
               {/* Action Bar inside Widget */}
-              <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                   <span>Mẹo: Nhắc khách quét QR bàn và đánh giá kèm ảnh (+20 điểm) để tối ưu điểm US.</span>
                 </div>
                 <button

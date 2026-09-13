@@ -67,27 +67,75 @@ const DESCRIPTION_META_LABELS = [
   "Loại món chính",
   "Nhóm món chủ đạo",
   "Khoảng giá trung bình",
+  "Loại hình ẩm thực",
+  "Ẩm thực",
+  "Người đại diện",
+  "Số CCCD",
+  "Căn cước",
+  "Số CCCD / Hộ chiếu",
+  "Loại giấy tờ định danh",
+  "Mã số thuế",
+  "Mã số thuế doanh nghiệp",
+  "Ảnh mặt trước",
+  "Ảnh mặt sau",
+  "Giấy chứng nhận",
+  "Ảnh không gian quán",
+  "Giấy phép KD",
+  "Mã số GPKD",
 ];
 
-function getDisplayDescription(description?: string) {
-  const lines = (description || "")
+function getDisplayDescription(description?: string): string {
+  if (!description) return "";
+
+  const lines = description
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const markerIndex = lines.findIndex((line) =>
-    line.toLowerCase().includes("thông tin ui bổ sung"),
-  );
-  const summaryLines =
-    markerIndex >= 0
-      ? lines.slice(0, markerIndex)
-      : lines.filter(
-          (line) =>
-            !DESCRIPTION_META_LABELS.some((label) =>
-              line.toLowerCase().startsWith(`${label.toLowerCase()}:`),
-            ),
-        );
 
-  return summaryLines.join("\n").trim();
+  // Cutoff at first section delimiter or legal / technical marker
+  const markerIndex = lines.findIndex((line) => {
+    const lower = line.toLowerCase();
+    return (
+      lower.startsWith("---") ||
+      lower.includes("thông tin pháp lý") ||
+      lower.includes("định danh (kyc)") ||
+      lower.includes("thông tin kyc") ||
+      lower.includes("thông tin ui bổ sung")
+    );
+  });
+
+  const rawLines = markerIndex >= 0 ? lines.slice(0, markerIndex) : lines;
+
+  const cleanLines = rawLines.filter((line) => {
+    const lower = line.toLowerCase();
+    // Exclude URLs or image paths
+    if (
+      lower.startsWith("http://") ||
+      lower.startsWith("https://") ||
+      lower.includes("res.cloudinary.com")
+    ) {
+      return false;
+    }
+    // Exclude horizontal lines or dividers
+    if (
+      lower.startsWith("---") ||
+      lower.endsWith("---") ||
+      lower.startsWith("___")
+    ) {
+      return false;
+    }
+    // Exclude metadata headers
+    if (
+      DESCRIPTION_META_LABELS.some((label) =>
+        lower.startsWith(`${label.toLowerCase()}:`),
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  return cleanLines.join("\n").trim();
 }
 
 function getReviewAuthorName(review: Review) {
@@ -307,6 +355,17 @@ export function MerchantRestaurantPage() {
 
   const menu = merchant?.menu ?? merchant?.foods ?? [];
 
+  const menuPriceRange = useMemo(() => {
+    const validPrices = menu
+      .map((m) => Number(m.price))
+      .filter((p) => !isNaN(p) && p > 0);
+    if (validPrices.length === 0) return null;
+    const min = Math.min(...validPrices);
+    const max = Math.max(...validPrices);
+    if (min === max) return `${min.toLocaleString("vi-VN")}đ (Theo menu)`;
+    return `${min.toLocaleString("vi-VN")}đ - ${max.toLocaleString("vi-VN")}đ (Theo menu)`;
+  }, [menu]);
+
   async function handleLogoUpload(file?: File) {
     if (!file) return;
 
@@ -509,7 +568,35 @@ export function MerchantRestaurantPage() {
                     value={form.openingHours}
                     onChange={(v) => setForm((p) => ({ ...p, openingHours: v }))}
                     disabled={saving}
-                    placeholder="VD: 08:00 - 22:00"
+                    placeholder="VD: 07:00 - 22:00 hoặc Cả ngày"
+                    hint={
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setForm((p) => ({ ...p, openingHours: "07:00 - 22:00" }))}
+                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          07:00 - 22:00
+                        </button>
+                        <span className="text-slate-400">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setForm((p) => ({ ...p, openingHours: "06:00 - 21:00" }))}
+                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          06:00 - 21:00
+                        </button>
+                        <span className="text-slate-400">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setForm((p) => ({ ...p, openingHours: "Cả ngày (24/7)" }))}
+                          className="text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          24/7
+                        </button>
+                      </div>
+                    }
+                    helper="Thời gian quán mở cửa đón khách hoặc nhận đơn hàng."
                   />
                   <EditSelectField
                     label="Loại hình nhà hàng"
@@ -524,6 +611,7 @@ export function MerchantRestaurantPage() {
                     onChange={(v) => setForm((p) => ({ ...p, mainDishType: v }))}
                     disabled={saving}
                     options={mainDishOptions}
+                    helper="Thể loại món chính (VD: Cơm tấm, Trà sữa...) giúp UFind phân loại và gợi ý quán chính xác khi khách tìm kiếm."
                   />
                   <EditSelectField
                     label="Khoảng giá trung bình"
@@ -531,6 +619,7 @@ export function MerchantRestaurantPage() {
                     onChange={(v) => setForm((p) => ({ ...p, priceRange: v }))}
                     disabled={saving}
                     options={discoveryOptions.priceRanges}
+                    helper="Ước lượng chi phí bình quân mỗi bữa ăn (sẽ tự động tính theo menu nếu để trống)."
                   />
                   <EditField
                     label="Email liên hệ nhà hàng"
@@ -566,8 +655,11 @@ export function MerchantRestaurantPage() {
                       disabled={saving}
                       rows={4}
                       className="w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
-                      placeholder="Mô tả phong cách ẩm thực, cam kết vệ sinh và điểm nổi bật của nhà hàng..."
+                      placeholder="Mô tả phong cách ẩm thực, câu chuyện quán, cam kết chất lượng và những món best seller..."
                     />
+                    <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      Mô tả này sẽ hiển thị trực tiếp cho thực khách trên ứng dụng UFind (không chứa thông tin pháp lý hay CCCD).
+                    </p>
                   </div>
                 </div>
 
@@ -627,20 +719,75 @@ export function MerchantRestaurantPage() {
                     <InfoLine icon={<MapPin className="h-4 w-4" />} label="Địa chỉ" value={cleanAddress(merchant.address)} />
                     <InfoLine icon={<Phone className="h-4 w-4" />} label="Số điện thoại" value={merchant.phone} />
                     <InfoLine icon={<Mail className="h-4 w-4" />} label="Email nhà hàng" value={merchant.email} />
-                    <InfoLine icon={<Clock3 className="h-4 w-4" />} label="Giờ mở cửa" value={merchant.openingHours} />
+                    <InfoLine
+                      icon={<Clock3 className="h-4 w-4" />}
+                      label="Giờ mở cửa"
+                      value={merchant.openingHours}
+                      action={
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm(toEditForm(merchant));
+                            setIsEditing(true);
+                          }}
+                          className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          {merchant.openingHours ? "Đổi giờ" : "+ Cài đặt ngay"}
+                        </button>
+                      }
+                    />
                     <InfoLine icon={<Tag className="h-4 w-4" />} label="Loại hình quán" value={merchant.restaurantType} />
                     <InfoLine icon={<Compass className="h-4 w-4" />} label="Nhóm món chủ đạo" value={merchant.mainDishType} />
-                    <InfoLine icon={<DollarSign className="h-4 w-4" />} label="Khoảng giá" value={merchant.priceRange} />
+                    <InfoLine
+                      icon={<DollarSign className="h-4 w-4" />}
+                      label="Khoảng giá"
+                      value={merchant.priceRange || menuPriceRange || "Tự động theo menu"}
+                    />
                   </div>
 
-                  {displayDescription && (
+                  {displayDescription ? (
                     <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-6 shadow-lg backdrop-blur-2xl">
-                      <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                        Mô tả nhà hàng
-                      </p>
-                      <p className="whitespace-pre-line text-xs font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
-                        {displayDescription}
-                      </p>
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <Store className="h-4 w-4 text-cyan-500" /> Mô tả & Giới thiệu nhà hàng
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm(toEditForm(merchant));
+                            setIsEditing(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          <Pencil className="h-3 w-3" /> Chỉnh sửa
+                        </button>
+                      </div>
+                      <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-white/[0.03] p-4 sm:p-5">
+                        <p className="whitespace-pre-line text-xs sm:text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-200">
+                          {displayDescription}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 shadow-sm backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <span className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <Store className="h-4 w-4 text-cyan-500" /> Mô tả & Giới thiệu nhà hàng
+                        </span>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Chưa có bài viết mô tả quán. Hãy thêm câu chuyện thương hiệu và phong cách ẩm thực để thu hút thực khách.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(toEditForm(merchant));
+                          setIsEditing(true);
+                        }}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 dark:bg-cyan-500/20 px-3.5 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/20 transition"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Thêm mô tả
+                      </button>
                     </div>
                   )}
                 </div>
@@ -834,20 +981,27 @@ function InfoLine({
   icon,
   label,
   value,
+  action,
 }: {
   icon: ReactNode;
   label: string;
   value?: string | null;
+  action?: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-4">
-      <div className="mb-1 flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        <span className="text-cyan-600 dark:text-cyan-400">{icon}</span>
-        {label}
+    <div className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/80 dark:bg-white/5 p-4 flex flex-col justify-between">
+      <div>
+        <div className="mb-1 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span className="text-cyan-600 dark:text-cyan-400">{icon}</span>
+            {label}
+          </span>
+          {action}
+        </div>
+        <p className="text-xs font-black text-slate-950 dark:text-white truncate">
+          {value || <span className="text-slate-400 dark:text-slate-500 font-medium italic">Chưa cập nhật</span>}
+        </p>
       </div>
-      <p className="text-xs font-black text-slate-950 dark:text-white truncate">
-        {value || "Chưa cập nhật"}
-      </p>
     </div>
   );
 }
@@ -858,18 +1012,25 @@ function EditField({
   onChange,
   disabled,
   placeholder,
+  hint,
+  helper,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  hint?: ReactNode;
+  helper?: string;
 }) {
   return (
     <div>
-      <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-        {label}
-      </label>
+      <div className="mb-2 flex items-center justify-between">
+        <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          {label}
+        </label>
+        {hint}
+      </div>
       <input
         type="text"
         value={value}
@@ -878,6 +1039,11 @@ function EditField({
         placeholder={placeholder || label}
         className="h-12 w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/60 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 placeholder:text-slate-400"
       />
+      {helper && (
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+          {helper}
+        </p>
+      )}
     </div>
   );
 }
@@ -888,12 +1054,14 @@ function EditSelectField({
   onChange,
   disabled,
   options,
+  helper,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   options: string[];
+  helper?: string;
 }) {
   const visibleOptions = value && !options.includes(value)
     ? [value, ...options]
@@ -917,6 +1085,11 @@ function EditSelectField({
           </option>
         ))}
       </select>
+      {helper && (
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+          {helper}
+        </p>
+      )}
     </div>
   );
 }
