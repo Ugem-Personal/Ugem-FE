@@ -141,17 +141,17 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-100 transition-colors duration-300">
       <div className={cn("relative grid min-h-screen transition-all duration-300", collapsed ? "lg:grid-cols-[80px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)]")}>
         {/* Desktop Sidebar */}
-        <aside className="sticky top-0 hidden h-dvh bg-slate-950 px-4 py-5 text-white shadow-2xl shadow-slate-950/20 lg:flex lg:flex-col justify-between">
+        <aside className="sticky top-0 hidden h-dvh border-r border-slate-200 bg-white px-4 py-5 text-slate-900 shadow-2xl shadow-slate-950/10 dark:border-transparent dark:bg-slate-950 dark:text-white dark:shadow-slate-950/20 lg:flex lg:flex-col justify-between">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <div className={cn("flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md", collapsed ? "justify-center py-3" : "p-3")}>
+            <div className={cn("flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 backdrop-blur-md dark:border-white/10 dark:bg-white/5", collapsed ? "justify-center py-3" : "p-3")}>
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-600 text-white shadow-md">
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className={cn("min-w-0", collapsed && "hidden")}>
-                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
+                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                   UFind Staff
                 </p>
-                <p className="truncate text-base font-black text-white">
+                <p className="truncate text-base font-black text-slate-900 dark:text-white">
                   Review Center
                 </p>
               </div>
@@ -159,19 +159,19 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
 
             <div className={cn("grid grid-cols-2 gap-2", collapsed && "hidden")}>
               <div className="min-w-0 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
-                <p className="truncate text-[10px] font-bold text-amber-400">
+                <p className="truncate text-[10px] font-bold text-amber-600 dark:text-amber-400">
                   Chờ duyệt
                 </p>
-                <p className="mt-0.5 truncate text-lg font-black text-amber-300">
+                <p className="mt-0.5 truncate text-lg font-black text-amber-600 dark:text-amber-300">
                   {pendingCount}
                 </p>
               </div>
 
               <div className="min-w-0 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-                <p className="truncate text-[10px] font-bold text-emerald-400">
+                <p className="truncate text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                   Đã xử lý
                 </p>
-                <p className="mt-0.5 truncate text-lg font-black text-emerald-300">
+                <p className="mt-0.5 truncate text-lg font-black text-emerald-600 dark:text-emerald-300">
                   {reviewedCount}
                 </p>
               </div>
@@ -196,7 +196,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                       "group flex min-h-12 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200", collapsed && "justify-center px-0",
                       isActive
                         ? "bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20"
-                        : "text-slate-300 hover:bg-white/10 hover:text-white",
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white",
                     )}
                   >
                     <span
@@ -204,20 +204,20 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                         "grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors",
                         isActive
                           ? "bg-slate-950/20 text-slate-950"
-                          : "bg-white/8 text-slate-300 group-hover:bg-white/12",
+                          : "bg-slate-100 text-slate-500 group-hover:bg-slate-200 dark:bg-white/8 dark:text-slate-300 dark:group-hover:bg-white/12",
                       )}
                     >
                       <Icon className="h-4.5 w-4.5" />
                     </span>
 
                     <span className={cn("min-w-0 flex-1", collapsed && "hidden")}>
-                      <span className="block truncate text-xs font-bold">
+                      <span className="block truncate text-xs font-bold text-slate-900 dark:text-white">
                         {item.label}
                       </span>
                       <span
                         className={cn(
                           "block truncate text-[11px] font-medium opacity-80",
-                          isActive ? "text-slate-950/80" : "text-slate-400",
+                          isActive ? "text-slate-950/80" : "text-slate-500 dark:text-slate-400",
                         )}
                       >
                         {item.description}
@@ -230,7 +230,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
                           "ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black",
                           isActive
                             ? "bg-slate-950 text-cyan-300"
-                            : "bg-white/10 text-slate-300",
+                            : "bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-300",
                         )}
                       >
                         {count}

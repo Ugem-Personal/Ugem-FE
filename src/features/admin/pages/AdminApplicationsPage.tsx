@@ -154,7 +154,7 @@ function ApplicationTable({
                   <Link
                     to={`${basePath}/${app.id}`}
                     state={{ application: app }}
-                    className="inline-flex items-center justify-center rounded-full bg-slate-950 dark:bg-cyan-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-cyan-700 dark:hover:bg-cyan-500"
+                    className="inline-flex items-center justify-center rounded-full bg-cyan-600 hover:bg-cyan-700 px-4 py-2 text-xs font-black text-white shadow-md shadow-cyan-600/20 transition hover:-translate-y-0.5 dark:bg-cyan-600 dark:hover:bg-cyan-500"
                   >
                     {isPending && canReview ? "Xem và duyệt" : "Xem chi tiết"}
                   </Link>

@@ -195,17 +195,17 @@ export default function StaffUserProfilePage() {
         <div className="pointer-events-none fixed bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
 
         <div className="relative">
-          <div className="sticky top-4 z-30 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-white/55 p-3 backdrop-blur-xl ring-1 ring-slate-950/5">
+          <div className="sticky top-4 z-30 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200/80 bg-white/75 p-5 backdrop-blur-xl ring-1 ring-slate-950/5 shadow-2xl shadow-cyan-950/5 dark:border-white/10 dark:bg-slate-900/80 dark:shadow-slate-950/30">
             <div className="min-w-0">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50/80 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 shadow-sm shadow-cyan-950/5">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50/80 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700 shadow-sm shadow-cyan-950/5 dark:border-cyan-800/60 dark:bg-cyan-950/80 dark:text-cyan-300">
                 Staff Profile
               </div>
 
-              <h1 className="break-words text-3xl font-black tracking-tight text-slate-950">
+              <h1 className="break-words text-3xl font-black tracking-tight text-slate-950 dark:text-white">
                 Profile Staff
               </h1>
 
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
                 Quản lý thông tin hiển thị và tài khoản Staff đang đăng nhập.
               </p>
             </div>
@@ -213,14 +213,14 @@ export default function StaffUserProfilePage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-            <section className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
               <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-300/25 blur-2xl" />
 
               <div className="absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-amber-300/25 blur-2xl" />
 
-              <div className="relative border-b border-white/70 p-6">
+              <div className="relative border-b border-slate-200/80 p-6 dark:border-white/10">
                 <div className="grid place-items-center text-center">
-                  <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-[28px] bg-cyan-100 text-4xl font-black text-cyan-800 shadow-xl shadow-cyan-900/10 ring-1 ring-white/70">
+                  <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-[28px] bg-cyan-100 text-4xl font-black text-cyan-800 shadow-xl shadow-cyan-900/10 ring-1 ring-white/70 dark:bg-cyan-950 dark:text-cyan-300 dark:ring-cyan-800">
                     {displayedAvatarUrl ? (
                       <img
                         src={displayedAvatarUrl}
@@ -232,15 +232,15 @@ export default function StaffUserProfilePage() {
                     )}
                   </div>
 
-                  <h2 className="mt-5 max-w-full truncate text-2xl font-black tracking-tight text-slate-950">
+                  <h2 className="mt-5 max-w-full truncate text-2xl font-black tracking-tight text-slate-950 dark:text-white">
                     {displayName}
                   </h2>
 
-                  <p className="mt-1 truncate text-sm font-semibold text-slate-500">
+                  <p className="mt-1 truncate text-sm font-semibold text-slate-500 dark:text-slate-400">
                     {email}
                   </p>
 
-                  <span className="mt-4 inline-flex rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700 shadow-sm">
+                  <span className="mt-4 inline-flex rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700 shadow-sm dark:border-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">
                     {roleLabel}
                   </span>
                 </div>
@@ -265,22 +265,22 @@ export default function StaffUserProfilePage() {
               </div>
             </section>
 
-            <section className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl">
+            <section className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/75 p-6 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-cyan-300/20 blur-2xl" />
 
               <div className="absolute -bottom-14 -left-14 h-36 w-36 rounded-full bg-amber-300/20 blur-2xl" />
 
               <div className="relative mb-6 flex items-start gap-4">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-800 shadow-sm ring-1 ring-cyan-100">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-800 shadow-sm ring-1 ring-cyan-100 dark:bg-cyan-950/80 dark:text-cyan-300 dark:ring-cyan-800/60">
                   <UserRound className="h-5 w-5" />
                 </div>
 
                 <div className="min-w-0">
-                  <h2 className="text-xl font-black text-slate-950">
+                  <h2 className="text-xl font-black text-slate-950 dark:text-white">
                     Thông tin hiển thị
                   </h2>
 
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                  <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
                     Tên và avatar sẽ được dùng trong menu tài khoản.
                   </p>
                 </div>
@@ -288,34 +288,34 @@ export default function StaffUserProfilePage() {
 
               {isLoading ? (
                 <div className="space-y-4">
-                  <div className="h-12 animate-pulse rounded-2xl bg-slate-100/80" />
+                  <div className="h-12 animate-pulse rounded-2xl bg-slate-100/80 dark:bg-slate-800/50" />
 
-                  <div className="h-12 animate-pulse rounded-2xl bg-slate-100/80" />
+                  <div className="h-12 animate-pulse rounded-2xl bg-slate-100/80 dark:bg-slate-800/50" />
 
-                  <div className="h-28 animate-pulse rounded-2xl bg-slate-100/80" />
+                  <div className="h-28 animate-pulse rounded-2xl bg-slate-100/80 dark:bg-slate-800/50" />
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="relative space-y-5">
                   <label className="block">
-                    <span className="text-sm font-black text-slate-800">
+                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">
                       Tên Staff
                     </span>
 
                     <input
                       value={fullName}
                       onChange={(event) => setFullName(event.target.value)}
-                      className="mt-2 h-12 w-full rounded-2xl border border-white/70 bg-white/80 px-4 text-sm font-semibold text-slate-950 shadow-sm ring-1 ring-slate-950/5 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15"
+                      className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
                       placeholder="Nhập tên hiển thị"
                       disabled={isSaving}
                     />
                   </label>
 
                   <div className="block">
-                    <span className="text-sm font-black text-slate-800">
+                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">
                       Avatar
                     </span>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-white/70 bg-white/80 p-3 shadow-sm ring-1 ring-slate-950/5">
+                    <div className="mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-sm dark:border-white/10 dark:bg-slate-950">
                       <input
                         id="staff-avatar-upload"
                         type="file"
@@ -340,13 +340,13 @@ export default function StaffUserProfilePage() {
                         {isUploadingAvatar ? "Đang tải lên..." : "Chọn ảnh"}
                       </label>
 
-                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-500">
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-500 dark:text-slate-400">
                         {avatarFileName || "Chưa chọn ảnh"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4 text-sm leading-6 text-cyan-900 shadow-sm">
+                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4 text-sm leading-6 text-cyan-900 shadow-sm dark:border-cyan-900/40 dark:bg-cyan-950/40 dark:text-cyan-300">
                     Email, role và số điện thoại đang là thông tin đồng bộ từ hệ
                     thống nên chỉ hiển thị tại đây.
                   </div>
@@ -383,17 +383,17 @@ function ProfileInfoRow({
   value: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/80 p-3 shadow-sm ring-1 ring-slate-950/5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-700 shadow-sm ring-1 ring-cyan-100">
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-3 shadow-sm ring-1 ring-slate-950/5 dark:border-white/10 dark:bg-slate-950/50">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-700 shadow-sm ring-1 ring-cyan-100 dark:bg-cyan-950/80 dark:text-cyan-300 dark:ring-cyan-800/60">
         <Icon className="h-4 w-4" />
       </span>
 
       <div className="min-w-0">
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">
+        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
           {label}
         </p>
 
-        <p className="mt-1 break-all text-sm font-black text-slate-950">
+        <p className="mt-1 break-all text-sm font-black text-slate-950 dark:text-white">
           {value}
         </p>
       </div>
