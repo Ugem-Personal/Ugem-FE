@@ -454,7 +454,7 @@ export default function MerchantCreateOrderPage() {
                       </p>
                       <p className="mt-1 text-xs font-medium leading-5 text-amber-700 dark:text-amber-300">
                         Hãy giới thiệu khách đăng ký hoặc đăng nhập ứng dụng
-                        UGem bằng số điện thoại/Gmail để có thể đặt món tại quán
+                        UFind bằng số điện thoại/Gmail để có thể đặt món tại quán
                         và nhận quyền lợi check-in.
                       </p>
                     </div>

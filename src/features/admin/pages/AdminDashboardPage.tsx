@@ -438,7 +438,7 @@ function RevenueHeroCard({
           </p>
           <p className="mt-3 max-w-lg text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
             Tổng giá trị giao dịch các đơn hàng đã hoàn thành trên toàn hệ thống
-            UGem.
+            UFind.
           </p>
         </div>
 

@@ -92,8 +92,8 @@ function formatPrice(value: number) {
 }
 
 function getBankTransferDescription(orderId?: string | null) {
-  if (!orderId) return "UGEM CHUYEN TIEN";
-  return `UGEM DON ${orderId.split("-")[0].toUpperCase()}`;
+  if (!orderId) return "UFIND CHUYEN TIEN";
+  return `UFIND DON ${orderId.split("-")[0].toUpperCase()}`;
 }
 
 export default function CustomerOrderDetailPage() {

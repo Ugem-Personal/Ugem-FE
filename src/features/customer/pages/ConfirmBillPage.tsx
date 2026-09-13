@@ -117,9 +117,9 @@ function getBillPaymentMethod(bill?: Bill | null): BillPaymentMethod {
 }
 
 function getBankTransferDescription(orderId?: string | null) {
-  if (!orderId) return "UGEM CHUYEN TIEN";
+  if (!orderId) return "UFIND CHUYEN TIEN";
   const shortId = orderId.split("-")[0].toUpperCase();
-  return `UGEM DON ${shortId}`;
+  return `UFIND DON ${shortId}`;
 }
 
 function getBankTransferInfo(

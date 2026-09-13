@@ -165,7 +165,7 @@ export default function CheckInPage() {
               Đang ghi nhận check-in...
             </h1>
             <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">
-              Ugem đang cố gắng ghi nhận check-in của bạn. Vui lòng đợi trong
+              UFind đang cố gắng ghi nhận check-in của bạn. Vui lòng đợi trong
               giây lát.
             </p>
           </>

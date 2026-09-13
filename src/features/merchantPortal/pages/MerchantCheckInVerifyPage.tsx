@@ -164,7 +164,7 @@ export default function MerchantCheckInVerifyPage() {
                           onChange={(e) =>
                             setCustomerCode(e.target.value.toUpperCase())
                           }
-                          placeholder="Ví dụ: UGEM-A8K9X2"
+                          placeholder="Ví dụ: UFIND-A8K9X2"
                           className="h-14 font-mono text-xl font-black uppercase tracking-wider pl-4 pr-12 rounded-2xl border-slate-300 dark:border-slate-700 focus-visible:ring-cyan-500"
                           disabled={submitting}
                           autoFocus

@@ -143,7 +143,7 @@ export function MerchantPortalPage() {
                 icon={Wallet}
                 label="Doanh thu thực nhận"
                 value={loadingData ? "..." : `${(stats?.merchantReceive ?? stats?.totalRevenue ?? 0).toLocaleString("vi-VN")}đ`}
-                subtext={`Đã trừ phí ${stats?.platformFeePercent ?? 5}% UGem`}
+                subtext={`Đã trừ phí ${stats?.platformFeePercent ?? 5}% UFind`}
                 color="emerald"
               />
               <PortalKpiCard

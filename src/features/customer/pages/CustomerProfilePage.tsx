@@ -587,7 +587,7 @@ export default function CustomerProfilePage() {
               <div className="flex items-center gap-3 mb-3 text-cyan-600 dark:text-cyan-300">
                 <ShieldCheck className="h-5 w-5" />
                 <h4 className="font-black text-sm text-slate-900 dark:text-white">
-                  UGem Account Security
+                  UFind Account Security
                 </h4>
               </div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -715,7 +715,7 @@ export default function CustomerProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      Thẻ Thành Viên & Điểm Thưởng UGem
+                      Thẻ Thành Viên & Điểm Thưởng UFind
                       <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold">
                         1 điểm = 1.000đ
                       </span>
@@ -760,7 +760,7 @@ export default function CustomerProfilePage() {
                           <div className="h-4 w-6 border border-yellow-100/40 rounded-sm" />
                         </div>
                         <span className="font-mono text-xs font-black tracking-widest text-white/80 uppercase">
-                          UGEM PASS
+                          UFIND PASS
                         </span>
                       </div>
                       <span
@@ -994,7 +994,7 @@ export default function CustomerProfilePage() {
                               <td className="py-3.5 pr-2 text-slate-700 dark:text-slate-200 font-bold max-w-xs truncate">
                                 {tx.reason ||
                                   (isPositive
-                                    ? "Thưởng tương tác UGem"
+                                    ? "Thưởng tương tác UFind"
                                     : "Giảm giá hóa đơn món")}
                               </td>
                               <td
@@ -1071,7 +1071,7 @@ export default function CustomerProfilePage() {
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
                       Đánh giá món ăn, nhận mã giới thiệu và tích lũy phần thưởng
-                      độc quyền từ UGem.
+                      độc quyền từ UFind.
                     </p>
                   </div>
                 </div>
