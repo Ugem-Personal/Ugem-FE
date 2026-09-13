@@ -92,13 +92,13 @@ export function StoreInfoLocationStep({
 
   const createMarkerElement = useCallback(() => {
     const marker = document.createElement("div");
-    marker.style.width = "20px";
-    marker.style.height = "20px";
+    marker.style.width = "24px";
+    marker.style.height = "24px";
     marker.style.borderRadius = "999px";
-    marker.style.background = "#0891b2";
+    marker.style.background = "#06b6d4";
     marker.style.border = "3px solid #ffffff";
-    marker.style.boxShadow = "0 0 0 6px rgba(8, 145, 178, 0.25)";
-    marker.style.transform = "translateY(-1px)";
+    marker.style.boxShadow = "0 0 0 6px rgba(6, 182, 212, 0.35), 0 4px 12px rgba(0, 0, 0, 0.5)";
+    marker.style.cursor = "grab";
     marker.style.position = "relative";
     marker.style.zIndex = "10";
     return marker;
@@ -273,6 +273,7 @@ export function StoreInfoLocationStep({
 
     map.on("load", () => {
       map.resize();
+      setTimeout(() => map.resize(), 120);
       if (validLocationCoords) {
         placeMarker(map, validLocationCoords);
       }
@@ -617,14 +618,17 @@ export function StoreInfoLocationStep({
         )}
 
         {/* VietMap Interactive Map */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 shadow-inner relative">
-          <div ref={mapContainer} className="h-64 w-full bg-slate-100 dark:bg-slate-900" />
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg relative dark:[&_.vietmapgl-canvas]:brightness-90 dark:[&_.vietmapgl-canvas]:contrast-[1.15] dark:[&_.vietmapgl-canvas]:hue-rotate-180 dark:[&_.vietmapgl-canvas]:invert">
+          <div
+            ref={mapContainer}
+            className="h-[440px] sm:h-[480px] w-full bg-slate-100 dark:bg-slate-900"
+          />
 
           {/* Floating map hint */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between rounded-xl bg-slate-950/70 backdrop-blur-md px-3 py-1.5 text-[11px] text-white">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-cyan-400" />
-              Click hoặc kéo thả ghim đỏ để điều chỉnh vị trí quán
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between rounded-xl bg-slate-950/75 backdrop-blur-md px-3.5 py-2 text-[11px] text-white shadow-md">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+              Click hoặc kéo thả ghim để điều chỉnh vị trí quán
             </span>
             {hasCoords && (
               <span className="font-mono text-cyan-300 font-bold hidden sm:inline">
