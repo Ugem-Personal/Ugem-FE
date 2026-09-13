@@ -77,10 +77,10 @@ export function LoginForm() {
                     disabled={loginMutation.isPending}
                     aria-invalid={Boolean(form.formState.errors.email)}
                     className="
-                      h-12 sm:h-12.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/70
-                      hover:border-slate-300 dark:hover:border-white/20 pl-11 text-sm font-semibold text-slate-950 dark:text-white
-                      shadow-xs transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500
-                      focus-visible:border-cyan-500 focus-visible:ring-4 focus-visible:ring-cyan-500/15 focus-visible:bg-white dark:focus-visible:bg-slate-900
+                      h-12 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/60
+                      hover:border-slate-300 dark:hover:border-white/20 pl-11 pr-4 text-sm font-semibold text-slate-950 dark:text-white
+                      shadow-2xs transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-500
+                      focus-visible:border-cyan-500 dark:focus-visible:border-cyan-400 focus-visible:ring-4 focus-visible:ring-cyan-500/15 focus-visible:bg-white dark:focus-visible:bg-slate-900
                     "
                     {...field}
                   />
@@ -110,7 +110,7 @@ export function LoginForm() {
                   autoComplete="current-password"
                   disabled={loginMutation.isPending}
                   aria-invalid={Boolean(form.formState.errors.password)}
-                  className="text-sm font-semibold"
+                  className="text-sm font-semibold rounded-2xl"
                   {...field}
                 />
               </FormControl>
@@ -126,10 +126,10 @@ export function LoginForm() {
             className="group flex cursor-pointer items-center gap-2.5 select-none"
           >
             <div
-              className={`grid h-4.5 w-4.5 place-items-center rounded border transition-all ${
+              className={`grid h-4.5 w-4.5 place-items-center rounded-md border transition-all duration-200 ${
                 rememberAccount
                   ? "border-cyan-600 bg-cyan-600 text-white dark:border-cyan-500 dark:bg-cyan-500 shadow-xs"
-                  : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800 hover:border-cyan-500"
+                  : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800/80 hover:border-cyan-500"
               }`}
             >
               <input
@@ -152,7 +152,7 @@ export function LoginForm() {
         {loginMutation.isError && (
           <div
             role="alert"
-            className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-xs font-bold text-rose-700 dark:text-rose-300"
+            className="rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-xs font-bold text-rose-700 dark:text-rose-300"
           >
             {apiError}
           </div>
@@ -162,7 +162,7 @@ export function LoginForm() {
           type="submit"
           disabled={loginMutation.isPending}
           aria-disabled={loginMutation.isPending}
-          className="w-full font-black text-sm h-12 sm:h-12.5 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-md shadow-cyan-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none disabled:transform-none mt-2"
+          className="w-full font-black text-sm h-12 rounded-2xl bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 hover:from-cyan-500 hover:via-sky-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none disabled:transform-none mt-2 cursor-pointer"
         >
           {loginMutation.isPending ? (
             <>

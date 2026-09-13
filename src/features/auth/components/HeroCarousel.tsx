@@ -107,11 +107,11 @@ export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
 
       {/* Header Controls */}
       <header className="relative z-20 flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/40 py-1.5 pl-2.5 pr-3.5 text-xs font-bold tracking-wider text-white backdrop-blur-md shadow-xs">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-400 text-slate-950">
-            <Sparkles className="h-3.5 w-3.5" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/50 py-1.5 pl-2 pr-3.5 text-xs font-black tracking-wider text-white backdrop-blur-md shadow-lg shadow-black/30 ring-1 ring-white/10">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan-400 text-slate-950 shadow-[0_0_12px_rgba(34,211,238,0.6)]">
+            <Sparkles className="h-3.5 w-3.5 fill-slate-950" />
           </span>
-          <span>UGEM EXPERIENCE</span>
+          <span>UFIND EXPERIENCE</span>
         </div>
 
         <div className="flex gap-2 items-center" aria-label="Slider progress indicator">
@@ -128,7 +128,13 @@ export function HeroCarousel({ images, intervalMs = 4500, onChange }: Props) {
                 aria-label={`Chuyển đến slide ${storyIndex + 1}`}
                 aria-current={isActive ? "true" : "false"}
               >
-                <span className={`block h-2 rounded-full ${isActive ? "w-8 bg-cyan-400" : "w-2 bg-white/40"}`} />
+                <span
+                  className={`block h-2 rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "w-8 bg-gradient-to-r from-cyan-400 to-sky-400 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+                      : "w-2 bg-white/40 hover:bg-white/70"
+                  }`}
+                />
               </button>
             );
           })}

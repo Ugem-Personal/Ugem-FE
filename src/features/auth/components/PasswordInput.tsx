@@ -21,7 +21,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           type={showPassword ? "text" : "password"}
           disabled={disabled}
           className={cn(
-            "h-12 sm:h-12.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/70 hover:border-slate-300 dark:hover:border-white/20 text-slate-950 dark:text-white text-sm font-semibold shadow-xs transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-4 focus-visible:ring-cyan-500/15 focus-visible:bg-white dark:focus-visible:bg-slate-900",
+            "h-12 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/60 hover:border-slate-300 dark:hover:border-white/20 text-slate-950 dark:text-white text-sm font-semibold shadow-2xs transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:border-cyan-500 dark:focus-visible:border-cyan-400 focus-visible:ring-4 focus-visible:ring-cyan-500/15 focus-visible:bg-white dark:focus-visible:bg-slate-900",
             showIcon ? "pl-11" : "pl-4",
             "pr-11",
             className

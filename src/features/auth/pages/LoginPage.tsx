@@ -139,15 +139,16 @@ export function LoginPage() {
     function renderButtonAppearance() {
       const container = googleButtonRef.current;
       if (cancelled || !container || !window.google?.accounts?.id) return;
+      const isDark = document.documentElement.classList.contains("dark");
       container.innerHTML = "";
       window.google.accounts.id.renderButton(container, {
         type: "standard",
-        theme: "outline",
+        theme: isDark ? "filled_black" : "outline",
         size: "large",
-        shape: "rectangular",
+        shape: "pill",
         text: "signin_with",
         logo_alignment: "left",
-        width: Math.min(400, Math.max(280, Math.floor(container.clientWidth || 380))),
+        width: Math.min(420, Math.max(280, Math.floor(container.clientWidth || 380))),
       });
     }
 

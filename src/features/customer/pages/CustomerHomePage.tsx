@@ -1226,7 +1226,7 @@ export default function CustomerHomePage() {
 
           <div className="relative z-10 max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-600/25 bg-cyan-500/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-700 shadow-xs backdrop-blur-md dark:border-cyan-400/30 dark:text-cyan-300">
-              <Sparkles className="h-3.5 w-3.5" /> UGem Food Dashboard
+              <Sparkles className="h-3.5 w-3.5" /> UFind Food Dashboard
             </span>
             <h1 className="editorial-heading mt-4 text-3xl font-black leading-tight sm:text-5xl">
               Hôm nay bạn muốn{" "}
