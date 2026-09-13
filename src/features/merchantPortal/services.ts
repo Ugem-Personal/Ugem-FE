@@ -460,12 +460,14 @@ export async function checkStoreAvailability(query: {
   name?: string;
   phone?: string;
   email?: string;
+  address?: string;
   applicationId?: string;
 }): Promise<StoreAvailabilityResult> {
   const params = new URLSearchParams();
   if (query.name) params.set("name", query.name);
   if (query.phone) params.set("phone", query.phone);
   if (query.email) params.set("email", query.email);
+  if (query.address) params.set("address", query.address);
   if (query.applicationId) params.set("applicationId", query.applicationId);
 
   const res = await api.get<ApiResponse<StoreAvailabilityResult>>(

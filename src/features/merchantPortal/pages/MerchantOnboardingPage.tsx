@@ -277,6 +277,7 @@ export function MerchantOnboardingPage() {
       const name = watch("restaurantName")?.trim();
       const phone = watch("phone")?.trim();
       const email = watch("email")?.trim();
+      const address = watch("address")?.trim();
 
       if (name && phone && email) {
         setCheckingAvailability(true);
@@ -285,6 +286,7 @@ export function MerchantOnboardingPage() {
             name,
             phone,
             email,
+            address,
             applicationId: latestApplication?.id,
           });
 
