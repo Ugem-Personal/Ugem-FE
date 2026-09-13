@@ -447,92 +447,112 @@ export default function AdminApplicationDetailPage({
         </div>
 
         <section className="overflow-hidden rounded-3xl border border-white/70 bg-white/75 shadow-2xl shadow-cyan-950/10 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
-          <div className="grid gap-0 lg:grid-cols-[340px_1fr]">
-            <div className="relative min-h-80 overflow-hidden bg-slate-100 dark:bg-slate-900">
-              {heroImage ? (
-                <img
-                  src={heroImage}
-                  alt={name}
-                  className="h-full min-h-80 w-full object-cover"
-                />
-              ) : (
-                <div className="grid h-full min-h-80 place-items-center bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.22),transparent_38%),linear-gradient(135deg,#cffafe,#ffffff,#fef3c7)] text-cyan-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_38%),linear-gradient(135deg,#0f172a,#111827,#1c1917)] dark:text-cyan-300">
-                  <Store className="h-16 w-16" />
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-linear-to-t from-slate-950/45 via-transparent to-transparent" />
-
-              <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-xs font-black text-slate-900 shadow-lg shadow-slate-950/10 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-950/85 dark:text-slate-100">
-                <StatusIcon className="h-4 w-4" />
-                {statusMeta.label}
+          <div className="p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-6">
+              {/* Khung ảnh quán chuẩn tỷ lệ 16:10, bo góc đẹp, có nút phóng to */}
+              <div className="relative shrink-0 group overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-950/60 w-full lg:w-84 aspect-[16/10] flex items-center justify-center shadow-lg">
+                {heroImage ? (
+                  <>
+                    <img
+                      src={heroImage}
+                      alt={name}
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105 cursor-pointer"
+                      onClick={() =>
+                        setLightboxImage({
+                          src: heroImage,
+                          title: `Ảnh thực tế quán: ${name}`,
+                        })
+                      }
+                    />
+                    <div
+                      className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold cursor-pointer"
+                      onClick={() =>
+                        setLightboxImage({
+                          src: heroImage,
+                          title: `Ảnh thực tế quán: ${name}`,
+                        })
+                      }
+                    >
+                      <ZoomIn className="h-4 w-4" /> Phóng to xem ảnh gốc
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.22),transparent_38%),linear-gradient(135deg,#cffafe,#ffffff,#fef3c7)] text-cyan-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_38%),linear-gradient(135deg,#0f172a,#111827,#1c1917)] dark:text-cyan-300">
+                    <Store className="h-16 w-16" />
+                  </div>
+                )}
               </div>
 
-              <div className="absolute bottom-5 left-5 right-5">
-                <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate-950/65 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-lg backdrop-blur-xl">
-                  Hồ sơ Merchant
-                </div>
-              </div>
-            </div>
+              {/* Thông tin hồ sơ quán */}
+              <div className="flex-1 min-w-0 flex flex-col justify-between space-y-5">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-400">
+                    <span>Hồ sơ Merchant</span>
+                    <span>•</span>
+                    <span>{application.restaurantType || application.type || "Quán ăn / Đồ uống"}</span>
+                  </div>
 
-            <div className="relative overflow-hidden p-6 md:p-8">
-              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-cyan-300/20 blur-2xl" />
-              <div className="absolute -bottom-16 -left-16 h-36 w-36 rounded-full bg-amber-300/20 blur-2xl" />
-
-              <div className="relative flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-400">
-                    Hồ sơ Merchant
-                  </p>
-
-                  <h1 className="mt-2 break-words text-3xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">
+                  <h1 className="mt-2 break-words text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-950 dark:text-white">
                     {name}
                   </h1>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span
-                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-black shadow-sm ${statusMeta.badge}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-black shadow-sm ${statusMeta.badge}`}
                     >
-                      <StatusIcon className="h-4 w-4" />
+                      <StatusIcon className="h-3.5 w-3.5" />
                       {statusMeta.label}
                     </span>
 
-                    <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-black text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200">
-                      {application.restaurantType || application.type || "Quán ăn / Đồ uống"}
-                    </span>
+                    {application.applicant?.phoneNumber && (
+                      <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 flex items-center gap-1">
+                        <Phone className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
+                        {application.applicant.phoneNumber}
+                      </span>
+                    )}
+
+                    {application.applicant?.email && (
+                      <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
+                        {application.applicant.email}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white shadow-xl shadow-slate-950/15 ring-1 ring-white/20">
-                  {getInitials(name)}
-                </div>
-              </div>
+                {/* 3 cards tóm tắt thông tin */}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 pt-2">
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3.5 shadow-sm ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CalendarClock className="h-4 w-4 text-cyan-700 dark:text-cyan-400" />
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Ngày gửi</span>
+                    </div>
+                    <p className="text-sm font-black leading-5 text-slate-950 dark:text-white">
+                      {formatDate(application.createdAt)}
+                    </p>
+                  </div>
 
-              <div className="relative mt-7 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-lg shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
-                  <CalendarClock className="mb-3 h-5 w-5 text-cyan-700 dark:text-cyan-400" />
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Ngày gửi</p>
-                  <p className="mt-1 text-sm font-black leading-5 text-slate-950 dark:text-white">
-                    {formatDate(application.createdAt)}
-                  </p>
-                </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3.5 shadow-sm ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <UtensilsCrossed className="h-4 w-4 text-cyan-700 dark:text-cyan-400" />
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Loại hình quán</span>
+                    </div>
+                    <p className="text-sm font-black leading-5 text-slate-950 dark:text-white truncate">
+                      {application.restaurantType || "Quán ăn / Đồ uống"}
+                    </p>
+                  </div>
 
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-lg shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
-                  <UtensilsCrossed className="mb-3 h-5 w-5 text-cyan-700 dark:text-cyan-400" />
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Loại hình quán</p>
-                  <p className="mt-1 text-sm font-black leading-5 text-slate-950 dark:text-white truncate">
-                    {application.restaurantType || "Quán ăn / Đồ uống"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-lg shadow-slate-950/5 ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
-                  <Clock3 className="mb-3 h-5 w-5 text-cyan-700 dark:text-cyan-400" />
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Rà soát</p>
-                  <p className="mt-1 text-sm font-black leading-5 text-slate-950 dark:text-white">
-                    {isPendingStatus
-                      ? "Chưa xử lý"
-                      : formatDate(application.reviewedAt)}
-                  </p>
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3.5 shadow-sm ring-1 ring-slate-950/5 backdrop-blur dark:border-white/10 dark:bg-slate-800/60 dark:ring-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock3 className="h-4 w-4 text-cyan-700 dark:text-cyan-400" />
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rà soát</span>
+                    </div>
+                    <p className="text-sm font-black leading-5 text-slate-950 dark:text-white">
+                      {isPendingStatus
+                        ? "Chưa xử lý"
+                        : formatDate(application.reviewedAt)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
