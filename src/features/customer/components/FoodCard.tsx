@@ -22,8 +22,6 @@ export function FoodCard({
   onOpenModal,
   className,
 }: FoodCardProps) {
-  const hasToppings = Boolean(food.toppings && food.toppings.length > 0);
-
   return (
     <div
       className={cn(
@@ -41,12 +39,6 @@ export function FoodCard({
             fallbackIcon={<Flame className="h-6 w-6 text-cyan-400" />}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
-
-          {hasToppings && (
-            <span className="absolute left-2 top-2 rounded-lg bg-slate-950/80 dark:bg-slate-900/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur-md border border-white/10 shadow-md">
-              +{food.toppings?.length} Món thêm
-            </span>
-          )}
         </div>
 
         {/* Info */}
