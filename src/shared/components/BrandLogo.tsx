@@ -1,6 +1,36 @@
-﻿import logoLight from "@/assets/ugem-logo.png";
+﻿import { useEffect, useState } from "react";
+import logoLight from "@/assets/ugem-logo.png";
 import logoDark from "@/assets/ugem-logo-dark.png";
 import { cn } from "@/lib/utils";
+
+export function useIsDarkMode() {
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.classList.contains("dark");
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
+
+    checkDark();
+
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
 
 interface BrandLogoProps {
   className?: string;
@@ -8,21 +38,17 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ className = "h-10 w-auto", alt = "UFind" }: BrandLogoProps) {
+  const isDark = useIsDarkMode();
+
   return (
-    <div className="relative inline-flex items-center">
-      <img
-        src={logoLight}
-        alt={alt}
-        className={cn(className, "dark:hidden print:block select-none")}
-      />
-      <img
-        src={logoDark}
-        alt={alt}
-        className={cn(
-          className,
-          "hidden dark:block print:hidden select-none drop-shadow-[0_0_15px_rgba(56,189,248,0.28)]"
-        )}
-      />
-    </div>
+    <img
+      src={isDark ? logoDark : logoLight}
+      alt={alt}
+      className={cn(
+        className,
+        "select-none transition-all duration-300",
+        isDark && "drop-shadow-[0_0_15px_rgba(56,189,248,0.28)]"
+      )}
+    />
   );
 }
