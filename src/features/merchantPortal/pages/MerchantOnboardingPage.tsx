@@ -22,6 +22,7 @@ import {
   useCreateApplication,
   useResubmitApplication,
 } from "../hooks/useCreateApplication";
+import { checkStoreAvailability } from "../services";
 import { useMyApplications } from "../hooks/useMyApplications";
 import { OnboardingSidebar } from "../../../shared/layouts/Merchants/OnboardingSidebar";
 import { OnboardingTopbar } from "../../../shared/layouts/Merchants/OnboardingTopbar";
@@ -168,6 +169,7 @@ export function MerchantOnboardingPage() {
       : "/merchant";
   const createMutation = useCreateApplication();
   const [currentStep, setCurrentStep] = useState(getDraftStep);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
     try {
@@ -226,6 +228,7 @@ export function MerchantOnboardingPage() {
     control,
     watch,
     setValue,
+    setError,
     trigger,
     handleSubmit,
     subscribe,
@@ -269,6 +272,63 @@ export function MerchantOnboardingPage() {
 
     const valid = await trigger(fieldsByStep[currentStep]);
     if (!valid) return;
+
+    if (currentStep === 1) {
+      const name = watch("restaurantName")?.trim();
+      const phone = watch("phone")?.trim();
+      const email = watch("email")?.trim();
+
+      if (name && phone && email) {
+        setCheckingAvailability(true);
+        try {
+          const result = await checkStoreAvailability({
+            name,
+            phone,
+            email,
+            applicationId: latestApplication?.id,
+          });
+
+          if (!result.available) {
+            let hasConflict = false;
+            if (result.conflicts.name) {
+              setError("restaurantName", {
+                type: "manual",
+                message: result.conflicts.name,
+              });
+              hasConflict = true;
+            }
+            if (result.conflicts.phone) {
+              setError("phone", {
+                type: "manual",
+                message: result.conflicts.phone,
+              });
+              hasConflict = true;
+            }
+            if (result.conflicts.email) {
+              setError("email", {
+                type: "manual",
+                message: result.conflicts.email,
+              });
+              hasConflict = true;
+            }
+
+            if (hasConflict) {
+              notify.error("Thông tin quán bị trùng lặp", {
+                description:
+                  result.conflicts.name ||
+                  result.conflicts.phone ||
+                  result.conflicts.email,
+              });
+              return;
+            }
+          }
+        } catch {
+          // If check fails due to network, proceed and let backend enforce on submit
+        } finally {
+          setCheckingAvailability(false);
+        }
+      }
+    }
 
     setCurrentStep(Math.min(currentStep + 1, 3));
   }
@@ -444,9 +504,10 @@ export function MerchantOnboardingPage() {
                     <button
                       type="button"
                       className="next-button"
+                      disabled={checkingAvailability}
                       onClick={nextStep}
                     >
-                      Tiếp tục
+                      {checkingAvailability ? "Đang kiểm tra..." : "Tiếp tục"}
                       <ArrowRight size={18} />
                     </button>
                   ) : (

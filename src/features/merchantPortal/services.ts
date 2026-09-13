@@ -446,3 +446,31 @@ export async function updateBill(
   );
   return res.data;
 }
+
+export interface StoreAvailabilityResult {
+  available: boolean;
+  conflicts: {
+    name?: string;
+    phone?: string;
+    email?: string;
+  };
+}
+
+export async function checkStoreAvailability(query: {
+  name?: string;
+  phone?: string;
+  email?: string;
+  applicationId?: string;
+}): Promise<StoreAvailabilityResult> {
+  const params = new URLSearchParams();
+  if (query.name) params.set("name", query.name);
+  if (query.phone) params.set("phone", query.phone);
+  if (query.email) params.set("email", query.email);
+  if (query.applicationId) params.set("applicationId", query.applicationId);
+
+  const res = await api.get<ApiResponse<StoreAvailabilityResult>>(
+    `/applications/check-availability?${params.toString()}`,
+  );
+  return unwrapApiResponse(res.data);
+}
+
