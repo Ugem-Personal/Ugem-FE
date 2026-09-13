@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import logoUrl from "@/assets/ugem-logo.png";
-import { ModeToggle } from "@/shared/components";
+import { BrandLogo, ModeToggle } from "@/shared/components";
 import {
   DEFAULT_DISCOVERY_OPTIONS,
   getDiscoveryOptions,
@@ -417,11 +416,7 @@ export default function GuestExplorePage() {
             className="flex items-center gap-3"
             aria-label="UFind Guest Explore"
           >
-            <img
-              src={logoUrl}
-              alt="UFind"
-              className="h-8 w-auto transition-transform hover:scale-105"
-            />
+            <BrandLogo className="h-8 w-auto transition-transform hover:scale-105" />
           </Link>
 
           <nav className="flex items-center gap-3" aria-label="Tài khoản">

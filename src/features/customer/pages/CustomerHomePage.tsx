@@ -21,9 +21,8 @@ import {
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { notify } from "@/shared/lib/notify";
 
-import logoUrl from "@/assets/ugem-logo.png";
 import { cn } from "@/lib/utils";
-import { UserAccountMenu } from "@/shared/components";
+import { BrandLogo, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -999,7 +998,7 @@ export default function CustomerHomePage() {
             <div className="shrink-0 border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <Link to="/customer" className="flex items-center gap-2">
-                  <img src={logoUrl} alt="UFind" className="h-8 w-auto" />
+                  <BrandLogo className="h-8 w-auto" />
                 </Link>
                 <div className="flex items-center gap-2">
                   <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
@@ -1182,11 +1181,7 @@ export default function CustomerHomePage() {
       <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xs transition-colors duration-300">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex items-center gap-3">
-            <img
-              src={logoUrl}
-              alt="UFind"
-              className="h-10 w-auto transition-transform hover:scale-105"
-            />
+            <BrandLogo className="h-10 w-auto transition-transform hover:scale-105" />
           </Link>
 
           <div className="flex items-center gap-3">

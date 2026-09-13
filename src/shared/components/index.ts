@@ -5,5 +5,6 @@ export { ModeToggle } from "./ModeToggle";
 export { ImageWithFallback } from "./ImageWithFallback";
 export { MerchantStatusBadge } from "./MerchantStatusBadge";
 export { default as VietMapGL } from "./VietMapGL";
+export { BrandLogo } from "./BrandLogo";
 
 

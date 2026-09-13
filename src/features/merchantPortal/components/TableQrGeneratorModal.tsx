@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   ShieldCheck,
 } from "lucide-react";
-import logoUrl from "@/assets/ugem-logo.png";
+import { BrandLogo } from "@/shared/components";
 
 interface TableQrGeneratorModalProps {
   open: boolean;
@@ -121,7 +121,7 @@ export function TableQrGeneratorModal({
           <div className="mx-auto max-w-xs space-y-4">
             {/* Header with Logo */}
             <div className="flex items-center justify-center gap-2">
-              <img src={logoUrl} alt="UFind" className="h-8 w-auto" />
+              <BrandLogo className="h-8 w-auto" />
               <div className="text-left">
                 <p className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                   {merchantName}

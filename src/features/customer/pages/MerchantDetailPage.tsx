@@ -42,9 +42,8 @@ import { getWishlist } from "../services/wishlistService";
 import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
 import { clearAuth, getCurrentUser } from "@/features/auth";
-import { ModeToggle, UserAccountMenu } from "@/shared/components";
+import { BrandLogo, ModeToggle, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
-import logoUrl from "@/assets/ugem-logo.png";
 import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
 import { FoodOptionModal } from "../components/FoodOptionModal";
@@ -698,7 +697,7 @@ export default function MerchantDetailPage() {
       <header className="sticky top-0 z-40 -mx-4 -mt-6 mb-6 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex shrink-0 items-center">
-            <img src={logoUrl} alt="UFind" className="h-10 w-auto" />
+            <BrandLogo className="h-10 w-auto" />
           </Link>
           <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
             <Button

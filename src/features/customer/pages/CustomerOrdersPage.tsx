@@ -16,9 +16,8 @@ import {
 } from "../services/orderService";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
-import { UserAccountMenu, ModeToggle } from "@/shared/components";
+import { BrandLogo, UserAccountMenu, ModeToggle } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
-import logoUrl from "@/assets/ugem-logo.png";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
 
@@ -175,7 +174,7 @@ export default function CustomerOrdersPage() {
       <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/85 shadow-xs backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex items-center gap-3">
-            <img src={logoUrl} alt="UFind" className="h-10 w-auto" />
+            <BrandLogo className="h-10 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <Button
