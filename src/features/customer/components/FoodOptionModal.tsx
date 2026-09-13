@@ -102,7 +102,7 @@ export function FoodOptionModal({
           {food.toppings && food.toppings.length > 0 && (
             <div>
               <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">
-                Topping tùy chọn
+                Món ăn kèm / Gọi thêm tùy chọn
               </h3>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {food.toppings.map((topping) => {
