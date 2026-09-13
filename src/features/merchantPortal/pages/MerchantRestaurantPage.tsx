@@ -36,6 +36,7 @@ import {
   getMyMerchantDetail,
   updateMerchant,
 } from "../services";
+import { getFoods } from "../services/foodService";
 import { useMyApplications } from "../hooks/useMyApplications";
 import type { MerchantApplication } from "../types";
 import { MerchantStatusBadge, ImageWithFallback } from "@/shared/components";
@@ -347,14 +348,40 @@ export function MerchantRestaurantPage() {
 
       try {
         let data: MerchantDetail | null = null;
+        let foodList: any[] = [];
 
         try {
-          data = await getMyMerchantDetail();
+          const [merchantData, foods] = await Promise.allSettled([
+            getMyMerchantDetail(),
+            getFoods(),
+          ]);
+
+          if (merchantData.status === "fulfilled" && merchantData.value) {
+            data = merchantData.value;
+          } else if (latestApprovedApplication) {
+            data = await resolveMerchantFromApprovedApplication(
+              latestApprovedApplication,
+            );
+          }
+
+          if (foods.status === "fulfilled" && Array.isArray(foods.value)) {
+            foodList = foods.value;
+          }
         } catch {
           if (latestApprovedApplication) {
             data = await resolveMerchantFromApprovedApplication(
               latestApprovedApplication,
             );
+          }
+        }
+
+        if (data) {
+          if (foodList.length > 0) {
+            data = {
+              ...data,
+              foods: foodList as any,
+              menu: foodList as any,
+            };
           }
         }
 

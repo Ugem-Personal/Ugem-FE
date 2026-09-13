@@ -1218,24 +1218,34 @@ export function MerchantFoodsPage() {
                 Thêm món gọi thêm mới
               </span>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={newToppingForm.name}
-                  onChange={(e) => setNewToppingForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Tên món (vd: Trứng ốp la, Chả...)"
-                  className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                <div className="sm:col-span-7 space-y-1">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Tên món gọi thêm
+                  </label>
+                  <input
+                    type="text"
+                    value={newToppingForm.name}
+                    onChange={(e) => setNewToppingForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ví dụ: Trứng ốp la"
+                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
+                  />
+                </div>
 
-                <input
-                  type="number"
-                  min="0"
-                  step="500"
-                  value={newToppingForm.price}
-                  onChange={(e) => setNewToppingForm((prev) => ({ ...prev, price: e.target.value }))}
-                  placeholder="Giá cộng thêm (VNĐ) - vd: 5000"
-                  className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
-                />
+                <div className="sm:col-span-5 space-y-1">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Giá thêm (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    value={newToppingForm.price}
+                    onChange={(e) => setNewToppingForm((prev) => ({ ...prev, price: e.target.value }))}
+                    placeholder="Ví dụ: 5000"
+                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
+                  />
+                </div>
               </div>
 
               {toppingError && (
@@ -1248,10 +1258,10 @@ export function MerchantFoodsPage() {
                 <button
                   type="submit"
                   disabled={savingTopping}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 text-xs font-black shadow-md shadow-cyan-600/20 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-5 py-2.5 text-xs font-black shadow-md shadow-cyan-600/20 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition"
                 >
-                  {savingTopping ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                  {savingTopping ? "Đang thêm..." : "+ Thêm món gọi thêm"}
+                  {savingTopping ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                  {savingTopping ? "Đang thêm..." : "Thêm món gọi thêm"}
                 </button>
               </div>
             </form>
@@ -1315,7 +1325,7 @@ export function MerchantFoodsPage() {
             <button
               type="button"
               onClick={() => setToppingModalFood(null)}
-              className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-5 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-2xs"
+              className="h-10 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-750 px-6 text-xs font-black text-slate-700 dark:text-slate-200 transition shadow-xs"
             >
               Đóng
             </button>
