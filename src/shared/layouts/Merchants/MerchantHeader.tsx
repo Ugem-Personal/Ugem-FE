@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
 import { cn } from "@/lib/utils";
-import { ModeToggle, UserAccountMenu } from "@/shared/components";
+import { UserAccountMenu } from "@/shared/components";
 
 const merchantItems = [
   ["Hồ sơ quán", "/merchant", Home],
@@ -56,7 +56,7 @@ export function MerchantHeader() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-                KHÔNG GIANG CHỦ QUÁN
+                KHÔNG GIAN CHỦ QUÁN
               </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono font-black text-emerald-600 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -71,7 +71,6 @@ export function MerchantHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <ModeToggle />
         <UserAccountMenu fallbackName="Chủ quán" />
       </div>
 
