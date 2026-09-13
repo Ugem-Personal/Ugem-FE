@@ -20,13 +20,13 @@ export function PartnerBenefitCard() {
               <Sparkles className="h-6 w-6 text-cyan-200 animate-pulse" />
             </div>
             <span className="inline-block rounded-full bg-white/20 px-3 py-0.5 text-[10px] font-mono font-black uppercase tracking-wider text-cyan-100">
-              UGem Partnership
+              UFind Partnership
             </span>
             <h4 className="mt-1 text-lg font-black tracking-tight text-white">
               Safe & Quality Meals
             </h4>
             <p className="mt-1 text-[11px] text-cyan-100/90 leading-relaxed font-medium">
-              Nâng tầm thương hiệu ẩm thực của bạn cùng cộng đồng UGem.
+              Nâng tầm thương hiệu ẩm thực của bạn cùng cộng đồng UFind.
             </p>
           </div>
         </div>
@@ -35,7 +35,7 @@ export function PartnerBenefitCard() {
         <div className="mt-6">
           <h3 className="text-sm font-black text-slate-950 dark:text-white flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-            Vì sao chọn đối tác UGem?
+            Vì sao chọn đối tác UFind?
           </h3>
         </div>
 

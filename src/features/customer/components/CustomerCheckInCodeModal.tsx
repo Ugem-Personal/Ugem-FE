@@ -195,7 +195,7 @@ export default function CustomerCheckInCodeModal({ open, onClose }: Props) {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-500 font-bold">✓</span>
-                  <span>Tự động cộng <strong>+10 điểm thưởng</strong> vào ví UGem.</span>
+                  <span>Tự động cộng <strong>+10 điểm thưởng</strong> vào ví UFind.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-500 font-bold">★</span>

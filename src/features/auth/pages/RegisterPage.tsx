@@ -83,8 +83,8 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
-      eyebrow="Tạo tài khoản UGem"
-      title="Tham gia UGem Platform"
+      eyebrow="Tạo tài khoản UFind"
+      title="Tham gia UFind Platform"
       subtitle="Bắt đầu trải nghiệm khám phá quán ăn ngon địa phương hoặc mở rộng thương hiệu ẩm thực của bạn."
     >
       <Form {...form}>

@@ -102,13 +102,13 @@ export default function MerchantProfilePage() {
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="space-y-2 max-w-2xl">
                 <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-mono font-bold text-cyan-300 backdrop-blur-md">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> UGem Merchant Workspace
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> UFind Merchant Workspace
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
                   Xin chào, {profile.displayName}! 👋
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-                  Chào mừng bạn đến với Cổng Quản lý Chủ quán UGem. Hãy cập nhật đầy đủ thông tin cửa hàng để sẵn sàng đón nhận hàng ngàn đơn hàng mỗi ngày.
+                  Chào mừng bạn đến với Cổng Quản lý Chủ quán UFind. Hãy cập nhật đầy đủ thông tin cửa hàng để sẵn sàng đón nhận hàng ngàn đơn hàng mỗi ngày.
                 </p>
               </div>
 
@@ -212,7 +212,7 @@ export default function MerchantProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-slate-950 dark:text-white">Phân biệt Hồ sơ Tài khoản & Nhà hàng</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Quy định quản lý dữ liệu đối tác Merchant UGem</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Quy định quản lý dữ liệu đối tác Merchant UFind</p>
                   </div>
                 </div>
 

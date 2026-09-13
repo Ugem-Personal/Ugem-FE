@@ -89,7 +89,7 @@ export default function MerchantCard({
   isWishlisted = false,
   onWishlistToggle,
 }: Props) {
-  const name = merchant.name || "Quán trên UGem";
+  const name = merchant.name || "Quán trên UFind";
   const descriptionPreview = getMerchantDescriptionPreview(
     merchant.description,
   );
@@ -257,7 +257,7 @@ export default function MerchantCard({
               {merchant.hasActiveCampaign && (
                 <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-emerald-50/90 dark:bg-emerald-500/10 px-2.5 py-1 text-emerald-800 dark:text-emerald-300 shadow-2xs font-bold">
                   <Tag className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  {merchant.isBoosted ? "Voucher hời UGem" : "Khuyến mãi"}
+                  {merchant.isBoosted ? "Voucher hời UFind" : "Khuyến mãi"}
                 </span>
               )}
 

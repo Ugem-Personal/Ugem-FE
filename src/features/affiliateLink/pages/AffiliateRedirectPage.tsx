@@ -83,7 +83,7 @@ export default function AffiliateRedirectPage() {
             <Loader2 className="mx-auto h-9 w-9 animate-spin text-slate-700 dark:text-slate-300" />
             <h1 className="mt-3 text-2xl font-black">Đang mở quán</h1>
             <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-              UGem đang ghi nhận lượt click affiliate và chuyển bạn tới trang
+              UFind đang ghi nhận lượt click affiliate và chuyển bạn tới trang
               quán.
             </p>
           </>

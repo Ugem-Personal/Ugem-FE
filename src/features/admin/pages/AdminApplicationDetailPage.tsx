@@ -89,7 +89,7 @@ function getStatusMeta(status?: string) {
 }
 
 function getInitials(name?: string) {
-  const parts = (name || "UGem").trim().split(/\s+/).filter(Boolean);
+  const parts = (name || "UFind").trim().split(/\s+/).filter(Boolean);
 
   return parts
     .slice(-2)
@@ -309,7 +309,7 @@ export default function AdminApplicationDetailPage({
     if (!id || !isPendingStatus) return;
 
     const toastId = notify.loading("Đang duyệt hồ sơ...", {
-      description: `UGem đang tạo hồ sơ merchant cho ${name}.`,
+      description: `UFind đang tạo hồ sơ merchant cho ${name}.`,
     });
 
     setSubmittingAction("accept");
@@ -699,7 +699,7 @@ export default function AdminApplicationDetailPage({
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-black text-slate-950 dark:text-white">
-                    Đánh giá tiêu chí UGem (Underrated Assessment)
+                    Đánh giá tiêu chí UFind (Underrated Assessment)
                   </h3>
                   <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
                     Kiểm tra thông tin quán, menu món ăn và category để đánh giá tiêu chí "underrated" trước khi phê duyệt.

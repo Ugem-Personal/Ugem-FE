@@ -52,7 +52,7 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
     return {
       label: "Chưa gửi hồ sơ",
       description:
-        "Hãy bắt đầu gửi thông tin để quán của bạn được xuất hiện trên UGem.",
+        "Hãy bắt đầu gửi thông tin để quán của bạn được xuất hiện trên UFind.",
       tone: "empty",
       actionLabel: "Bắt đầu nộp hồ sơ",
       actionTo: "/merchant/application/create",
@@ -76,7 +76,7 @@ function getStatusText(application?: MerchantApplication): StatusInfo {
   ) {
     return {
       label: "Đã được duyệt",
-      description: "Quán của bạn đã được duyệt thành công và hiển thị trên UGem.",
+      description: "Quán của bạn đã được duyệt thành công và hiển thị trên UFind.",
       tone: "approved",
       actionLabel: "Quản lý nhà hàng",
       actionTo: "/merchant/restaurant",

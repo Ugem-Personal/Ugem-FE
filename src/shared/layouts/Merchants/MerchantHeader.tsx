@@ -91,7 +91,7 @@ export function MerchantHeader() {
                     <Sparkles className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase text-cyan-600 dark:text-cyan-400">UGem Partner</p>
+                    <p className="text-[10px] font-black uppercase text-cyan-600 dark:text-cyan-400">UFind Partner</p>
                     <p className="text-xs font-black text-slate-900 dark:text-white">Cổng Chủ Quán</p>
                   </div>
                 </div>

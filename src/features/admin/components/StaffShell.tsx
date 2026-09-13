@@ -149,7 +149,7 @@ export function StaffShell({ activeItem, children }: StaffShellProps) {
               </div>
               <div className={cn("min-w-0", collapsed && "hidden")}>
                 <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
-                  UGem Staff
+                  UFind Staff
                 </p>
                 <p className="truncate text-base font-black text-white">
                   Review Center

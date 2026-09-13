@@ -305,7 +305,7 @@ export function MerchantViewStatisticsPage() {
                     <MetricBox
                       label={`Phí nền tảng (${stats?.platformFeePercent ?? 0}%)`}
                       value={formatCurrency(stats?.platformFee)}
-                      description="Phí duy trì hệ thống UGem"
+                      description="Phí duy trì hệ thống UFind"
                       accent="amber"
                     />
                     <MetricBox

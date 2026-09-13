@@ -53,7 +53,7 @@ export function OnboardingSidebar() {
 
   return (
     <aside className="onboarding-sidebar" data-collapsed={collapsed}>
-      <strong className="onboarding-brand">{collapsed ? "UG" : "UGem Merchants"}</strong>
+      <strong className="onboarding-brand">{collapsed ? "UF" : "UFind Merchants"}</strong>
 
       <div className="onboarding-progress" hidden={collapsed}>
         <span>Onboarding</span>

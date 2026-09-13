@@ -12,7 +12,7 @@ export function TipsSection() {
             Mẹo chuẩn bị hồ sơ
           </h3>
           <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-            Hãy chụp những bức ảnh chân thực nhất về món ăn và không gian. UGem
+            Hãy chụp những bức ảnh chân thực nhất về món ăn và không gian. UFind
             đánh giá cao sự mộc mạc và chất lượng cốt lõi.
           </p>
         </div>

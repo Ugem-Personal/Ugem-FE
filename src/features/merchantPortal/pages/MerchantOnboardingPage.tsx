@@ -318,7 +318,7 @@ export function MerchantOnboardingPage() {
     const toastId = notify.loading(
       isRejected ? "Đang gửi lại hồ sơ..." : "Đang gửi hồ sơ...",
       {
-        description: "UGem đang chuyển hồ sơ của bạn đến staff xét duyệt.",
+        description: "UFind đang chuyển hồ sơ của bạn đến staff xét duyệt.",
       },
     );
 

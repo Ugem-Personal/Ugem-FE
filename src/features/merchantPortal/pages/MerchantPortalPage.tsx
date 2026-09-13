@@ -96,7 +96,7 @@ export function MerchantPortalPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-bold text-cyan-600 dark:text-cyan-400">
                     <Store className="h-3.5 w-3.5" />
-                    <span>Không gian Chủ quán UGem</span>
+                    <span>Không gian Chủ quán UFind</span>
                   </div>
                   {merchant?.status && (
                     <MerchantStatusBadge status={merchant.status} />
@@ -104,7 +104,7 @@ export function MerchantPortalPage() {
                 </div>
 
                 <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
-                  {merchant?.name ? `Chào mừng ${merchant.name}` : "Chào mừng đến không gian quản lý UGem"}
+                  {merchant?.name ? `Chào mừng ${merchant.name}` : "Chào mừng đến không gian quản lý UFind"}
                 </h1>
                 <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
                   Bảng điều khiển quản lý kinh doanh, thống kê doanh thu và phục vụ thực khách đích thực.
@@ -167,7 +167,7 @@ export function MerchantPortalPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/20 px-3 py-1 text-xs font-mono font-black uppercase tracking-wider text-cyan-300">
                       <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-                      UGem Rebalancing Engine
+                      UFind Rebalancing Engine
                     </span>
                     {(merchant.underratedScore && Number(merchant.underratedScore) >= 3.0) || merchant.isUnderrated ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300">
@@ -185,7 +185,7 @@ export function MerchantPortalPage() {
                   </h2>
 
                   <p className="text-xs sm:text-sm font-medium text-slate-300 leading-relaxed">
-                    Thuật toán UGem tính toán <strong className="text-cyan-300">Điểm Tiềm Năng (US)</strong> dựa trên Chất Lượng Đánh Giá và Chỉ Số Sức Mạnh (SI) để tự động đưa quán ngon núp hẻm tiếp cận hàng nghìn thực khách quanh khu vực.
+                    Thuật toán UFind tính toán <strong className="text-cyan-300">Điểm Tiềm Năng (US)</strong> dựa trên Chất Lượng Đánh Giá và Chỉ Số Sức Mạnh (SI) để tự động đưa quán ngon núp hẻm tiếp cận hàng nghìn thực khách quanh khu vực.
                   </p>
                 </div>
 

@@ -67,7 +67,7 @@ export function TableQrGeneratorModal({
           <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
             <QrCode className="h-5 w-5" />
             <span className="text-xs font-black uppercase tracking-widest font-mono">
-              UGem Smart POS
+              UFind Smart POS
             </span>
           </div>
           <DialogTitle className="text-xl font-black text-slate-950 dark:text-white sm:text-2xl">
@@ -121,13 +121,13 @@ export function TableQrGeneratorModal({
           <div className="mx-auto max-w-xs space-y-4">
             {/* Header with Logo */}
             <div className="flex items-center justify-center gap-2">
-              <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
+              <img src={logoUrl} alt="UFind" className="h-8 w-auto" />
               <div className="text-left">
                 <p className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                   {merchantName}
                 </p>
                 <p className="text-[10px] font-semibold text-slate-500 truncate max-w-[180px]">
-                  {merchantAddress || "Quán Ăn Đối Tác UGem"}
+                  {merchantAddress || "Quán Ăn Đối Tác UFind"}
                 </p>
               </div>
             </div>

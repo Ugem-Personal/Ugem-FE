@@ -348,7 +348,7 @@ export function MerchantApplicationStatusPage() {
                     <StepItem
                       active={isApproved}
                       done={isApproved}
-                      title="Hiển thị trên UGem"
+                      title="Hiển thị trên UFind"
                       description={getActiveDescription(isApproved)}
                       icon={<Home size={18} />}
                     />
@@ -367,7 +367,7 @@ export function MerchantApplicationStatusPage() {
                   {isApproved && (
                     <div className="mt-6 pt-6 border-t border-slate-200/80 dark:border-white/10">
                       <p className="mb-4 text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                        Quán của bạn đã được duyệt và hiển thị trên UGem. Nếu
+                        Quán của bạn đã được duyệt và hiển thị trên UFind. Nếu
                         cần thay đổi thông tin, vui lòng liên hệ Support.
                       </p>
 

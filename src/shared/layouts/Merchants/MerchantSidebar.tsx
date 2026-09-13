@@ -129,7 +129,7 @@ export function MerchantSidebar() {
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-400">
-                  UGem Partner
+                  UFind Partner
                 </span>
               </div>
               <p className="truncate text-sm font-black tracking-tight text-white mt-0.5">
@@ -204,7 +204,7 @@ export function MerchantSidebar() {
         {!collapsed && <>
         <div className="border-t border-slate-200/80 dark:border-white/10 pt-3 text-center">
           <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-            UGem Business v2.5 Premium
+            UFind Business v2.5 Premium
           </p>
         </div>
         </>}

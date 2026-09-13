@@ -52,7 +52,7 @@ export function WishlistMerchantCard({
           </div>
 
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
-            Quán ăn đối tác chất lượng trên UGem Platform
+            Quán ăn đối tác chất lượng trên UFind Platform
           </p>
 
           {/* Action Buttons */}

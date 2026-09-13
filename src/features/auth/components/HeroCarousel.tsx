@@ -25,7 +25,7 @@ const STORIES = [
     eyebrow: "Khám phá có chọn lọc",
     title: "Mỗi quán nhỏ đều có một câu chuyện đáng được tìm thấy.",
     description:
-      "UGem kết nối thực khách với những địa điểm địa phương chất lượng, ngay khi họ cần một gợi ý đáng tin cậy.",
+      "UFind kết nối thực khách với những địa điểm địa phương chất lượng, ngay khi họ cần một gợi ý đáng tin cậy.",
     icon: MapPin,
   },
   {

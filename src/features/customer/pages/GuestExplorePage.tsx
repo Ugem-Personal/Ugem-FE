@@ -97,7 +97,7 @@ function MerchantVisual({
       {image && !failedImage ? (
         <img
           src={image}
-          alt={merchant.name || "Quán ăn trên UGem"}
+          alt={merchant.name || "Quán ăn trên UFind"}
           className={
             logoImage
               ? "h-full w-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.03]"
@@ -415,11 +415,11 @@ export default function GuestExplorePage() {
           <Link
             to="/explore"
             className="flex items-center gap-3"
-            aria-label="UGem Guest Explore"
+            aria-label="UFind Guest Explore"
           >
             <img
               src={logoUrl}
-              alt="UGem"
+              alt="UFind"
               className="h-8 w-auto transition-transform hover:scale-105"
             />
           </Link>
@@ -810,7 +810,7 @@ export default function GuestExplorePage() {
                 <div className="p-6">
                   <div className="flex items-start gap-3">
                     <h3 className="line-clamp-1 text-base font-black tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400">
-                      {merchant.name || "Quán trên UGem"}
+                      {merchant.name || "Quán trên UFind"}
                     </h3>
                   </div>
 
@@ -908,7 +908,7 @@ export default function GuestExplorePage() {
                   id="guest-merchant-title"
                   className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl"
                 >
-                  {detail.name || "Quán trên UGem"}
+                  {detail.name || "Quán trên UFind"}
                 </h2>
               </div>
               <button
@@ -968,7 +968,7 @@ export default function GuestExplorePage() {
                   Đặt món & Trải nghiệm đầy đủ?
                 </p>
                 <p className="mt-0.5 text-xs text-slate-300">
-                  Đăng nhập tài khoản UGem để bắt đầu ngay.
+                  Đăng nhập tài khoản UFind để bắt đầu ngay.
                 </p>
               </div>
               <Link

@@ -15,7 +15,7 @@ type AuthLayoutProps = {
 const HERO_IMAGES = ["discovery", "merchant", "insights", "security"];
 
 export function AuthLayout({
-  eyebrow = "UGem Platform",
+  eyebrow = "UFind Platform",
   title,
   subtitle,
   children,
@@ -44,7 +44,7 @@ export function AuthLayout({
 
           {/* Top Header Controls */}
           <header className="relative z-10 flex w-full items-center justify-between gap-4 mb-3">
-            <Link to="/explore" className="group flex items-center gap-2 hover:opacity-90 transition-opacity" title="Về trang Khám Phá UGem">
+            <Link to="/explore" className="group flex items-center gap-2 hover:opacity-90 transition-opacity" title="Về trang Khám Phá UFind">
               <Logo />
             </Link>
 
@@ -82,7 +82,7 @@ export function AuthLayout({
           {/* Footer info */}
           <footer className="relative z-10 w-full text-center pt-3 border-t border-slate-100 dark:border-slate-800/60 mt-3">
             <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
-              &copy; {new Date().getFullYear()} UGem Food Platform. Nền tảng Quản lý & Trải nghiệm Ẩm thực.
+              &copy; {new Date().getFullYear()} UFind Food Platform. Nền tảng Quản lý & Trải nghiệm Ẩm thực.
             </p>
           </footer>
         </section>

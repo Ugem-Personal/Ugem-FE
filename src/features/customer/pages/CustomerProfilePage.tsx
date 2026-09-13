@@ -592,7 +592,7 @@ export default function CustomerProfilePage() {
               </div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                 Tài khoản được đồng bộ trực tiếp với hệ thống OAuth & JWT Token
-                của UGem. Email của bạn là thông tin nhận dạng chính thức.
+                của UFind. Email của bạn là thông tin nhận dạng chính thức.
               </p>
             </div>
           </div>
@@ -1047,7 +1047,7 @@ export default function CustomerProfilePage() {
                     </h3>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                       Tài khoản của bạn đã được nâng cấp chính thức thành
-                      Reviewer trên UGem.
+                      Reviewer trên UFind.
                     </p>
                   </div>
                 </div>

@@ -13,12 +13,12 @@ const steps: Step[] = [
   {
     number: 2,
     title: "Staff xét duyệt",
-    description: "Đội ngũ UGem kiểm tra thông tin, món ăn và tính xác thực của quán.",
+    description: "Đội ngũ UFind kiểm tra thông tin, món ăn và tính xác thực của quán.",
   },
   {
     number: 3,
     title: "Kích hoạt quán",
-    description: "Hồ sơ được duyệt và quán chính thức sẵn sàng hoạt động trên UGem.",
+    description: "Hồ sơ được duyệt và quán chính thức sẵn sàng hoạt động trên UFind.",
   },
 ];
 
@@ -27,7 +27,7 @@ export function OnboardingSteps() {
     <section className="space-y-6">
       <div>
         <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-950 dark:text-white">
-          Quy trình đưa quán lên UGem
+          Quy trình đưa quán lên UFind
         </h2>
         <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
           Đơn giản, minh bạch và đảm bảo chất lượng thẩm định.

@@ -513,7 +513,7 @@ export default function CustomerOrderDetailPage() {
       <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/85 shadow-xs backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex items-center gap-3">
-            <img src={logoUrl} alt="UGem" className="h-10 w-auto" />
+            <img src={logoUrl} alt="UFind" className="h-10 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <Button
@@ -926,7 +926,7 @@ export default function CustomerOrderDetailPage() {
                   <span className="text-amber-600 dark:text-amber-400 font-black">
                     +20 điểm thưởng
                   </span>{" "}
-                  vào ví UGem!
+                  vào ví UFind!
                 </p>
               </div>
             </div>

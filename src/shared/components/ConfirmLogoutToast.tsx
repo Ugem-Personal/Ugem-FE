@@ -18,7 +18,7 @@ export function showLogoutConfirmToast(onConfirm: () => void) {
               Xác nhận đăng xuất?
             </AlertDialog.Title>
             <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-              Phiên làm việc hiện tại sẽ kết thúc. Bạn có chắc chắn muốn thoát khỏi hệ thống UGem?
+              Phiên làm việc hiện tại sẽ kết thúc. Bạn có chắc chắn muốn thoát khỏi hệ thống UFind?
             </AlertDialog.Description>
             <div className="mt-6 flex items-center justify-center gap-3">
               <AlertDialog.Cancel className="h-10 rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">

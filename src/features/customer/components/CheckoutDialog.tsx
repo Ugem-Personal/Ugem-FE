@@ -491,7 +491,7 @@ export function CheckoutDialog({
             ) : null}
           </div>
 
-          {/* UGem Reviewer Points Redemption Switch */}
+          {/* UFind Reviewer Points Redemption Switch */}
           {customerPoints > 0 ? (
             <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-500/20">
               <div className="flex items-center justify-between gap-3">
@@ -501,7 +501,7 @@ export function CheckoutDialog({
                   </div>
                   <div>
                     <p className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                      Điểm thưởng UGem
+                      Điểm thưởng UFind
                       <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300">
                         <Sparkles className="h-2.5 w-2.5" /> Có {customerPoints} điểm
                       </span>
@@ -545,7 +545,7 @@ export function CheckoutDialog({
             ) : null}
             {usePoints && pointsDiscount > 0 ? (
               <div className="mt-2 flex justify-between text-sm font-bold text-amber-600">
-                <span>Trừ điểm UGem ({maxPointsPossible}đ)</span>
+                <span>Trừ điểm UFind ({maxPointsPossible}đ)</span>
                 <span>-{formatPrice(pointsDiscount)}</span>
               </div>
             ) : null}

@@ -196,7 +196,7 @@ export function LoginPage() {
     <AuthLayout
       eyebrow="Đăng nhập an toàn"
       title="Chào mừng trở lại"
-      subtitle="Tiếp tục hành trình khám phá và quản lý trải nghiệm của bạn trên UGem."
+      subtitle="Tiếp tục hành trình khám phá và quản lý trải nghiệm của bạn trên UFind."
     >
       <div className="space-y-5">
         {GOOGLE_CLIENT_ID ? (
@@ -255,7 +255,7 @@ export function LoginPage() {
           <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white p-6 sm:p-7 shadow-2xl dark:bg-slate-900">
             <h3 className="text-xl font-black text-slate-950 dark:text-white">Bạn muốn làm gì tiếp theo?</h3>
             <p className="mt-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-              Chào mừng bạn đến với UGem! Hãy chọn mục đích sử dụng để chúng tôi đưa bạn đến đúng giao diện.
+              Chào mừng bạn đến với UFind! Hãy chọn mục đích sử dụng để chúng tôi đưa bạn đến đúng giao diện.
             </p>
 
             <div className="mt-6 grid gap-3.5">
@@ -290,7 +290,7 @@ export function LoginPage() {
                     Đăng Ký Mở Quán Ăn
                   </p>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Đưa thương hiệu ẩm thực lên UGem
+                    Đưa thương hiệu ẩm thực lên UFind
                   </p>
                 </div>
               </button>

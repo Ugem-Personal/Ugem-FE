@@ -999,7 +999,7 @@ export default function CustomerHomePage() {
             <div className="shrink-0 border-b border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <Link to="/customer" className="flex items-center gap-2">
-                  <img src={logoUrl} alt="UGem" className="h-8 w-auto" />
+                  <img src={logoUrl} alt="UFind" className="h-8 w-auto" />
                 </Link>
                 <div className="flex items-center gap-2">
                   <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
@@ -1184,7 +1184,7 @@ export default function CustomerHomePage() {
           <Link to="/customer" className="flex items-center gap-3">
             <img
               src={logoUrl}
-              alt="UGem"
+              alt="UFind"
               className="h-10 w-auto transition-transform hover:scale-105"
             />
           </Link>
@@ -1344,7 +1344,7 @@ export default function CustomerHomePage() {
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-                UGem Recommended
+                UFind Recommended
               </p>
               <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
                 Địa điểm quanh bạn

@@ -11,7 +11,7 @@ const routeLabel = (pathname: string) => {
   if (pathname.startsWith("/notifications")) return "Thông báo";
   if (pathname.startsWith("/reviews")) return "Đánh giá";
   if (pathname.startsWith("/check-in")) return "Check-in";
-  return "UGem";
+  return "UFind";
 };
 
 function RouteLoading() {
@@ -26,7 +26,7 @@ function RouteLoading() {
           className="size-5 animate-spin rounded-full border-2 border-primary/25 border-t-primary motion-reduce:animate-none"
           aria-hidden="true"
         />
-        <span className="text-sm font-medium">Đang tải UGem...</span>
+        <span className="text-sm font-medium">Đang tải UFind...</span>
       </div>
     </main>
   );
@@ -38,7 +38,7 @@ export default function RouteLoadingBoundary() {
   const currentRouteLabel = routeLabel(pathname);
 
   useEffect(() => {
-    document.title = `${currentRouteLabel} — UGem`;
+    document.title = `${currentRouteLabel} — UFind`;
     contentRef.current?.focus({ preventScroll: true });
   }, [currentRouteLabel, pathname]);
 

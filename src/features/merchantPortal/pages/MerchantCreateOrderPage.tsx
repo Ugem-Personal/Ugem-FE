@@ -450,7 +450,7 @@ export default function MerchantCreateOrderPage() {
                     </div>
                     <div>
                       <p className="text-sm font-black text-slate-950 dark:text-white">
-                        Khách chưa có tài khoản UGem
+                        Khách chưa có tài khoản UFind
                       </p>
                       <p className="mt-1 text-xs font-medium leading-5 text-amber-700 dark:text-amber-300">
                         Hãy giới thiệu khách đăng ký hoặc đăng nhập ứng dụng
@@ -470,7 +470,7 @@ export default function MerchantCreateOrderPage() {
                   value={
                     selectedCustomer?.fullName ??
                     (customerLookupStatus === "not-found"
-                      ? "Khách chưa có tài khoản UGem"
+                      ? "Khách chưa có tài khoản UFind"
                       : "")
                   }
                   readOnly

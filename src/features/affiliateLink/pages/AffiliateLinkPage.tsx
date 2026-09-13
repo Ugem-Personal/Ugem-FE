@@ -189,7 +189,7 @@ export default function AffiliateLinkPage() {
       <header className="border-b border-slate-200/80 bg-white/85 shadow-sm shadow-slate-950/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
-            <h1 className="text-3xl font-black">UGem</h1>
+            <h1 className="text-3xl font-black">UFind</h1>
             <p className="text-sm font-medium text-slate-500">
               Khám phá các quán ăn gần bạn
             </p>
@@ -220,7 +220,7 @@ export default function AffiliateLinkPage() {
                 Tạo liên kết affiliate
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500 dark:text-slate-400">
-                Tìm quán trong UGem, chọn merchant rồi tạo link chia sẻ để hệ
+                Tìm quán trong UFind, chọn merchant rồi tạo link chia sẻ để hệ
                 thống ghi nhận lượt click.
               </p>
             </div>

@@ -11,7 +11,7 @@ export function OnboardingTopbar() {
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 block">UGem</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 block">UFind</span>
             <span className="text-xs font-black text-foreground block">Merchant Onboarding</span>
           </div>
         </Link>

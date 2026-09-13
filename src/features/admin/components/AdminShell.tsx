@@ -14,7 +14,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 
-import ugemLogo from "@/assets/ugem-logo.png";
+import ufindIcon from "@/assets/ufind-icon.png";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/shared/components/ModeToggle";
 import { UserAccountMenu } from "@/shared/components/UserAccountMenu";
@@ -76,12 +76,12 @@ function AdminBrand({ collapsed }: { collapsed?: boolean }) {
       )}
     >
       <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white shadow-md">
-        <img src={ugemLogo} alt="UGem" className="h-7 w-7 object-contain" />
+        <img src={ufindIcon} alt="UFind" className="h-8 w-8 object-contain" />
       </div>
       {!collapsed && (
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-            UGem Admin
+            UFind Admin
           </p>
           <p className="truncate text-base font-black text-slate-900 dark:text-white">
             Control center
@@ -220,13 +220,13 @@ export function AdminShell({ children }: AdminShellProps) {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-4 shadow-xs backdrop-blur-xl lg:hidden">
         <div className="flex items-center gap-2.5">
           <img
-            src={ugemLogo}
-            alt="UGem"
+            src={ufindIcon}
+            alt="UFind"
             className="h-8 w-8 rounded-lg bg-white object-contain shadow-xs"
           />
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-              UGem Admin
+              UFind Admin
             </p>
             <p className="text-xs font-black text-slate-900 dark:text-white">
               Control center
@@ -316,7 +316,7 @@ export function AdminShell({ children }: AdminShellProps) {
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-widest text-cyan-400">
-                  UGem Admin
+                  UFind Admin
                 </span>
                 <button
                   type="button"

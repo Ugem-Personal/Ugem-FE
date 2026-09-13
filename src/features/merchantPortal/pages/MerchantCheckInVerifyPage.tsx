@@ -45,7 +45,7 @@ type CheckInHistoryItem = {
 const DEFAULT_BENEFITS = [
   "Giảm 5% cho hóa đơn tiếp theo",
   "Tặng 1 ly Coca / Nước ngọt miễn phí",
-  "Voucher kích cầu UGem (Giảm 20%)",
+  "Voucher kích cầu UFind (Giảm 20%)",
   "Tặng món khai vị / tráng miệng",
 ];
 
@@ -150,7 +150,7 @@ export default function MerchantCheckInVerifyPage() {
                     Nhập Mã Khách Hàng
                   </h2>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Khách hàng mở mục "Mã Check-in của tôi" trên ứng dụng UGem để lấy mã code hoặc mã QR.
+                    Khách hàng mở mục "Mã Check-in của tôi" trên ứng dụng UFind để lấy mã code hoặc mã QR.
                   </p>
 
                   <form onSubmit={handleVerify} className="mt-5 space-y-5">

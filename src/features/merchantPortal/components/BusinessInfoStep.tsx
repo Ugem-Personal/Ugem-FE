@@ -142,7 +142,7 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
               Thông tin cơ bản
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Giúp UGem hiểu rõ hơn về quán của bạn để xét duyệt và hiển thị
+              Giúp UFind hiểu rõ hơn về quán của bạn để xét duyệt và hiển thị
               chính xác.
             </p>
           </div>
@@ -450,7 +450,7 @@ export function BusinessInfoStep({ register, errors, setValue, watch }: Props) {
               <div>
                 <strong className="text-sm font-black">Mẹo cho chủ quán</strong>
                 <p className="mt-1 text-sm leading-6 text-cyan-900/80 dark:text-cyan-200/80">
-                  Hãy mô tả quán thật chân thực. UGem yêu thích những câu chuyện
+                  Hãy mô tả quán thật chân thực. UFind yêu thích những câu chuyện
                   đằng sau các món ăn “underrated”.
                 </p>
               </div>
