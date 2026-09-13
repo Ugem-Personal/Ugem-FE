@@ -770,23 +770,23 @@ export default function AdminApplicationDetailPage({
               )}
             </section>
 
-            <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-amber-700 shadow-sm ring-1 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900">
-                  <Utensils className="h-5 w-5" />
+            {menuItems.length > 0 && (
+              <section className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-2xl shadow-cyan-950/5 ring-1 ring-slate-950/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 dark:ring-0">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-amber-700 shadow-sm ring-1 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900">
+                    <Utensils className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-black text-slate-950 dark:text-white">
+                      Menu gửi kèm ({menuItems.length} món)
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Kiểm tra ảnh, giá, mô tả và danh mục món (nếu có).
+                    </p>
+                  </div>
                 </div>
 
-                <div className="min-w-0">
-                  <h2 className="truncate text-lg font-black text-slate-950 dark:text-white">
-                    Menu gửi kèm
-                  </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Kiểm tra ảnh, giá, mô tả và danh mục món (nếu có).
-                  </p>
-                </div>
-              </div>
-
-              {menuItems.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {menuItems.map((item, index) => (
                     <article
@@ -858,17 +858,8 @@ export default function AdminApplicationDetailPage({
                     </article>
                   ))}
                 </div>
-              ) : (
-                <div className="rounded-2xl border border-cyan-500/20 bg-cyan-50/40 dark:bg-cyan-950/20 p-6 text-center">
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    Quy trình tinh gọn: Quán chưa nộp menu trước
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                    Chủ quán sẽ chủ động tạo Menu món ăn, hình ảnh, giá bán và cài đặt Khung giờ mở cửa trong Dashboard sau khi được duyệt.
-                  </p>
-                </div>
-              )}
-            </section>
+              </section>
+            )}
           </div>
 
           <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
