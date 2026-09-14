@@ -1,7 +1,6 @@
 import {
   Clock,
   ChevronRight,
-  MapPin,
   FileText,
   Star,
   Store,
@@ -114,15 +113,8 @@ export function OrderCard({
                 {order.name || `Đơn hàng #${fallbackOrderNumber}`}
               </h3>
 
-              <span
-                className={cn(
-                  "rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
-                  isOfflineOrder
-                    ? "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50"
-                    : "bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50",
-                )}
-              >
-                {isOfflineOrder ? "Tại quán" : "Giao tận nơi"}
+              <span className="rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50">
+                Dùng tại quán
               </span>
             </div>
 
@@ -149,12 +141,6 @@ export function OrderCard({
 
       {/* Middle: Details & Notes */}
       <div className="pt-3.5 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-        {order.deliveryAddress && !isOfflineOrder && (
-          <div className="flex items-start gap-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-500 mt-0.5" />
-            <span className="truncate">{order.deliveryAddress}</span>
-          </div>
-        )}
 
         {order.notes && (
           <div className="flex items-start gap-2 rounded-2xl border border-amber-200/50 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/40 p-2.5 text-amber-900 dark:text-amber-200">

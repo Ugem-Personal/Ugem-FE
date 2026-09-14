@@ -2,7 +2,6 @@ import {
   CheckCircle2,
   Clock,
   ChefHat,
-  Bike,
   PackageCheck,
   XCircle,
   AlertTriangle,
@@ -34,21 +33,16 @@ type TimelineStep = {
 
 export function OrderStatusTimeline({
   status,
-  orderType = "Online",
   orderedAt,
   acceptedAt,
   preparingAt,
   readyAt,
-  deliveringAt,
   completedAt,
   rejectedAt,
   rejectionReason,
   className,
 }: OrderStatusTimelineProps) {
   const normalizedStatus = (status ?? "").trim().toLowerCase();
-  const isOffline =
-    orderType?.trim().toLowerCase() === "offline" ||
-    orderType?.trim().toLowerCase() === "tại quán";
 
   const isRejected = normalizedStatus === "rejected";
   const isCancelled = normalizedStatus === "cancelled";
@@ -127,38 +121,26 @@ export function OrderStatusTimeline({
       icon: ChefHat,
       timestamp: preparingAt,
     },
-    isOffline
-      ? {
-          key: "ready",
-          label: "Sẵn sàng tại bàn",
-          description: "Món đã chế biến xong",
-          icon: PackageCheck,
-          timestamp: readyAt,
-        }
-      : {
-          key: "delivering",
-          label: "Đang giao hàng",
-          description: "Tài xế đang vận chuyển",
-          icon: Bike,
-          timestamp: deliveringAt || readyAt,
-        },
+    {
+      key: "ready",
+      label: "Sẵn sàng tại bàn",
+      description: "Món đã chế biến xong, sẵn sàng phục vụ",
+      icon: PackageCheck,
+      timestamp: readyAt,
+    },
     {
       key: "completed",
       label: "Hoàn thành",
-      description: "Đã nhận hàng thành công",
+      description: "Đã hoàn tất bữa ăn thành công",
       icon: CheckCircle2,
       timestamp: completedAt,
     },
   ];
 
-  const statusOrder = ["pending", "accepted", "preparing", isOffline ? "ready" : "delivering", "completed"];
+  const statusOrder = ["pending", "accepted", "preparing", "ready", "completed"];
   let currentIndex = statusOrder.indexOf(normalizedStatus);
   if (currentIndex === -1) {
-    if (normalizedStatus === "ready" && !isOffline) {
-      currentIndex = 2; // Keep at "preparing" / ready state until merchant clicks "Bắt đầu giao hàng"
-    } else {
-      currentIndex = 0;
-    }
+    currentIndex = 0;
   }
 
   return (
@@ -170,7 +152,7 @@ export function OrderStatusTimeline({
     >
       <div className="mb-4 flex items-center justify-between">
         <h4 className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-          Tiến trình đơn hàng ({isOffline ? "Tại quán" : "Giao hàng"})
+          Tiến trình đơn hàng (Dùng tại quán)
         </h4>
       </div>
 

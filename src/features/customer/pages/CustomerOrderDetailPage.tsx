@@ -5,7 +5,6 @@ import {
   Heart,
   Star,
   RefreshCw,
-  MapPin,
   FileText,
   Clock,
   Receipt,
@@ -579,8 +578,8 @@ export default function CustomerOrderDetailPage() {
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
                   <Receipt className="h-3.5 w-3.5" /> Order Detail
                 </span>
-                <span className="rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  {isOfflineOrder ? "Tại quán" : "Giao hàng"}
+                <span className="rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50">
+                  Dùng tại quán
                 </span>
               </div>
 
@@ -615,22 +614,9 @@ export default function CustomerOrderDetailPage() {
             </div>
           </div>
 
-          {/* Delivery & Notes Info */}
+          {/* Notes Info */}
           {currentSummaryOrder && (
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-              {currentSummaryOrder.deliveryAddress && !isOfflineOrder && (
-                <div className="flex items-start gap-2.5 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-950/50 p-3.5">
-                  <MapPin className="h-4 w-4 shrink-0 text-cyan-500 mt-0.5" />
-                  <div>
-                    <p className="font-bold text-slate-900 dark:text-white">
-                      Địa chỉ giao hàng
-                    </p>
-                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">
-                      {currentSummaryOrder.deliveryAddress}
-                    </p>
-                  </div>
-                </div>
-              )}
+            <div className="mt-6 grid gap-4 text-xs font-medium text-slate-600 dark:text-slate-300">
 
               {currentSummaryOrder.notes && (
                 <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200/50 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-950/40 p-3.5 text-amber-900 dark:text-amber-200">

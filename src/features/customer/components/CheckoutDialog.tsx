@@ -6,7 +6,6 @@ import {
   Sparkles,
   Store,
   Tag,
-  Truck,
   UserRound,
   WalletCards,
 } from "lucide-react";
@@ -24,12 +23,8 @@ import {
   type CustomerOrderType,
 } from "../services/orderService";
 import { getReviewerProfile } from "../services/customerService";
-import {
-  DeliveryLocationPicker,
-  type DeliveryLocation,
-} from "./DeliveryLocationPicker";
 
-export type CheckoutPaymentMethod = "COD" | "Cash" | "BankTransfer";
+export type CheckoutPaymentMethod = "Cash" | "BankTransfer";
 
 export type CheckoutFormData = {
   recipientName: string;
@@ -99,23 +94,13 @@ export function CheckoutDialog({
   open,
   merchantId,
   total,
-  merchantLatitude,
-  merchantLongitude,
   defaultRecipientName = "",
-  defaultOrderType = "Online",
   submitting,
   onOpenChange,
   onConfirm,
 }: CheckoutDialogProps) {
   const [recipientName, setRecipientName] = useState(defaultRecipientName);
-  const [deliveryLocation, setDeliveryLocation] = useState<DeliveryLocation>({
-    address: "",
-  });
-  const [orderType, setOrderType] =
-    useState<CustomerOrderType>(defaultOrderType);
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>(
-    defaultOrderType === "Online" ? "COD" : "Cash",
-  );
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("Cash");
   const [campaignCode, setCampaignCode] = useState("");
   const [appliedCampaign, setAppliedCampaign] =
     useState<CheckoutCampaign | null>(null);
@@ -129,26 +114,12 @@ export function CheckoutDialog({
   const [customerPoints, setCustomerPoints] = useState<number>(0);
   const [usePoints, setUsePoints] = useState<boolean>(false);
 
-  const merchantProximity = useMemo(() => {
-    if (
-      Number.isFinite(merchantLatitude) &&
-      Number.isFinite(merchantLongitude)
-    ) {
-      return {
-        lat: merchantLatitude as number,
-        lng: merchantLongitude as number,
-      };
-    }
-    return null;
-  }, [merchantLatitude, merchantLongitude]);
-
   useEffect(() => {
     if (!open) return;
     setRecipientName(defaultRecipientName);
-    setOrderType(defaultOrderType);
-    setPaymentMethod(defaultOrderType === "Online" ? "COD" : "Cash");
+    setPaymentMethod("Cash");
     setErrors({});
-  }, [open, defaultOrderType, defaultRecipientName]);
+  }, [open, defaultRecipientName]);
 
   useEffect(() => {
     if (!open) return;
@@ -246,16 +217,6 @@ export function CheckoutDialog({
     if (!recipientName.trim()) {
       nextErrors.recipientName = "Vui lòng nhập tên người nhận.";
     }
-    if (orderType === "Online" && !deliveryLocation.address.trim()) {
-      nextErrors.deliveryAddress = "Vui lòng chọn địa chỉ giao hàng.";
-    } else if (
-      orderType === "Online" &&
-      (!Number.isFinite(deliveryLocation.latitude) ||
-        !Number.isFinite(deliveryLocation.longitude))
-    ) {
-      nextErrors.deliveryAddress =
-        "Hãy chọn một gợi ý hoặc dùng vị trí hiện tại để xác định tọa độ.";
-    }
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) return;
@@ -271,13 +232,10 @@ export function CheckoutDialog({
 
     await onConfirm({
       recipientName: recipientName.trim(),
-      deliveryAddress:
-        orderType === "Online" ? deliveryLocation.address.trim() : "Tại quán",
-      deliveryLatitude:
-        orderType === "Online" ? deliveryLocation.latitude : undefined,
-      deliveryLongitude:
-        orderType === "Online" ? deliveryLocation.longitude : undefined,
-      orderType,
+      deliveryAddress: "Tại quán",
+      deliveryLatitude: undefined,
+      deliveryLongitude: undefined,
+      orderType: "Offline",
       paymentMethod,
       campaignId: campaign?.id,
       campaignCode: campaign?.code,
@@ -294,10 +252,10 @@ export function CheckoutDialog({
       <DialogContent className="max-w-3xl border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
         <DialogHeader>
           <DialogTitle className="text-slate-950 dark:text-white">
-            Xác nhận thông tin đặt món
+            Xác nhận thông tin đặt món tại quán
           </DialogTitle>
           <DialogDescription className="text-slate-500 dark:text-slate-400">
-            Kiểm tra thông tin nhận món trước khi gửi đơn đến quán.
+            Kiểm tra thông tin nhận món và hình thức thanh toán trước khi gửi đơn đến quán.
           </DialogDescription>
         </DialogHeader>
 
@@ -305,12 +263,12 @@ export function CheckoutDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm font-bold text-slate-800 dark:text-slate-200">
               <span className="flex items-center gap-2">
-                <UserRound className="h-4 w-4 text-cyan-600" /> Người nhận *
+                <UserRound className="h-4 w-4 text-cyan-600" /> Tên khách nhận món *
               </span>
               <input
                 value={recipientName}
                 onChange={(event) => setRecipientName(event.target.value)}
-                placeholder="Ví dụ: Customer UAT"
+                placeholder="Ví dụ: Anh Cường"
                 autoComplete="name"
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-semibold outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-950"
               />
@@ -322,95 +280,33 @@ export function CheckoutDialog({
             </label>
 
             <div className="space-y-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-              <span>Hình thức nhận món</span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOrderType("Online");
-                    if (paymentMethod === "Cash") setPaymentMethod("COD");
-                  }}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
-                    orderType === "Online"
-                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Truck className="h-4 w-4" /> Giao tận nơi
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOrderType("Offline");
-                    if (paymentMethod === "COD") setPaymentMethod("Cash");
-                  }}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
-                    orderType === "Offline"
-                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Store className="h-4 w-4" /> Ăn tại quán
-                </button>
+              <span>Hình thức phục vụ</span>
+              <div className="flex h-12 items-center gap-2.5 rounded-xl border border-cyan-500/30 bg-cyan-50/80 px-4 text-xs font-black text-cyan-900 dark:border-cyan-500/30 dark:bg-cyan-950/40 dark:text-cyan-200">
+                <Store className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                <span>Ăn tại quán (Dùng món tại bàn)</span>
               </div>
             </div>
           </div>
 
-          {orderType === "Online" ? (
-            <DeliveryLocationPicker
-              value={deliveryLocation}
-              onChange={(nextLocation) => {
-                setDeliveryLocation(nextLocation);
-                if (errors.deliveryAddress) {
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.deliveryAddress;
-                    return next;
-                  });
-                }
-              }}
-              proximity={merchantProximity}
-              error={errors.deliveryAddress}
-            />
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-              Bạn đang chọn dùng món tại quán. Khi tới nơi, nhân viên sẽ phục vụ
-              món theo đúng thông tin đơn hàng này.
-            </div>
-          )}
+          <div className="rounded-2xl border border-dashed border-cyan-200 bg-cyan-50/40 p-3.5 text-xs font-semibold text-cyan-800 dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-cyan-300 flex items-center gap-2">
+            <Store className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+            <span>Đơn sẽ được quán chuẩn bị và phục vụ trực tiếp tại bàn khi bạn tới.</span>
+          </div>
 
           <div className="space-y-2 text-sm font-bold text-slate-800 dark:text-slate-200">
             <span>Phương thức thanh toán</span>
-            <div
-              className={`grid gap-2 ${
-                orderType === "Online" ? "grid-cols-2" : "grid-cols-2"
-              }`}
-            >
-              {orderType === "Online" ? (
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("COD")}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
-                    paymentMethod === "COD"
-                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Banknote className="h-4 w-4" /> Tiền mặt (COD)
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("Cash")}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
-                    paymentMethod === "Cash"
-                      ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Banknote className="h-4 w-4" /> Tiền mặt tại quầy
-                </button>
-              )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("Cash")}
+                className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
+                  paymentMethod === "Cash"
+                    ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
+                }`}
+              >
+                <Banknote className="h-4 w-4" /> Tiền mặt tại quầy
+              </button>
 
               <button
                 type="button"
