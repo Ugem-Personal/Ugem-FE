@@ -63,6 +63,10 @@ export type Food = {
   merchantId?: string;
   isAvailable?: boolean;
   categoryIds?: string[];
+  isCombo?: boolean;
+  originalPrice?: number | null;
+  servingSize?: string | null;
+  comboItems?: any[];
 };
 
 export type CreateFoodRequest = {

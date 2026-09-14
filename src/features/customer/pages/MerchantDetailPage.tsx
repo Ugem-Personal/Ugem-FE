@@ -361,6 +361,16 @@ export default function MerchantDetailPage() {
     return Array.from(categoriesSet);
   }, [menuItems]);
 
+  const hasCombos = useMemo(
+    () => menuItems.some((item) => item.isCombo),
+    [menuItems],
+  );
+
+  const comboCount = useMemo(
+    () => menuItems.filter((item) => item.isCombo).length,
+    [menuItems],
+  );
+
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((food) => {
       const matchesKeyword =
@@ -370,11 +380,19 @@ export default function MerchantDetailPage() {
           .includes(foodSearchKeyword.trim().toLowerCase()) ||
         (food.description ?? "")
           .toLowerCase()
-          .includes(foodSearchKeyword.trim().toLowerCase());
+          .includes(foodSearchKeyword.trim().toLowerCase()) ||
+        (food.comboItems &&
+          food.comboItems.some((ci) =>
+            ci.food?.name
+              ?.toLowerCase()
+              .includes(foodSearchKeyword.trim().toLowerCase()),
+          ));
 
       const matchesCategory =
         !selectedFoodCategory ||
-        food.categoryDetail?.includes(selectedFoodCategory);
+        (selectedFoodCategory === "combo"
+          ? food.isCombo === true
+          : food.categoryDetail?.includes(selectedFoodCategory));
 
       return matchesKeyword && matchesCategory;
     });
@@ -926,7 +944,7 @@ export default function MerchantDetailPage() {
             </div>
           </div>
 
-          {foodCategories.length > 0 && (
+          {(foodCategories.length > 0 || hasCombos) && (
             <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               <button
                 onClick={() => setSelectedFoodCategory("")}
@@ -938,6 +956,29 @@ export default function MerchantDetailPage() {
               >
                 Tất cả ({menuItems.length})
               </button>
+
+              {hasCombos && (
+                <button
+                  onClick={() => setSelectedFoodCategory("combo")}
+                  className={`h-9 shrink-0 rounded-xl px-4 text-xs font-black transition flex items-center gap-1.5 ${
+                    selectedFoodCategory === "combo"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20"
+                      : "border border-amber-300/80 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:border-amber-400"
+                  }`}
+                >
+                  <span>🔥 Combo Tiết Kiệm</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                      selectedFoodCategory === "combo"
+                        ? "bg-white/20 text-white"
+                        : "bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200"
+                    }`}
+                  >
+                    {comboCount}
+                  </span>
+                </button>
+              )}
+
               {foodCategories.map((cat) => (
                 <button
                   key={cat}

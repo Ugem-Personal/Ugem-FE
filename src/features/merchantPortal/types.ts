@@ -79,6 +79,20 @@ export type MerchantApplication = {
   }[];
 };
 
+export type ComboItem = {
+  id?: string;
+  comboId?: string;
+  foodId: string;
+  quantity: number;
+  food?: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl?: string | null;
+    isAvailable?: boolean;
+  };
+};
+
 export type Food = {
   id: string;
   foodId?: string;
@@ -89,6 +103,10 @@ export type Food = {
   imageUrl?: string | null;
   merchantId?: string;
   isAvailable?: boolean;
+  isCombo?: boolean;
+  originalPrice?: number | null;
+  servingSize?: string | null;
+  comboItems?: ComboItem[];
   categoryIds?: string[];
   categories?: { id: string; name: string; description?: string | null }[];
   toppings?: { id: string; foodId: string; name: string; price: number; isActive?: boolean }[];
@@ -104,6 +122,10 @@ export type CreateFoodPayload = {
   imageUrl?: string;
   merchantId?: string;
   isAvailable?: boolean;
+  isCombo?: boolean;
+  originalPrice?: number | null;
+  servingSize?: string | null;
+  comboItems?: { foodId: string; quantity: number }[];
   categoryIds: string[];
 };
 

@@ -1,4 +1,4 @@
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X, Users, Sparkles } from "lucide-react";
 import type { MerchantMenuItem } from "../types";
 
 type FoodOptionModalProps = {
@@ -32,6 +32,17 @@ export function FoodOptionModal({
   onConfirm,
   onClose,
 }: FoodOptionModalProps) {
+  const hasDiscount = Boolean(
+    food.originalPrice && Number(food.originalPrice) > Number(food.price),
+  );
+  const discountPercent = hasDiscount
+    ? Math.round(
+        ((Number(food.originalPrice) - Number(food.price)) /
+          Number(food.originalPrice)) *
+          100,
+      )
+    : 0;
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md transition-opacity"
@@ -48,7 +59,7 @@ export function FoodOptionModal({
         <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 px-6 py-4">
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-              Tùy chọn món ăn
+              {food.isCombo ? "Combo nhiều người" : "Tùy chọn món ăn"}
             </span>
             <h2 id="food-option-modal-title" className="text-lg font-black text-slate-950 dark:text-white">
               {food.name}
@@ -66,13 +77,62 @@ export function FoodOptionModal({
 
         {/* Content */}
         <div className="p-6 space-y-5">
+          {/* Combo banner */}
+          {food.isCombo && (
+            <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-50/80 to-orange-50/60 dark:border-amber-900/50 dark:from-amber-950/30 dark:to-orange-950/20 p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1 text-xs font-black text-amber-700 dark:text-amber-300">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Combo Tiết Kiệm
+                </span>
+                {food.servingSize && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-white/90 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-extrabold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <Users size={12} /> {food.servingSize}
+                  </span>
+                )}
+              </div>
+
+              {food.comboItems && food.comboItems.length > 0 && (
+                <div className="pt-1">
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                    Thành phần set ăn gồm:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {food.comboItems.map((ci) => (
+                      <span
+                        key={ci.id || ci.foodId}
+                        className="inline-flex items-center gap-1 rounded-lg bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 border border-amber-200/60 dark:border-amber-800/40 shadow-2xs"
+                      >
+                        <span className="font-black text-amber-600 dark:text-amber-400 font-mono">{ci.quantity}x</span>
+                        <span>{ci.food?.name ?? "Món"}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Price & Quantity */}
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 dark:bg-slate-950/60 p-4 border border-slate-200/80 dark:border-white/5">
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Đơn giá món</span>
-              <p className="text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">
-                {formatPrice(food.price)}
-              </p>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                {food.isCombo ? "Giá bán Combo" : "Đơn giá món"}
+              </span>
+              <div className="flex items-baseline gap-2">
+                <p className="text-base font-black text-cyan-600 dark:text-cyan-400 font-mono">
+                  {formatPrice(food.price)}
+                </p>
+                {hasDiscount && (
+                  <>
+                    <p className="text-xs font-bold text-slate-400 line-through font-mono">
+                      {formatPrice(Number(food.originalPrice))}
+                    </p>
+                    <span className="rounded-md bg-rose-500 text-white px-1.5 py-0.2 text-[10px] font-black">
+                      -{discountPercent}%
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1 shadow-2xs">

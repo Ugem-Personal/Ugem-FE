@@ -14,6 +14,21 @@ export type MerchantMenuItem = {
   imageUrl?: string;
   categoryDetail?: string[];
   toppings?: MerchantFoodTopping[];
+  isCombo?: boolean;
+  originalPrice?: number | null;
+  servingSize?: string | null;
+  comboItems?: {
+    id?: string;
+    foodId: string;
+    quantity: number;
+    food?: {
+      id: string;
+      name: string;
+      price: number;
+      imageUrl?: string | null;
+      isAvailable?: boolean;
+    };
+  }[];
 };
 
 export type Merchant = {

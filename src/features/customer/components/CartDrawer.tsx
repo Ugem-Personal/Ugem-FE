@@ -105,12 +105,27 @@ export function CartDrawer({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-black text-slate-950 dark:text-white truncate">
-                      {item.food.name}
-                    </h4>
-                    <p className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 mt-0.5 font-mono">
-                      {formatPrice(itemPrice)}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      {item.food.isCombo && (
+                        <span className="rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.2 text-[9px] font-black border border-amber-500/20 shrink-0">
+                          COMBO
+                        </span>
+                      )}
+                      <h4 className="text-sm font-black text-slate-950 dark:text-white truncate">
+                        {item.food.name}
+                      </h4>
+                    </div>
+
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <p className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 font-mono">
+                        {formatPrice(itemPrice)}
+                      </p>
+                      {item.food.originalPrice && Number(item.food.originalPrice) > Number(item.food.price) && (
+                        <p className="text-[10px] font-bold text-slate-400 line-through font-mono">
+                          {formatPrice((Number(item.food.originalPrice) + toppingTotal) * item.quantity)}
+                        </p>
+                      )}
+                    </div>
 
                     {item.toppings && item.toppings.length > 0 && (
                       <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
@@ -176,34 +191,60 @@ export function CartDrawer({
         </div>
 
         {/* Footer */}
-        {cart.length > 0 && (
-          <div className="border-t border-slate-200/80 dark:border-white/10 p-6 space-y-4 bg-slate-50 dark:bg-slate-950/60">
-            <div className="flex items-center justify-between text-sm font-black text-slate-950 dark:text-white">
-              <span>Tổng thanh toán ({cartItemCount} món):</span>
-              <span className="text-xl text-cyan-600 dark:text-cyan-400 font-mono">
-                {formatPrice(total)}
-              </span>
-            </div>
+        {cart.length > 0 && (() => {
+          const totalComboSavings = cart.reduce((sum, item) => {
+            if (
+              item.food.isCombo &&
+              item.food.originalPrice &&
+              Number(item.food.originalPrice) > Number(item.food.price)
+            ) {
+              return (
+                sum +
+                (Number(item.food.originalPrice) - Number(item.food.price)) *
+                  item.quantity
+              );
+            }
+            return sum;
+          }, 0);
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClearCart}
-                className="w-1/3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-3 text-xs font-black text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 transition"
-              >
-                Xóa giỏ
-              </button>
-              <button
-                type="button"
-                onClick={onCreateOrder}
-                disabled={ordering || cart.length === 0}
-                className="w-2/3 rounded-xl bg-slate-950 dark:bg-cyan-500 p-3 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
-              >
-                {ordering ? "Đang xử lý..." : "Xác nhận đặt món"}
-              </button>
+          return (
+            <div className="border-t border-slate-200/80 dark:border-white/10 p-6 space-y-4 bg-slate-50 dark:bg-slate-950/60">
+              {totalComboSavings > 0 && (
+                <div className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+                  <Flame className="h-4 w-4 shrink-0 text-emerald-500 animate-pulse" />
+                  <span>
+                    Bạn đang tiết kiệm {formatPrice(totalComboSavings)} nhờ mua theo Combo ưu đãi!
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm font-black text-slate-950 dark:text-white">
+                <span>Tổng thanh toán ({cartItemCount} món):</span>
+                <span className="text-xl text-cyan-600 dark:text-cyan-400 font-mono">
+                  {formatPrice(total)}
+                </span>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClearCart}
+                  className="w-1/3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-3 text-xs font-black text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 transition"
+                >
+                  Xóa giỏ
+                </button>
+                <button
+                  type="button"
+                  onClick={onCreateOrder}
+                  disabled={ordering || cart.length === 0}
+                  className="w-2/3 rounded-xl bg-slate-950 dark:bg-cyan-500 p-3 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
+                >
+                  {ordering ? "Đang xử lý..." : "Xác nhận đặt món"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
