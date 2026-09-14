@@ -141,6 +141,16 @@ export function LoginPage() {
       if (cancelled || !container || !window.google?.accounts?.id) return;
       const isDark = document.documentElement.classList.contains("dark");
       container.innerHTML = "";
+      const parentWidth =
+        container.parentElement?.parentElement?.clientWidth ||
+        container.parentElement?.clientWidth ||
+        container.clientWidth ||
+        380;
+      const targetWidth = Math.min(
+        400,
+        Math.max(250, Math.floor(parentWidth))
+      );
+
       window.google.accounts.id.renderButton(container, {
         type: "standard",
         theme: isDark ? "filled_black" : "outline",
@@ -148,7 +158,7 @@ export function LoginPage() {
         shape: "pill",
         text: "signin_with",
         logo_alignment: "left",
-        width: Math.min(420, Math.max(280, Math.floor(container.clientWidth || 380))),
+        width: targetWidth,
       });
 
       // Remove any white background or square corners from Google wrapper/iframe
@@ -195,14 +205,17 @@ export function LoginPage() {
       attributeFilter: ["class"],
     });
 
-    let lastWidth = googleButtonRef.current?.clientWidth;
+    const observeTarget =
+      googleButtonRef.current?.parentElement?.parentElement ||
+      googleButtonRef.current;
+    let lastWidth = observeTarget?.clientWidth;
     const resizeObserver = new ResizeObserver(() => {
-      const width = googleButtonRef.current?.clientWidth;
+      const width = observeTarget?.clientWidth;
       if (width === lastWidth) return;
       lastWidth = width;
       renderButtonAppearance();
     });
-    if (googleButtonRef.current) resizeObserver.observe(googleButtonRef.current);
+    if (observeTarget) resizeObserver.observe(observeTarget);
 
     return () => {
       cancelled = true;
@@ -221,16 +234,18 @@ export function LoginPage() {
         {GOOGLE_CLIENT_ID ? (
           <div>
             <div className="flex justify-center w-full">
-              <div
-                ref={googleButtonRef}
-                className="google-btn-wrapper h-[40px] flex justify-center items-center rounded-full overflow-hidden bg-transparent"
-                style={{
-                  borderRadius: "9999px",
-                  overflow: "hidden",
-                  backgroundColor: "transparent",
-                  clipPath: "inset(1.5px round 9999px)",
-                }}
-              />
+              <div className="inline-flex items-center justify-center rounded-full border border-slate-300/90 dark:border-white/20 bg-white dark:bg-[#131314] shadow-sm hover:border-cyan-500/60 dark:hover:border-cyan-400/60 transition-all duration-200">
+                <div
+                  ref={googleButtonRef}
+                  className="google-btn-wrapper min-h-[40px] flex justify-center items-center rounded-full overflow-hidden bg-transparent"
+                  style={{
+                    borderRadius: "9999px",
+                    overflow: "hidden",
+                    backgroundColor: "transparent",
+                    clipPath: "inset(1.5px round 9999px)",
+                  }}
+                />
+              </div>
             </div>
 
             {googleLoading && (
