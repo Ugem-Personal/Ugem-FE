@@ -264,7 +264,7 @@ export default function CustomerOrdersPage() {
               { key: "Pending", label: "Chờ nhận" },
               { key: "Accepted", label: "Đã nhận" },
               { key: "Preparing", label: "Đang làm" },
-              { key: "Ready", label: "Món sẵn sàng" },
+              { key: "Ready", label: "Đã lên món" },
               { key: "Completed", label: "Hoàn thành" },
               { key: "Cancelled", label: "Đã hủy" },
             ].map((tab) => (

@@ -8,6 +8,7 @@ import {
   Map,
   MapPin,
   RefreshCw,
+  Utensils,
   X,
 } from "lucide-react";
 import {
@@ -123,9 +124,9 @@ function getOrderStatusChipClass(status?: string | null) {
 }
 
 function getOrderTypeLabel(orderType?: string | null) {
-  return orderType?.trim().toLowerCase() === "online"
-    ? "Giao hàng"
-    : "Dùng tại quán";
+  return orderType?.trim().toLowerCase() === "offline"
+    ? "Dùng tại quán"
+    : "Giao hàng";
 }
 
 function getOrderTypeChipClass(orderType?: string | null) {
@@ -146,13 +147,12 @@ function getOrderActionMessage(
     return "Đơn hàng đã hoàn tất, đã xác nhận thanh toán.";
   }
 
-  if (
-    statusKey === "accepted" ||
-    statusKey === "preparing" ||
-    statusKey === "ready" ||
-    statusKey === "billconfirmed"
-  ) {
-    return "Đơn đã xác nhận. Bếp đang chuẩn bị món phục vụ khách.";
+  if (statusKey === "ready" || statusKey === "delivering") {
+    return "Món đã lên bàn cho khách. Chờ khách thanh toán khi dùng bữa xong.";
+  }
+
+  if (statusKey === "accepted" || statusKey === "preparing") {
+    return "Đơn đã nhận. Bếp đang chuẩn bị món.";
   }
 
   if (statusKey === "cashpending") {
@@ -182,7 +182,7 @@ function getDetailNote(detail: MerchantOrderDetailPayload | null) {
 function canConfirmPayment(
   status?: string | null,
   paymentStatus?: string | null,
-  billStatus?: string | null,
+  _billStatus?: string | null,
   paymentMethod?: string | null,
 ) {
   if (paymentMethod?.trim().toLowerCase() !== "cash") return false;
@@ -191,14 +191,14 @@ function canConfirmPayment(
   if (isPaid) return false;
 
   const statusKey = getOrderStatusKey(status);
-  const isBillConfirmed = billStatus?.trim().toLowerCase() === "confirmed";
+  if (
+    !statusKey ||
+    ["rejected", "cancelled", "completed", "pending"].includes(statusKey)
+  ) {
+    return false;
+  }
 
-  // Quán thấy nút "Xác nhận đã nhận tiền" SAU KHI khách hàng đã bấm "Xác nhận hóa đơn" (billConfirmed hoặc status billconfirmed / cashpending)
-  return (
-    isBillConfirmed ||
-    statusKey === "billconfirmed" ||
-    statusKey === "cashpending"
-  );
+  return true;
 }
 
 function getLockedOrderMessage(status?: string | null) {
@@ -397,16 +397,33 @@ export default function MerchantOrdersPage() {
 
     try {
       await acceptOrder(orderId);
-      try {
-        await updateMerchantOrderStatus(orderId, "Ready");
-      } catch {
-        // Fallback if backend already set status
-      }
-      notify.success("Đã xác nhận đơn. Bếp bắt đầu lên món.");
+      notify.success("Đã xác nhận đơn. Bếp bắt đầu chuẩn bị món.");
       await loadOrders();
+      if (detailOpen && selectedOrder?.orderId === orderId) {
+        await openOrderDetail(orderId);
+      }
     } catch (error) {
       console.error(error);
       notify.errorApi(error, "Xác nhận đơn thất bại.");
+    } finally {
+      setActionOrderId(null);
+    }
+  }
+
+  async function handleMarkFoodReady(order: MerchantOrderSummary) {
+    const { orderId } = order;
+    setActionOrderId(orderId);
+
+    try {
+      await updateMerchantOrderStatus(orderId, "Ready");
+      notify.success("Đã cập nhật: Món đã lên bàn cho khách.");
+      await loadOrders();
+      if (detailOpen && selectedOrder?.orderId === orderId) {
+        await openOrderDetail(orderId);
+      }
+    } catch (error) {
+      console.error(error);
+      notify.errorApi(error, "Không thể cập nhật trạng thái đã lên món.");
     } finally {
       setActionOrderId(null);
     }
@@ -561,6 +578,9 @@ export default function MerchantOrdersPage() {
       await confirmCashPayment(order.orderId);
       notify.success("Đã xác nhận thanh toán và hoàn tất đơn hàng!");
       await loadOrders();
+      if (detailOpen && selectedOrder?.orderId === order.orderId) {
+        await openOrderDetail(order.orderId);
+      }
     } catch (error) {
       console.error(error);
       notify.errorApi(error, "Xác nhận thanh toán thất bại.");
@@ -789,6 +809,19 @@ export default function MerchantOrdersPage() {
                             Từ chối
                           </button>
                         </>
+                      ) : null}
+
+                      {getOrderStatusKey(order.status) === "accepted" ||
+                      getOrderStatusKey(order.status) === "preparing" ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleMarkFoodReady(order)}
+                          disabled={actionOrderId === order.orderId}
+                          className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-teal-500 disabled:opacity-50"
+                        >
+                          <Utensils size={15} />
+                          Đã lên món
+                        </button>
                       ) : null}
 
                       {canConfirmPayment(
@@ -1097,6 +1130,21 @@ export default function MerchantOrdersPage() {
                             Từ chối đơn
                           </button>
                         </>
+                      ) : null}
+
+                      {getOrderStatusKey(selectedOrder.status) === "accepted" ||
+                      getOrderStatusKey(selectedOrder.status) === "preparing" ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleMarkFoodReady(selectedOrder)
+                          }
+                          disabled={actionOrderId === selectedOrder.orderId}
+                          className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-teal-500 disabled:opacity-50"
+                        >
+                          <Utensils size={16} />
+                          Đã lên món
+                        </button>
                       ) : null}
 
                       {getOrderStatusKey(selectedOrder.status) ===

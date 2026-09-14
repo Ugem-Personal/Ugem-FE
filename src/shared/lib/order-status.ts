@@ -19,10 +19,10 @@ const statusLabels: Record<OrderStatus, string> = {
   Pending: "Chờ xác nhận",
   Accepted: "Đang chuẩn bị",
   Preparing: "Đang chuẩn bị",
-  Ready: "Đang chuẩn bị",
+  Ready: "Đã lên món",
   Delivering: "Đang phục vụ",
   Rejected: "Đã từ chối",
-  Completed: "Hoàn thành",
+  Completed: "Hoàn tất bữa ăn",
   NotReceived: "Khách báo chưa nhận",
   Cancelled: "Đã hủy",
 };
@@ -45,19 +45,11 @@ export function getMerchantOrderAction(
 ): MerchantOrderAction | null {
   const statusKey = normalizeOrderStatus(status);
 
-  if (statusKey === "accepted") {
-    return {
-      nextStatus: "Preparing",
-      label: "Bắt đầu chuẩn bị",
-      successMessage: "Đơn đã chuyển sang bước chuẩn bị.",
-    };
-  }
-
-  if (statusKey === "preparing") {
+  if (statusKey === "accepted" || statusKey === "preparing") {
     return {
       nextStatus: "Ready",
-      label: "Đánh dấu đã sẵn sàng",
-      successMessage: "Món đã sẵn sàng phục vụ tại quán.",
+      label: "Đã lên món",
+      successMessage: "Đã cập nhật: Món đã lên bàn cho khách.",
     };
   }
 
@@ -95,7 +87,7 @@ export function isCustomerConfirmationReady(
 
 export function getCustomerOrderProgressMessage(
   status?: string | null,
-  orderType?: string | null,
+  _orderType?: string | null,
 ) {
   const statusKey = normalizeOrderStatus(status);
 
@@ -103,22 +95,12 @@ export function getCustomerOrderProgressMessage(
     return "Đơn đang chờ quán xác nhận.";
   }
 
-  if (statusKey === "accepted") {
-    return "Quán đã nhận đơn và sẽ bắt đầu chuẩn bị ngay.";
+  if (statusKey === "accepted" || statusKey === "preparing") {
+    return "Quán đã tiếp nhận và đang chuẩn bị món cho bạn.";
   }
 
-  if (statusKey === "preparing") {
-    return "Quán đang chuẩn bị món cho bạn.";
-  }
-
-  if (statusKey === "ready") {
-    return orderType?.trim().toLowerCase() === "offline"
-      ? "Quán đang chuẩn bị món. Bạn có thể kiểm tra bill và thanh toán."
-      : "Quán đang chuẩn bị món cho bạn.";
-  }
-
-  if (statusKey === "delivering") {
-    return "Quán đang phục vụ món. Hãy xác nhận sau khi bạn nhận đủ món.";
+  if (statusKey === "ready" || statusKey === "delivering") {
+    return "Món đã được phục vụ tại bàn. Chúc bạn dùng bữa ngon miệng!";
   }
 
   if (statusKey === "rejected") {
@@ -126,7 +108,7 @@ export function getCustomerOrderProgressMessage(
   }
 
   if (statusKey === "completed") {
-    return "Bạn đã xác nhận hoàn tất đơn hàng này.";
+    return "Bữa ăn đã hoàn tất. Cảm ơn bạn đã sử dụng dịch vụ!";
   }
 
   if (statusKey === "notreceived") {

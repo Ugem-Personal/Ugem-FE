@@ -41,25 +41,25 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     description: "Đang chờ quán chấp nhận đơn",
   },
   accepted: {
-    label: "Đã nhận đơn",
+    label: "Đang chuẩn bị",
     className:
-      "border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300",
-    icon: CheckCircle2,
-    description: "Quán đã chấp nhận và lên đơn",
+      "border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300",
+    icon: ChefHat,
+    description: "Quán đã tiếp nhận và đang chuẩn bị món",
   },
   preparing: {
     label: "Đang chuẩn bị",
     className:
       "border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300",
     icon: ChefHat,
-    description: "Quán đang chuẩn bị món",
+    description: "Quán đang chuẩn bị món cho bạn",
   },
   ready: {
-    label: "Đang chuẩn bị",
+    label: "Đã lên món",
     className:
-      "border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300",
-    icon: ChefHat,
-    description: "Quán đang chuẩn bị món phục vụ bạn",
+      "border-teal-200 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300",
+    icon: Utensils,
+    description: "Món đã được mang lên bàn phục vụ bạn",
   },
   delivering: {
     label: "Đang phục vụ",
@@ -69,11 +69,11 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     description: "Quán đang phục vụ món cho bạn",
   },
   completed: {
-    label: "Hoàn thành",
+    label: "Hoàn tất bữa ăn",
     className:
       "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300",
     icon: CheckCircle2,
-    description: "Đơn hàng đã được hoàn tất thành công",
+    description: "Bữa ăn đã được hoàn tất thành công",
   },
   rejected: {
     label: "Đã từ chối",

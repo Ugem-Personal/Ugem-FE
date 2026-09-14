@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Banknote,
   Check,
+  ChefHat,
   Heart,
   Star,
   RefreshCw,
@@ -13,6 +13,7 @@ import {
   QrCode,
   Coins,
   Sparkles,
+  Utensils,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -672,22 +673,42 @@ export default function CustomerOrderDetailPage() {
                     Kiểm tra & Thanh toán chuyển khoản
                   </button>
                 </div>
-              ) : (
-                <div className="mt-6 rounded-2xl border border-amber-200/80 dark:border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-orange-50/60 dark:from-amber-950/40 dark:to-slate-900 px-5 py-4 shadow-2xs flex items-start gap-3.5">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 mt-0.5">
-                    <Banknote className="h-5 w-5" />
+              ) : normalizedOrderStatus === "ready" ||
+                normalizedOrderStatus === "delivering" ? (
+                <div className="mt-6 rounded-2xl border border-teal-200/80 dark:border-teal-500/30 bg-gradient-to-r from-teal-50/80 to-emerald-50/60 dark:from-teal-950/40 dark:to-slate-900 px-5 py-4 shadow-2xs flex items-start gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20 mt-0.5">
+                    <Utensils className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <h4 className="font-black text-slate-950 dark:text-white text-sm">
-                        Thanh toán tiền mặt tại quán
+                        🍲 Món đã được phục vụ tại bàn
+                      </h4>
+                      <span className="font-mono text-sm font-black text-teal-700 dark:text-teal-400">
+                        {formatPrice(total)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      Món ăn đã được phục vụ tại bàn. Chúc bạn dùng bữa ngon miệng! Khi dùng bữa xong, vui lòng thanh toán tiền mặt trực tiếp cho nhân viên hoặc tại quầy. Quán sẽ xác nhận hoàn tất bữa ăn.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 rounded-2xl border border-amber-200/80 dark:border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-orange-50/60 dark:from-amber-950/40 dark:to-slate-900 px-5 py-4 shadow-2xs flex items-start gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 mt-0.5">
+                    <ChefHat className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h4 className="font-black text-slate-950 dark:text-white text-sm">
+                        👨‍🍳 Quán đang chuẩn bị món
                       </h4>
                       <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-400">
                         {formatPrice(total)}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                      Bếp đang chế biến món ăn. Vui lòng gửi tiền mặt trực tiếp cho nhân viên hoặc tại quầy khi nhận món / dùng bữa xong. Quán sẽ xác nhận hoàn tất đơn cho bạn.
+                      Bếp đã tiếp nhận đơn và đang chuẩn bị món ăn cho bạn. Vui lòng thanh toán tiền mặt trực tiếp cho nhân viên hoặc tại quầy khi nhận món / dùng bữa xong.
                     </p>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import {
   CheckCircle2,
   Clock,
   ChefHat,
+  Utensils,
   XCircle,
   AlertTriangle,
   Ban,
@@ -36,6 +37,7 @@ export function OrderStatusTimeline({
   acceptedAt,
   preparingAt,
   readyAt,
+  deliveringAt,
   completedAt,
   rejectedAt,
   rejectionReason,
@@ -97,7 +99,7 @@ export function OrderStatusTimeline({
     );
   }
 
-  // Streamlined 3-step timeline for Dine-in
+  // Clear 4-step timeline for Dine-in
   const steps: TimelineStep[] = [
     {
       key: "pending",
@@ -108,15 +110,22 @@ export function OrderStatusTimeline({
     },
     {
       key: "accepted",
-      label: "Quán đã nhận (Đang chuẩn bị)",
-      description: "Bếp đã tiếp nhận & đang làm món",
+      label: "Đang chuẩn bị",
+      description: "Bếp đang chế biến món",
       icon: ChefHat,
-      timestamp: acceptedAt || preparingAt || readyAt,
+      timestamp: acceptedAt || preparingAt,
+    },
+    {
+      key: "ready",
+      label: "Đã lên món",
+      description: "Món đã phục vụ tại bàn",
+      icon: Utensils,
+      timestamp: readyAt || deliveringAt,
     },
     {
       key: "completed",
       label: "Hoàn tất bữa ăn",
-      description: "Món đã lên bàn & hoàn tất",
+      description: "Đã thanh toán & hoàn tất",
       icon: CheckCircle2,
       timestamp: completedAt,
     },
@@ -124,12 +133,15 @@ export function OrderStatusTimeline({
 
   let currentIndex = 0;
   if (normalizedStatus === "completed") {
+    currentIndex = 3;
+  } else if (
+    normalizedStatus === "ready" ||
+    normalizedStatus === "delivering"
+  ) {
     currentIndex = 2;
   } else if (
     normalizedStatus === "accepted" ||
-    normalizedStatus === "preparing" ||
-    normalizedStatus === "ready" ||
-    normalizedStatus === "delivering"
+    normalizedStatus === "preparing"
   ) {
     currentIndex = 1;
   } else {
