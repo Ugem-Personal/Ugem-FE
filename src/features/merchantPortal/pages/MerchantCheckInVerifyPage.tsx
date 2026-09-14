@@ -7,11 +7,23 @@ import {
   QrCode,
   UserCheck,
   Flame,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { notify } from "@/shared/lib/notify";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 
@@ -42,6 +54,8 @@ type CheckInHistoryItem = {
   status: string;
 };
 
+const STORAGE_KEY = "ugem_merchant_checkin_benefits";
+
 const DEFAULT_BENEFITS = [
   "Giảm 5% cho hóa đơn tiếp theo",
   "Tặng 1 ly Coca / Nước ngọt miễn phí",
@@ -51,7 +65,112 @@ const DEFAULT_BENEFITS = [
 
 export default function MerchantCheckInVerifyPage() {
   const [customerCode, setCustomerCode] = useState("");
-  const [selectedBenefit, setSelectedBenefit] = useState(DEFAULT_BENEFITS[0]);
+  const [benefits, setBenefits] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load check-in benefits from localStorage:", err);
+    }
+    return DEFAULT_BENEFITS;
+  });
+
+  const [selectedBenefit, setSelectedBenefit] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed[0];
+        }
+      }
+    } catch {
+      // fallback below
+    }
+    return DEFAULT_BENEFITS[0];
+  });
+
+  const [benefitModalOpen, setBenefitModalOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [benefitInput, setBenefitInput] = useState("");
+
+  const saveBenefits = (newBenefits: string[]) => {
+    setBenefits(newBenefits);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newBenefits));
+    } catch (err) {
+      console.error("Failed to save check-in benefits to localStorage:", err);
+    }
+  };
+
+  const handleOpenAddBenefit = () => {
+    setEditingIndex(null);
+    setBenefitInput("");
+    setBenefitModalOpen(true);
+  };
+
+  const handleOpenEditBenefit = (index: number, currentText: string) => {
+    setEditingIndex(index);
+    setBenefitInput(currentText);
+    setBenefitModalOpen(true);
+  };
+
+  const handleSaveBenefit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = benefitInput.trim();
+    if (!trimmed) {
+      notify.error("Vui lòng nhập nội dung ưu đãi");
+      return;
+    }
+
+    if (editingIndex !== null) {
+      const prevBenefit = benefits[editingIndex];
+      const updated = [...benefits];
+      updated[editingIndex] = trimmed;
+      saveBenefits(updated);
+      if (selectedBenefit === prevBenefit) {
+        setSelectedBenefit(trimmed);
+      }
+      notify.success("Đã cập nhật ưu đãi thành công");
+    } else {
+      if (benefits.includes(trimmed)) {
+        notify.error("Ưu đãi này đã tồn tại trong danh sách");
+        return;
+      }
+      const updated = [...benefits, trimmed];
+      saveBenefits(updated);
+      setSelectedBenefit(trimmed);
+      notify.success("Đã thêm ưu đãi mới thành công");
+    }
+
+    setBenefitModalOpen(false);
+  };
+
+  const handleDeleteBenefit = (index: number, text: string) => {
+    if (benefits.length <= 1) {
+      notify.error("Cần giữ lại ít nhất 1 ưu đãi trong danh sách");
+      return;
+    }
+
+    const updated = benefits.filter((_, i) => i !== index);
+    saveBenefits(updated);
+    if (selectedBenefit === text) {
+      setSelectedBenefit(updated[0]);
+    }
+    notify.success("Đã xóa ưu đãi");
+  };
+
+  const handleResetDefaultBenefits = () => {
+    saveBenefits(DEFAULT_BENEFITS);
+    setSelectedBenefit(DEFAULT_BENEFITS[0]);
+    notify.success("Đã khôi phục các ưu đãi mặc định");
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState<CheckInResult | null>(null);
 
@@ -251,30 +370,78 @@ export default function MerchantCheckInVerifyPage() {
 
                     {/* Benefit selection */}
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                        Ưu Đãi Check-in Áp Dụng
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {DEFAULT_BENEFITS.map((benefit) => (
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Ưu Đãi Check-in Áp Dụng
+                        </label>
+                        <div className="flex items-center gap-2">
                           <button
-                            key={benefit}
                             type="button"
+                            onClick={handleResetDefaultBenefits}
+                            title="Khôi phục các ưu đãi mặc định"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Mặc định
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleOpenAddBenefit}
+                            className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 px-2.5 py-1 text-xs font-bold transition"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Thêm ưu đãi
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {benefits.map((benefit, index) => (
+                          <div
+                            key={`${benefit}-${index}`}
                             onClick={() => setSelectedBenefit(benefit)}
-                            className={`flex items-start gap-2.5 rounded-2xl border p-3 text-left text-xs font-bold transition ${
+                            className={`group relative flex items-start justify-between gap-2 rounded-2xl border p-3 text-left text-xs font-bold transition cursor-pointer ${
                               selectedBenefit === benefit
                                 ? "border-cyan-500 bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 ring-2 ring-cyan-500/20"
                                 : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 hover:border-slate-300"
                             }`}
                           >
-                            <Gift
-                              className={`h-4 w-4 shrink-0 mt-0.5 ${
-                                selectedBenefit === benefit
-                                  ? "text-cyan-600 dark:text-cyan-400"
-                                  : "text-slate-400"
-                              }`}
-                            />
-                            <span>{benefit}</span>
-                          </button>
+                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                              <Gift
+                                className={`h-4 w-4 shrink-0 mt-0.5 ${
+                                  selectedBenefit === benefit
+                                    ? "text-cyan-600 dark:text-cyan-400"
+                                    : "text-slate-400"
+                                }`}
+                              />
+                              <span className="break-words leading-relaxed">{benefit}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition">
+                              <button
+                                type="button"
+                                title="Chỉnh sửa ưu đãi"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditBenefit(index, benefit);
+                                }}
+                                className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Xóa ưu đãi"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteBenefit(index, benefit);
+                                }}
+                                className="p-1 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -467,6 +634,56 @@ export default function MerchantCheckInVerifyPage() {
           </div>
         </main>
       </div>
+
+      {/* Dialog Thêm / Sửa Ưu Đãi Check-in */}
+      <Dialog open={benefitModalOpen} onOpenChange={setBenefitModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
+              <Gift className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              {editingIndex !== null ? "Chỉnh sửa ưu đãi" : "Thêm ưu đãi mới"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              {editingIndex !== null
+                ? "Thay đổi nội dung ưu đãi check-in cho khách hàng."
+                : "Tạo thêm quà tặng hoặc ưu đãi mới khi khách hàng check-in tại quán."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveBenefit} className="mt-4 space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Nội dung ưu đãi *
+              </label>
+              <Input
+                value={benefitInput}
+                onChange={(e) => setBenefitInput(e.target.value)}
+                placeholder="Ví dụ: Giảm 10k, Tặng bánh flan, Tặng trà chanh..."
+                className="h-11 rounded-xl border-slate-300 dark:border-slate-700 text-sm font-medium"
+                autoFocus
+              />
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBenefitModalOpen(false)}
+                className="rounded-xl font-bold"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                disabled={!benefitInput.trim()}
+                className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-black"
+              >
+                {editingIndex !== null ? "Lưu thay đổi" : "Thêm ưu đãi"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
