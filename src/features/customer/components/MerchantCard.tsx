@@ -72,7 +72,7 @@ function formatDistance(distanceKm: number) {
 export default function MerchantCard({
   merchant,
   selected = false,
-  orderMode = "online",
+  orderMode = "offline",
   backTo,
   compact = false,
   isWishlisted = false,
@@ -387,7 +387,7 @@ export default function MerchantCard({
         {/* Footer Action */}
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-white/5">
           <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
-            {orderMode === "offline" ? "Dùng tại quán" : "Giao tận nơi"}
+            Ăn tại quán
           </span>
 
           <span className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50/90 px-3.5 py-1.5 text-xs font-black text-cyan-700 shadow-2xs transition-all duration-300 group-hover:bg-cyan-500 group-hover:text-slate-950 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300">

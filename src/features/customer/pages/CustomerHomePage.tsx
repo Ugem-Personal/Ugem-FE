@@ -729,7 +729,7 @@ export default function CustomerHomePage() {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
-        next.set("tab", "delivery");
+        next.delete("tab");
         return next;
       },
       { replace: true },
@@ -1152,11 +1152,11 @@ export default function CustomerHomePage() {
               <MerchantCard
                 merchant={merchant}
                 selected={selected}
-                orderMode={serviceMode === "dineIn" ? "offline" : "online"}
+                orderMode="offline"
                 backTo={
                   serviceMode === "dineIn"
                     ? "/customer?tab=map"
-                    : "/customer?tab=delivery"
+                    : "/customer"
                 }
                 compact={compact}
                 isWishlisted={wishlistIds.has(merchant.id)}
