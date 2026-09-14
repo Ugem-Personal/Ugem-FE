@@ -21,12 +21,14 @@ import { Button } from "@/shared/components/ui/button";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
 import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
+import { useRealtime } from "@/shared/contexts/RealtimeContext";
 
 type OrderFilterTab = "Active" | "History";
 
 export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const handleBack = useSafeBack("/customer");
+  const { subscribe } = useRealtime();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const rawStatus = searchParams.get("status");
@@ -57,33 +59,42 @@ export default function CustomerOrdersPage() {
     return Number.isFinite(parsedTime) ? parsedTime : 0;
   }
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
+  const fetchOrders = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) {
+        setLoading(true);
+      }
 
-    try {
-      const res = await getCustomerOrders({
-        pageIndex,
-        pageSize: 10,
-        status: activeTab,
-      });
+      try {
+        const res = await getCustomerOrders({
+          pageIndex,
+          pageSize: 10,
+          status: activeTab,
+        });
 
-      const sortedOrders = [...(res.data ?? [])].sort(
-        (left, right) => getOrderSortTime(right) - getOrderSortTime(left),
-      );
-      setOrders(sortedOrders);
-      setPaginationMeta(res.meta ?? null);
-    } catch (error: unknown) {
-      console.error("Lỗi khi tải lịch sử đơn hàng:", error);
-      const apiMessage = (
-        error as { response?: { data?: { message?: string } } }
-      )?.response?.data?.message;
-      setOrders([]);
-      setPaginationMeta(null);
-      notify.error(apiMessage || "Không tải được lịch sử đơn hàng.");
-    } finally {
-      setLoading(false);
-    }
-  }, [pageIndex, activeTab]);
+        const sortedOrders = [...(res.data ?? [])].sort(
+          (left, right) => getOrderSortTime(right) - getOrderSortTime(left),
+        );
+        setOrders(sortedOrders);
+        setPaginationMeta(res.meta ?? null);
+      } catch (error: unknown) {
+        if (!options?.silent) {
+          console.error("Lỗi khi tải lịch sử đơn hàng:", error);
+          const apiMessage = (
+            error as { response?: { data?: { message?: string } } }
+          )?.response?.data?.message;
+          setOrders([]);
+          setPaginationMeta(null);
+          notify.error(apiMessage || "Không tải được lịch sử đơn hàng.");
+        }
+      } finally {
+        if (!options?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [pageIndex, activeTab],
+  );
 
   useEffect(() => {
     let active = true;
@@ -96,6 +107,31 @@ export default function CustomerOrdersPage() {
       active = false;
     };
   }, [fetchOrders]);
+
+  useEffect(() => {
+    const unsubStatus = subscribe("order:status_changed", () => {
+      void fetchOrders({ silent: true });
+    });
+    const unsubNew = subscribe("order:new", () => {
+      void fetchOrders({ silent: true });
+    });
+    const unsubNotification = subscribe("notification:new", () => {
+      void fetchOrders({ silent: true });
+    });
+
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        void fetchOrders({ silent: true });
+      }
+    }, 3500);
+
+    return () => {
+      unsubStatus();
+      unsubNew();
+      unsubNotification();
+      clearInterval(interval);
+    };
+  }, [subscribe, fetchOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {

@@ -25,6 +25,7 @@ import {
 } from "@/features/customer/services/orderService";
 import { verifyCheckIn } from "@/shared/services/checkInService";
 import { ModeToggle } from "@/shared/components";
+import { useRealtime } from "@/shared/contexts/RealtimeContext";
 import type { CustomerOrderSummary } from "@/shared/types";
 
 type BillItem = {
@@ -150,6 +151,7 @@ function getBankTransferInfo(
 export default function ConfirmBillPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { subscribeToOrder } = useRealtime();
   const orderId = searchParams.get("orderId");
   const handleBack = useSafeBack(
     orderId ? `/customer/orders/${orderId}` : "/customer/orders",
@@ -445,20 +447,15 @@ export default function ConfirmBillPage() {
         return;
       }
 
-      if (!currentStatus || currentStatus === "cashpending") {
+      if (currentStatus === "rejected" || currentStatus === "cancelled") {
+        const cashPaymentKey = getCashPaymentStorageKey(orderId);
+        if (cashPaymentKey && typeof window !== "undefined") {
+          window.localStorage.removeItem(cashPaymentKey);
+        }
+        setCashRequested(false);
+        setError("Đơn hàng đã bị hủy hoặc từ chối.");
         return;
       }
-
-      const cashPaymentKey = getCashPaymentStorageKey(orderId);
-
-      if (cashPaymentKey && typeof window !== "undefined") {
-        window.localStorage.removeItem(cashPaymentKey);
-      }
-
-      setCashRequested(false);
-      setError(
-        "Đơn tiền mặt đã thay đổi trạng thái. Vui lòng tải lại hóa đơn.",
-      );
     }
 
     void syncCashPaymentStatus();
@@ -477,6 +474,50 @@ export default function ConfirmBillPage() {
     selectedPaymentMethod,
     checkInVerified,
     paymentMethodSyncing,
+  ]);
+
+  useEffect(() => {
+    if (!orderId) return;
+
+    const unsubscribe = subscribeToOrder(orderId, (updatedOrder: any) => {
+      const paymentStatus = (updatedOrder?.paymentStatus ?? "").toLowerCase();
+      const status = (updatedOrder?.status ?? "").toLowerCase();
+
+      if (paymentStatus === "paid" || status === "completed") {
+        const cashPaymentKey = getCashPaymentStorageKey(orderId);
+        if (cashPaymentKey && typeof window !== "undefined") {
+          window.localStorage.removeItem(cashPaymentKey);
+        }
+        notify.success("Hệ thống đã nhận được tiền thanh toán thành công!");
+        const isOfflineOrder =
+          (bill?.orderType ?? updatedOrder?.orderType)?.toLowerCase() === "offline";
+        const isCheckInComplete =
+          !isOfflineOrder ||
+          checkInVerified ||
+          bill?.checkInStatus === "Verified";
+
+        if (isCheckInComplete) {
+          navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, {
+            replace: true,
+          });
+        } else {
+          navigate(`/orders/${encodeURIComponent(orderId)}`, {
+            replace: true,
+          });
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [
+    orderId,
+    subscribeToOrder,
+    bill?.orderType,
+    bill?.checkInStatus,
+    checkInVerified,
+    navigate,
   ]);
 
   async function handleConfirmBill() {
