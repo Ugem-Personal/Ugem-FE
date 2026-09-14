@@ -338,20 +338,17 @@ export default function MerchantCheckInVerifyPage() {
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         Mã Code Khách Hàng *
                       </label>
-                      <div className="mt-1.5 relative">
+                      <div className="mt-1.5">
                         <Input
                           value={customerCode}
                           onChange={(e) =>
                             setCustomerCode(e.target.value.toUpperCase())
                           }
                           placeholder="Ví dụ: UFIND-A8K9X2"
-                          className="h-14 font-mono text-xl font-black uppercase tracking-wider pl-4 pr-12 rounded-2xl border-slate-300 dark:border-slate-700 focus-visible:ring-cyan-500"
+                          className="h-14 font-mono text-xl font-black uppercase tracking-wider px-4 rounded-2xl border-slate-300 dark:border-slate-700 focus-visible:ring-cyan-500"
                           disabled={submitting}
                           autoFocus
                         />
-                        <div className="absolute right-4 top-4 text-slate-400">
-                          <QrCode className="h-6 w-6" />
-                        </div>
                       </div>
                     </div>
 
