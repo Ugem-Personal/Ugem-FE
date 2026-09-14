@@ -69,17 +69,6 @@ function formatDistance(distanceKm: number) {
   return `${Math.round(distanceKm)} km`;
 }
 
-function getUnderratedTone(percent: number) {
-  if (percent <= 0) {
-    return "border-slate-200/80 dark:border-white/10 bg-slate-100/70 dark:bg-white/5 text-slate-600 dark:text-slate-400";
-  }
-
-  if (percent >= 80) {
-    return "border-emerald-300/80 dark:border-emerald-500/30 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/20";
-  }
-
-  return "border-slate-200/80 dark:border-white/10 bg-slate-100/70 dark:bg-white/5 text-slate-700 dark:text-slate-300";
-}
 
 export default function MerchantCard({
   merchant,
@@ -308,20 +297,22 @@ export default function MerchantCard({
                 </span>
               )}
 
-              {underratedScore !== null && (
+              {(merchant.menu?.some((food) => food.isCombo) ||
+                merchant.featuredFoods?.some((f) =>
+                  f.toLowerCase().includes("combo"),
+                )) && (
+                <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/40 bg-amber-50/90 dark:bg-amber-500/15 px-2.5 py-1 text-xs font-black text-amber-800 dark:text-amber-300 shadow-2xs">
+                  🍱 Có Combo ưu đãi
+                </span>
+              )}
+
+              {isHotUnderrated && (
                 <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 font-extrabold shadow-2xs",
-                    getUnderratedTone(underratedScore.percent),
-                  )}
-                  title="Underrated Score - Điểm tiềm năng BE"
+                  className="inline-flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10 px-2.5 py-1 text-xs font-black text-amber-700 dark:text-amber-300 shadow-2xs"
+                  title="Điểm tiềm năng nổi bật - Quán ăn chất lượng cao"
                 >
-                  {isHotUnderrated ? (
-                    <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500 animate-pulse" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  )}
-                  {`US ${underratedScore.score.toFixed(2)}`}
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  💎 Hidden Gem
                 </span>
               )}
             </div>

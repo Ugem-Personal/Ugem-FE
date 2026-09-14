@@ -1,6 +1,7 @@
 import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ChevronDown,
   Clock,
   Heart,
   List,
@@ -12,7 +13,6 @@ import {
   Route,
   Search,
   ShoppingBag,
-  SlidersHorizontal,
   Sparkles,
   Store,
   Utensils,
@@ -29,13 +29,13 @@ import {
   DEFAULT_DISCOVERY_OPTIONS,
   getDiscoveryOptions,
 } from "@/shared/services/categoryService";
-import type { Category, DiscoveryOptions } from "@/shared/types";
-import { getCategoryDisplayName } from "@/shared/utils/category";
+import type { DiscoveryOptions } from "@/shared/types";
 
 import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
 import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
 import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
+import VietMapLocationPickerModal from "../components/VietMapLocationPickerModal";
 import { getNearbyMerchants } from "../services/merchantService";
 import { getWishlist } from "../services/wishlistService";
 import { getCurrentUser } from "@/features/auth";
@@ -46,6 +46,7 @@ import {
   metersToKm,
   secondsToText,
   searchGeocodeAddress,
+  reverseGeocode,
 } from "@/shared/services/vietmapService";
 
 type Coords = { latitude: number; longitude: number };
@@ -63,6 +64,29 @@ const DEFAULT_COORDS: Coords = {
   latitude: 10.762622,
   longitude: 106.660172,
 };
+
+const CUISINE_QUICK_TABS = [
+  { id: "all", label: "Tất cả món", query: "" },
+  { id: "combo", label: "🔥 Combo Tiết Kiệm", query: "", isCombo: true },
+  { id: "com", label: "🍛 Cơm", query: "Cơm" },
+  { id: "bun-pho", label: "🍜 Bún, Phở, Mì", query: "Bún, Phở" },
+  { id: "banh-mi", label: "🥖 Bánh mì & Fastfood", query: "Bánh mì" },
+  { id: "tra-sua", label: "🧋 Trà sữa & Cà phê", query: "Trà sữa" },
+  { id: "lau-nuong", label: "🍲 Lẩu & Đồ nướng", query: "Lẩu & Đồ nướng" },
+  { id: "chay", label: "🥗 Món Chay", query: "Món Chay" },
+  { id: "an-vat", label: "🍢 Ăn vặt", query: "Đồ ăn vặt" },
+  { id: "mon-viet", label: "🥢 Món Việt truyền thống", query: "Món Việt" },
+  { id: "han-nhat-thai", label: "🍣 Món Hàn / Nhật / Thái", query: "Món Hàn" },
+  { id: "mon-au", label: "🍕 Món Âu", query: "Món Âu" },
+];
+
+type SortOption = "distance" | "rating" | "reviews" | "combo";
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: "distance", label: "📍 Gần tôi nhất" },
+  { id: "rating", label: "⭐ Đánh giá cao nhất" },
+  { id: "reviews", label: "🔥 Nhiều đánh giá nhất" },
+  { id: "combo", label: "🍱 Ưu đãi & Combo hot" },
+];
 
 const LOCATION_SAMPLE_TIMEOUT_MS = 10_000;
 
@@ -230,14 +254,18 @@ export default function CustomerHomePage() {
     searchParams.get("tab") === "map" || searchParams.get("mode") === "dinein";
 
   const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
     DEFAULT_DISCOVERY_OPTIONS,
   );
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
-  const [selectedRadiusKm, setSelectedRadiusKm] = useState<number>(5);
+  const [selectedRadiusKm] = useState<number>(15);
+  const [selectedRestaurantType, setSelectedRestaurantType] = useState("");
+  const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
+  const [sortBy, setSortBy] = useState<SortOption>("distance");
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [locationAddress, setLocationAddress] = useState("");
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -292,16 +320,89 @@ export default function CustomerHomePage() {
 
   const displayedMerchants = useMemo(() => {
     let list = merchants;
+
     if (onlyOpenNow) {
       list = list.filter((m) => isMerchantOpenNow(m.openingHours));
     }
-    // Sắp xếp quán đang mở cửa lên đầu, quán đã đóng cửa xếp xuống dưới
-    return [...list].sort((a, b) => {
+
+    if (selectedRestaurantType) {
+      const typeLower = selectedRestaurantType.toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.restaurantType?.toLowerCase().includes(typeLower) ||
+          m.description?.toLowerCase().includes(typeLower),
+      );
+    }
+
+    if (selectedPriceRange) {
+      list = list.filter((m) => m.priceRange === selectedPriceRange);
+    }
+
+    if (selectedCuisineTab === "combo") {
+      list = list.filter(
+        (m) =>
+          m.menu?.some((food) => food.isCombo) ||
+          m.featuredFoods?.some((f) => f.toLowerCase().includes("combo")),
+      );
+    } else if (selectedCuisineTab !== "all") {
+      const tabObj = CUISINE_QUICK_TABS.find((t) => t.id === selectedCuisineTab);
+      if (tabObj?.query) {
+        const queryTerms = tabObj.query.toLowerCase().split(",").map((s) => s.trim());
+        list = list.filter((m) => {
+          const text = [
+            m.name,
+            m.description,
+            m.restaurantType,
+            ...(m.featuredFoods || []),
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return queryTerms.some((term) => text.includes(term));
+        });
+      }
+    }
+
+    const sorted = [...list].sort((a, b) => {
       const aOpen = isMerchantOpenNow(a.openingHours) ? 1 : 0;
       const bOpen = isMerchantOpenNow(b.openingHours) ? 1 : 0;
-      return bOpen - aOpen;
+      if (aOpen !== bOpen) return bOpen - aOpen;
+
+      if (sortBy === "distance") {
+        return (a.distance ?? 999) - (b.distance ?? 999);
+      }
+      if (sortBy === "rating") {
+        return (b.rating ?? 0) - (a.rating ?? 0);
+      }
+      if (sortBy === "reviews") {
+        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+      }
+      if (sortBy === "combo") {
+        const aCombo =
+          a.menu?.some((f) => f.isCombo) ||
+          a.featuredFoods?.some((f) => f.toLowerCase().includes("combo"))
+            ? 1
+            : 0;
+        const bCombo =
+          b.menu?.some((f) => f.isCombo) ||
+          b.featuredFoods?.some((f) => f.toLowerCase().includes("combo"))
+            ? 1
+            : 0;
+        if (aCombo !== bCombo) return bCombo - aCombo;
+        return (a.distance ?? 999) - (b.distance ?? 999);
+      }
+      return 0;
     });
-  }, [merchants, onlyOpenNow]);
+
+    return sorted;
+  }, [
+    merchants,
+    onlyOpenNow,
+    selectedRestaurantType,
+    selectedPriceRange,
+    selectedCuisineTab,
+    sortBy,
+  ]);
 
   const merchantCountText = useMemo(() => {
     if (loading) return "Đang tìm...";
@@ -376,7 +477,6 @@ export default function CustomerHomePage() {
         const options = await getDiscoveryOptions();
         if (active) {
           setDiscoveryOptions(options);
-          setCategories(options.foodCategories ?? []);
         }
       } catch (error) {
         console.error(error);
@@ -483,7 +583,17 @@ export default function CustomerHomePage() {
         setLocationError("");
       }
 
-      await loadMerchants("", result.coords);
+      try {
+        const addr = await reverseGeocode(
+          result.coords.latitude,
+          result.coords.longitude,
+        );
+        if (!cancelled && addr?.address) setLocationAddress(addr.address);
+      } catch {
+        // ignore
+      }
+
+      await loadMerchants("", result.coords, undefined, undefined, 15);
     };
 
     void initialize();
@@ -596,38 +706,6 @@ export default function CustomerHomePage() {
     );
   }
 
-  function handleRadiusChange(nextRadiusKm: number) {
-    setSelectedRadiusKm(nextRadiusKm);
-    void loadMerchants(
-      keyword,
-      coords,
-      selectedCategoryId,
-      selectedPriceRange,
-      nextRadiusKm,
-    );
-  }
-
-  function handleCategoryChange(nextCategoryId: string) {
-    setSelectedCategoryId(nextCategoryId);
-    void loadMerchants(
-      keyword,
-      coords,
-      nextCategoryId,
-      selectedPriceRange,
-      selectedRadiusKm,
-    );
-  }
-
-  function handlePriceRangeChange(nextPriceRange: string) {
-    setSelectedPriceRange(nextPriceRange);
-    void loadMerchants(
-      keyword,
-      coords,
-      selectedCategoryId,
-      nextPriceRange,
-      selectedRadiusKm,
-    );
-  }
 
   function handleServiceModeChange(nextMode: CustomerServiceMode) {
     setServiceMode(nextMode);
@@ -688,11 +766,47 @@ export default function CustomerHomePage() {
       setOriginSuggestions([]);
       setOriginSuggestionsOpen(false);
       setLocationError("");
+      try {
+        const addr = await reverseGeocode(
+          result.coords.latitude,
+          result.coords.longitude,
+        );
+        if (addr?.address) setLocationAddress(addr.address);
+      } catch {
+        // ignore
+      }
       await applyCustomerOrigin(result.coords, "browser", result.accuracy);
+      notify.success("Đã định vị thành công vị trí của bạn!");
     } finally {
       setLocatingCustomer(false);
     }
   }
+
+  const handleLocationPicked = async (
+    targetCoords: Coords,
+    addressName?: string,
+  ) => {
+    setShowMapPicker(false);
+    if (addressName) {
+      setLocationAddress(addressName);
+    } else {
+      try {
+        const addr = await reverseGeocode(
+          targetCoords.latitude,
+          targetCoords.longitude,
+        );
+        if (addr?.address) setLocationAddress(addr.address);
+      } catch {
+        // ignore
+      }
+    }
+    setCoords(targetCoords);
+    setHasCustomerLocation(true);
+    setLocationMode("manual");
+    setLocationError("");
+    await loadMerchants(keyword, targetCoords, selectedCategoryId, selectedPriceRange, 15);
+    notify.success("Đã cập nhật vị trí mới từ bản đồ!");
+  };
 
   function handleCandidateDrag(lat: number, lng: number) {
     setCandidateLocation({ latitude: lat, longitude: lng });
@@ -813,81 +927,185 @@ export default function CustomerHomePage() {
     );
   }
 
-  function renderPriceRangeFilters(className = "") {
+  function renderLocationBar() {
     return (
-      <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <div className="relative z-10 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-3 backdrop-blur-md shadow-xs">
+        <div className="flex min-w-0 items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">
+          <MapPin className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+          <span
+            className="truncate max-w-[260px] sm:max-w-md"
+            title={locationAddress || "Vị trí của bạn"}
+          >
+            {locationAddress || "Đang xác định vị trí của bạn..."}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleRefreshCustomerLocation}
+            disabled={locatingCustomer}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition shadow-2xs"
+          >
+            {locatingCustomer ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-600" />
+            ) : (
+              <Navigation className="h-3.5 w-3.5 text-cyan-500" />
+            )}
+            Vị trí của tôi
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowMapPicker(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-50 dark:bg-cyan-950/50 px-3 text-xs font-black text-cyan-800 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition shadow-xs"
+          >
+            <MapIcon className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+            Chọn trên bản đồ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderFilterBar(className = "") {
+    return (
+      <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
+        {/* Toggle Đang mở cửa */}
         <button
           type="button"
           onClick={() => setOnlyOpenNow((prev) => !prev)}
-          className={`h-9 rounded-full px-3.5 text-xs font-black transition flex items-center gap-1.5 ${
+          className={`h-10 rounded-xl px-3.5 text-xs font-black transition flex items-center gap-2 shrink-0 ${
             onlyOpenNow
               ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/30"
               : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-emerald-400"
           }`}
           title="Chỉ hiển thị các quán đang mở cửa phục vụ"
         >
-          <span className={cn("h-2 w-2 rounded-full", onlyOpenNow ? "bg-white" : "bg-emerald-500 animate-pulse")} />
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full",
+              onlyOpenNow ? "bg-white" : "bg-emerald-500 animate-pulse",
+            )}
+          />
           Đang mở cửa
         </button>
 
-        <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">
-          Khoảng giá:
-        </span>
-        <button
-          type="button"
-          onClick={() => handlePriceRangeChange("")}
-          className={`h-9 rounded-full px-4 text-xs font-black transition ${
-            selectedPriceRange === ""
-              ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
-              : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
-          }`}
-        >
-          Tất cả
-        </button>
-
-        {discoveryOptions.priceRanges.map((label) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => handlePriceRangeChange(label)}
-            className={`h-9 rounded-full px-4 text-xs font-black transition ${
-              selectedPriceRange === label
-                ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
-                : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
-            }`}
+        {/* Dropdown Loại hình quán */}
+        <div className="relative min-w-[170px] flex-1 sm:flex-none">
+          <select
+            value={selectedRestaurantType}
+            onChange={(e) => setSelectedRestaurantType(e.target.value)}
+            className="h-10 w-full appearance-none rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 pr-8 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition shadow-2xs cursor-pointer"
           >
-            {label}
+            <option value="">Tất cả loại hình quán</option>
+            {discoveryOptions.restaurantTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
+
+        {/* Dropdown Mức giá */}
+        <div className="relative min-w-[190px] flex-1 sm:flex-none">
+          <select
+            value={selectedPriceRange}
+            onChange={(e) => setSelectedPriceRange(e.target.value)}
+            className="h-10 w-full appearance-none rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 pr-8 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-cyan-400 focus:border-cyan-500 focus:outline-none transition shadow-2xs cursor-pointer"
+          >
+            <option value="">Tất cả mức giá</option>
+            {discoveryOptions.priceRanges.map((range) => (
+              <option key={range} value={range}>
+                {range}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
+
+        {/* Dropdown Sắp xếp theo */}
+        <div className="relative min-w-[170px] flex-1 sm:flex-none">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="h-10 w-full appearance-none rounded-xl border border-cyan-300 dark:border-cyan-500/30 bg-cyan-50/70 dark:bg-cyan-950/40 px-3.5 pr-8 text-xs font-black text-cyan-900 dark:text-cyan-200 hover:border-cyan-500 focus:border-cyan-500 focus:outline-none transition shadow-2xs cursor-pointer"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-600 dark:text-cyan-400" />
+        </div>
+
+        {(selectedRestaurantType ||
+          selectedPriceRange ||
+          onlyOpenNow ||
+          selectedCuisineTab !== "all") && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRestaurantType("");
+              setSelectedPriceRange("");
+              setOnlyOpenNow(false);
+              setSelectedCuisineTab("all");
+              setSelectedCategoryId("");
+            }}
+            className="h-10 rounded-xl px-3 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0"
+          >
+            Đặt lại lọc
           </button>
-        ))}
+        )}
       </div>
     );
   }
 
-  function renderRadiusFilters(className = "") {
-    const RADIUS_OPTIONS = [1, 3, 5, 10, 15];
+  function renderCuisineTabs() {
     return (
-      <div className={cn("flex flex-wrap items-center gap-2", className)}>
-        <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mr-1">
-          <MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-          Bán kính:
-        </span>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {RADIUS_OPTIONS.map((km) => (
+      <section className="mt-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
+            <Utensils className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            Khám phá theo món
+          </h2>
+          {selectedCuisineTab !== "all" && (
             <button
-              key={km}
-              type="button"
-              onClick={() => handleRadiusChange(km)}
-              className={`h-8 rounded-full px-3 text-xs font-black transition ${
-                selectedRadiusKm === km
-                  ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/25 ring-2 ring-cyan-500/30"
-                  : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-500/50"
-              }`}
+              onClick={() => setSelectedCuisineTab("all")}
+              className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 hover:underline"
             >
-              {km} km
+              Xem tất cả món
             </button>
-          ))}
+          )}
         </div>
-      </div>
+        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+          {CUISINE_QUICK_TABS.map((tab) => {
+            const isActive = selectedCuisineTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setSelectedCuisineTab(tab.id);
+                  if (tab.id === "all") {
+                    setSelectedCategoryId("");
+                  }
+                }}
+                className={`h-11 shrink-0 rounded-2xl px-4 text-xs sm:text-sm font-black transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive
+                    ? tab.isCombo
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 scale-[1.02]"
+                      : "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md scale-[1.02]"
+                    : tab.isCombo
+                      ? "border border-amber-400/50 bg-amber-50/70 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 hover:border-amber-500"
+                      : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
     );
   }
 
@@ -1061,7 +1279,7 @@ export default function CustomerHomePage() {
               </form>
 
               {renderServiceModeTabs("mt-3")}
-              {renderPriceRangeFilters("mt-3")}
+              {renderFilterBar("mt-3")}
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
@@ -1266,10 +1484,12 @@ export default function CustomerHomePage() {
               Tìm các món ngon chuẩn vị quanh vị trí của bạn với thông tin
               khoảng cách & thời gian di chuyển chính xác.
             </p>
+
+            {renderLocationBar()}
           </div>
 
           {/* Service Mode Selector */}
-          <div className="relative z-10 mt-8">
+          <div className="relative z-10 mt-6">
             {renderServiceModeTabs("max-w-md")}
           </div>
 
@@ -1305,56 +1525,14 @@ export default function CustomerHomePage() {
             </Button>
           </form>
 
-          {/* Radius Filter Pills */}
-          <div className="relative z-10 mt-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 p-3 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-xs">
-            {renderRadiusFilters()}
+          {/* Filter Bar */}
+          <div className="relative z-10 mt-4 rounded-2xl bg-white/70 dark:bg-slate-900/70 p-3.5 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-xs">
+            {renderFilterBar()}
           </div>
         </section>
 
-        {/* Categories Bar */}
-        {categories.length > 0 ? (
-          <section className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-slate-950 dark:text-white flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />{" "}
-                Danh mục phổ biến
-              </h2>
-              {selectedCategoryId && (
-                <button
-                  onClick={() => handleCategoryChange("")}
-                  className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 hover:underline"
-                >
-                  Xóa lọc danh mục
-                </button>
-              )}
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-              <button
-                onClick={() => handleCategoryChange("")}
-                className={`h-11 shrink-0 rounded-2xl px-5 text-sm font-black transition duration-200 ${
-                  !selectedCategoryId
-                    ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
-                    : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
-                }`}
-              >
-                Tất cả
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`h-11 shrink-0 rounded-2xl px-5 text-sm font-black transition duration-200 ${
-                    selectedCategoryId === category.id
-                      ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
-                      : "border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-cyan-400"
-                  }`}
-                >
-                  {getCategoryDisplayName(category.name)}
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : null}
+        {/* Cuisine Quick Tabs */}
+        {renderCuisineTabs()}
 
         {locationError && (
           <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-950/30 p-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
@@ -1364,7 +1542,7 @@ export default function CustomerHomePage() {
 
         {/* Results Section */}
         <section className="mt-10">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                 UFind Recommended
@@ -1374,7 +1552,11 @@ export default function CustomerHomePage() {
               </h2>
             </div>
 
-            {renderPriceRangeFilters()}
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3.5 py-1 text-xs font-black text-cyan-800 dark:text-cyan-300 shadow-2xs">
+                {displayedMerchants.length} quán ăn
+              </span>
+            </div>
           </div>
 
           {renderMerchantListContent(false)}
@@ -1384,6 +1566,14 @@ export default function CustomerHomePage() {
       <CustomerCheckInCodeModal
         open={checkInModalOpen}
         onClose={() => setCheckInModalOpen(false)}
+      />
+
+      <VietMapLocationPickerModal
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        initialCoords={coords}
+        initialAddress={locationAddress}
+        onConfirm={handleLocationPicked}
       />
     </div>
   );
