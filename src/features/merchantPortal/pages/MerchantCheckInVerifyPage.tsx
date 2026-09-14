@@ -52,7 +52,6 @@ const DEFAULT_BENEFITS = [
 export default function MerchantCheckInVerifyPage() {
   const [customerCode, setCustomerCode] = useState("");
   const [selectedBenefit, setSelectedBenefit] = useState(DEFAULT_BENEFITS[0]);
-  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState<CheckInResult | null>(null);
 
@@ -107,7 +106,6 @@ export default function MerchantCheckInVerifyPage() {
         const res = await api.post("/check-in/merchant/verify-customer-code", {
           customerCode: code,
           rewardBenefit: benefitToApply,
-          notes: notes.trim() || undefined,
         });
         if (res.data?.data) {
           resultData = res.data.data;
@@ -117,7 +115,6 @@ export default function MerchantCheckInVerifyPage() {
           const res2 = await api.post("/check-ins/merchant/verify-customer-code", {
             customerCode: code,
             rewardBenefit: benefitToApply,
-            notes: notes.trim() || undefined,
           });
           if (res2.data?.data) {
             resultData = res2.data.data;
@@ -154,7 +151,7 @@ export default function MerchantCheckInVerifyPage() {
           customerName: resultData!.customerName,
           customerPhone: resultData!.customerPhone,
           rewardBenefit: resultData!.rewardBenefit,
-          notes: notes.trim() || null,
+          notes: null,
           amount: 0,
           orderType: "Check-in tại quán",
           checkedInAt: resultData!.checkedInAt,
@@ -165,7 +162,6 @@ export default function MerchantCheckInVerifyPage() {
       ]);
 
       setCustomerCode("");
-      setNotes("");
     } catch (err: any) {
       console.error(err);
       const msg =
@@ -262,20 +258,6 @@ export default function MerchantCheckInVerifyPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
-
-                    {/* Notes */}
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                        Ghi Chú Thêm (Bàn số, nhân viên phục vụ...)
-                      </label>
-                      <Input
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Ví dụ: Bàn 04, khách quen"
-                        className="rounded-xl"
-                        disabled={submitting}
-                      />
                     </div>
 
                     <Button
@@ -405,7 +387,7 @@ export default function MerchantCheckInVerifyPage() {
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-bold">
                       <th className="pb-3 pl-2">Khách hàng</th>
                       <th className="pb-3">SĐT</th>
-                      <th className="pb-3">Ưu đãi / Ghi chú</th>
+                      <th className="pb-3">Ưu đãi áp dụng</th>
                       <th className="pb-3">Thời gian</th>
                       <th className="pb-3 text-right pr-2">Trạng thái</th>
                     </tr>
