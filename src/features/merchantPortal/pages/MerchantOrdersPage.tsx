@@ -138,12 +138,11 @@ function getOrderTypeChipClass(orderType?: string | null) {
 function getOrderActionMessage(
   status?: string | null,
   _orderType?: string | null,
-  paymentStatus?: string | null,
+  _paymentStatus?: string | null,
 ) {
-  const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   const statusKey = getOrderStatusKey(status);
 
-  if (isPaid || statusKey === "completed") {
+  if (statusKey === "completed") {
     return "Đơn hàng đã hoàn tất, đã xác nhận thanh toán.";
   }
 
@@ -743,12 +742,7 @@ export default function MerchantOrdersPage() {
                           </span>
                         </div>
                         <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                          Trạng thái:{" "}
-                          {getOrderStatusLabel(
-                            order.paymentStatus?.toLowerCase() === "paid"
-                              ? "Completed"
-                              : order.status,
-                          )}
+                          Trạng thái: {getOrderStatusLabel(order.status)}
                         </p>
                         <p className="mt-2.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
                           <span className="font-bold text-slate-900 dark:text-white">
@@ -900,15 +894,11 @@ export default function MerchantOrdersPage() {
                           <div className="mt-1">
                             <span
                               className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase ${getOrderStatusChipClass(
-                                selectedOrder.paymentStatus?.toLowerCase() === "paid"
-                                  ? "Completed"
-                                  : selectedOrder.status,
+                                selectedOrder.status,
                               )}`}
                             >
                               {getOrderStatusLabel(
-                                selectedOrder.paymentStatus?.toLowerCase() === "paid"
-                                  ? "Completed"
-                                  : selectedOrder.status,
+                                selectedOrder.status,
                               )}
                             </span>
                           </div>
