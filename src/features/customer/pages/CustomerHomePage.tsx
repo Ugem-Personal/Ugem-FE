@@ -1,5 +1,5 @@
 import { SidebarToggle } from "@/shared/components/SidebarToggle";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   Clock,
@@ -480,6 +480,25 @@ export default function CustomerHomePage() {
     },
     [keyword, loadMerchants, selectedCategoryId, selectedPriceRange, selectedRadiusKm],
   );
+
+  const isInitialKeywordMount = useRef(true);
+  useEffect(() => {
+    if (isInitialKeywordMount.current) {
+      isInitialKeywordMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      void loadMerchants(
+        keyword,
+        coords,
+        selectedCategoryId,
+        selectedPriceRange,
+        selectedRadiusKm,
+      );
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [keyword, coords, loadMerchants, selectedCategoryId, selectedPriceRange, selectedRadiusKm]);
 
   useEffect(() => {
     let active = true;
@@ -1274,20 +1293,27 @@ export default function CustomerHomePage() {
                 </div>
               </div>
 
-              <form onSubmit={handleSearch} className="mt-4 flex gap-2">
+              <form onSubmit={handleSearch} className="mt-4 relative">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-600 dark:text-cyan-400 pointer-events-none" />
                 <Input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Tìm quán, món ăn..."
-                  className="h-11 rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 px-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs focus:border-cyan-600"
+                  className="h-11 w-full rounded-xl border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 pl-10 pr-9 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs focus:border-cyan-600"
                 />
-                <Button
-                  type="submit"
-                  className="h-11 shrink-0 gap-2 rounded-xl bg-linear-to-r from-cyan-600 to-blue-600 px-4 font-black shadow-md shadow-cyan-600/20"
-                  disabled={loading}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
+                {keyword && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setKeyword("");
+                      void loadMerchants("", coords, selectedCategoryId, selectedPriceRange, selectedRadiusKm);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white transition"
+                    title="Xóa tìm kiếm"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </form>
 
               {renderServiceModeTabs("mt-3")}
@@ -1508,33 +1534,30 @@ export default function CustomerHomePage() {
           {/* Search Form */}
           <form
             onSubmit={handleSearch}
-            className="relative z-10 mt-5 flex flex-col sm:flex-row gap-3"
+            className="relative z-10 mt-5"
           >
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <div className="relative w-full">
+              <Search className="absolute left-4.5 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-600 dark:text-cyan-400 pointer-events-none" />
               <Input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Tìm tên quán, món ăn hoặc khu vực gần bạn…"
-                className="h-14 rounded-2xl bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium pl-12 shadow-lg border-white/20 outline-none"
+                className="h-14 w-full rounded-2xl bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium pl-13 pr-12 shadow-lg border border-slate-200/80 dark:border-white/10 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 outline-none transition duration-200"
               />
               {keyword && (
                 <button
                   type="button"
-                  onClick={() => setKeyword("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  onClick={() => {
+                    setKeyword("");
+                    void loadMerchants("", coords, selectedCategoryId, selectedPriceRange, selectedRadiusKm);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  title="Xóa tìm kiếm"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            <Button
-              type="submit"
-              className="h-14 gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-blue-700"
-              disabled={loading}
-            >
-              <Search className="h-4 w-4" /> Tìm quán
-            </Button>
           </form>
 
           {/* Filter Bar */}
