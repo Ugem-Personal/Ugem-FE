@@ -313,17 +313,24 @@ export default function ConfirmBillPage() {
           currentPaymentStatus === "paid" ||
           (!isOfflineOrder && currentStatus === "completed");
 
-        if (isCheckInComplete && isPaymentComplete) {
+        if (isPaymentComplete) {
           const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
           if (cashPaymentKey && typeof window !== "undefined") {
             window.localStorage.removeItem(cashPaymentKey);
           }
 
-          navigate(
-            `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
-            { replace: true },
-          );
+          if (isCheckInComplete) {
+            navigate(
+              `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
+              { replace: true },
+            );
+          } else {
+            navigate(
+              `/orders/${encodeURIComponent(orderId)}`,
+              { replace: true },
+            );
+          }
           return;
         }
 
@@ -411,7 +418,7 @@ export default function ConfirmBillPage() {
         currentPaymentStatus === "paid" ||
         (!isOfflineOrder && currentStatus === "completed");
 
-      if (isCheckInComplete && isPaymentComplete) {
+      if (isPaymentComplete) {
         const cashPaymentKey = getCashPaymentStorageKey(orderId);
 
         if (cashPaymentKey && typeof window !== "undefined") {
@@ -419,12 +426,18 @@ export default function ConfirmBillPage() {
         }
 
         if (currentPaymentStatus === "paid") {
-          notify.success("Hệ thống đã nhận được tiền chuyển khoản thành công!");
+          notify.success("Hệ thống đã nhận được tiền thanh toán thành công!");
         }
 
-        navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, {
-          replace: true,
-        });
+        if (isCheckInComplete) {
+          navigate(`/check-in?success=1&orderId=${encodeURIComponent(orderId)}`, {
+            replace: true,
+          });
+        } else {
+          navigate(`/orders/${encodeURIComponent(orderId)}`, {
+            replace: true,
+          });
+        }
         return;
       }
 
@@ -665,18 +678,24 @@ export default function ConfirmBillPage() {
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-cyan-500" />
-                      Xác thực tại quán (Check-in)
+                      Tích điểm thưởng (Check-in tại quán)
                     </div>
                     {checkInVerified ? (
                       <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        ✓ CHECK-IN VERIFIED
+                        ✓ ĐÃ XÁC THỰC
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
-                        CHƯA CHECK-IN
+                      <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        TÙY CHỌN
                       </span>
                     )}
                   </div>
+
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    {checkInVerified
+                      ? "Bạn đã xác thực vị trí thành công và sẽ nhận điểm tích lũy sau khi thanh toán."
+                      : "Xác thực vị trí tại quán để nhận điểm thưởng check-in. Bạn có thể bỏ qua nếu chỉ muốn thanh toán."}
+                  </p>
 
                   <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
                     <p className="flex items-center gap-2">
@@ -704,7 +723,7 @@ export default function ConfirmBillPage() {
                         {checkInVerified ? "✓" : "○"}
                       </span>
                       {checkInVerified
-                        ? "Bạn đang trong phạm vi quán (Geofence OK)"
+                        ? "Vị trí GPS trong bán kính quán (Geofence OK)"
                         : "Định vị vị trí GPS trong bán kính quán"}
                     </p>
                   </div>
@@ -720,7 +739,7 @@ export default function ConfirmBillPage() {
                       type="button"
                       onClick={handleDoCheckIn}
                       disabled={verifyingCheckIn}
-                      className="w-full mt-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs py-3 shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full mt-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-black text-xs py-2.5 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                       {verifyingCheckIn ? (
                         <>
@@ -728,7 +747,7 @@ export default function ConfirmBillPage() {
                           thực vị trí GPS...
                         </>
                       ) : (
-                        "Xác thực Check-in ngay"
+                        "Xác thực Check-in tích điểm"
                       )}
                     </button>
                   )}
@@ -806,12 +825,9 @@ export default function ConfirmBillPage() {
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
-                      disabled={
-                        submitting ||
-                        (bill.orderType === "Offline" && !checkInVerified)
-                      }
+                      disabled={submitting}
                       onClick={handleConfirmBill}
-                      className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
+                      className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50 cursor-pointer"
                     >
                       {submitting ? "Đang xử lý..." : "Xác nhận hóa đơn"}
                     </button>
@@ -819,15 +835,14 @@ export default function ConfirmBillPage() {
                       type="button"
                       disabled={submitting}
                       onClick={() => handleReject("Khác")}
-                      className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 px-6 py-3.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition disabled:opacity-50"
+                      className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 px-6 py-3.5 text-xs font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition disabled:opacity-50 cursor-pointer"
                     >
                       Từ chối
                     </button>
                   </div>
                   {bill.orderType === "Offline" && !checkInVerified && (
-                    <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 text-center">
-                      * Vui lòng hoàn tất Xác thực Check-in tại quán ở trên
-                      trước khi bấm Xác nhận hóa đơn.
+                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 text-center">
+                      * Bạn có thể check-in ở trên để tích điểm thưởng, hoặc bấm Xác nhận hóa đơn để thanh toán ngay.
                     </p>
                   )}
                 </div>
