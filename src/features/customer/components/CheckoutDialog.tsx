@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Banknote,
-  Coins,
   Loader2,
-  Sparkles,
   Store,
   Tag,
   TicketPercent,
@@ -27,7 +25,6 @@ import {
 } from "../services/orderService";
 import {
   getMyRedeemedVouchers,
-  getReviewerProfile,
   type RedeemedVoucher,
 } from "../services/customerService";
 
@@ -119,8 +116,6 @@ export function CheckoutDialog({
   >([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [customerPoints, setCustomerPoints] = useState<number>(0);
-  const [usePoints, setUsePoints] = useState<boolean>(false);
   const [userVouchers, setUserVouchers] = useState<RedeemedVoucher[]>([]);
   const [appliedVoucher, setAppliedVoucher] = useState<RedeemedVoucher | null>(null);
 
@@ -133,13 +128,6 @@ export function CheckoutDialog({
 
   useEffect(() => {
     if (!open) return;
-    void getReviewerProfile()
-      .then((res) => {
-        if (res && typeof res.reviewerPoints === "number") {
-          setCustomerPoints(res.reviewerPoints);
-        }
-      })
-      .catch(() => {});
 
     void getMyRedeemedVouchers()
       .then((res) => {
@@ -179,15 +167,7 @@ export function CheckoutDialog({
   );
   const voucherDiscount = appliedVoucher ? appliedVoucher.discountValue : 0;
   const discount = campaignDiscount + voucherDiscount;
-
-  const remainingBill = Math.max(0, total - discount);
-  const POINT_TO_VND_RATE = 100;
-  const maxPointsPossible = Math.min(
-    customerPoints,
-    Math.floor(remainingBill / POINT_TO_VND_RATE),
-  );
-  const pointsDiscount = usePoints && maxPointsPossible > 0 ? maxPointsPossible * POINT_TO_VND_RATE : 0;
-  const finalPayable = Math.max(0, remainingBill - pointsDiscount);
+  const finalPayable = Math.max(0, total - discount);
 
   async function resolveCampaign() {
     const normalizedCode = campaignCode.trim().toUpperCase();
@@ -297,8 +277,7 @@ export function CheckoutDialog({
       campaignId: campaign?.id,
       campaignCode: campaign?.code,
       voucherCode: appliedVoucher?.code,
-      pointsToRedeem:
-        usePoints && maxPointsPossible > 0 ? maxPointsPossible : undefined,
+      pointsToRedeem: undefined,
     });
   }
 
@@ -471,47 +450,6 @@ export function CheckoutDialog({
             ) : null}
           </div>
 
-          {/* UFind Reviewer Points Redemption Switch */}
-          {customerPoints > 0 ? (
-            <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-500/20">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                    <Coins className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                      Điểm thưởng UFind
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300">
-                        <Sparkles className="h-2.5 w-2.5" /> Có {customerPoints} điểm
-                      </span>
-                    </p>
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      1 điểm = 100đ (Dùng tối đa {maxPointsPossible} điểm = -{formatPrice(maxPointsPossible * POINT_TO_VND_RATE)})
-                    </p>
-                  </div>
-                </div>
-
-                <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    checked={usePoints}
-                    onChange={(e) => setUsePoints(e.target.checked)}
-                    className="peer sr-only"
-                    disabled={maxPointsPossible <= 0}
-                  />
-                  <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-slate-600 dark:bg-slate-700" />
-                </label>
-              </div>
-              {usePoints && maxPointsPossible > 0 ? (
-                <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex justify-between text-xs font-bold text-amber-700 dark:text-amber-300">
-                  <span>Trừ điểm thưởng ({maxPointsPossible} điểm):</span>
-                  <span>-{formatPrice(pointsDiscount)}</span>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-950/60">
             <div className="flex justify-between text-sm font-semibold text-slate-600 dark:text-slate-300">
               <span>Tạm tính</span>
@@ -527,12 +465,6 @@ export function CheckoutDialog({
               <div className="mt-2 flex justify-between text-sm font-bold text-emerald-600">
                 <span>Voucher tích điểm ({appliedVoucher?.code})</span>
                 <span>-{formatPrice(voucherDiscount)}</span>
-              </div>
-            ) : null}
-            {usePoints && pointsDiscount > 0 ? (
-              <div className="mt-2 flex justify-between text-sm font-bold text-amber-600">
-                <span>Trừ điểm UFind ({maxPointsPossible}đ)</span>
-                <span>-{formatPrice(pointsDiscount)}</span>
               </div>
             ) : null}
             <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950 dark:border-white/10 dark:text-white">
