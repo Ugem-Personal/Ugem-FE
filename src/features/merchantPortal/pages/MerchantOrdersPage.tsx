@@ -1125,18 +1125,18 @@ export default function MerchantOrdersPage() {
                                   ) : null}
                                 </div>
 
-                                <div className="shrink-0 text-right text-xs">
-                                  <div className="font-medium text-slate-500 dark:text-slate-400">
-                                    Đơn giá:{" "}
-                                    {formatCurrency(getItemDisplayUnitPrice(item))}
-                                  </div>
-                                  {getItemToppingTotal(item) > 0 ? (
-                                    <div className="mt-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                                      Topping: +{formatCurrency(getItemToppingTotal(item))}
+                                <div className="shrink-0 text-right">
+                                  {getItemQuantity(item) > 1 ? (
+                                    <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                                      {formatCurrency(getItemDisplayUnitPrice(item))} x {getItemQuantity(item)}
                                     </div>
                                   ) : null}
-                                  <div className="mt-1 font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm">
-                                    Thành tiền:{" "}
+                                  {getItemToppingTotal(item) > 0 ? (
+                                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                      +{formatCurrency(getItemToppingTotal(item))}
+                                    </div>
+                                  ) : null}
+                                  <div className="font-mono font-black text-cyan-600 dark:text-cyan-400 text-sm sm:text-base">
                                     {formatCurrency(getItemDisplayTotal(item))}
                                   </div>
                                 </div>
