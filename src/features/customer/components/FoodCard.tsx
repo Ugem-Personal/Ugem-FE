@@ -1,4 +1,4 @@
-import { Eye, Flame, Plus, ShoppingCart, Users } from "lucide-react";
+import { Flame, Plus, ShoppingCart, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MerchantMenuItem } from "../types";
 import { ImageWithFallback } from "@/shared/components";
@@ -18,7 +18,7 @@ function formatPrice(price: number) {
 export function FoodCard({
   food,
   cartQuantity = 0,
-  isOfflineOrder = false,
+  isOfflineOrder: _isOfflineOrder = false,
   onOpenModal,
   className,
 }: FoodCardProps) {
@@ -127,18 +127,11 @@ export function FoodCard({
             <button
               type="button"
               onClick={() => onOpenModal(food)}
-              aria-label={`Xem chi tiết ${food.name}`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 dark:bg-cyan-500 px-4 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md transition hover:bg-cyan-600 dark:hover:bg-cyan-400 active:scale-95"
+              aria-label={`Chọn món ${food.name}`}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 dark:bg-cyan-500 px-4 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md transition hover:bg-cyan-600 dark:hover:bg-cyan-400 active:scale-95 cursor-pointer"
             >
-              {isOfflineOrder ? (
-                <>
-                  <Eye className="h-4 w-4" /> Chi tiết
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" /> Thêm
-                </>
-              )}
+              <Plus className="h-4 w-4" />
+              {cartQuantity > 0 ? "Thêm tiếp" : "Thêm món"}
             </button>
           </div>
         </div>

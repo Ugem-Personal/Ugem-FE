@@ -13,6 +13,7 @@ import {
   Navigation,
   ShoppingBag,
   CheckCircle2,
+  QrCode,
 } from "lucide-react";
 import {
   Link,
@@ -50,6 +51,7 @@ import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
 import { FoodOptionModal } from "../components/FoodOptionModal";
 import { CartDrawer, type CartItem } from "../components/CartDrawer";
+import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import {
   CheckoutDialog,
   type CheckoutFormData,
@@ -240,6 +242,7 @@ export default function MerchantDetailPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
 
   const CART_STORAGE_KEY = id ? `ugem_cart_${id}` : null;
   const CART_OPEN_STORAGE_KEY = id ? `ugem_cart_open_${id}` : null;
@@ -726,6 +729,16 @@ export default function MerchantDetailPage() {
           </Link>
           <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCheckInModalOpen(true)}
+              aria-label="Mã check-in tích điểm của tôi"
+              className="h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
+            >
+              <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+              <span className="hidden sm:inline">Mã Check-in</span>
+            </Button>
+            <Button
               asChild
               type="button"
               variant="outline"
@@ -774,22 +787,22 @@ export default function MerchantDetailPage() {
         </div>
 
         {/* Merchant Hero Banner */}
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950 text-white shadow-2xl p-6 sm:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.25),transparent_50%)] pointer-events-none" />
+        <section className="relative overflow-hidden rounded-3xl border border-cyan-200/80 dark:border-white/10 bg-gradient-to-br from-white via-cyan-50/60 to-blue-50/40 dark:from-slate-950 dark:via-cyan-950 dark:to-slate-950 text-slate-900 dark:text-white shadow-2xl p-6 sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.12),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.25),transparent_50%)] pointer-events-none" />
 
           <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-300 backdrop-blur-md shadow-2xs">
-                <Flame className="h-3.5 w-3.5 text-cyan-400" /> Premium Merchant
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-100/70 dark:border-cyan-400/30 dark:bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-800 dark:text-cyan-300 backdrop-blur-md shadow-2xs">
+                <Flame className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Premium Merchant
               </div>
 
-              <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl leading-tight text-white">
+              <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl leading-tight text-slate-950 dark:text-white">
                 {name}
               </h1>
 
               {merchant.address && (
-                <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
-                  <MapPin className="h-4.5 w-4.5 shrink-0 text-cyan-400" />
+                <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  <MapPin className="h-4.5 w-4.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
                   {merchant.address}
                 </p>
               )}
@@ -798,12 +811,12 @@ export default function MerchantDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowReviews(true)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-300 backdrop-blur-md transition hover:bg-amber-400/20"
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-300/80 dark:border-amber-400/40 bg-amber-50/80 dark:bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-800 dark:text-amber-300 backdrop-blur-md transition hover:bg-amber-100 dark:hover:bg-amber-400/20 shadow-2xs cursor-pointer"
                 >
                   <Star
                     className={
                       displayRating
-                        ? "h-4 w-4 fill-amber-400 text-amber-400"
+                        ? "h-4 w-4 fill-amber-400 text-amber-500"
                         : "h-4 w-4 text-amber-400/50"
                     }
                   />
@@ -813,32 +826,32 @@ export default function MerchantDetailPage() {
                 </button>
 
                 {merchant.phone && (
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold text-slate-300 backdrop-blur-md">
-                    <Phone className="h-4 w-4 text-cyan-400" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/10 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 backdrop-blur-md shadow-2xs">
+                    <Phone className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                     {merchant.phone}
                   </span>
                 )}
 
                 {merchant.email && (
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold text-slate-300 backdrop-blur-md">
-                    <Mail className="h-4 w-4 text-cyan-400" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/10 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 backdrop-blur-md shadow-2xs">
+                    <Mail className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                     {merchant.email}
                   </span>
                 )}
 
                 <span
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold backdrop-blur-md",
+                    "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold backdrop-blur-md shadow-2xs",
                     openStatus.isOpen
-                      ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
-                      : "border-rose-400/50 bg-rose-500/20 text-rose-200",
+                      ? "border-emerald-300/80 bg-emerald-50/90 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-300"
+                      : "border-rose-300/80 bg-rose-50/90 text-rose-800 dark:border-rose-400/50 dark:bg-rose-500/20 dark:text-rose-200",
                   )}
                   title={merchant.openingHours ? `Giờ mở cửa: ${merchant.openingHours}` : undefined}
                 >
                   <span
                     className={cn(
                       "h-2 w-2 rounded-full",
-                      openStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-rose-400",
+                      openStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-rose-500",
                     )}
                   />
                   {openStatus.statusText}
@@ -847,7 +860,7 @@ export default function MerchantDetailPage() {
               </div>
 
               {descriptionInfo.summary && (
-                <p className="mt-6 max-w-3xl text-sm leading-relaxed text-slate-300 font-medium">
+                <p className="mt-6 max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
                   {descriptionInfo.summary}
                 </p>
               )}
@@ -857,7 +870,7 @@ export default function MerchantDetailPage() {
                   {visibleFacts.map((item) => (
                     <span
                       key={`${item.label}-${item.value}`}
-                      className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3.5 py-1 text-xs font-bold text-cyan-200"
+                      className="inline-flex items-center rounded-full border border-cyan-300/80 dark:border-cyan-400/20 bg-cyan-50/80 dark:bg-cyan-400/10 px-3.5 py-1 text-xs font-bold text-cyan-800 dark:text-cyan-200 shadow-2xs"
                     >
                       {item.value}
                     </span>
@@ -870,7 +883,7 @@ export default function MerchantDetailPage() {
               <button
                 type="button"
                 onClick={() => navigate(`/customer?tab=map&merchantId=${merchant.id}`)}
-                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition cursor-pointer"
               >
                 <Navigation className="h-4 w-4" />
                 Chỉ đường (VietMap)
@@ -882,7 +895,7 @@ export default function MerchantDetailPage() {
                     .getElementById("menu-section")
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-500 hover:bg-cyan-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-95 transition"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-cyan-600 hover:bg-cyan-500 dark:bg-cyan-500 dark:hover:bg-cyan-400 px-5 text-xs font-black text-white dark:text-slate-950 shadow-lg shadow-cyan-600/20 active:scale-95 transition cursor-pointer"
               >
                 <Utensils className="h-4 w-4" />
                 Xem thực đơn
@@ -1226,6 +1239,11 @@ export default function MerchantDetailPage() {
             </div>
           </div>
         )}
+
+        <CustomerCheckInCodeModal
+          open={checkInModalOpen}
+          onClose={() => setCheckInModalOpen(false)}
+        />
       </div>
     </div>
   );
