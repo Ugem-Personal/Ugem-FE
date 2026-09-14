@@ -1,4 +1,4 @@
-import { Check, Minus, Plus, X, Users, Sparkles } from "lucide-react";
+import { Minus, Plus, X, Users, Sparkles } from "lucide-react";
 import type { MerchantMenuItem } from "../types";
 
 type FoodOptionModalProps = {
@@ -14,7 +14,6 @@ type FoodOptionModalProps = {
   onClose: () => void;
 };
 
-const NOTE_PRESETS = ["Không hành", "Ít cay", "Không ớt", "Ít đường", "Ít mỡ"];
 
 function formatPrice(price: number) {
   return `${price.toLocaleString("vi-VN")}đ`;
@@ -30,8 +29,6 @@ export function FoodOptionModal({
   onConfirm,
   onClose,
 }: FoodOptionModalProps) {
-  const noteParts = notes.split(",").map((part) => part.trim()).filter(Boolean);
-  const isSelected = (preset: string) => noteParts.some((part) => part.toLocaleLowerCase("vi") === preset.toLocaleLowerCase("vi"));
   const hasDiscount = Boolean(
     food.originalPrice && Number(food.originalPrice) > Number(food.price),
   );
@@ -129,27 +126,7 @@ export function FoodOptionModal({
               placeholder="Ví dụ: Không hành, để nước sốt riêng..."
               className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-400"
             />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {NOTE_PRESETS.map((preset) => {
-                const selected = isSelected(preset);
-                return (
-                  <button
-                    key={preset}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => onNotesChange(selected
-                      ? noteParts.filter((part) => part.toLocaleLowerCase("vi") !== preset.toLocaleLowerCase("vi")).join(", ")
-                      : [notes.trim(), preset].filter(Boolean).join(", "))}
-                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 ${selected
-                      ? "border-cyan-600 bg-cyan-50 text-cyan-800 dark:border-cyan-500 dark:bg-cyan-500/15 dark:text-cyan-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/15 dark:text-slate-300 dark:hover:bg-white/5"}`}
-                  >
-                    {selected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
-                    {preset}
-                  </button>
-                );
-              })}
-            </div>
+
           </div>
         </div>
         <div className="shrink-0 border-t border-slate-200 px-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] dark:border-white/10">
