@@ -152,12 +152,22 @@ export function LoginPage() {
       });
 
       // Remove any white background or square corners from Google wrapper/iframe
-      const elements = container.querySelectorAll<HTMLElement>("iframe, div");
-      elements.forEach((el) => {
-        el.style.borderRadius = "9999px";
-        el.style.overflow = "hidden";
-        el.style.backgroundColor = "transparent";
-      });
+      const applyIframeFixes = () => {
+        const elements = container.querySelectorAll<HTMLElement>("iframe, div");
+        elements.forEach((el) => {
+          el.style.borderRadius = "9999px";
+          el.style.overflow = "hidden";
+          el.style.backgroundColor = "transparent";
+          if (el.tagName === "IFRAME") {
+            el.style.colorScheme = isDark ? "dark" : "light";
+            el.style.border = "none";
+            el.setAttribute("allowtransparency", "true");
+          }
+        });
+      };
+      applyIframeFixes();
+      setTimeout(applyIframeFixes, 60);
+      setTimeout(applyIframeFixes, 200);
     }
 
     if (window.google?.accounts?.id) {
@@ -218,7 +228,7 @@ export function LoginPage() {
                   borderRadius: "9999px",
                   overflow: "hidden",
                   backgroundColor: "transparent",
-                  clipPath: "inset(0 round 9999px)",
+                  clipPath: "inset(1.5px round 9999px)",
                 }}
               />
             </div>

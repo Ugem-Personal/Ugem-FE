@@ -209,15 +209,34 @@
   border-radius: 12px;
 }
 
-.google-btn-wrapper,
-.google-btn-wrapper > div,
+.google-btn-wrapper {
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  clip-path: inset(1.5px round 9999px) !important;
+}
+
+.google-btn-wrapper > div {
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+}
+
 .google-btn-wrapper iframe {
   border-radius: 9999px !important;
   overflow: hidden !important;
   background-color: transparent !important;
   background: transparent !important;
   border: none !important;
-  clip-path: inset(0 round 9999px) !important;
+  color-scheme: light dark !important;
+}
+
+.dark .google-btn-wrapper iframe {
+  color-scheme: dark !important;
 }
 
 .google-button {
