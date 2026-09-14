@@ -938,22 +938,59 @@ export default function GuestExplorePage() {
                 ) : null}
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {(detail.foods ?? detail.menu ?? []).slice(0, 6).map((food) => (
-                  <div
-                    key={food.id}
-                    className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60 p-4"
-                  >
-                    <p className="font-bold text-xs text-slate-950 dark:text-white">
-                      {food.name}
-                    </p>
-                    <p className="mt-1 text-xs font-mono font-black text-cyan-600 dark:text-cyan-400">
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(food.price)}
-                    </p>
-                  </div>
-                ))}
+                {(detail.foods ?? detail.menu ?? []).slice(0, 6).map((food) => {
+                  const isCombo = food.isCombo;
+                  const origPrice = Number(food.originalPrice || 0);
+                  const price = Number(food.price || 0);
+                  const discountPct =
+                    isCombo && origPrice > price
+                      ? Math.round(((origPrice - price) / origPrice) * 100)
+                      : 0;
+
+                  return (
+                    <div
+                      key={food.id}
+                      className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60 p-4"
+                    >
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isCombo && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[9px] uppercase tracking-wider">
+                            Combo
+                          </span>
+                        )}
+                        {food.servingSize && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                            👥 {food.servingSize}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-bold text-xs text-slate-950 dark:text-white mt-1">
+                        {food.name}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-mono font-black text-cyan-600 dark:text-cyan-400">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(food.price)}
+                        </span>
+                        {discountPct > 0 && (
+                          <>
+                            <span className="text-[10px] font-mono text-slate-400 line-through">
+                              {new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(origPrice)}
+                            </span>
+                            <span className="px-1 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 font-black text-[9px]">
+                              -{discountPct}%
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
