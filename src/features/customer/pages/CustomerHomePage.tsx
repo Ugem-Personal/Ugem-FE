@@ -369,13 +369,25 @@ export default function CustomerHomePage() {
       if (aOpen !== bOpen) return bOpen - aOpen;
 
       if (sortBy === "distance") {
-        return (a.distance ?? 999) - (b.distance ?? 999);
-      }
-      if (sortBy === "rating") {
+        const distA = typeof a.distance === "number" && Number.isFinite(a.distance) ? a.distance : 9999;
+        const distB = typeof b.distance === "number" && Number.isFinite(b.distance) ? b.distance : 9999;
+        if (distA !== distB) return distA - distB;
         return (b.rating ?? 0) - (a.rating ?? 0);
       }
+      if (sortBy === "rating") {
+        const ratingA = typeof a.rating === "number" ? a.rating : 0;
+        const ratingB = typeof b.rating === "number" ? b.rating : 0;
+        if (ratingB !== ratingA) return ratingB - ratingA;
+        const revA = a.reviewCount ?? 0;
+        const revB = b.reviewCount ?? 0;
+        if (revB !== revA) return revB - revA;
+        return (a.distance ?? 9999) - (b.distance ?? 9999);
+      }
       if (sortBy === "reviews") {
-        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0);
+        const revA = a.reviewCount ?? 0;
+        const revB = b.reviewCount ?? 0;
+        if (revB !== revA) return revB - revA;
+        return (b.rating ?? 0) - (a.rating ?? 0);
       }
       if (sortBy === "combo") {
         const aCombo =
@@ -389,7 +401,7 @@ export default function CustomerHomePage() {
             ? 1
             : 0;
         if (aCombo !== bCombo) return bCombo - aCombo;
-        return (a.distance ?? 999) - (b.distance ?? 999);
+        return (a.distance ?? 9999) - (b.distance ?? 9999);
       }
       return 0;
     });
