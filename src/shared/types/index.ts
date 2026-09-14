@@ -51,6 +51,7 @@ export type Category = {
 export type DiscoveryOptions = {
   restaurantTypes: string[];
   priceRanges: string[];
+  mainDishTypes?: string[];
   foodCategories: Category[];
 };
 

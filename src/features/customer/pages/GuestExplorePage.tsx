@@ -23,8 +23,7 @@ import {
   DEFAULT_DISCOVERY_OPTIONS,
   getDiscoveryOptions,
 } from "@/shared/services/categoryService";
-import type { Category, DiscoveryOptions } from "@/shared/types";
-import { getCategoryDisplayName } from "@/shared/utils/category";
+import type { DiscoveryOptions } from "@/shared/types";
 import { cleanAddress } from "@/shared/utils/address";
 import {
   getMerchantDetail,
@@ -47,6 +46,22 @@ const DEFAULT_COORDS: Coords = {
 };
 
 const DISTANCE_OPTIONS = [5, 10, 15, 30];
+
+const CUISINE_QUICK_TABS = [
+  { id: "all", label: "Tất cả món", query: "" },
+  { id: "combo", label: "🔥 Combo Tiết Kiệm", query: "", isCombo: true },
+  { id: "com", label: "🍛 Cơm", query: "Cơm" },
+  { id: "bun-pho", label: "🍜 Bún, Phở, Mì", query: "Bún, Phở" },
+  { id: "banh-mi", label: "🥖 Bánh mì & Fastfood", query: "Bánh mì" },
+  { id: "tra-sua", label: "🧋 Trà sữa & Cà phê", query: "Trà sữa" },
+  { id: "lau-nuong", label: "🍲 Lẩu & Đồ nướng", query: "Lẩu & Đồ nướng" },
+  { id: "chay", label: "🥗 Món Chay", query: "Món Chay" },
+  { id: "an-vat", label: "🍢 Ăn vặt", query: "Đồ ăn vặt" },
+  { id: "mon-viet", label: "🥢 Món Việt truyền thống", query: "Món Việt" },
+  { id: "han-nhat-thai", label: "🍣 Món Hàn / Nhật / Thái", query: "Món Hàn" },
+  { id: "mon-au", label: "🍕 Món Âu", query: "Món Âu" },
+];
+
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
   "from-amber-600 via-orange-600 to-rose-700",
@@ -132,13 +147,13 @@ function MerchantVisual({
 
 export default function GuestExplorePage() {
   const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
     DEFAULT_DISCOVERY_OPTIONS,
   );
+  const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
+  const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
   const [locationMode, setLocationMode] = useState<LocationMode>("custom");
   const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh");
@@ -165,7 +180,6 @@ export default function GuestExplorePage() {
       .then((options) => {
         if (!active) return;
         setDiscoveryOptions(options);
-        setCategories(options.foodCategories.filter((item) => !item.parentId));
       })
       .catch(() => undefined);
     return () => {
@@ -208,9 +222,9 @@ export default function GuestExplorePage() {
       latitude: coords.latitude,
       longitude: coords.longitude,
       keyword: activeKeyword || undefined,
-      categoryId: selectedCategory || undefined,
       priceRange: priceRange || undefined,
       restaurantType: restaurantFilter || undefined,
+      mainDishType: selectedMainDishType || undefined,
       radiusKm: distanceKm,
     });
 
@@ -237,7 +251,7 @@ export default function GuestExplorePage() {
     priceRange,
     requestVersion,
     restaurantFilter,
-    selectedCategory,
+    selectedMainDishType,
   ]);
 
   useEffect(() => {
@@ -257,14 +271,20 @@ export default function GuestExplorePage() {
     };
   }, [detail]);
 
+  const displayedMerchants = useMemo(() => {
+    if (selectedCuisineTab !== "combo") return merchants;
+    return merchants.filter((m) => m.menu?.some((food) => food.isCombo));
+  }, [merchants, selectedCuisineTab]);
+
   const resultLabel = useMemo(() => {
     if (loading) return "Đang tìm những địa điểm phù hợp…";
-    return `${merchants.length} địa điểm đang sẵn sàng khám phá`;
-  }, [loading, merchants.length]);
+    return `${displayedMerchants.length} địa điểm đang sẵn sàng khám phá`;
+  }, [loading, displayedMerchants.length]);
 
   const hasActiveFilters = Boolean(
     activeKeyword ||
-    selectedCategory ||
+    selectedMainDishType ||
+    selectedCuisineTab === "combo" ||
     priceRange ||
     restaurantFilter ||
     distanceKm !== 15,
@@ -278,11 +298,12 @@ export default function GuestExplorePage() {
     setRequestVersion((value) => value + 1);
   }
 
-  function chooseCategory(categoryId: string) {
-    if (categoryId === selectedCategory) return;
+  function chooseCuisineTab(tab: (typeof CUISINE_QUICK_TABS)[number]) {
+    if (tab.id === selectedCuisineTab) return;
     setLoading(true);
     setError("");
-    setSelectedCategory(categoryId);
+    setSelectedCuisineTab(tab.id);
+    setSelectedMainDishType(tab.query || "");
   }
 
   function resetDiscoveryFilters() {
@@ -290,7 +311,8 @@ export default function GuestExplorePage() {
     setError("");
     setKeyword("");
     setActiveKeyword("");
-    setSelectedCategory("");
+    setSelectedCuisineTab("all");
+    setSelectedMainDishType("");
     setDistanceKm(15);
     setPriceRange("");
     setRestaurantFilter("");
@@ -693,41 +715,30 @@ export default function GuestExplorePage() {
           ) : null}
         </div>
 
-        {/* Categories Bar */}
-        {categories.length > 0 ? (
-          <div
-            className="flex gap-3 overflow-x-auto pb-4 scrollbar-none"
-            aria-label="Danh mục quán"
-          >
-            <button
-              type="button"
-              onClick={() => chooseCategory("")}
-              aria-pressed={!selectedCategory}
-              className={`h-11 shrink-0 rounded-2xl px-6 text-xs font-black transition duration-200 ${
-                !selectedCategory
-                  ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25"
-                  : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
-              }`}
-            >
-              Tất cả danh mục
-            </button>
-            {categories.map((category) => (
+        {/* Categories / Cuisine Bar */}
+        <div
+          className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-none"
+          aria-label="Nhóm món và ẩm thực"
+        >
+          {CUISINE_QUICK_TABS.map((tab) => {
+            const isSelected = selectedCuisineTab === tab.id;
+            return (
               <button
-                key={category.id}
+                key={tab.id}
                 type="button"
-                onClick={() => chooseCategory(category.id)}
-                aria-pressed={selectedCategory === category.id}
-                className={`h-11 shrink-0 rounded-2xl px-6 text-xs font-black transition duration-200 ${
-                  selectedCategory === category.id
+                onClick={() => chooseCuisineTab(tab)}
+                aria-pressed={isSelected}
+                className={`h-11 shrink-0 rounded-2xl px-5 text-xs font-black transition duration-200 ${
+                  isSelected
                     ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25"
                     : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
                 }`}
               >
-                {getCategoryDisplayName(category.name)}
+                {tab.label}
               </button>
-            ))}
-          </div>
-        ) : null}
+            );
+          })}
+        </div>
 
         {/* Results Header */}
         <div className="mb-6 mt-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
@@ -770,7 +781,7 @@ export default function GuestExplorePage() {
           <div className="rounded-3xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-8 text-center font-bold text-amber-700 dark:text-amber-300 text-xs">
             {error}
           </div>
-        ) : merchants.length === 0 ? (
+        ) : displayedMerchants.length === 0 ? (
           <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-12 text-center">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
               <Utensils className="h-6 w-6" />
@@ -794,7 +805,7 @@ export default function GuestExplorePage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {merchants.map((merchant, index) => (
+            {displayedMerchants.map((merchant, index) => (
               <button
                 key={merchant.id}
                 type="button"
@@ -845,6 +856,12 @@ export default function GuestExplorePage() {
                       <span className="inline-flex items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300">
                         <Tag className="h-3.5 w-3.5" />
                         {merchant.priceRange}
+                      </span>
+                    ) : null}
+
+                    {merchant.menu?.some((food) => food.isCombo) ? (
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-black text-amber-700 dark:text-amber-300">
+                        🍱 Có Combo ưu đãi
                       </span>
                     ) : null}
 

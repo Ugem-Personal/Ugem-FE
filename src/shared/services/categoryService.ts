@@ -3,19 +3,37 @@ import type { ApiResponse, Category, DiscoveryOptions } from "@/shared/types";
 
 export const DEFAULT_DISCOVERY_OPTIONS: DiscoveryOptions = {
   restaurantTypes: [
+    "Quán ăn bình dân",
     "Quán ăn gia đình",
-    "Quán vỉa hè",
-    "Nhà hàng nhỏ",
-    "Cafe / Đồ uống",
-    "Quán nhậu",
-    "Xe đẩy / gánh hàng",
+    "Quán vỉa hè / Đường phố",
+    "Nhà hàng / Quán máy lạnh",
+    "Quán Cafe / Trà sữa / Đồ uống",
+    "Quán nhậu / Lai rai",
+    "Kiot / Xe đẩy / Bán mang đi",
   ],
-  priceRanges: ["Tiết kiệm", "Bình dân", "Tầm trung"],
+  priceRanges: [
+    "Dưới 35.000đ (Bình dân / Học sinh, sinh viên)",
+    "35.000đ - 75.000đ (Phổ thông / Dân văn phòng)",
+    "75.000đ - 150.000đ (Tầm trung / Gia đình, họp mặt)",
+    "Trên 150.000đ (Cao cấp / Nhà hàng sang trọng)",
+  ],
+  mainDishTypes: [
+    "Cơm (Cơm tấm, Cơm văn phòng, Cơm gà)",
+    "Bún, Phở, Mì & Hủ tiếu",
+    "Món Việt truyền thống (Mâm cơm, Đặc sản)",
+    "Bánh mì & Thức ăn nhanh (Xôi, Bánh mì, Burger)",
+    "Đồ ăn vặt & Tráng miệng (Chè, Bánh tráng, Kem)",
+    "Trà sữa, Cà phê & Đồ uống",
+    "Lẩu & Đồ nướng",
+    "Món Chay & Thực dưỡng",
+    "Món Hàn / Nhật / Thái",
+    "Món Âu (Pizza, Pasta, Steak)",
+  ],
   foodCategories: [],
 };
 
 let discoveryOptionsRequest: Promise<DiscoveryOptions> | null = null;
-const DISCOVERY_OPTIONS_CACHE_KEY = "ugem.discovery-options.v1";
+const DISCOVERY_OPTIONS_CACHE_KEY = "ugem.discovery-options.v2";
 
 function readCachedDiscoveryOptions() {
   try {
