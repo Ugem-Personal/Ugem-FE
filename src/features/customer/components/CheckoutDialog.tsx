@@ -6,6 +6,9 @@ import {
   Sparkles,
   Store,
   Tag,
+  TicketPercent,
+  Gift,
+  Check,
   UserRound,
   WalletCards,
 } from "lucide-react";
@@ -22,7 +25,11 @@ import {
   type CheckoutCampaign,
   type CustomerOrderType,
 } from "../services/orderService";
-import { getReviewerProfile } from "../services/customerService";
+import {
+  getMyRedeemedVouchers,
+  getReviewerProfile,
+  type RedeemedVoucher,
+} from "../services/customerService";
 
 export type CheckoutPaymentMethod = "Cash" | "BankTransfer";
 
@@ -35,6 +42,7 @@ export type CheckoutFormData = {
   paymentMethod: CheckoutPaymentMethod;
   campaignId?: string;
   campaignCode?: string;
+  voucherCode?: string;
   pointsToRedeem?: number;
 };
 
@@ -113,6 +121,8 @@ export function CheckoutDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customerPoints, setCustomerPoints] = useState<number>(0);
   const [usePoints, setUsePoints] = useState<boolean>(false);
+  const [userVouchers, setUserVouchers] = useState<RedeemedVoucher[]>([]);
+  const [appliedVoucher, setAppliedVoucher] = useState<RedeemedVoucher | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -127,6 +137,14 @@ export function CheckoutDialog({
       .then((res) => {
         if (res && typeof res.reviewerPoints === "number") {
           setCustomerPoints(res.reviewerPoints);
+        }
+      })
+      .catch(() => {});
+
+    void getMyRedeemedVouchers()
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setUserVouchers(res.filter((v) => !v.isUsed));
         }
       })
       .catch(() => {});
@@ -155,10 +173,12 @@ export function CheckoutDialog({
     };
   }, [merchantId, open]);
 
-  const discount = useMemo(
+  const campaignDiscount = useMemo(
     () => calculateDiscount(appliedCampaign, total),
     [appliedCampaign, total],
   );
+  const voucherDiscount = appliedVoucher ? appliedVoucher.discountValue : 0;
+  const discount = campaignDiscount + voucherDiscount;
 
   const remainingBill = Math.max(0, total - discount);
   const POINT_TO_VND_RATE = 100;
@@ -174,6 +194,7 @@ export function CheckoutDialog({
 
     if (!normalizedCode) {
       setAppliedCampaign(null);
+      setAppliedVoucher(null);
       setCampaignMessage("");
       return null;
     }
@@ -182,6 +203,23 @@ export function CheckoutDialog({
     setCampaignMessage("");
 
     try {
+      // Check customer's redeemed vouchers first
+      const matchedVoucher = userVouchers.find(
+        (v) => v.code?.trim().toUpperCase() === normalizedCode,
+      );
+      if (matchedVoucher) {
+        if (total < matchedVoucher.minOrderAmount) {
+          throw new Error(
+            `Cần đơn tối thiểu ${formatPrice(matchedVoucher.minOrderAmount)} để dùng voucher này.`,
+          );
+        }
+        setAppliedVoucher(matchedVoucher);
+        setCampaignMessage(
+          `Đã áp dụng voucher tích điểm ${matchedVoucher.code} (-${formatPrice(matchedVoucher.discountValue)}).`,
+        );
+        return null;
+      }
+
       const campaigns = availableCampaigns.length
         ? availableCampaigns
         : await getMerchantCheckoutCampaigns(merchantId);
@@ -190,7 +228,7 @@ export function CheckoutDialog({
       );
 
       if (!campaign) {
-        throw new Error("Mã giảm giá không tồn tại tại quán này.");
+        throw new Error("Mã ưu đãi không tồn tại hoặc không hợp lệ.");
       }
       const eligibilityError = getCampaignEligibilityError(campaign, total);
       if (eligibilityError) throw new Error(eligibilityError);
@@ -208,6 +246,24 @@ export function CheckoutDialog({
       return undefined;
     } finally {
       setCheckingCampaign(false);
+    }
+  }
+
+  function handleToggleUserVoucher(voucher: RedeemedVoucher) {
+    if (appliedVoucher?.code === voucher.code) {
+      setAppliedVoucher(null);
+      setCampaignMessage("");
+    } else {
+      if (total < voucher.minOrderAmount) {
+        setCampaignMessage(
+          `Voucher ${voucher.code} yêu cầu đơn tối thiểu ${formatPrice(voucher.minOrderAmount)}.`,
+        );
+        return;
+      }
+      setAppliedVoucher(voucher);
+      setCampaignMessage(
+        `Đã áp dụng voucher tích điểm ${voucher.code} (-${formatPrice(voucher.discountValue)}).`,
+      );
     }
   }
 
@@ -229,7 +285,7 @@ export function CheckoutDialog({
         : await resolveCampaign()
       : null;
 
-    if (campaignCode.trim() && !campaign) return;
+    if (campaignCode.trim() && !campaign && !appliedVoucher) return;
 
     await onConfirm({
       recipientName: recipientName.trim(),
@@ -240,6 +296,7 @@ export function CheckoutDialog({
       paymentMethod,
       campaignId: campaign?.id,
       campaignCode: campaign?.code,
+      voucherCode: appliedVoucher?.code,
       pointsToRedeem:
         usePoints && maxPointsPossible > 0 ? maxPointsPossible : undefined,
     });
@@ -379,6 +436,39 @@ export function CheckoutDialog({
                 ))}
               </div>
             ) : null}
+
+            {userVouchers.length > 0 ? (
+              <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-white/5">
+                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                  <TicketPercent className="h-3.5 w-3.5 text-amber-500" />
+                  Voucher đổi từ điểm thưởng của bạn:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {userVouchers.map((voucher) => {
+                    const isSelected = appliedVoucher?.code === voucher.code;
+                    return (
+                      <button
+                        key={voucher.id}
+                        type="button"
+                        onClick={() => handleToggleUserVoucher(voucher)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                          isSelected
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            : "border-amber-500/30 bg-amber-50/50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-950/30 dark:text-amber-300"
+                        }`}
+                      >
+                        {isSelected ? (
+                          <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                          <Gift className="h-3 w-3 text-amber-500" />
+                        )}
+                        <span>{voucher.code} (-{formatPrice(voucher.discountValue)})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* UFind Reviewer Points Redemption Switch */}
@@ -427,10 +517,16 @@ export function CheckoutDialog({
               <span>Tạm tính</span>
               <span>{formatPrice(total)}</span>
             </div>
-            {discount > 0 ? (
+            {campaignDiscount > 0 ? (
               <div className="mt-2 flex justify-between text-sm font-bold text-emerald-600">
-                <span>Giảm giá mã khuyến mãi</span>
-                <span>-{formatPrice(discount)}</span>
+                <span>Khuyến mãi quán ({appliedCampaign?.code})</span>
+                <span>-{formatPrice(campaignDiscount)}</span>
+              </div>
+            ) : null}
+            {voucherDiscount > 0 ? (
+              <div className="mt-2 flex justify-between text-sm font-bold text-emerald-600">
+                <span>Voucher tích điểm ({appliedVoucher?.code})</span>
+                <span>-{formatPrice(voucherDiscount)}</span>
               </div>
             ) : null}
             {usePoints && pointsDiscount > 0 ? (

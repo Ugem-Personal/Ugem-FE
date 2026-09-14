@@ -495,6 +495,7 @@ export default function MerchantDetailPage() {
         finalPrice: total,
         affiliateLinkCode: affiliateRef || getStoredAffiliateRef(merchant.id),
         campaignId: checkout.campaignId,
+        voucherCode: checkout.voucherCode,
         pointsToRedeem: checkout.pointsToRedeem,
         foods: cart.map((item) => ({
           foodId: item.food.id,
@@ -505,9 +506,10 @@ export default function MerchantDetailPage() {
         })),
       });
 
+      const promoInfo = checkout.campaignCode || checkout.voucherCode;
       notify.success(
-        checkout.campaignCode
-          ? `Đặt món thành công và đã áp dụng mã ${checkout.campaignCode}.`
+        promoInfo
+          ? `Đặt món thành công và đã áp dụng mã ${promoInfo}.`
           : "Đặt món thành công.",
       );
 

@@ -26,12 +26,24 @@ import {
   Star,
   ChevronRight,
   TrendingUp,
+  TicketPercent,
+  Check,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 
 import { getCurrentUser, refreshCurrentSession } from "@/features/auth";
 import { UserAccountMenu } from "@/shared/components";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { Button } from "@/shared/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { notify } from "@/shared/lib/notify";
 import {
   getUserProfile,
@@ -50,9 +62,63 @@ import {
   type ReviewerApplication,
 } from "@/features/review/services";
 import {
+  getMyRedeemedVouchers,
   getReviewerProfile,
+  redeemVoucher,
+  type RedeemedVoucher,
   type ReviewerProfileData,
 } from "../services/customerService";
+
+const VOUCHER_CATALOG = [
+  {
+    tier: "VOUCHER_10K",
+    title: "Voucher UGem 10.000đ",
+    discount: 10000,
+    cost: 50,
+    minOrder: 50000,
+    badge: "Phổ biến",
+    gradient:
+      "border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent hover:border-amber-500/50",
+    buttonColor:
+      "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/20",
+  },
+  {
+    tier: "VOUCHER_25K",
+    title: "Voucher UGem 25.000đ",
+    discount: 25000,
+    cost: 100,
+    minOrder: 100000,
+    badge: "Ưu đãi HOT",
+    gradient:
+      "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent hover:border-emerald-500/50",
+    buttonColor:
+      "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-500/20",
+  },
+  {
+    tier: "VOUCHER_50K",
+    title: "Voucher UGem 50.000đ",
+    discount: 50000,
+    cost: 200,
+    minOrder: 200000,
+    badge: "Tiết kiệm lớn",
+    gradient:
+      "border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent hover:border-blue-500/50",
+    buttonColor:
+      "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-blue-500/20",
+  },
+  {
+    tier: "VOUCHER_100K",
+    title: "Voucher VIP UGem 100.000đ",
+    discount: 100000,
+    cost: 350,
+    minOrder: 300000,
+    badge: "VIP Đẳng Cấp",
+    gradient:
+      "border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-transparent hover:border-purple-500/50",
+    buttonColor:
+      "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-purple-500/20",
+  },
+];
 
 function getInitial(name?: string) {
   return (name || "C").trim().charAt(0).toUpperCase() || "C";
@@ -159,6 +225,21 @@ export default function CustomerProfilePage() {
     useState<ReviewerProfileData | null>(null);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
 
+  // Voucher Exchange & Wallet
+  const [myVouchers, setMyVouchers] = useState<RedeemedVoucher[]>([]);
+  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
+  const [selectedVoucherTier, setSelectedVoucherTier] = useState<{
+    tier: string;
+    title: string;
+    cost: number;
+    discount: number;
+    minOrder: number;
+  } | null>(null);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [copiedVoucherCode, setCopiedVoucherCode] = useState<string | null>(
+    null,
+  );
+
   const [reviewerApp, setReviewerApp] =
     useState<ReviewerApplication | null>(null);
   const [reviewerForm, setReviewerForm] = useState({
@@ -253,11 +334,47 @@ export default function CustomerProfilePage() {
     }
   }, []);
 
+  const loadVouchers = useCallback(async () => {
+    setIsLoadingVouchers(true);
+    try {
+      const list = await getMyRedeemedVouchers();
+      if (list) {
+        setMyVouchers(list);
+      }
+    } catch (error) {
+      console.error("Không thể tải kho voucher:", error);
+    } finally {
+      setIsLoadingVouchers(false);
+    }
+  }, []);
+
+  const handleCopyVoucher = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedVoucherCode(code);
+    notify.success(`Đã sao chép mã ${code}`);
+    setTimeout(() => setCopiedVoucherCode(null), 2500);
+  };
+
+  const handleConfirmRedeem = async () => {
+    if (!selectedVoucherTier) return;
+    setIsRedeeming(true);
+    try {
+      const res = await redeemVoucher(selectedVoucherTier.tier);
+      notify.success(`Đổi thành công! Mã voucher: ${res.voucherCode}`);
+      setSelectedVoucherTier(null);
+      await Promise.all([loadPoints(), loadVouchers()]);
+    } catch (error) {
+      notify.error(getErrorMessage(error));
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
   useEffect(() => {
     let active = true;
 
     const loadData = async () => {
-      await Promise.all([loadProfile(), loadPoints()]);
+      await Promise.all([loadProfile(), loadPoints(), loadVouchers()]);
 
       try {
         const data = await getMyReviewerApplication();
@@ -285,7 +402,7 @@ export default function CustomerProfilePage() {
     return () => {
       active = false;
     };
-  }, [loadProfile, loadPoints, refreshReviewerSessionIfNeeded]);
+  }, [loadProfile, loadPoints, loadVouchers, refreshReviewerSessionIfNeeded]);
 
   async function handleAvatarUpload(file?: File) {
     if (!file) return;
@@ -901,6 +1018,187 @@ export default function CustomerProfilePage() {
                 </div>
               </div>
 
+              {/* Voucher Exchange Store */}
+              <div className="mt-8 border-t border-slate-200/80 dark:border-white/10 pt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                  <div>
+                    <h4 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                      <TicketPercent className="h-5 w-5 text-amber-500" />
+                      Đổi điểm lấy Voucher giảm giá
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Dùng điểm tích lũy check-in & review để đổi lấy mã voucher giảm trực tiếp cho các bữa ăn tiếp theo!
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 font-bold text-xs shadow-sm">
+                    <Coins className="h-4 w-4 text-amber-500" />
+                    <span>Khả dụng: {currentPoints.toLocaleString("vi-VN")} điểm</span>
+                  </div>
+                </div>
+
+                {/* Voucher Catalog Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {VOUCHER_CATALOG.map((v) => {
+                    const canAfford = currentPoints >= v.cost;
+                    return (
+                      <div
+                        key={v.tier}
+                        className={`relative rounded-2xl border p-4 flex flex-col justify-between transition-all duration-200 bg-white/90 dark:bg-slate-900/90 shadow-sm hover:shadow-md ${v.gradient}`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-900/10 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                              {v.badge}
+                            </span>
+                            <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400">
+                              <Coins className="h-3.5 w-3.5" />
+                              <span>{v.cost} điểm</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-2">
+                            <p className="text-lg font-black text-slate-900 dark:text-white">
+                              Giảm {v.discount.toLocaleString("vi-VN")}đ
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                              Áp dụng đơn từ {v.minOrder.toLocaleString("vi-VN")}đ
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={!canAfford}
+                            onClick={() => setSelectedVoucherTier(v)}
+                            className={`w-full font-bold text-xs rounded-xl transition ${
+                              canAfford
+                                ? v.buttonColor
+                                : "bg-slate-100 dark:bg-white/5 text-slate-400 border border-slate-200 dark:border-white/10 cursor-not-allowed"
+                            }`}
+                          >
+                            {canAfford ? (
+                              <>
+                                <Gift className="h-3.5 w-3.5 mr-1.5" />
+                                Đổi ngay
+                              </>
+                            ) : (
+                              `Cần thêm ${v.cost - currentPoints} điểm`
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* My Redeemed Vouchers Wallet */}
+              <div className="mt-8 border-t border-slate-200/80 dark:border-white/10 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Gift className="h-4 w-4 text-emerald-500" />
+                    Kho Voucher đã đổi của bạn
+                  </h4>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                    {myVouchers.length} voucher
+                  </span>
+                </div>
+
+                {isLoadingVouchers ? (
+                  <div className="py-6 text-center text-slate-400">
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-cyan-500" />
+                    <p className="mt-1 text-xs">Đang tải kho voucher...</p>
+                  </div>
+                ) : myVouchers.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-6 text-center">
+                    <TicketPercent className="mx-auto h-7 w-7 text-slate-400/60 mb-2" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Bạn chưa đổi voucher nào
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Hãy tích lũy điểm khi đi ăn tại quán và đổi các voucher giảm giá ở phía trên nhé!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {myVouchers.map((v) => {
+                      const isCopied = copiedVoucherCode === v.code;
+                      return (
+                        <div
+                          key={v.id}
+                          className={`rounded-2xl border p-3.5 transition flex flex-col justify-between ${
+                            v.isUsed
+                              ? "bg-slate-50/70 dark:bg-white/[0.02] border-slate-200/60 dark:border-white/5 opacity-60"
+                              : "bg-white dark:bg-slate-900 border-emerald-500/30 dark:border-emerald-500/20 shadow-sm"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  v.isUsed
+                                    ? "bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-slate-400"
+                                    : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-500/30"
+                                }`}
+                              >
+                                {v.isUsed ? "Đã dùng" : "Sẵn sàng dùng"}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {new Date(v.createdAt).toLocaleDateString("vi-VN")}
+                              </span>
+                            </div>
+
+                            <p className="text-sm font-black text-slate-900 dark:text-white">
+                              Giảm {v.discountValue.toLocaleString("vi-VN")}đ
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              Đơn từ {v.minOrderAmount.toLocaleString("vi-VN")}đ
+                            </p>
+                          </div>
+
+                          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 font-mono text-xs font-black text-cyan-600 dark:text-cyan-400 tracking-wider">
+                              <span>{v.code}</span>
+                            </div>
+
+                            {!v.isUsed && (
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCopyVoucher(v.code)}
+                                  className="h-7 px-2 text-[11px] font-bold rounded-lg"
+                                >
+                                  {isCopied ? (
+                                    <Check className="h-3 w-3 text-emerald-600" />
+                                  ) : (
+                                    <Copy className="h-3 w-3 text-slate-500" />
+                                  )}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => {
+                                    window.location.href = "/customer";
+                                  }}
+                                  className="h-7 px-2 text-[11px] font-bold rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Dùng ngay
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Transaction Ledger Table */}
               <div className="mt-8 border-t border-slate-200/80 dark:border-white/10 pt-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1200,6 +1498,102 @@ export default function CustomerProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Redeem Voucher Confirmation Dialog */}
+      <Dialog
+        open={!!selectedVoucherTier}
+        onOpenChange={(open) =>
+          !isRedeeming && !open && setSelectedVoucherTier(null)
+        }
+      >
+        <DialogContent className="max-w-md border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-950 dark:text-white">
+              <TicketPercent className="h-5 w-5 text-amber-500" />
+              Xác nhận đổi Voucher
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              Bạn có chắc muốn dùng điểm tích lũy để đổi lấy mã voucher giảm giá này?
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedVoucherTier && (
+            <div className="space-y-3 py-2">
+              <div className="rounded-2xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-4">
+                <p className="text-base font-black text-amber-900 dark:text-amber-100">
+                  {selectedVoucherTier.title}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Áp dụng giảm trực tiếp{" "}
+                  <strong>
+                    {selectedVoucherTier.discount.toLocaleString("vi-VN")}đ
+                  </strong>{" "}
+                  cho đơn đặt món từ{" "}
+                  <strong>
+                    {selectedVoucherTier.minOrder.toLocaleString("vi-VN")}đ
+                  </strong>
+                  .
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Điểm hiện có:
+                  </span>
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {currentPoints.toLocaleString("vi-VN")} điểm
+                  </span>
+                </div>
+                <div className="flex justify-between text-rose-600 dark:text-rose-400">
+                  <span>Chi phí đổi voucher:</span>
+                  <span className="font-bold">
+                    -{selectedVoucherTier.cost.toLocaleString("vi-VN")} điểm
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex justify-between font-bold">
+                  <span className="text-slate-700 dark:text-slate-300">
+                    Điểm còn lại sau khi đổi:
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {(currentPoints - selectedVoucherTier.cost).toLocaleString(
+                      "vi-VN",
+                    )}{" "}
+                    điểm
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isRedeeming}
+              onClick={() => setSelectedVoucherTier(null)}
+              className="rounded-xl"
+            >
+              Huỷ
+            </Button>
+            <Button
+              type="button"
+              disabled={isRedeeming}
+              onClick={handleConfirmRedeem}
+              className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold"
+            >
+              {isRedeeming ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Đang quy đổi...
+                </>
+              ) : (
+                "Xác nhận đổi ngay"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

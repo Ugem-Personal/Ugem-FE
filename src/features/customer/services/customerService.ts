@@ -69,3 +69,41 @@ export async function getReviewerProfile() {
   return data.data;
 }
 
+export type RedeemedVoucher = {
+  id: string;
+  code: string;
+  title: string;
+  discountValue: number;
+  minOrderAmount: number;
+  pointsSpent: number;
+  isUsed?: boolean;
+  createdAt: string;
+};
+
+export type RedeemVoucherResponse = {
+  voucherCode: string;
+  voucherTier: string;
+  title: string;
+  discountValue: number;
+  minOrderAmount: number;
+  pointsCost: number;
+  remainingPoints: number;
+  createdAt: string;
+};
+
+export async function redeemVoucher(voucherTier: string) {
+  const { data } = await api.post<ApiResponse<RedeemVoucherResponse>>(
+    "/customers/redeem-voucher",
+    { voucherTier },
+  );
+  return data.data;
+}
+
+export async function getMyRedeemedVouchers() {
+  const { data } = await api.get<ApiResponse<RedeemedVoucher[]>>(
+    "/customers/my-vouchers",
+  );
+  return data.data;
+}
+
+
