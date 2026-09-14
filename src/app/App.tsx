@@ -8,7 +8,7 @@ export default function App() {
   return (
     <RealtimeProvider>
       <RouterProvider router={routers} />
-      <Toaster visibleToasts={3} />
+      <Toaster expand gap={12} visibleToasts={3} />
     </RealtimeProvider>
   );
 }
