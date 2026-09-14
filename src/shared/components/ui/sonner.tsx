@@ -15,8 +15,7 @@ export function Toaster({ ...props }: ToasterProps) {
   return (
     <Sonner
       className="toaster group"
-      expand
-      gap={12}
+      visibleToasts={1}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,

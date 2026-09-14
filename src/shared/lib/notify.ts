@@ -34,9 +34,11 @@ export function getErrorMessage(
 
 export const notify = {
   success(message: string, options?: ExternalToast) {
+    toast.dismiss();
     return showSuccessToast(message, options);
   },
   error(message: string, options?: ExternalToast) {
+    toast.dismiss();
     return showErrorToast(message, options);
   },
   errorApi(
@@ -44,16 +46,20 @@ export const notify = {
     fallbackMessage = "Thao tác thất bại. Vui lòng thử lại.",
     options?: ExternalToast,
   ) {
+    toast.dismiss();
     const message = getErrorMessage(error, fallbackMessage);
     return showErrorToast(message, options);
   },
   info(message: string, options?: ExternalToast) {
+    toast.dismiss();
     return showInfoToast(message, options);
   },
   loading(message: string, options?: ExternalToast) {
+    toast.dismiss();
     return showLoadingToast(message, options);
   },
   confirmLogout(onConfirm: () => void) {
+    toast.dismiss();
     showLogoutConfirmToast(onConfirm);
   },
   dismiss(id?: string | number) {
