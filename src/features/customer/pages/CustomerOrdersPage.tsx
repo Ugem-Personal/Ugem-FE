@@ -16,27 +16,26 @@ import {
 } from "../services/orderService";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
-import { BrandLogo, UserAccountMenu, ModeToggle } from "@/shared/components";
+import { BrandLogo, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
 import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 
-type OrderFilterTab =
-  | "all"
-  | "Pending"
-  | "Accepted"
-  | "Preparing"
-  | "Ready"
-  | "Completed"
-  | "Cancelled";
+type OrderFilterTab = "Active" | "History";
 
 export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const handleBack = useSafeBack("/customer");
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialTab = (searchParams.get("status") as OrderFilterTab) || "all";
+  const rawStatus = searchParams.get("status");
+  const initialTab: OrderFilterTab =
+    rawStatus === "History" ||
+    rawStatus === "Completed" ||
+    rawStatus === "Cancelled"
+      ? "History"
+      : "Active";
   const initialPage = Math.max(1, Number(searchParams.get("page")) || 1);
 
   const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
@@ -62,17 +61,10 @@ export default function CustomerOrdersPage() {
     setLoading(true);
 
     try {
-      const statusFilter =
-        activeTab === "all" ||
-        activeTab === "Cancelled" ||
-        activeTab === "Ready"
-          ? undefined
-          : activeTab;
-
       const res = await getCustomerOrders({
         pageIndex,
         pageSize: 10,
-        status: statusFilter,
+        status: activeTab,
       });
 
       const sortedOrders = [...(res.data ?? [])].sort(
@@ -116,19 +108,9 @@ export default function CustomerOrdersPage() {
         (order.notes ?? "").toLowerCase().includes(keyword) ||
         orderId.toLowerCase().includes(keyword);
 
-      const statusLower = (order.status ?? "").toLowerCase();
-      const matchesTab =
-        activeTab === "all"
-          ? true
-          : activeTab === "Cancelled"
-            ? statusLower === "cancelled" || statusLower === "rejected"
-            : activeTab === "Ready"
-              ? statusLower === "ready" || statusLower === "delivering"
-              : statusLower === activeTab.toLowerCase();
-
-      return matchesSearch && matchesTab;
+      return matchesSearch;
     });
-  }, [orders, searchKeyword, activeTab]);
+  }, [orders, searchKeyword]);
 
   function handleViewDetail(
     order: CustomerOrderSummary,
@@ -238,14 +220,13 @@ export default function CustomerOrdersPage() {
               />
               Làm mới
             </button>
-            <ModeToggle />
           </div>
         </div>
 
         {/* Page Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
-            <ShoppingBag className="h-3.5 w-3.5" /> Track & Manage Orders
+            <ShoppingBag className="h-3.5 w-3.5" /> Theo dõi đơn hàng
           </div>
           <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-950 dark:text-white">
             Đơn hàng của tôi
@@ -258,15 +239,10 @@ export default function CustomerOrdersPage() {
         {/* Filters & Search */}
         <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           {/* Tabs */}
-          <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-1.5 shadow-2xs backdrop-blur-md">
+          <div className="flex gap-1.5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 p-1.5 shadow-2xs backdrop-blur-md">
             {[
-              { key: "all", label: `Tất cả (${orders.length})` },
-              { key: "Pending", label: "Chờ nhận" },
-              { key: "Accepted", label: "Đã nhận" },
-              { key: "Preparing", label: "Đang làm" },
-              { key: "Ready", label: "Đã lên món" },
-              { key: "Completed", label: "Hoàn thành" },
-              { key: "Cancelled", label: "Đã hủy" },
+              { key: "Active", label: "Đang phục vụ" },
+              { key: "History", label: "Lịch sử đơn" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -279,7 +255,7 @@ export default function CustomerOrdersPage() {
                     { replace: true },
                   );
                 }}
-                className={`rounded-xl px-4 py-2 text-xs font-black transition ${
+                className={`rounded-xl px-5 py-2 text-xs font-black transition ${
                   activeTab === tab.key
                     ? "bg-slate-950 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-md"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
@@ -331,20 +307,42 @@ export default function CustomerOrdersPage() {
           <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/40 p-12 text-center shadow-2xs backdrop-blur-md">
             <ShoppingBag className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-3" />
             <h3 className="text-lg font-black text-slate-950 dark:text-white">
-              Không tìm thấy đơn hàng nào
+              {activeTab === "Active"
+                ? "Không có đơn hàng nào đang phục vụ"
+                : "Không tìm thấy đơn hàng nào trong lịch sử"}
             </h3>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              {searchKeyword || activeTab !== "all"
-                ? "Thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục tab khác."
-                : "Bạn chưa thực hiện đơn đặt món nào. Khám phá ngay các quán ăn chất lượng xung quanh!"}
+              {searchKeyword
+                ? "Thử thay đổi từ khóa tìm kiếm để tìm đơn hàng."
+                : activeTab === "Active"
+                  ? "Hiện tại bạn không có món ăn nào đang chờ quán làm hoặc mang lên bàn."
+                  : "Bạn chưa có đơn hàng nào đã hoàn tất trước đây."}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate("/customer")}
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-6 py-3 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
-            >
-              Khám phá món ngay
-            </button>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {activeTab === "Active" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("History");
+                    setPageIndex(1);
+                    setSearchParams(
+                      { status: "History", page: "1" },
+                      { replace: true },
+                    );
+                  }}
+                  className="rounded-2xl border border-slate-200 dark:border-white/10 px-5 py-2.5 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition"
+                >
+                  Xem lịch sử đơn
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate("/customer")}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-6 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
+              >
+                Khám phá món ngay
+              </button>
+            </div>
           </div>
         )}
 

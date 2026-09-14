@@ -7,6 +7,9 @@ import {
   Check,
   XCircle,
   QrCode,
+  ChefHat,
+  Utensils,
+  CheckCircle2,
 } from "lucide-react";
 import type { CustomerOrderSummary } from "@/shared/types";
 import { OrderStatusBadge } from "./OrderStatusBadge";
@@ -27,6 +30,13 @@ interface OrderCardProps {
 function formatCurrency(value: number) {
   return `${value.toLocaleString("vi-VN")}đ`;
 }
+
+const ORDER_STEPS = [
+  { key: "pending", label: "Đã đặt", icon: Clock },
+  { key: "preparing", label: "Đang nấu", icon: ChefHat },
+  { key: "ready", label: "Lên món", icon: Utensils },
+  { key: "completed", label: "Hoàn tất", icon: CheckCircle2 },
+];
 
 export function OrderCard({
   order,
@@ -49,6 +59,23 @@ export function OrderCard({
     (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
 
   const statusLower = (order.status ?? "").toLowerCase();
+  const isCancelled = statusLower === "cancelled";
+  const isRejected = statusLower === "rejected";
+  const isCancelledOrRejected = isCancelled || isRejected;
+
+  let currentStepIndex = 0;
+  if (isPaid || statusLower === "completed") {
+    currentStepIndex = 3;
+  } else if (
+    ["ready", "delivering", "billconfirmed", "cashpending"].includes(statusLower)
+  ) {
+    currentStepIndex = 2;
+  } else if (["accepted", "preparing"].includes(statusLower)) {
+    currentStepIndex = 1;
+  } else {
+    currentStepIndex = 0;
+  }
+
   const isOrderAccepted = [
     "accepted",
     "preparing",
@@ -173,6 +200,64 @@ export function OrderCard({
             </div>
           )}
       </div>
+
+      {/* Mini Progress Stepper */}
+      {!isCancelledOrRejected && (
+        <div className="pt-3.5 pb-1">
+          <div className="relative flex items-center justify-between">
+            {/* Background line */}
+            <div className="absolute left-4 right-4 top-3.5 h-0.5 -translate-y-1/2 bg-slate-200 dark:bg-slate-800 -z-0">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-500"
+                style={{
+                  width: `${(currentStepIndex / (ORDER_STEPS.length - 1)) * 100}%`,
+                }}
+              />
+            </div>
+
+            {/* Steps */}
+            {ORDER_STEPS.map((s, idx) => {
+              const isPassed = idx < currentStepIndex;
+              const isCurrent = idx === currentStepIndex;
+              const StepIcon = s.icon;
+
+              return (
+                <div
+                  key={s.key}
+                  className="relative z-10 flex flex-col items-center"
+                >
+                  <div
+                    className={cn(
+                      "grid h-7 w-7 place-items-center rounded-full text-[10px] font-black transition-all border",
+                      isPassed &&
+                        "border-cyan-500 bg-cyan-500 text-slate-950 shadow-xs",
+                      isCurrent &&
+                        "border-cyan-500 bg-slate-950 dark:bg-cyan-500 text-cyan-400 dark:text-slate-950 ring-4 ring-cyan-500/25 shadow-sm scale-110",
+                      !isPassed &&
+                        !isCurrent &&
+                        "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600",
+                    )}
+                  >
+                    <StepIcon className="h-3.5 w-3.5" />
+                  </div>
+                  <span
+                    className={cn(
+                      "mt-1.5 text-[10px] tracking-tight",
+                      isCurrent
+                        ? "text-cyan-600 dark:text-cyan-400 font-black"
+                        : isPassed
+                          ? "text-slate-700 dark:text-slate-300 font-bold"
+                          : "text-slate-400 dark:text-slate-600 font-medium",
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Bottom Bar: Action buttons */}
       <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/10">
