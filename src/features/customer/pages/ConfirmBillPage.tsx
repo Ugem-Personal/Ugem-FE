@@ -484,11 +484,14 @@ export default function ConfirmBillPage() {
 
     setSubmitting(true);
     setError(null);
-    setCashRequested(false);
 
     try {
       await confirmBill(orderId, selectedPaymentMethod);
       setBillConfirmed(true);
+      if (selectedPaymentMethod === "Cash") {
+        await requestCashPayment(orderId).catch(() => {});
+        setCashRequested(true);
+      }
     } catch (err) {
       console.error(err);
       const msg = getServerMessage(err, "");
@@ -497,13 +500,18 @@ export default function ConfirmBillPage() {
         msg.includes("đã được thanh toán")
       ) {
         setBillConfirmed(true);
+        notify.success("Đơn hàng này đã được thanh toán thành công!");
         if (
           bill?.orderType?.trim().toLowerCase() !== "offline" ||
           checkInVerified
         ) {
-          notify.success("Đơn hàng này đã được thanh toán thành công!");
           navigate(
             `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
+            { replace: true },
+          );
+        } else {
+          navigate(
+            `/orders/${encodeURIComponent(orderId)}`,
             { replace: true },
           );
         }
@@ -518,22 +526,11 @@ export default function ConfirmBillPage() {
     }
   }
 
-  function handleStartPayment() {
-    setError(null);
-    void handleCashPaymentRequested();
-  }
-
   async function handleSelectPaymentMethod(method: BillPaymentMethod) {
-    if (cashRequested || method === selectedPaymentMethod) return;
-
-    setError(null);
-    if (method === "Cash") {
-      setSelectedPaymentMethod(method);
-      return;
-    }
-
+    if (method === selectedPaymentMethod) return;
     if (!orderId) return;
 
+    setError(null);
     const previousMethod = selectedPaymentMethod;
     setSelectedPaymentMethod(method);
     setPaymentMethodSyncing(true);
@@ -541,57 +538,23 @@ export default function ConfirmBillPage() {
     try {
       await confirmBill(orderId, method);
       setBillConfirmed(true);
+      if (method === "Cash") {
+        await requestCashPayment(orderId).catch(() => {});
+        setCashRequested(true);
+      } else {
+        setCashRequested(false);
+      }
     } catch (error) {
       console.error(error);
       setSelectedPaymentMethod(previousMethod);
       setError(
         getServerMessage(
           error,
-          "Không thể chuyển sang thanh toán chuyển khoản. Vui lòng thử lại.",
+          "Không thể thay đổi phương thức thanh toán. Vui lòng thử lại.",
         ),
       );
     } finally {
       setPaymentMethodSyncing(false);
-    }
-  }
-
-  async function handleCashPaymentRequested() {
-    if (!orderId) return;
-    if (cashRequested) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await requestCashPayment(orderId);
-      setCashRequested(true);
-    } catch (err) {
-      console.error(err);
-      const msg = getServerMessage(err, "");
-      if (
-        msg.includes("Order đã được thanh toán") ||
-        msg.includes("đã được thanh toán")
-      ) {
-        if (
-          bill?.orderType?.trim().toLowerCase() !== "offline" ||
-          checkInVerified
-        ) {
-          notify.success("Đơn hàng này đã được thanh toán thành công!");
-          navigate(
-            `/check-in?success=1&orderId=${encodeURIComponent(orderId)}`,
-            { replace: true },
-          );
-        }
-        return;
-      }
-      setError(
-        getServerMessage(
-          err,
-          "Không thể gửi yêu cầu xác nhận tiền mặt. Vui lòng thử lại.",
-        ),
-      );
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -858,70 +821,50 @@ export default function ConfirmBillPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Chọn phương thức thanh toán
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPaymentMethod("Cash")}
-                        disabled={cashRequested || paymentMethodSyncing}
-                        className={`rounded-2xl border p-4 text-left transition ${
-                          selectedPaymentMethod === "Cash"
-                            ? "border-amber-400 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200"
-                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/50 text-slate-700 dark:text-slate-300"
-                        }`}
-                      >
-                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
-                          <Banknote className="h-5 w-5" />
-                        </div>
-                        <div className="text-xs font-black">Tiền mặt</div>
-                        <div className="mt-1 text-[11px] font-medium opacity-80">
-                          Thanh toán trực tiếp tại quán
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSelectPaymentMethod("BankTransfer")
-                        }
-                        disabled={cashRequested || paymentMethodSyncing}
-                        className={`rounded-2xl border p-4 text-left transition ${
-                          selectedPaymentMethod === "BankTransfer"
-                            ? "border-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-900 dark:text-cyan-200"
-                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/50 text-slate-700 dark:text-slate-300"
-                        }`}
-                      >
-                        <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 dark:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300">
-                          <CreditCard className="h-5 w-5" />
-                        </div>
-                        <div className="text-xs font-black">Chuyển khoản</div>
-                        <div className="mt-1 text-[11px] font-medium opacity-80">
-                          Quét mã QR Ngân hàng (SePay)
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Payment Details Card */}
+                  {/* Payment Details Card - Directly showing the active method with switch option */}
                   {selectedPaymentMethod === "Cash" ? (
-                    <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 p-4 text-xs">
-                      <div className="font-bold text-amber-900 dark:text-amber-200 mb-1">
-                        Thanh toán tiền mặt
+                    <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200 text-sm">
+                          <Banknote className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          Phương thức: Tiền mặt tại quán
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          Đang chờ quán xác nhận
+                        </span>
                       </div>
-                      <p className="font-medium text-amber-800 dark:text-amber-300/80 leading-relaxed">
-                        Vui lòng gửi tiền mặt trực tiếp cho nhân viên quán. Sau
-                        khi đã thanh toán, bấm nút Đã thanh toán tiền mặt bên
-                        dưới.
+
+                      <p className="text-xs text-amber-800/90 dark:text-amber-300/80 leading-relaxed font-medium">
+                        Hệ thống đã ghi nhận và gửi yêu cầu thanh toán tiền mặt đến quán. Vui lòng thanh toán trực tiếp số tiền <strong className="font-mono text-sm text-amber-950 dark:text-white">{formatCurrency(finalPrice)}</strong> cho nhân viên hoặc tại quầy thu ngân.
                       </p>
+
+                      <div className="pt-3 border-t border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                          Muốn đổi sang quét mã QR?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPaymentMethod("BankTransfer")}
+                          disabled={paymentMethodSyncing}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 underline underline-offset-4 cursor-pointer disabled:opacity-50"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          {paymentMethodSyncing ? "Đang chuyển..." : "Chuyển khoản SePay (QR)"}
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/80 dark:bg-cyan-950/40 p-4 text-xs space-y-4">
-                      <div className="font-bold text-cyan-900 dark:text-cyan-200">
-                        Thanh toán qua mã QR Ngân hàng
+                    <div className="rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/80 dark:bg-cyan-950/40 p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 font-bold text-cyan-900 dark:text-cyan-200 text-sm">
+                          <CreditCard className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                          Phương thức: Chuyển khoản ngân hàng (SePay)
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                          Chờ nhận tiền chuyển khoản
+                        </span>
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -958,7 +901,7 @@ export default function ConfirmBillPage() {
                                     "account",
                                   )
                                 }
-                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
+                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition cursor-pointer"
                                 title="Sao chép số tài khoản"
                               >
                                 {copiedField === "account" ? (
@@ -996,7 +939,7 @@ export default function ConfirmBillPage() {
                                     "description",
                                   )
                                 }
-                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition"
+                                className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-300 transition cursor-pointer"
                                 title="Sao chép nội dung chuyển khoản"
                               >
                                 {copiedField === "description" ? (
@@ -1012,30 +955,36 @@ export default function ConfirmBillPage() {
                           </div>
                         </div>
                       </div>
+
+                      <div className="pt-3 border-t border-cyan-200/60 dark:border-cyan-900/40 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                          Muốn đổi sang tiền mặt?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPaymentMethod("Cash")}
+                          disabled={paymentMethodSyncing}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 underline underline-offset-4 cursor-pointer disabled:opacity-50"
+                        >
+                          <Banknote className="h-3.5 w-3.5" />
+                          {paymentMethodSyncing ? "Đang chuyển..." : "Thanh toán tiền mặt tại quán"}
+                        </button>
+                      </div>
                     </div>
                   )}
 
-                  {/* Payment Submission Button */}
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Payment Status Notice */}
+                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-100/80 dark:bg-slate-900/60 p-3.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-400">
                     {selectedPaymentMethod === "Cash" ? (
-                      <button
-                        type="button"
-                        onClick={handleStartPayment}
-                        disabled={submitting || cashRequested}
-                        className="flex-1 rounded-2xl bg-slate-950 dark:bg-cyan-500 px-5 py-3.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition disabled:opacity-50"
-                      >
-                        {cashRequested
-                          ? "Đang chờ merchant xác nhận tiền mặt"
-                          : "Đã thanh toán tiền mặt"}
-                      </button>
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                        Quán sẽ hoàn tất đơn ngay sau khi nhận đủ tiền mặt.
+                      </span>
                     ) : (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3.5 text-xs font-black text-cyan-700 dark:text-cyan-300"
-                      >
-                        Đang chờ hệ thống tự động xác nhận chuyển khoản
-                      </button>
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                        Hệ thống sẽ tự động cập nhật ngay khi tài khoản nhận được tiền chuyển khoản.
+                      </span>
                     )}
                   </div>
                 </>
