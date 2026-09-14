@@ -25,7 +25,9 @@ import {
   Clock,
   AlertTriangle,
   ChevronLeft,
+  Tag,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { useSearchParams } from "react-router-dom";
 
@@ -159,10 +161,13 @@ function formatDateTime(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
 function toDateTimeLocalValue(value?: string | null) {
@@ -264,9 +269,9 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
         ? undefined
         : Number(form.minOrderAmount),
     maxDiscountAmount:
-      form.maxDiscountAmount.trim() === ""
-        ? undefined
-        : Number(form.maxDiscountAmount),
+      form.isPercentage && form.maxDiscountAmount.trim() !== ""
+        ? Number(form.maxDiscountAmount)
+        : undefined,
     quantity: Number.parseInt(form.quantity, 10) || 0,
     maxUsagePerUser: Number.parseInt(form.maxUsagePerUser, 10) || 0,
     isGlobal: false,
@@ -391,7 +396,7 @@ export function MerchantCampaignPage() {
 
     try {
       await deleteCampaign(campaignToDelete.id);
-      notify.success(`Đã xóa campaign ${campaignToDelete.code}.`);
+      notify.success(`Đã xóa chiến dịch ${campaignToDelete.code}.`);
 
       if (selectedCampaign?.id === campaignToDelete.id) {
         setDetailOpen(false);
@@ -405,7 +410,7 @@ export function MerchantCampaignPage() {
       await loadCampaigns();
     } catch (error) {
       console.error(error);
-      notify.error("Không xóa được campaign.");
+      notify.error("Không xóa được chiến dịch.");
     } finally {
       setDeletingId(null);
     }
@@ -417,7 +422,7 @@ export function MerchantCampaignPage() {
     const nextStatus = !campaign.isActive;
     const toastId = "merchant-campaign-status";
     setTogglingId(campaign.id);
-    notify.loading("Đang cập nhật trạng thái Campaign...", { id: toastId });
+    notify.loading("Đang cập nhật trạng thái chiến dịch...", { id: toastId });
 
     try {
       const updated = await updateCampaignStatus(campaign.id, nextStatus);
@@ -430,7 +435,7 @@ export function MerchantCampaignPage() {
           : current,
       );
       notify.success(
-        nextStatus ? "Đã bật Campaign." : "Đã tạm dừng Campaign.",
+        nextStatus ? "Đã kích hoạt chiến dịch." : "Đã tạm dừng chiến dịch.",
         { id: toastId },
       );
     } catch (error) {
@@ -438,7 +443,7 @@ export function MerchantCampaignPage() {
       notify.error(
         error instanceof Error
           ? error.message
-          : "Không thể thay đổi trạng thái Campaign.",
+          : "Không thể thay đổi trạng thái chiến dịch.",
         { id: toastId },
       );
     } finally {
@@ -450,7 +455,18 @@ export function MerchantCampaignPage() {
     event.preventDefault();
 
     if (!form.code.trim() || !form.title.trim()) {
-      notify.error("Vui lòng nhập code và tiêu đề campaign.");
+      notify.error("Vui lòng nhập mã code và tiêu đề chiến dịch.");
+      return;
+    }
+
+    const discountNum = Number(form.discountValue);
+    if (!form.discountValue.trim() || isNaN(discountNum) || discountNum <= 0) {
+      notify.error("Vui lòng nhập mức giảm giá hợp lệ (> 0).");
+      return;
+    }
+
+    if (form.isPercentage && discountNum > 100) {
+      notify.error("Giảm theo phần trăm không thể vượt quá 100%.");
       return;
     }
 
@@ -479,10 +495,10 @@ export function MerchantCampaignPage() {
         };
 
         await updateCampaign(updatePayload);
-        notify.success("Đã cập nhật campaign.");
+        notify.success("Đã cập nhật chiến dịch.");
       } else {
         await createCampaign(payload);
-        notify.success("Đã tạo campaign.");
+        notify.success("Đã tạo chiến dịch.");
       }
 
       resetForm();
@@ -490,7 +506,7 @@ export function MerchantCampaignPage() {
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : "";
-      notify.error(message || "Lưu campaign thất bại.");
+      notify.error(message || "Lưu chiến dịch thất bại.");
     } finally {
       setSaving(false);
     }
@@ -520,7 +536,7 @@ export function MerchantCampaignPage() {
 
               <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-50 dark:border-cyan-900/50 dark:bg-cyan-950/40 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
                 <Megaphone className="h-3.5 w-3.5" />
-                Campaign Management
+                Chiến dịch ưu đãi
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -551,7 +567,7 @@ export function MerchantCampaignPage() {
               <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4 mb-6">
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                    {form.id ? "Chỉnh sửa Campaign" : "Tạo Campaign mới"}
+                    {form.id ? "Chỉnh sửa chiến dịch" : "Tạo chiến dịch mới"}
                   </h2>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {form.id
@@ -597,72 +613,121 @@ export function MerchantCampaignPage() {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Giá trị giảm <span className="text-rose-500">*</span>
+                  {/* Hình thức giảm giá: Segmented Buttons */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span>Hình thức giảm giá <span className="text-rose-500">*</span></span>
+                      <span className="text-[11px] font-medium text-slate-400">
+                        {form.isPercentage ? "Giảm theo % giá trị hoá đơn" : "Giảm số tiền cố định trực tiếp"}
+                      </span>
                     </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={form.discountValue}
-                      onChange={(e) =>
-                        setForm((c) => ({ ...c, discountValue: e.target.value }))
-                      }
-                      placeholder="10"
-                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
-                    />
+                    <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                      <button
+                        type="button"
+                        onClick={() => setForm((c) => ({ ...c, isPercentage: false }))}
+                        className={cn(
+                          "flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                          !form.isPercentage
+                            ? "bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        <span className="h-2 w-2 rounded-full bg-cyan-500" />
+                        Giảm theo số tiền (VNĐ)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm((c) => ({ ...c, isPercentage: true }))}
+                        className={cn(
+                          "flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                          form.isPercentage
+                            ? "bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        Giảm theo phần trăm (%)
+                      </button>
+                    </div>
                   </div>
 
+                  {/* Mức giảm */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Loại giảm giá
+                      Mức giảm ({form.isPercentage ? "%" : "VNĐ"}) <span className="text-rose-500">*</span>
                     </label>
-                    <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.isPercentage}
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step={form.isPercentage ? "1" : "5000"}
+                        min="1"
+                        max={form.isPercentage ? "100" : undefined}
+                        value={form.discountValue}
                         onChange={(e) =>
-                          setForm((c) => ({ ...c, isPercentage: e.target.checked }))
+                          setForm((c) => ({ ...c, discountValue: e.target.value }))
                         }
-                        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                        placeholder={form.isPercentage ? "Ví dụ: 15" : "Ví dụ: 20000"}
+                        className="h-10 pr-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
                       />
-                      <span>Giảm theo phần trăm (%)</span>
-                    </label>
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        {form.isPercentage ? "%" : "đ"}
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Giảm tối đa (VNĐ) */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span>Giảm tối đa (VNĐ)</span>
+                      {!form.isPercentage && (
+                        <span className="text-[10px] font-normal text-slate-400">(Không áp dụng)</span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="5000"
+                        min="0"
+                        disabled={!form.isPercentage}
+                        value={form.isPercentage ? form.maxDiscountAmount : ""}
+                        onChange={(e) =>
+                          setForm((c) => ({ ...c, maxDiscountAmount: e.target.value }))
+                        }
+                        placeholder={form.isPercentage ? "Ví dụ: 50000" : "Không giới hạn trần"}
+                        className={cn(
+                          "h-10 pr-10 rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700",
+                          !form.isPercentage
+                            ? "bg-slate-100 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed"
+                            : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        )}
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        đ
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Đơn tối thiểu */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Đơn tối thiểu (VNĐ)
                     </label>
-                    <Input
-                      type="number"
-                      step="5000"
-                      min="0"
-                      value={form.minOrderAmount}
-                      onChange={(e) =>
-                        setForm((c) => ({ ...c, minOrderAmount: e.target.value }))
-                      }
-                      placeholder="100000"
-                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Giảm tối đa (VNĐ)
-                    </label>
-                    <Input
-                      type="number"
-                      step="5000"
-                      min="0"
-                      value={form.maxDiscountAmount}
-                      onChange={(e) =>
-                        setForm((c) => ({ ...c, maxDiscountAmount: e.target.value }))
-                      }
-                      placeholder="50000"
-                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
-                    />
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="5000"
+                        min="0"
+                        value={form.minOrderAmount}
+                        onChange={(e) =>
+                          setForm((c) => ({ ...c, minOrderAmount: e.target.value }))
+                        }
+                        placeholder="100000 (Để trống = 0đ)"
+                        className="h-10 pr-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        đ
+                      </span>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -767,6 +832,39 @@ export function MerchantCampaignPage() {
                   </label>
                 </div>
 
+                {/* Live Preview Box */}
+                <div className="rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50/60 to-emerald-50/40 dark:border-cyan-900/50 dark:from-cyan-950/30 dark:to-emerald-950/20 p-4">
+                  <div className="flex items-center gap-1.5 mb-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
+                    <Tag className="h-3.5 w-3.5" />
+                    Xem trước hiển thị với khách hàng
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-lg bg-cyan-600 text-white font-mono font-black text-xs tracking-wider">
+                          {form.code.trim() ? form.code.trim().toUpperCase() : "MÃ_GIẢM_GIÁ"}
+                        </span>
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                          {form.title.trim() || "Tiêu đề chương trình"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        {form.discountValue ? (
+                          <>
+                            Ưu đãi: <strong className="text-cyan-700 dark:text-cyan-400 font-extrabold">
+                              Giảm {form.isPercentage ? `${form.discountValue}%` : formatCurrency(Number(form.discountValue))}
+                            </strong>
+                            {form.isPercentage && form.maxDiscountAmount ? ` (Tối đa ${formatCurrency(Number(form.maxDiscountAmount))})` : ""}
+                            {form.minOrderAmount ? ` cho đơn từ ${formatCurrency(Number(form.minOrderAmount))}` : " cho mọi đơn hàng"}
+                          </>
+                        ) : (
+                          "Nhập mức giảm giá để xem trước ưu đãi áp dụng..."
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200/60 dark:border-slate-800">
                   <Button
                     type="button"
@@ -789,7 +887,7 @@ export function MerchantCampaignPage() {
                     ) : (
                       <Plus className="h-3.5 w-3.5" />
                     )}
-                    {saving ? "Đang lưu..." : form.id ? "Lưu thay đổi" : "Tạo Campaign"}
+                    {saving ? "Đang lưu..." : form.id ? "Lưu thay đổi" : "Tạo chiến dịch"}
                   </Button>
                 </div>
               </form>
@@ -800,7 +898,7 @@ export function MerchantCampaignPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-200/60 dark:border-slate-800">
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                    Danh sách Campaign
+                    Danh sách chiến dịch
                   </h2>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     Theo dõi các chương trình đang mở và lịch sử khuyến mãi.
@@ -827,7 +925,7 @@ export function MerchantCampaignPage() {
                   <Input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Tìm theo mã code, tiêu đề hoặc mô tả..."
+                    placeholder="Tìm theo mã code, tên chiến dịch hoặc mô tả..."
                     className="h-10 rounded-xl bg-white dark:bg-slate-800 pl-10 text-xs font-medium border-slate-200 dark:border-slate-700"
                   />
                 </div>
@@ -946,8 +1044,8 @@ export function MerchantCampaignPage() {
                                 aria-checked={campaign.isActive}
                                 aria-label={
                                   campaign.isActive
-                                    ? "Tạm dừng Campaign"
-                                    : "Bật Campaign"
+                                    ? "Tạm dừng chiến dịch"
+                                    : "Kích hoạt chiến dịch"
                                 }
                                 title={
                                   campaign.isActive
@@ -1002,7 +1100,7 @@ export function MerchantCampaignPage() {
                                   type="button"
                                   onClick={() => handleEdit(campaign)}
                                   className="p-1.5 rounded-lg border border-cyan-200 dark:border-cyan-900 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50"
-                                  aria-label="Sửa campaign"
+                                  aria-label="Sửa chiến dịch"
                                 >
                                   <Pencil size={14} />
                                 </button>
@@ -1013,7 +1111,7 @@ export function MerchantCampaignPage() {
                                   type="button"
                                   onClick={() => setCampaignToDelete(campaign)}
                                   className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50"
-                                  aria-label="Xóa campaign"
+                                  aria-label="Xóa chiến dịch"
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -1028,7 +1126,7 @@ export function MerchantCampaignPage() {
                   <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
                     <Sparkles className="mx-auto h-8 w-8 text-slate-300 mb-2" />
                     <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                      Không tìm thấy campaign phù hợp.
+                      Không tìm thấy chiến dịch nào phù hợp.
                     </p>
                   </div>
                 )}
@@ -1043,7 +1141,7 @@ export function MerchantCampaignPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-rose-600">
                 <AlertTriangle size={18} />
-                Xác nhận xóa Campaign
+                Xác nhận xóa chiến dịch
               </DialogTitle>
               <DialogDescription className="text-xs font-medium text-slate-600 dark:text-slate-400 pt-2">
                 Bạn có chắc chắn muốn xóa mã khuyến mãi <span className="font-extrabold text-slate-900 dark:text-white">"{campaignToDelete?.code}"</span> ({campaignToDelete?.title})?

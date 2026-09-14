@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ const merchantItems = [
   ["Nhà hàng của bạn", "/merchant/restaurant", Store],
   ["Tạo đơn tại quán", "/merchant/create-order", ClipboardPlus],
   ["Trạng thái xét duyệt", "/merchant/application/status", Timer],
-  ["Chiến dịch", "/merchant/campaigns", Megaphone],
+  ["Chiến dịch ưu đãi", "/merchant/campaigns", Megaphone],
   ["Thống kê lượt xem", "/merchant/view-statistics", BarChart3],
 ] as const;
 
@@ -22,8 +22,15 @@ const applicantItems = [
 
 export function MerchantHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
   const role = getCurrentUser()?.Role;
   const items = role === "Customer" || role === "Reviewer" ? applicantItems : merchantItems;
+
+  const currentItem = items.find(([_, path]) => {
+    if (path === "/merchant") return location.pathname === "/merchant";
+    return location.pathname.startsWith(path);
+  });
+  const currentTitle = currentItem ? currentItem[0] : "Không gian chủ quán";
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -60,11 +67,11 @@ export function MerchantHeader() {
               </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono font-black text-emerald-600 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                SYSTEM ONLINE
+                HỆ THỐNG SẴN SÀNG
               </span>
             </div>
             <h1 className="mt-0.5 truncate text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              Quản lý hồ sơ cửa hàng
+              {currentTitle}
             </h1>
           </div>
         </div>
