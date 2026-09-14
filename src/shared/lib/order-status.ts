@@ -17,9 +17,9 @@ export type MerchantOrderAction = {
 
 const statusLabels: Record<OrderStatus, string> = {
   Pending: "Chờ xác nhận",
-  Accepted: "Đã nhận đơn",
+  Accepted: "Đang chuẩn bị",
   Preparing: "Đang chuẩn bị",
-  Ready: "Đã sẵn sàng",
+  Ready: "Đang chuẩn bị",
   Delivering: "Đang phục vụ",
   Rejected: "Đã từ chối",
   Completed: "Hoàn thành",
@@ -113,8 +113,8 @@ export function getCustomerOrderProgressMessage(
 
   if (statusKey === "ready") {
     return orderType?.trim().toLowerCase() === "offline"
-      ? "Đơn đã sẵn sàng tại quán. Bạn có thể kiểm tra bill và check-in."
-      : "Món đã sẵn sàng phục vụ tại quán.";
+      ? "Quán đang chuẩn bị món. Bạn có thể kiểm tra bill và thanh toán."
+      : "Quán đang chuẩn bị món cho bạn.";
   }
 
   if (statusKey === "delivering") {

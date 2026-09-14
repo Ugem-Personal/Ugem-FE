@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   XCircle,
   ChefHat,
-  PackageCheck,
   Utensils,
   AlertTriangle,
   Ban,
@@ -56,11 +55,11 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     description: "Quán đang chuẩn bị món",
   },
   ready: {
-    label: "Sẵn sàng",
+    label: "Đang chuẩn bị",
     className:
-      "border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300",
-    icon: PackageCheck,
-    description: "Món đã làm xong, sẵn sàng phục vụ tại quán",
+      "border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300",
+    icon: ChefHat,
+    description: "Quán đang chuẩn bị món phục vụ bạn",
   },
   delivering: {
     label: "Đang phục vụ",
