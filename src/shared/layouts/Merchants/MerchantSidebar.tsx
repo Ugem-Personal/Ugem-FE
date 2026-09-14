@@ -59,7 +59,7 @@ const merchantMenuItems: MerchantNavItem[] = [
       "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
   },
   {
-    label: "Tạo đơn tại quán (POS)",
+    label: "Tạo đơn tại quán",
     icon: ClipboardPlus,
     path: "/merchant/create-order",
     badge: "POS",
@@ -116,7 +116,7 @@ export function MerchantSidebar() {
       : merchantMenuItems;
 
   return (
-    <aside className={cn("sticky top-0 z-20 hidden h-dvh shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-4 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5", collapsed ? "w-[80px]" : "w-[250px]")}>
+    <aside className={cn("sticky top-0 z-20 hidden h-dvh shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-3.5 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5", collapsed ? "w-[80px]" : "w-[270px]")}>
       <div className="flex min-h-0 flex-1 flex-col gap-6">
         {/* Brand Header */}
         <div className="relative shrink-0 overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-xl text-white" style={{ padding: collapsed ? "12px 3px" : "14px" }}>
@@ -154,9 +154,9 @@ export function MerchantSidebar() {
                 end={end} title={label} aria-label={label}
                 className={({ isActive }) =>
                   cn(
-                    "group relative flex min-h-11 min-w-0 items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                    "group relative flex min-h-11 min-w-0 items-center gap-2.5 rounded-2xl px-3 py-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
                     isActive
-                      ? "bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-transparent border-l-4 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-black shadow-xs pl-3"
+                      ? "bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-transparent border-l-4 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-black shadow-xs pl-2.5"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white",
                     collapsed && "justify-center px-0 pl-0",
                   )
@@ -175,7 +175,7 @@ export function MerchantSidebar() {
                       <Icon className="h-4 w-4" />
                     </span>
 
-                    <span className={cn("min-w-0 flex-1 truncate text-xs font-bold", collapsed && "hidden")}>
+                    <span className={cn("min-w-0 flex-1 text-xs font-bold whitespace-nowrap", collapsed && "hidden")}>
                       {label}
                     </span>
 
