@@ -1,23 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
-  Bike,
   Check,
-  ChefHat,
   Eye,
   Info,
   Map,
   MapPin,
-  PackageCheck,
-  QrCode,
   RefreshCw,
   X,
 } from "lucide-react";
 import {
   acceptOrder,
   confirmCashPayment,
-  getMerchantCheckInQr,
   getMerchantOrderDetail,
   getMerchantOrders,
   rejectOrder,
@@ -30,7 +25,6 @@ import type {
 } from "@/shared/types";
 import { notify } from "@/shared/lib/notify";
 import {
-  getMerchantOrderAction,
   getOrderStatusLabel,
   normalizeOrderStatus,
 } from "@/shared/lib/order-status";
@@ -138,29 +132,6 @@ function getOrderTypeChipClass(orderType?: string | null) {
     : "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400";
 }
 
-function canGenerateCheckInQr(
-  status?: string | null,
-  orderType?: string | null,
-  paymentStatus?: string | null,
-) {
-  const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
-  const statusKey = getOrderStatusKey(status);
-
-  if (isPaid || statusKey === "completed") {
-    return false;
-  }
-
-  if (orderType?.trim().toLowerCase() !== "offline") {
-    return false;
-  }
-
-  return (
-    statusKey === "ready" ||
-    statusKey === "billupdated" ||
-    statusKey === "billconfirmed"
-  );
-}
-
 function getOrderActionMessage(
   status?: string | null,
   _orderType?: string | null,
@@ -173,47 +144,28 @@ function getOrderActionMessage(
     return "Đơn hàng đã hoàn tất, đã xác nhận thanh toán.";
   }
 
-  if (statusKey === "accepted") {
-    return "Đơn đã được nhận. Bắt đầu chuẩn bị khi bếp sẵn sàng.";
-  }
-
-  if (statusKey === "preparing") {
-    return "Bếp đang chuẩn bị món. Cập nhật khi toàn bộ đơn đã sẵn sàng.";
-  }
-
-  if (statusKey === "ready") {
-    return "Món đã sẵn sàng phục vụ tại bàn.";
-  }
-
-  if (statusKey === "delivering") {
-    return "Đang phục vụ món tại bàn cho khách.";
-  }
-
-  if (statusKey === "billconfirmed") {
-    return "Khách đã xác nhận bill. Có thể tạo lại QR check-in nếu cần.";
+  if (
+    statusKey === "accepted" ||
+    statusKey === "preparing" ||
+    statusKey === "ready" ||
+    statusKey === "billconfirmed"
+  ) {
+    return "Đơn đã xác nhận. Bếp đang chuẩn bị món phục vụ khách.";
   }
 
   if (statusKey === "cashpending") {
     return "Khách đã thanh toán tiền mặt, chờ quán xác nhận để hoàn tất đơn.";
   }
 
-  if (statusKey === "billupdated") {
-    return "Bill đã được cập nhật, có thể tạo lại QR check-in.";
-  }
-
   if (statusKey === "billrejected") {
     return "Khách đã từ chối bill, hãy cập nhật hóa đơn.";
-  }
-
-  if (statusKey === "completed") {
-    return "Đơn hàng đã hoàn tất.";
   }
 
   if (statusKey === "rejected") {
     return "Đơn đã bị từ chối.";
   }
 
-  return "Đơn mới đang chờ quán xác nhận để bắt đầu chế biến.";
+  return "Đơn mới đang chờ quán xác nhận.";
 }
 
 function getDetailItems(detail: MerchantOrderDetailPayload | null) {
@@ -304,8 +256,6 @@ export default function MerchantOrdersPage() {
   const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
   const [orderDetail, setOrderDetail] =
     useState<MerchantOrderDetailPayload | null>(null);
-  const [qrUrls, setQrUrls] = useState<Record<string, string>>({});
-  const generatingQrRef = useRef(new Set<string>());
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectTargetOrder, setRejectTargetOrder] =
@@ -329,27 +279,6 @@ export default function MerchantOrdersPage() {
 
       if (shouldCommit()) {
         setOrders(data ?? []);
-        setQrUrls((current) => {
-          const next = { ...current };
-
-          for (const orderId of Object.keys(current)) {
-            const matchingOrder = data?.find(
-              (order) => order.orderId === orderId,
-            );
-
-            if (
-              !matchingOrder ||
-              !canGenerateCheckInQr(
-                matchingOrder.status,
-                matchingOrder.orderType,
-              )
-            ) {
-              delete next[orderId];
-            }
-          }
-
-          return next;
-        });
       }
     } catch (error) {
       console.error(error);
@@ -466,11 +395,16 @@ export default function MerchantOrdersPage() {
 
     try {
       await acceptOrder(orderId);
-      notify.success("Đã chấp nhận đơn.");
+      try {
+        await updateMerchantOrderStatus(orderId, "Ready");
+      } catch {
+        // Fallback if backend already set status
+      }
+      notify.success("Đã xác nhận đơn. Bếp bắt đầu lên món.");
       await loadOrders();
     } catch (error) {
       console.error(error);
-      notify.errorApi(error, "Chấp nhận đơn thất bại.");
+      notify.errorApi(error, "Xác nhận đơn thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -504,57 +438,6 @@ export default function MerchantOrdersPage() {
       console.error(error);
       notify.errorApi(error, "Từ chối đơn thất bại.");
     } finally {
-      setActionOrderId(null);
-    }
-  }
-
-  async function handleAdvanceOrder(order: MerchantOrderSummary) {
-    const action = getMerchantOrderAction(order.status, order.orderType);
-
-    if (!action) {
-      notify.error("Đơn hiện không có bước vận hành tiếp theo dành cho quán.");
-      return;
-    }
-
-    setActionOrderId(order.orderId);
-
-    try {
-      await updateMerchantOrderStatus(order.orderId, action.nextStatus);
-      notify.success(action.successMessage);
-      await loadOrders();
-    } catch (error) {
-      console.error(error);
-      notify.errorApi(
-        error,
-        "Không thể cập nhật tiến độ đơn. Vui lòng thử lại.",
-      );
-    } finally {
-      setActionOrderId(null);
-    }
-  }
-
-  async function handleGenerateQr(
-    orderId: string,
-    billAlreadyConfirmed = false,
-  ) {
-    if (generatingQrRef.current.has(orderId) || qrUrls[orderId]) {
-      return;
-    }
-
-    generatingQrRef.current.add(orderId);
-    setActionOrderId(orderId);
-
-    try {
-      const nextUrl = await getMerchantCheckInQr(orderId, billAlreadyConfirmed);
-      setQrUrls((current) => ({
-        ...current,
-        [orderId]: nextUrl,
-      }));
-    } catch (error) {
-      console.error(error);
-      notify.errorApi(error, "Không tạo được QR check-in.");
-    } finally {
-      generatingQrRef.current.delete(orderId);
       setActionOrderId(null);
     }
   }
@@ -791,7 +674,7 @@ export default function MerchantOrdersPage() {
                 Đơn hàng của quán
               </h1>
               <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                Theo dõi, duyệt đơn và tạo QR xác nhận bill cho khách hàng.
+                Theo dõi, tiếp nhận đơn và xác nhận thanh toán cho khách hàng.
               </p>
             </div>
 
@@ -882,31 +765,28 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
-                      {canGenerateCheckInQr(
-                        order.status,
-                        order.orderType,
-                        order.paymentStatus,
-                      ) ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void handleGenerateQr(
-                              order.orderId,
-                              getOrderStatusKey(order.status) ===
-                                "billconfirmed",
-                            )
-                          }
-                          disabled={
-                            actionOrderId === order.orderId ||
-                            Boolean(qrUrls[order.orderId])
-                          }
-                          className="inline-flex items-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 transition hover:bg-cyan-500/20 disabled:opacity-50"
-                        >
-                          <QrCode size={16} />
-                          {qrUrls[order.orderId]
-                            ? "Đã tạo QR"
-                            : "Tạo mã QR check-in"}
-                        </button>
+                      {getOrderStatusKey(order.status) === "pending" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void handleAcceptOrder(order)}
+                            disabled={actionOrderId === order.orderId}
+                            className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                          >
+                            <Check size={15} />
+                            Xác nhận đơn
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRejectOrder(order)}
+                            disabled={actionOrderId === order.orderId}
+                            className="inline-flex items-center gap-1.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50"
+                          >
+                            <X size={15} />
+                            Từ chối
+                          </button>
+                        </>
                       ) : null}
 
                       {canConfirmPayment(
@@ -1217,34 +1097,6 @@ export default function MerchantOrdersPage() {
                         </>
                       ) : null}
 
-                      {getMerchantOrderAction(
-                        selectedOrder.status,
-                        selectedOrder.orderType,
-                      ) ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleAdvanceOrder(selectedOrder)}
-                          disabled={actionOrderId === selectedOrder.orderId}
-                          className="inline-flex h-10 items-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 shadow-md transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {getOrderStatusKey(selectedOrder.status) ===
-                          "accepted" ? (
-                            <ChefHat size={17} />
-                          ) : getOrderStatusKey(selectedOrder.status) ===
-                            "preparing" ? (
-                            <PackageCheck size={17} />
-                          ) : (
-                            <Bike size={17} />
-                          )}
-                          {
-                            getMerchantOrderAction(
-                              selectedOrder.status,
-                              selectedOrder.orderType,
-                            )?.label
-                          }
-                        </button>
-                      ) : null}
-
                       {getOrderStatusKey(selectedOrder.status) ===
                       "billrejected" ? (
                         <button
@@ -1254,33 +1106,6 @@ export default function MerchantOrdersPage() {
                           className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-300 transition hover:bg-amber-500/20 disabled:opacity-50"
                         >
                           Cập nhật hóa đơn
-                        </button>
-                      ) : null}
-
-                      {canGenerateCheckInQr(
-                        selectedOrder.status,
-                        selectedOrder.orderType,
-                        selectedOrder.paymentStatus,
-                      ) ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void handleGenerateQr(
-                              selectedOrder.orderId,
-                              getOrderStatusKey(selectedOrder.status) ===
-                                "billconfirmed",
-                            )
-                          }
-                          disabled={
-                            actionOrderId === selectedOrder.orderId ||
-                            Boolean(qrUrls[selectedOrder.orderId])
-                          }
-                          className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 transition hover:bg-cyan-500/20 disabled:opacity-50"
-                        >
-                          <QrCode size={16} />
-                          {qrUrls[selectedOrder.orderId]
-                            ? "Đã tạo QR"
-                            : "Tạo mã QR check-in"}
                         </button>
                       ) : null}
 
@@ -1312,27 +1137,6 @@ export default function MerchantOrdersPage() {
                       Đóng
                     </button>
                   </DialogFooter>
-
-                  {qrUrls[selectedOrder.orderId] ? (
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 rounded-2xl border border-cyan-500/30 bg-cyan-50/60 dark:bg-cyan-950/40 p-4 shadow-md">
-                      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white p-2 shrink-0">
-                        <img
-                          src={qrUrls[selectedOrder.orderId]}
-                          alt={`QR check-in ${selectedOrder.orderId}`}
-                          className="h-36 w-36 object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 w-full space-y-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                        <div className="font-bold text-cyan-600 dark:text-cyan-400">
-                          QR check-in tại quán
-                        </div>
-                        <p className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
-                          Khách hàng quét mã QR để mở hóa đơn, xác nhận bill và
-                          check-in tại quán.
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-16 text-center">
