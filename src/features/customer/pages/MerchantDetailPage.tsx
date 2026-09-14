@@ -45,7 +45,7 @@ import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
 import { clearAuth, getCurrentUser } from "@/features/auth";
 import { getMerchantOpenStatus } from "@/shared/utils/openingHours";
-import { BrandLogo, ModeToggle, UserAccountMenu } from "@/shared/components";
+import { BrandLogo, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
@@ -723,17 +723,17 @@ export default function MerchantDetailPage() {
       }`}
     >
       <header className="sticky top-0 z-40 -mx-4 -mt-6 mb-6 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-          <Link to="/customer" className="flex shrink-0 items-center">
-            <BrandLogo className="h-10 w-auto" />
+        <div className="mx-auto flex h-20 max-w-7xl 2xl:max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex shrink-0 items-center gap-3">
+            <BrandLogo className="h-9 sm:h-10 w-auto shrink-0 transition-transform hover:scale-105" />
           </Link>
-          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => setCheckInModalOpen(true)}
               aria-label="Mã check-in tích điểm của tôi"
-              className="h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
             >
               <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
               <span className="hidden sm:inline">Mã Check-in</span>
@@ -742,21 +742,21 @@ export default function MerchantDetailPage() {
               asChild
               type="button"
               variant="outline"
-              className="h-11 gap-2 rounded-xl px-3 text-xs font-black sm:px-4 sm:text-sm"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0"
             >
               <Link to="/customer/wishlist" aria-label="Quán yêu thích">
-                <Heart className="h-4 w-4 text-rose-500" />
+                <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
                 <span className="hidden md:inline">Quán yêu thích</span>
               </Link>
             </Button>
             <Button
               asChild
               type="button"
-              className="h-11 gap-2 rounded-xl bg-slate-900 px-3 text-xs font-black text-white dark:bg-cyan-500 dark:text-slate-950 sm:px-4 sm:text-sm"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl bg-slate-900 px-3 sm:px-5 text-xs sm:text-sm font-black text-white dark:bg-cyan-500 dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400 shrink-0"
             >
               <Link to="/customer/orders" aria-label="Đơn hàng của tôi">
                 <ShoppingBag className="h-4 w-4" />
-                <span className="hidden sm:inline">Đơn hàng của tôi</span>
+                <span className="hidden md:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
             <UserAccountMenu fallbackName="Customer" />
@@ -782,8 +782,6 @@ export default function MerchantDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Quay lại
           </button>
-
-          <ModeToggle />
         </div>
 
         {/* Merchant Hero Banner */}
