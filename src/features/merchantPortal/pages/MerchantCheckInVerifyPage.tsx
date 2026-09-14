@@ -80,20 +80,7 @@ export default function MerchantCheckInVerifyPage() {
     return DEFAULT_BENEFITS;
   });
 
-  const [selectedBenefit, setSelectedBenefit] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed[0];
-        }
-      }
-    } catch {
-      // fallback below
-    }
-    return DEFAULT_BENEFITS[0];
-  });
+  const [selectedBenefit, setSelectedBenefit] = useState<string | null>(null);
 
   const [benefitModalOpen, setBenefitModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -160,14 +147,14 @@ export default function MerchantCheckInVerifyPage() {
     const updated = benefits.filter((_, i) => i !== index);
     saveBenefits(updated);
     if (selectedBenefit === text) {
-      setSelectedBenefit(updated[0]);
+      setSelectedBenefit(null);
     }
     notify.success("Đã xóa ưu đãi");
   };
 
   const handleResetDefaultBenefits = () => {
     saveBenefits(DEFAULT_BENEFITS);
-    setSelectedBenefit(DEFAULT_BENEFITS[0]);
+    setSelectedBenefit(null);
     notify.success("Đã khôi phục các ưu đãi mặc định");
   };
 
@@ -215,7 +202,7 @@ export default function MerchantCheckInVerifyPage() {
       return;
     }
 
-    const benefitToApply = selectedBenefit;
+    const benefitToApply = selectedBenefit?.trim() || undefined;
 
     setSubmitting(true);
     try {
@@ -225,7 +212,7 @@ export default function MerchantCheckInVerifyPage() {
       try {
         const res = await api.post("/check-in/merchant/verify-customer-code", {
           customerCode: code,
-          rewardBenefit: benefitToApply,
+          ...(benefitToApply ? { rewardBenefit: benefitToApply } : {}),
         });
         if (res.data?.data) {
           resultData = res.data.data;
@@ -241,7 +228,7 @@ export default function MerchantCheckInVerifyPage() {
               "/check-ins/merchant/verify-customer-code",
               {
                 customerCode: code,
-                rewardBenefit: benefitToApply,
+                ...(benefitToApply ? { rewardBenefit: benefitToApply } : {}),
               },
             );
             if (res2.data?.data) {
@@ -271,7 +258,7 @@ export default function MerchantCheckInVerifyPage() {
           customerCode: code,
           pointsAwarded: 10,
           newTotalPoints: 160,
-          rewardBenefit: benefitToApply,
+          rewardBenefit: benefitToApply || "Không áp dụng ưu đãi (Chỉ tích điểm)",
           checkedInAt: new Date().toISOString(),
           status: "Verified",
         };
@@ -396,13 +383,50 @@ export default function MerchantCheckInVerifyPage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {/* Option: Không áp dụng ưu đãi (Chỉ tích điểm) */}
+                        <div
+                          onClick={() => setSelectedBenefit(null)}
+                          className={`group relative flex items-start justify-between gap-2 rounded-2xl border p-3 text-left text-xs font-bold transition cursor-pointer ${
+                            selectedBenefit === null
+                              ? "border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <CheckCircle2
+                              className={`h-4 w-4 shrink-0 mt-0.5 ${
+                                selectedBenefit === null
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-slate-400"
+                              }`}
+                            />
+                            <div>
+                              <span className="break-words leading-relaxed font-bold block">
+                                Không áp dụng ưu đãi
+                              </span>
+                              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block mt-0.5">
+                                Chỉ tích điểm thưởng cho khách
+                              </span>
+                            </div>
+                          </div>
+                          {selectedBenefit === null && (
+                            <span className="shrink-0 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+                              ✓ Đang chọn
+                            </span>
+                          )}
+                        </div>
+
                         {benefits.map((benefit, index) => (
                           <div
                             key={`${benefit}-${index}`}
-                            onClick={() => setSelectedBenefit(benefit)}
+                            onClick={() =>
+                              setSelectedBenefit((prev) =>
+                                prev === benefit ? null : benefit,
+                              )
+                            }
                             className={`group relative flex items-start justify-between gap-2 rounded-2xl border p-3 text-left text-xs font-bold transition cursor-pointer ${
                               selectedBenefit === benefit
-                                ? "border-cyan-500 bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 ring-2 ring-cyan-500/20"
+                                ? "border-cyan-500 bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 ring-2 ring-cyan-500/20 shadow-xs"
                                 : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 hover:border-slate-300"
                             }`}
                           >
@@ -414,7 +438,16 @@ export default function MerchantCheckInVerifyPage() {
                                     : "text-slate-400"
                                 }`}
                               />
-                              <span className="break-words leading-relaxed">{benefit}</span>
+                              <div>
+                                <span className="break-words leading-relaxed block font-bold">
+                                  {benefit}
+                                </span>
+                                {selectedBenefit === benefit ? (
+                                  <span className="text-[10px] font-medium text-cyan-600 dark:text-cyan-400 block mt-0.5">
+                                    (Bấm lại để hủy chọn)
+                                  </span>
+                                ) : null}
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition">
