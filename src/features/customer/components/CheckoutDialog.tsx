@@ -161,11 +161,12 @@ export function CheckoutDialog({
   );
 
   const remainingBill = Math.max(0, total - discount);
+  const POINT_TO_VND_RATE = 100;
   const maxPointsPossible = Math.min(
     customerPoints,
-    Math.floor(remainingBill / 1000),
+    Math.floor(remainingBill / POINT_TO_VND_RATE),
   );
-  const pointsDiscount = usePoints && maxPointsPossible > 0 ? maxPointsPossible * 1000 : 0;
+  const pointsDiscount = usePoints && maxPointsPossible > 0 ? maxPointsPossible * POINT_TO_VND_RATE : 0;
   const finalPayable = Math.max(0, remainingBill - pointsDiscount);
 
   async function resolveCampaign() {
@@ -403,7 +404,7 @@ export function CheckoutDialog({
                       </span>
                     </p>
                     <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      1 điểm = 1.000đ (Dùng tối đa {maxPointsPossible} điểm = -{formatPrice(maxPointsPossible * 1000)})
+                      1 điểm = 100đ (Dùng tối đa {maxPointsPossible} điểm = -{formatPrice(maxPointsPossible * POINT_TO_VND_RATE)})
                     </p>
                   </div>
                 </div>

@@ -707,7 +707,7 @@ export default function CustomerProfilePage() {
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                       Thẻ Thành Viên & Điểm Thưởng UFind
                       <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold">
-                        1 điểm = 1.000đ
+                        1 điểm = 100đ
                       </span>
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -776,7 +776,7 @@ export default function CustomerProfilePage() {
                       </div>
                       <div className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-black/40 border border-white/10 px-3 py-1 text-xs font-mono font-bold text-emerald-300 backdrop-blur-md">
                         <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                        Trừ ngay = {(currentPoints * 1000).toLocaleString("vi-VN")} đ khi gọi món
+                        Trừ ngay = {(currentPoints * 100).toLocaleString("vi-VN")} đ khi gọi món
                       </div>
                     </div>
 
@@ -795,7 +795,7 @@ export default function CustomerProfilePage() {
                           Quy chuẩn
                         </p>
                         <p className="text-xs font-mono font-bold text-cyan-300">
-                          1 Point = 1.000 VNĐ
+                          1 Point = 100 VNĐ
                         </p>
                       </div>
                     </div>
@@ -894,7 +894,7 @@ export default function CustomerProfilePage() {
                         Chọn dùng điểm khi order
                       </p>
                       <p className="mt-2 text-xs font-black text-cyan-600 dark:text-cyan-400">
-                        1đ = 1.000 VNĐ
+                        1đ = 100 VNĐ
                       </p>
                     </div>
                   </div>
