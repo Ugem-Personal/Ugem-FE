@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ChevronRight,
   LoaderCircle,
+  Map,
   MapPin,
   Navigation,
   Search,
@@ -36,6 +37,7 @@ import {
   reverseGeocode,
   searchGeocodeAddress,
 } from "@/shared/services/vietmapService";
+import VietMapLocationPickerModal from "../components/VietMapLocationPickerModal";
 
 type Coords = { latitude: number; longitude: number };
 type LocationMode = "current" | "custom";
@@ -44,8 +46,6 @@ const DEFAULT_COORDS: Coords = {
   latitude: 10.762622,
   longitude: 106.660172,
 };
-
-const DISTANCE_OPTIONS = [5, 10, 15, 30];
 
 const CUISINE_QUICK_TABS = [
   { id: "all", label: "Tất cả món", query: "" },
@@ -165,7 +165,8 @@ export default function GuestExplorePage() {
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationBusy, setLocationBusy] = useState(false);
   const [locationError, setLocationError] = useState("");
-  const [distanceKm, setDistanceKm] = useState(15);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [sortBy, setSortBy] = useState<"distance" | "rating" | "reviews" | "combo">("distance");
   const [priceRange, setPriceRange] = useState("");
   const [restaurantFilter, setRestaurantFilter] = useState("");
   const [requestVersion, setRequestVersion] = useState(0);
@@ -225,7 +226,7 @@ export default function GuestExplorePage() {
       priceRange: priceRange || undefined,
       restaurantType: restaurantFilter || undefined,
       mainDishType: selectedMainDishType || undefined,
-      radiusKm: distanceKm,
+      radiusKm: 15,
     });
 
     request
@@ -247,7 +248,6 @@ export default function GuestExplorePage() {
     activeKeyword,
     coords.latitude,
     coords.longitude,
-    distanceKm,
     priceRange,
     requestVersion,
     restaurantFilter,
@@ -272,9 +272,41 @@ export default function GuestExplorePage() {
   }, [detail]);
 
   const displayedMerchants = useMemo(() => {
-    if (selectedCuisineTab !== "combo") return merchants;
-    return merchants.filter((m) => m.menu?.some((food) => food.isCombo));
-  }, [merchants, selectedCuisineTab]);
+    let list = merchants;
+    if (selectedCuisineTab === "combo") {
+      list = list.filter((m) => m.menu?.some((food) => food.isCombo));
+    }
+
+    return [...list].sort((a, b) => {
+      if (sortBy === "distance") {
+        const distA =
+          typeof a.distance === "number" && Number.isFinite(a.distance)
+            ? a.distance
+            : Number.MAX_VALUE;
+        const distB =
+          typeof b.distance === "number" && Number.isFinite(b.distance)
+            ? b.distance
+            : Number.MAX_VALUE;
+        return distA - distB;
+      }
+      if (sortBy === "rating") {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA;
+      }
+      if (sortBy === "reviews") {
+        const reviewsA = a.reviewCount ?? 0;
+        const reviewsB = b.reviewCount ?? 0;
+        return reviewsB - reviewsA;
+      }
+      if (sortBy === "combo") {
+        const hasComboA = a.menu?.some((f) => f.isCombo) ? 1 : 0;
+        const hasComboB = b.menu?.some((f) => f.isCombo) ? 1 : 0;
+        return hasComboB - hasComboA;
+      }
+      return 0;
+    });
+  }, [merchants, selectedCuisineTab, sortBy]);
 
   const resultLabel = useMemo(() => {
     if (loading) return "Đang tìm những địa điểm phù hợp…";
@@ -287,7 +319,7 @@ export default function GuestExplorePage() {
     selectedCuisineTab === "combo" ||
     priceRange ||
     restaurantFilter ||
-    distanceKm !== 15,
+    sortBy !== "distance",
   );
 
   function handleSearch(event: FormEvent) {
@@ -313,7 +345,7 @@ export default function GuestExplorePage() {
     setActiveKeyword("");
     setSelectedCuisineTab("all");
     setSelectedMainDishType("");
-    setDistanceKm(15);
+    setSortBy("distance");
     setPriceRange("");
     setRestaurantFilter("");
   }
@@ -559,6 +591,14 @@ export default function GuestExplorePage() {
                   <MapPin className="h-4 w-4" />
                   Khu vực khác
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMapPicker(true)}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-black text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+                >
+                  <Map className="h-4 w-4 text-cyan-500" />
+                  Chọn trên bản đồ
+                </button>
               </div>
               <div className="mt-3 flex min-w-0 items-start gap-2 text-sm font-black text-slate-950 dark:text-white">
                 <MapPin className="h-4 w-4 shrink-0 text-cyan-500" />
@@ -577,20 +617,18 @@ export default function GuestExplorePage() {
 
             <div className="flex flex-1 flex-col gap-2 sm:flex-row lg:max-w-3xl lg:justify-end">
               <label className="relative min-w-36 flex-1 lg:max-w-48">
-                <span className="sr-only">Khoảng cách</span>
+                <span className="sr-only">Sắp xếp</span>
                 <select
-                  value={distanceKm}
+                  value={sortBy}
                   onChange={(event) => {
-                    setLoading(true);
-                    setDistanceKm(Number(event.target.value));
+                    setSortBy(event.target.value as typeof sortBy);
                   }}
                   className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  {DISTANCE_OPTIONS.map((distance) => (
-                    <option key={distance} value={distance}>
-                      ≤ {distance} km
-                    </option>
-                  ))}
+                  <option value="distance">📍 Gần tôi nhất</option>
+                  <option value="rating">⭐ Đánh giá cao nhất</option>
+                  <option value="reviews">🔥 Nhiều đánh giá nhất</option>
+                  <option value="combo">🍱 Ưu đãi & Combo hot</option>
                 </select>
               </label>
 
@@ -1032,6 +1070,16 @@ export default function GuestExplorePage() {
           </section>
         </div>
       ) : null}
+
+      <VietMapLocationPickerModal
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        initialCoords={coords}
+        initialAddress={locationLabel}
+        onConfirm={(pickedCoords, pickedAddress) => {
+          applyLocation(pickedCoords, pickedAddress, "custom");
+        }}
+      />
     </main>
   );
 }
