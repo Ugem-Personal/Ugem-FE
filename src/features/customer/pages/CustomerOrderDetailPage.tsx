@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Banknote,
   Check,
   Heart,
   Star,
@@ -492,6 +493,15 @@ export default function CustomerOrderDetailPage() {
     currentSummaryOrder?.orderType?.trim().toLowerCase() === "offline" ||
     normalizeString(currentSummaryOrder?.deliveryAddress) === "tai quan" ||
     normalizeString(currentSummaryOrder?.notes).includes("offline");
+  const isBankTransfer =
+    currentSummaryOrder?.paymentMethod === "BankTransfer" ||
+    currentSummaryOrder?.paymentMethod === "SePay" ||
+    Boolean(
+      currentSummaryOrder?.paymentMethod
+        ?.toLowerCase()
+        .includes("banktransfer") ||
+        currentSummaryOrder?.paymentMethod?.toLowerCase().includes("sepay"),
+    );
   const isConfirmationReady =
     !isCompleted &&
     isCustomerConfirmationReady(
@@ -642,29 +652,65 @@ export default function CustomerOrderDetailPage() {
             </div>
           )}
 
-          {/* Ready / Confirmation / Completion Action Box */}
+          {/* Ready / Confirmation / Guidance Box */}
           {effectiveOrderId && isConfirmationReady ? (
-            <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
-              <div className="font-black text-slate-950 dark:text-white text-sm">
-                {isOfflineOrder
-                  ? "Món đã sẵn sàng tại bàn"
-                  : "Quán đang phục vụ món"}
+            isOfflineOrder ? (
+              isBankTransfer ? (
+                <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
+                  <div className="font-black text-slate-950 dark:text-white text-sm">
+                    Đơn đã được quán tiếp nhận
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                    Bếp đang chuẩn bị món. Vui lòng kiểm tra hóa đơn và quét mã chuyển khoản để thanh toán.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenCheckIn()}
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-xs font-black text-white shadow-md transition"
+                  >
+                    <Check className="h-4 w-4" />
+                    Kiểm tra & Thanh toán chuyển khoản
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-6 rounded-2xl border border-amber-200/80 dark:border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-orange-50/60 dark:from-amber-950/40 dark:to-slate-900 px-5 py-4 shadow-2xs flex items-start gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 mt-0.5">
+                    <Banknote className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h4 className="font-black text-slate-950 dark:text-white text-sm">
+                        Thanh toán tiền mặt tại quán
+                      </h4>
+                      <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-400">
+                        {formatPrice(total)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      Bếp đang chế biến món ăn. Vui lòng gửi tiền mặt trực tiếp cho nhân viên hoặc tại quầy khi nhận món / dùng bữa xong. Quán sẽ xác nhận hoàn tất đơn cho bạn.
+                    </p>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div className="mt-6 rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/60 dark:to-slate-900 px-5 py-4 shadow-2xs">
+                <div className="font-black text-slate-950 dark:text-white text-sm">
+                  Quán đang phục vụ món
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  Chỉ bấm xác nhận sau khi bạn đã kiểm tra và nhận đầy đủ món.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleOpenCheckIn()}
+                  disabled={confirmingDelivery}
+                  className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-950 dark:bg-cyan-500 px-5 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
+                >
+                  <Check className="h-4 w-4" />
+                  Đã nhận món
+                </button>
               </div>
-              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
-                {isOfflineOrder
-                  ? "Quán đã chuẩn bị xong món. Vui lòng mở hóa đơn để kiểm tra thông tin và tiến hành thanh toán."
-                  : "Chỉ bấm xác nhận sau khi bạn đã kiểm tra và nhận đầy đủ món."}
-              </p>
-              <button
-                type="button"
-                onClick={() => void handleOpenCheckIn()}
-                disabled={confirmingDelivery}
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-950 dark:bg-cyan-500 px-5 py-2.5 text-xs font-black text-white dark:text-slate-950 shadow-md hover:bg-cyan-600 dark:hover:bg-cyan-400 transition"
-              >
-                <Check className="h-4 w-4" />
-                {isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận món"}
-              </button>
-            </div>
+            )
           ) : isCompleted ? (
             <div className="mt-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-950/40 px-5 py-4 text-xs font-bold text-emerald-900 dark:text-emerald-200">
               <p className="font-black text-sm text-emerald-900 dark:text-emerald-100">
