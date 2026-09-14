@@ -3,31 +3,12 @@ import type { MerchantFoodTopping, MerchantMenuItem } from "../types";
 import { ImageWithFallback } from "@/shared/components";
 import { cn } from "@/lib/utils";
 
-export const DEFAULT_SAMPLE_TOPPINGS: MerchantFoodTopping[] = [
-  { id: "top-egg", name: "Trứng ốp la", price: 5000 },
-  { id: "top-cha", name: "Chả hấp", price: 8000 },
-  { id: "top-rice", name: "Cơm thêm", price: 5000 },
-  { id: "top-soup", name: "Canh rong biển", price: 10000 },
-];
-
 export function getEffectiveFoodToppings(
   food?: MerchantMenuItem | null,
 ): MerchantFoodTopping[] {
   if (!food) return [];
-  if (food.toppings && food.toppings.length > 0) {
-    return food.toppings;
-  }
-  return DEFAULT_SAMPLE_TOPPINGS;
+  return food.toppings && food.toppings.length > 0 ? food.toppings : [];
 }
-
-const QUICK_NOTE_PRESETS = [
-  "Ít cơm",
-  "Không hành",
-  "Nước sốt riêng",
-  "Ít cay",
-  "Ăn tại bàn",
-  "Mang về",
-];
 
 type FoodOptionModalProps = {
   food: MerchantMenuItem;
@@ -77,36 +58,6 @@ export function FoodOptionModal({
 
   const unitTotal = food.price + selectedToppingsTotal;
   const totalPrice = unitTotal * quantity;
-
-  function toggleQuickNote(preset: string) {
-    const trimmedNotes = notes.trim();
-    if (!trimmedNotes) {
-      onNotesChange(preset);
-      return;
-    }
-
-    const currentParts = trimmedNotes
-      .split(/,\s*|\s*\|\s*/)
-      .map((p) => p.trim())
-      .filter(Boolean);
-
-    const exists = currentParts.some(
-      (p) => p.toLowerCase() === preset.toLowerCase(),
-    );
-
-    if (exists) {
-      const nextParts = currentParts.filter(
-        (p) => p.toLowerCase() !== preset.toLowerCase(),
-      );
-      onNotesChange(nextParts.join(", "));
-    } else {
-      onNotesChange([...currentParts, preset].join(", "));
-    }
-  }
-
-  function isNotePresetActive(preset: string) {
-    return notes.toLowerCase().includes(preset.toLowerCase());
-  }
 
   return (
     <div
@@ -287,34 +238,12 @@ export function FoodOptionModal({
               </span>
             </div>
 
-            {/* Quick Note Presets */}
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {QUICK_NOTE_PRESETS.map((preset) => {
-                const active = isNotePresetActive(preset);
-                return (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => toggleQuickNote(preset)}
-                    className={cn(
-                      "rounded-xl px-2.5 py-1 text-xs font-bold transition-colors",
-                      active
-                        ? "border border-cyan-500 bg-cyan-100/70 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300"
-                        : "border border-slate-200/80 dark:border-white/10 bg-slate-100/80 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-white/10",
-                    )}
-                  >
-                    {active ? `✓ ${preset}` : `+ ${preset}`}
-                  </button>
-                );
-              })}
-            </div>
-
             <textarea
               id="food-option-notes"
               value={notes}
               onChange={(event) => onNotesChange(event.target.value)}
               rows={3}
-              placeholder="Ví dụ: Ít cơm, không hành, để nước sốt riêng..."
+              placeholder="Ví dụ: Ít cay, ít ngọt, để riêng đá / nước sốt..."
               className="w-full resize-none rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
             />
           </div>
