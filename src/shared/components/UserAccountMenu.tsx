@@ -94,7 +94,7 @@ export function UserAccountMenu({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2.5 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-2.5 py-1.5 shadow-xs backdrop-blur-md transition duration-200 hover:border-cyan-300 dark:hover:border-cyan-500/50 sm:px-3.5",
+        "flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-2 py-1.5 shadow-xs backdrop-blur-md transition duration-200 hover:border-cyan-300 dark:hover:border-cyan-500/50 sm:px-3",
         className,
       )}
     >
@@ -114,13 +114,13 @@ export function UserAccountMenu({
       </div>
 
       <div className="hidden min-w-0 xl:block">
-        <p className="max-w-[190px] truncate text-sm font-black leading-snug text-slate-950 dark:text-white sm:max-w-[220px]">
+        <p className="max-w-[140px] 2xl:max-w-[200px] truncate text-sm font-black leading-snug text-slate-950 dark:text-white">
           {displayName}
         </p>
 
         <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5">
           {email ? (
-            <span className="max-w-[150px] truncate text-xs font-semibold leading-none text-slate-500 dark:text-slate-400 sm:max-w-[190px]">
+            <span className="max-w-[120px] 2xl:max-w-[170px] truncate text-xs font-semibold leading-none text-slate-500 dark:text-slate-400">
               {email}
             </span>
           ) : null}

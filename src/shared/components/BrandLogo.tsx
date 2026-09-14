@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import logoLight from "@/assets/ugem-logo.png";
 import logoDark from "@/assets/ugem-logo-dark.png";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,7 @@ export function BrandLogo({ className = "h-10 w-auto", alt = "UFind" }: BrandLog
       src={isDark ? logoDark : logoLight}
       alt={alt}
       className={cn(
+        "shrink-0 object-contain",
         className,
         "select-none transition-all duration-300",
         isDark && "drop-shadow-[0_0_15px_rgba(56,189,248,0.28)]"

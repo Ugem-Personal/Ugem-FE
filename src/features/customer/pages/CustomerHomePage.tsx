@@ -1207,28 +1207,28 @@ export default function CustomerHomePage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-xs transition-colors duration-300">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <Link to="/customer" className="flex items-center gap-3">
-            <BrandLogo className="h-10 w-auto transition-transform hover:scale-105" />
+        <div className="mx-auto flex h-20 max-w-7xl 2xl:max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/customer" className="flex items-center gap-3 shrink-0">
+            <BrandLogo className="h-9 sm:h-10 w-auto shrink-0 transition-transform hover:scale-105" />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => setCheckInModalOpen(true)}
               aria-label="Mã check-in tích điểm của tôi"
-              className="h-11 gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-3 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
             >
               <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-              <span>Mã Check-in</span>
+              <span className="hidden sm:inline">Mã Check-in</span>
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={handleOpenWishlist}
               aria-label="Mở danh sách quán yêu thích"
-              className="h-11 gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-3 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0"
             >
               <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
               <span className="hidden md:inline">Quán yêu thích</span>
@@ -1236,10 +1236,10 @@ export default function CustomerHomePage() {
             <Button
               type="button"
               onClick={handleOpenMyOrders}
-              className="h-11 gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400"
+              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-3 sm:px-5 text-xs sm:text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400 shrink-0"
             >
               <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">Đơn hàng của tôi</span>
+              <span className="hidden md:inline">Đơn hàng của tôi</span>
             </Button>
             <UserAccountMenu fallbackName="Customer" />
           </div>

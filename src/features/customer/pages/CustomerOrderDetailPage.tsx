@@ -512,8 +512,8 @@ export default function CustomerOrderDetailPage() {
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/85 shadow-xs backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <Link to="/customer" className="flex items-center gap-3">
-            <BrandLogo className="h-10 w-auto" />
+          <Link to="/customer" className="flex items-center gap-3 shrink-0">
+            <BrandLogo className="h-10 w-auto shrink-0" />
           </Link>
           <div className="flex items-center gap-3">
             <Button
