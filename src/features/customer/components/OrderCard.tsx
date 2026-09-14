@@ -76,15 +76,15 @@ export function OrderCard({
     currentStepIndex = 0;
   }
 
-  const isOrderAccepted = [
-    "accepted",
-    "preparing",
-    "ready",
-    "delivering",
-    "completed",
-    "billconfirmed",
-    "cashpending",
-  ].includes(statusLower);
+  const canShowCheckInCode = isOfflineOrder
+    ? [
+        "ready",
+        "delivering",
+        "completed",
+        "billconfirmed",
+        "cashpending",
+      ].includes(statusLower)
+    : ["delivering", "completed"].includes(statusLower);
 
   const isBillConfirmed =
     !isPaid &&
@@ -268,11 +268,18 @@ export function OrderCard({
         <div className="flex flex-wrap items-center gap-2">
           {statusLower === "pending" && (
             <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 italic">
-              Chờ quán nhận đơn để check-in
+              Chờ quán nhận đơn
             </span>
           )}
 
-          {isOrderAccepted && onOpenCheckInCode && (
+          {(statusLower === "accepted" || statusLower === "preparing") && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 italic">
+              <ChefHat className="h-3.5 w-3.5" />
+              Bếp đang chuẩn bị món...
+            </span>
+          )}
+
+          {canShowCheckInCode && onOpenCheckInCode && (
             <button
               type="button"
               onClick={(e) => {

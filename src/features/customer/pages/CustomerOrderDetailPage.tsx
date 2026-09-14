@@ -509,15 +509,15 @@ export default function CustomerOrderDetailPage() {
       displayOrderStatus,
       isOfflineOrder ? "Offline" : "Online",
     );
-  const isOrderAccepted = [
-    "accepted",
-    "preparing",
-    "ready",
-    "delivering",
-    "completed",
-    "billconfirmed",
-    "cashpending",
-  ].includes(normalizedOrderStatus ?? "");
+  const canShowLoyaltyCard = isOfflineOrder
+    ? [
+        "ready",
+        "delivering",
+        "completed",
+        "billconfirmed",
+        "cashpending",
+      ].includes(normalizedOrderStatus ?? "")
+    : ["delivering", "completed"].includes(normalizedOrderStatus ?? "");
   const isOrderPending = normalizedOrderStatus === "pending";
   const reviewLocked = hasReviewed || submittingReview;
 
@@ -751,8 +751,8 @@ export default function CustomerOrderDetailPage() {
             </div>
           ) : null}
 
-          {/* Check-In Loyalty Card (Only when order is accepted / preparing / ready / completed) */}
-          {isOrderAccepted && (
+          {/* Check-In Loyalty Card (Only when order is ready / completed / bill confirmed) */}
+          {canShowLoyaltyCard && (
             <div className="mt-6 rounded-2xl border border-cyan-300/80 dark:border-cyan-500/40 bg-gradient-to-r from-cyan-50/90 via-white to-sky-50/90 dark:from-cyan-950/40 dark:via-slate-900 dark:to-sky-950/30 p-5 shadow-xs backdrop-blur-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">

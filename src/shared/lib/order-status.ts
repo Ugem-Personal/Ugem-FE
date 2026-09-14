@@ -79,9 +79,7 @@ export function isCustomerConfirmationReady(
   }
 
   return orderTypeKey === "offline"
-    ? statusKey === "accepted" ||
-        statusKey === "preparing" ||
-        statusKey === "ready"
+    ? statusKey === "ready" || statusKey === "delivering"
     : statusKey === "delivering";
 }
 
