@@ -20,6 +20,7 @@ import { BrandLogo, UserAccountMenu, ModeToggle } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
 import { OrderCard, OrderCardSkeleton } from "../components/OrderCard";
+import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 
 type OrderFilterTab =
   | "all"
@@ -43,6 +44,8 @@ export default function CustomerOrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderFilterTab>(initialTab);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pageIndex, setPageIndex] = useState(initialPage);
+  const [checkInModalOrder, setCheckInModalOrder] =
+    useState<CustomerOrderSummary | null>(null);
   const [paginationMeta, setPaginationMeta] = useState<{
     pageIndex: number;
     pageSize: number;
@@ -320,6 +323,7 @@ export default function CustomerOrdersPage() {
                 onViewDetail={handleViewDetail}
                 onQuickReview={handleQuickReview}
                 onQuickConfirm={(ord) => void handleQuickConfirm(ord)}
+                onOpenCheckInCode={(ord) => setCheckInModalOrder(ord)}
               />
             ))}
           </div>
@@ -386,6 +390,12 @@ export default function CustomerOrdersPage() {
             </button>
           </div>
         ) : null}
+
+        <CustomerCheckInCodeModal
+          open={!!checkInModalOrder}
+          order={checkInModalOrder}
+          onClose={() => setCheckInModalOrder(null)}
+        />
       </div>
     </div>
   );

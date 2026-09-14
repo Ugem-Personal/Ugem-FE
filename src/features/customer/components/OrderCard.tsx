@@ -20,6 +20,7 @@ interface OrderCardProps {
   onViewDetail: (order: CustomerOrderSummary, fallbackOrderNumber: number) => void;
   onQuickReview?: (order: CustomerOrderSummary) => void;
   onQuickConfirm?: (order: CustomerOrderSummary) => void;
+  onOpenCheckInCode?: (order: CustomerOrderSummary) => void;
   className?: string;
 }
 
@@ -33,6 +34,7 @@ export function OrderCard({
   onViewDetail,
   onQuickReview,
   onQuickConfirm,
+  onOpenCheckInCode,
   className,
 }: OrderCardProps) {
   const orderId = getCustomerOrderId(order);
@@ -45,6 +47,17 @@ export function OrderCard({
   const isOfflineOrder =
     order.orderType?.trim().toLowerCase() === "offline" ||
     (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
+
+  const statusLower = (order.status ?? "").toLowerCase();
+  const isOrderAccepted = [
+    "accepted",
+    "preparing",
+    "ready",
+    "delivering",
+    "completed",
+    "billconfirmed",
+    "cashpending",
+  ].includes(statusLower);
 
   const isBillConfirmed =
     !isPaid &&
@@ -167,7 +180,27 @@ export function OrderCard({
           Xem chi tiết đơn <ChevronRight className="h-4 w-4" />
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {statusLower === "pending" && (
+            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 italic">
+              Chờ quán nhận đơn để check-in
+            </span>
+          )}
+
+          {isOrderAccepted && onOpenCheckInCode && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenCheckInCode(order);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-300 dark:border-cyan-500/40 bg-cyan-50 dark:bg-cyan-950/40 px-3 py-1.5 text-xs font-black text-cyan-800 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition shadow-2xs"
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              Mã Check-in
+            </button>
+          )}
+
           {isReadyToConfirm && onQuickConfirm && (
             <button
               type="button"

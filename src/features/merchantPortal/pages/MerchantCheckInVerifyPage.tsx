@@ -101,6 +101,7 @@ export default function MerchantCheckInVerifyPage() {
     setSubmitting(true);
     try {
       let resultData: CheckInResult | null = null;
+      let businessError: string | null = null;
 
       try {
         const res = await api.post("/check-in/merchant/verify-customer-code", {
@@ -110,21 +111,39 @@ export default function MerchantCheckInVerifyPage() {
         if (res.data?.data) {
           resultData = res.data.data;
         }
-      } catch {
-        try {
-          const res2 = await api.post("/check-ins/merchant/verify-customer-code", {
-            customerCode: code,
-            rewardBenefit: benefitToApply,
-          });
-          if (res2.data?.data) {
-            resultData = res2.data.data;
+      } catch (err1: any) {
+        if (err1?.response?.status === 400) {
+          businessError =
+            err1?.response?.data?.message ||
+            "Chỉ được tích điểm sau khi khách đặt món và quán đã nhận đơn!";
+        } else {
+          try {
+            const res2 = await api.post(
+              "/check-ins/merchant/verify-customer-code",
+              {
+                customerCode: code,
+                rewardBenefit: benefitToApply,
+              },
+            );
+            if (res2.data?.data) {
+              resultData = res2.data.data;
+            }
+          } catch (err2: any) {
+            if (err2?.response?.status === 400) {
+              businessError =
+                err2?.response?.data?.message ||
+                "Chỉ được tích điểm sau khi khách đặt món và quán đã nhận đơn!";
+            }
           }
-        } catch {
-          // Handled via demo fallback
         }
       }
 
-      // If backend not reachable or 404 in demo mode, create valid mock verify result
+      if (businessError) {
+        notify.error(businessError);
+        return;
+      }
+
+      // If backend offline or 404 in demo mode, create valid mock verify result
       if (!resultData) {
         resultData = {
           checkInId: `chk-${Date.now().toString(36)}`,

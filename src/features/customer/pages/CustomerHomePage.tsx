@@ -9,7 +9,6 @@ import {
   Map as MapIcon,
   MapPin,
   Navigation,
-  QrCode,
   Route,
   Search,
   ShoppingBag,
@@ -34,7 +33,6 @@ import type { DiscoveryOptions } from "@/shared/types";
 import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
 import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
-import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import VietMapLocationPickerModal from "../components/VietMapLocationPickerModal";
 import { getNearbyMerchants } from "../services/merchantService";
 import { getWishlist } from "../services/wishlistService";
@@ -266,7 +264,6 @@ export default function CustomerHomePage() {
   const [sortBy, setSortBy] = useState<SortOption>("distance");
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [locationAddress, setLocationAddress] = useState("");
-  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -1472,16 +1469,6 @@ export default function CustomerHomePage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setCheckInModalOpen(true)}
-              aria-label="Mã check-in tích điểm của tôi"
-              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
-            >
-              <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-              <span className="hidden sm:inline">Mã Check-in</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
               onClick={handleOpenWishlist}
               aria-label="Mở danh sách quán yêu thích"
               className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-rose-200 dark:border-rose-400/30 bg-white dark:bg-slate-900 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 shadow-sm transition hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0"
@@ -1597,11 +1584,6 @@ export default function CustomerHomePage() {
           {renderMerchantListContent(false)}
         </section>
       </main>
-
-      <CustomerCheckInCodeModal
-        open={checkInModalOpen}
-        onClose={() => setCheckInModalOpen(false)}
-      />
 
       <VietMapLocationPickerModal
         isOpen={showMapPicker}

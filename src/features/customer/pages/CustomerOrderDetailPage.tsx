@@ -47,6 +47,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { OrderStatusTimeline } from "../components/OrderStatusTimeline";
+import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import { useRealtime } from "@/shared/contexts/RealtimeContext";
 
 type OrderDetailLocationState = {
@@ -125,6 +126,7 @@ export default function CustomerOrderDetailPage() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [paymentBankInfo, setPaymentBankInfo] =
     useState<PaymentBankInfo | null>(null);
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
 
   const handleCopy = (text: string, field: string) => {
     void navigator.clipboard.writeText(text);
@@ -496,6 +498,16 @@ export default function CustomerOrderDetailPage() {
       displayOrderStatus,
       isOfflineOrder ? "Offline" : "Online",
     );
+  const isOrderAccepted = [
+    "accepted",
+    "preparing",
+    "ready",
+    "delivering",
+    "completed",
+    "billconfirmed",
+    "cashpending",
+  ].includes(normalizedOrderStatus ?? "");
+  const isOrderPending = normalizedOrderStatus === "pending";
   const reviewLocked = hasReviewed || submittingReview;
 
   if (loading) {
@@ -671,6 +683,49 @@ export default function CustomerOrderDetailPage() {
               )}
             </div>
           ) : null}
+
+          {/* Check-In Loyalty Card (Only when order is accepted / preparing / ready / completed) */}
+          {isOrderAccepted && (
+            <div className="mt-6 rounded-2xl border border-cyan-300/80 dark:border-cyan-500/40 bg-gradient-to-r from-cyan-50/90 via-white to-sky-50/90 dark:from-cyan-950/40 dark:via-slate-900 dark:to-sky-950/30 p-5 shadow-xs backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-500 text-slate-950 shadow-md">
+                    <QrCode className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-950 dark:text-white">
+                      Mã Check-in Tích Điểm Thưởng
+                    </h4>
+                    <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      Quán đã nhận đơn của bạn. Mở mã QR hoặc mã cá nhân đưa cho chủ quán / nhân viên tại bàn để tích điểm Loyalty!
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCheckInModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 px-5 py-2.5 text-xs font-black text-slate-950 shadow-md transition shrink-0"
+                >
+                  <QrCode className="h-4 w-4" />
+                  Mở mã Check-in
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Pending Info Notice */}
+          {isOrderPending && (
+            <div className="mt-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 p-4 text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-3">
+              <Clock className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div>
+                <p className="font-black text-sm">Đang chờ quán nhận đơn</p>
+                <p className="font-medium mt-0.5 opacity-90">
+                  Mã Check-in tích điểm thưởng sẽ tự động mở ngay sau khi quán bấm nhận đơn của bạn!
+                </p>
+              </div>
+            </div>
+          )}
           {/* VietQR SePay Payment Card for Online Orders */}
           {!isPaid &&
             (currentSummaryOrder?.paymentMethod === "BankTransfer" ||
@@ -1002,6 +1057,12 @@ export default function CustomerOrderDetailPage() {
             </p>
           )}
         </div>
+
+        <CustomerCheckInCodeModal
+          open={checkInModalOpen}
+          order={currentSummaryOrder}
+          onClose={() => setCheckInModalOpen(false)}
+        />
       </div>
     </div>
   );

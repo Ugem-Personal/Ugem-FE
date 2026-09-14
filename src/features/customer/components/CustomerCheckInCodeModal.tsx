@@ -8,10 +8,13 @@ import {
   ShieldCheck,
   Loader2,
   X,
+  Store,
 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { notify } from "@/shared/lib/notify";
 import { Button } from "@/shared/components/ui/button";
+import type { CustomerOrderSummary } from "@/shared/types";
+import { getCustomerOrderId } from "../services/orderService";
 
 import { getCurrentUser } from "@/features/auth/store";
 
@@ -29,9 +32,10 @@ type CustomerCodeData = {
 type Props = {
   open: boolean;
   onClose: () => void;
+  order?: CustomerOrderSummary | null;
 };
 
-export default function CustomerCheckInCodeModal({ open, onClose }: Props) {
+export default function CustomerCheckInCodeModal({ open, onClose, order }: Props) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<CustomerCodeData | null>(null);
   const [copied, setCopied] = useState(false);
@@ -154,13 +158,44 @@ export default function CustomerCheckInCodeModal({ open, onClose }: Props) {
           </div>
         </div>
 
+        {/* Order Info Banner */}
+        {order && (
+          <div className="mt-4 rounded-2xl border border-cyan-200/80 dark:border-cyan-800/40 bg-cyan-50/70 dark:bg-cyan-950/40 p-3.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-2xs">
+                <Store className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                  {order.name || "Đơn hàng của bạn"}
+                </h4>
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  <span className="font-mono">#{getCustomerOrderId(order)?.slice(0, 8) || "DON"}</span>
+                  {order.finalPrice ? (
+                    <>
+                      <span>•</span>
+                      <span className="font-black text-cyan-700 dark:text-cyan-300 font-mono">
+                        {`${Number(order.finalPrice).toLocaleString("vi-VN")}đ`}
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <span className="rounded-lg bg-emerald-100/80 dark:bg-emerald-950/80 px-2 py-1 text-[10px] font-black text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shrink-0">
+              ✓ Quán đã nhận đơn
+            </span>
+          </div>
+        )}
+
         {loading ? (
           <div className="my-12 flex flex-col items-center justify-center gap-3 text-slate-500">
             <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
             <p className="text-sm font-medium">Đang tạo mã định danh...</p>
           </div>
         ) : data ? (
-          <div className="mt-5 space-y-5">
+          <div className="mt-4 space-y-4">
             {/* Customer Code Display */}
             <div className="flex flex-col items-center justify-center rounded-2xl border border-cyan-200/80 dark:border-cyan-800/40 bg-gradient-to-br from-cyan-50/70 via-white to-sky-50/70 dark:from-cyan-950/30 dark:via-slate-900 dark:to-sky-950/20 p-5 text-center shadow-inner">
               <span className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">

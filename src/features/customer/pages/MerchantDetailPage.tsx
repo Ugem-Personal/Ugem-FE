@@ -13,7 +13,6 @@ import {
   Navigation,
   ShoppingBag,
   CheckCircle2,
-  QrCode,
 } from "lucide-react";
 import {
   Link,
@@ -54,7 +53,6 @@ import {
   getEffectiveFoodToppings,
 } from "../components/FoodOptionModal";
 import { CartDrawer, type CartItem } from "../components/CartDrawer";
-import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import {
   CheckoutDialog,
   type CheckoutFormData,
@@ -245,7 +243,6 @@ export default function MerchantDetailPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
 
   const CART_STORAGE_KEY = id ? `ugem_cart_${id}` : null;
   const CART_OPEN_STORAGE_KEY = id ? `ugem_cart_open_${id}` : null;
@@ -731,16 +728,6 @@ export default function MerchantDetailPage() {
             <BrandLogo className="h-9 sm:h-10 w-auto shrink-0 transition-transform hover:scale-105" />
           </Link>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCheckInModalOpen(true)}
-              aria-label="Mã check-in tích điểm của tôi"
-              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl border-cyan-300 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-950/40 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-cyan-800 dark:text-cyan-300 shadow-sm transition hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shrink-0"
-            >
-              <QrCode className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-              <span className="hidden sm:inline">Mã Check-in</span>
-            </Button>
             <Button
               asChild
               type="button"
@@ -1241,11 +1228,6 @@ export default function MerchantDetailPage() {
             </div>
           </div>
         )}
-
-        <CustomerCheckInCodeModal
-          open={checkInModalOpen}
-          onClose={() => setCheckInModalOpen(false)}
-        />
       </div>
     </div>
   );
