@@ -69,7 +69,7 @@ export function OrderCard({
         ? "cashpending"
         : order.status;
 
-  let confirmButtonText = isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận hàng";
+  let confirmButtonText = isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận món";
   let confirmButtonIcon = Check;
 
   if (isBillConfirmed) {

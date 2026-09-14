@@ -4,7 +4,7 @@ import {
   XCircle,
   ChefHat,
   PackageCheck,
-  Bike,
+  Utensils,
   AlertTriangle,
   Ban,
   Banknote,
@@ -53,21 +53,21 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     className:
       "border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300",
     icon: ChefHat,
-    description: "Quán đang nấu và đóng gói món",
+    description: "Quán đang chuẩn bị món",
   },
   ready: {
     label: "Sẵn sàng",
     className:
       "border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300",
     icon: PackageCheck,
-    description: "Món đã làm xong, sẵn sàng phục vụ/giao",
+    description: "Món đã làm xong, sẵn sàng phục vụ tại quán",
   },
   delivering: {
-    label: "Đang giao hàng",
+    label: "Đang phục vụ",
     className:
       "border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300",
-    icon: Bike,
-    description: "Tài xế đang giao món tới địa chỉ của bạn",
+    icon: Utensils,
+    description: "Quán đang phục vụ món cho bạn",
   },
   completed: {
     label: "Hoàn thành",
@@ -88,7 +88,7 @@ const ORDER_STATUS_CONFIG: Record<string, StatusConfig> = {
     className:
       "border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300",
     icon: AlertTriangle,
-    description: "Khách báo chưa nhận được hàng",
+    description: "Khách báo chưa nhận được món",
   },
   cancelled: {
     label: "Đã hủy",

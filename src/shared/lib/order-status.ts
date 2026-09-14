@@ -20,7 +20,7 @@ const statusLabels: Record<OrderStatus, string> = {
   Accepted: "Đã nhận đơn",
   Preparing: "Đang chuẩn bị",
   Ready: "Đã sẵn sàng",
-  Delivering: "Đang giao hàng",
+  Delivering: "Đang phục vụ",
   Rejected: "Đã từ chối",
   Completed: "Hoàn thành",
   NotReceived: "Khách báo chưa nhận",
@@ -57,7 +57,7 @@ export function getMerchantOrderAction(
     return {
       nextStatus: "Ready",
       label: "Đánh dấu đã sẵn sàng",
-      successMessage: "Đơn đã sẵn sàng để bàn giao.",
+      successMessage: "Món đã sẵn sàng phục vụ tại quán.",
     };
   }
 
@@ -67,8 +67,8 @@ export function getMerchantOrderAction(
   ) {
     return {
       nextStatus: "Delivering",
-      label: "Bắt đầu giao hàng",
-      successMessage: "Đơn đã chuyển sang trạng thái đang giao.",
+      label: "Phục vụ món",
+      successMessage: "Đơn đã chuyển sang trạng thái đang phục vụ.",
     };
   }
 
@@ -112,11 +112,11 @@ export function getCustomerOrderProgressMessage(
   if (statusKey === "ready") {
     return orderType?.trim().toLowerCase() === "offline"
       ? "Đơn đã sẵn sàng tại quán. Bạn có thể kiểm tra bill và check-in."
-      : "Đơn đã sẵn sàng và đang chờ bàn giao cho bên giao hàng.";
+      : "Món đã sẵn sàng phục vụ tại quán.";
   }
 
   if (statusKey === "delivering") {
-    return "Đơn đang được giao. Hãy xác nhận sau khi bạn nhận đủ món.";
+    return "Quán đang phục vụ món. Hãy xác nhận sau khi bạn nhận đủ món.";
   }
 
   if (statusKey === "rejected") {
