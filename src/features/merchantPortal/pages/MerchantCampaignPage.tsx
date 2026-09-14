@@ -666,10 +666,10 @@ export function MerchantCampaignPage() {
                         onChange={(e) =>
                           setForm((c) => ({ ...c, discountValue: e.target.value }))
                         }
-                        placeholder={form.isPercentage ? "Ví dụ: 15" : "Ví dụ: 20000"}
-                        className="h-10 pr-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                        placeholder={form.isPercentage ? "15" : "20000"}
+                        className="h-10 pr-9 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none select-none">
                         {form.isPercentage ? "%" : "đ"}
                       </span>
                     </div>
@@ -679,9 +679,9 @@ export function MerchantCampaignPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
                       <span>Giảm tối đa (VNĐ)</span>
-                      {!form.isPercentage && (
-                        <span className="text-[10px] font-normal text-slate-400">(Không áp dụng)</span>
-                      )}
+                      <span className="text-[11px] font-normal lowercase text-slate-400">
+                        {form.isPercentage ? "tùy chọn" : "không áp dụng"}
+                      </span>
                     </label>
                     <div className="relative">
                       <Input
@@ -693,15 +693,15 @@ export function MerchantCampaignPage() {
                         onChange={(e) =>
                           setForm((c) => ({ ...c, maxDiscountAmount: e.target.value }))
                         }
-                        placeholder={form.isPercentage ? "Ví dụ: 50000" : "Không giới hạn trần"}
+                        placeholder={form.isPercentage ? "50000" : "Không giới hạn trần"}
                         className={cn(
-                          "h-10 pr-10 rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700",
+                          "h-10 pr-9 rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                           !form.isPercentage
                             ? "bg-slate-100 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed"
                             : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         )}
                       />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none select-none">
                         đ
                       </span>
                     </div>
@@ -709,8 +709,11 @@ export function MerchantCampaignPage() {
 
                   {/* Đơn tối thiểu */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Đơn tối thiểu (VNĐ)
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span>Đơn tối thiểu (VNĐ)</span>
+                      <span className="text-[11px] font-normal lowercase text-slate-400">
+                        để trống = 0đ
+                      </span>
                     </label>
                     <div className="relative">
                       <Input
@@ -721,10 +724,10 @@ export function MerchantCampaignPage() {
                         onChange={(e) =>
                           setForm((c) => ({ ...c, minOrderAmount: e.target.value }))
                         }
-                        placeholder="100000 (Để trống = 0đ)"
-                        className="h-10 pr-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                        placeholder="100000"
+                        className="h-10 pr-9 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none select-none">
                         đ
                       </span>
                     </div>
@@ -742,7 +745,7 @@ export function MerchantCampaignPage() {
                         setForm((c) => ({ ...c, quantity: e.target.value }))
                       }
                       placeholder="100"
-                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
 
@@ -758,7 +761,7 @@ export function MerchantCampaignPage() {
                         setForm((c) => ({ ...c, maxUsagePerUser: e.target.value }))
                       }
                       placeholder="1"
-                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                      className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
 
