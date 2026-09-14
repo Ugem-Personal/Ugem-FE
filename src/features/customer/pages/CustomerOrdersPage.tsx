@@ -27,7 +27,6 @@ type OrderFilterTab =
   | "Accepted"
   | "Preparing"
   | "Ready"
-  | "Delivering"
   | "Completed"
   | "Cancelled";
 
@@ -61,7 +60,9 @@ export default function CustomerOrdersPage() {
 
     try {
       const statusFilter =
-        activeTab === "all" || activeTab === "Cancelled"
+        activeTab === "all" ||
+        activeTab === "Cancelled" ||
+        activeTab === "Ready"
           ? undefined
           : activeTab;
 
@@ -118,7 +119,9 @@ export default function CustomerOrdersPage() {
           ? true
           : activeTab === "Cancelled"
             ? statusLower === "cancelled" || statusLower === "rejected"
-            : statusLower === activeTab.toLowerCase();
+            : activeTab === "Ready"
+              ? statusLower === "ready" || statusLower === "delivering"
+              : statusLower === activeTab.toLowerCase();
 
       return matchesSearch && matchesTab;
     });

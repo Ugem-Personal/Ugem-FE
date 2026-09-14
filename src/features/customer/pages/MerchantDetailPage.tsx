@@ -49,7 +49,10 @@ import { BrandLogo, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { WishlistButton } from "../components/WishlistButton";
 import { FoodCard } from "../components/FoodCard";
-import { FoodOptionModal } from "../components/FoodOptionModal";
+import {
+  FoodOptionModal,
+  getEffectiveFoodToppings,
+} from "../components/FoodOptionModal";
 import { CartDrawer, type CartItem } from "../components/CartDrawer";
 import CustomerCheckInCodeModal from "../components/CustomerCheckInCodeModal";
 import {
@@ -1137,7 +1140,8 @@ export default function MerchantDetailPage() {
             }}
             onConfirm={() => {
               const isEditing = pendingMode === "edit";
-              const selectedToppings = (pendingFood.toppings ?? []).filter(
+              const availableToppings = getEffectiveFoodToppings(pendingFood);
+              const selectedToppings = availableToppings.filter(
                 (topping) => pendingToppingIds.includes(topping.id),
               );
               if (isEditing) {

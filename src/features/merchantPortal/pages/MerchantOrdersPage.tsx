@@ -187,11 +187,11 @@ function getOrderActionMessage(
   if (statusKey === "ready") {
     return orderTypeKey === "offline"
       ? "Đơn đã sẵn sàng tại quán, chờ khách check-in và xác nhận."
-      : "Đơn đã đóng gói xong, sẵn sàng bàn giao để giao hàng.";
+      : "Món đã sẵn sàng phục vụ tại bàn / bàn giao cho khách.";
   }
 
   if (statusKey === "delivering") {
-    return "Đơn đang được giao, chờ khách xác nhận đã nhận hàng.";
+    return "Đang phục vụ món tại bàn cho khách.";
   }
 
   if (statusKey === "billconfirmed") {
@@ -292,7 +292,7 @@ const QUICK_REJECT_REASONS = [
   "Đơn không hợp lệ",
   "Hết món / Hết nguyên liệu",
   "Quán đang quá tải",
-  "Không thể giao tới địa chỉ này",
+  "Quán tạm thời không phục vụ đơn này",
 ];
 
 export default function MerchantOrdersPage() {
