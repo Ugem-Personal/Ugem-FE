@@ -21,6 +21,9 @@ import {
   Users,
   Minus,
   Flame,
+  Check,
+  Tag,
+  Percent,
 } from "lucide-react";
 
 import {
@@ -78,7 +81,7 @@ export function MerchantFoodsPage() {
   // Form state (Create / Edit)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedChildFoodToAdd, setSelectedChildFoodToAdd] = useState("");
+  const [comboFoodSearch, setComboFoodSearch] = useState("");
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -227,10 +230,11 @@ export function MerchantFoodsPage() {
     return foods.filter((f) => !f.isCombo && f.id !== editingFoodId);
   }, [foods, editingFoodId]);
 
-  const availableSingleFoodsForCombo = useMemo(() => {
-    const selectedIds = new Set(form.comboItems.map((item) => item.foodId));
-    return singleFoods.filter((f) => !selectedIds.has(f.id));
-  }, [singleFoods, form.comboItems]);
+  const filteredSingleFoods = useMemo(() => {
+    if (!comboFoodSearch.trim()) return singleFoods;
+    const q = comboFoodSearch.trim().toLowerCase();
+    return singleFoods.filter((f) => f.name.toLowerCase().includes(q));
+  }, [singleFoods, comboFoodSearch]);
 
   const calculatedOriginalPrice = useMemo(() => {
     if (!form.isCombo) return 0;
@@ -250,11 +254,16 @@ export function MerchantFoodsPage() {
     return { diff, pct, basePrice };
   }, [form.isCombo, form.originalPrice, form.price, calculatedOriginalPrice]);
 
-  function handleAddComboItem(foodId: string) {
+  function handleToggleComboFood(foodId: string) {
     if (!foodId) return;
     setForm((prev) => {
       const exists = prev.comboItems.some((ci) => ci.foodId === foodId);
-      if (exists) return prev;
+      if (exists) {
+        return {
+          ...prev,
+          comboItems: prev.comboItems.filter((ci) => ci.foodId !== foodId),
+        };
+      }
       return {
         ...prev,
         comboItems: [...prev.comboItems, { foodId, quantity: 1 }],
@@ -263,7 +272,6 @@ export function MerchantFoodsPage() {
     if (formErrors.comboItems) {
       setFormErrors((err) => ({ ...err, comboItems: undefined }));
     }
-    setSelectedChildFoodToAdd("");
   }
 
   function handleUpdateComboItemQuantity(foodId: string, delta: number) {
@@ -278,13 +286,6 @@ export function MerchantFoodsPage() {
           return ci;
         })
         .filter(Boolean) as { foodId: string; quantity: number }[],
-    }));
-  }
-
-  function handleRemoveComboItem(foodId: string) {
-    setForm((prev) => ({
-      ...prev,
-      comboItems: prev.comboItems.filter((ci) => ci.foodId !== foodId),
     }));
   }
 
@@ -449,7 +450,7 @@ export function MerchantFoodsPage() {
     setImagePreview("");
     setImageFileName("");
     setEditingFoodId(null);
-    setSelectedChildFoodToAdd("");
+    setComboFoodSearch("");
   }
 
   function startEditingFood(food: Food) {
@@ -477,7 +478,7 @@ export function MerchantFoodsPage() {
     setFormErrors({});
     setImagePreview(food.imageUrl ?? "");
     setImageFileName("");
-    setSelectedChildFoodToAdd("");
+    setComboFoodSearch("");
 
     const formElement = document.getElementById("merchant-food-form");
     if (formElement) {
@@ -708,39 +709,39 @@ export function MerchantFoodsPage() {
                     </div>
                   </div>
 
-                  {/* Combo Items Picker */}
+                  {/* Combo Items Multi-Select Grid */}
                   <div className="space-y-3 pt-3 border-t border-amber-200/60 dark:border-amber-900/40">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>
-                        Món ăn thành phần <span className="text-rose-500">*</span>
-                      </span>
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                        Đã chọn: {form.comboItems.length} món
-                      </span>
-                    </label>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>Chọn các món ăn vào Combo</span>
+                          <span className="text-rose-500">*</span>
+                        </label>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Tick chọn món để thêm vào combo, bấm dấu [+] hoặc [-] để tăng/giảm số lượng từng món.
+                        </p>
+                      </div>
 
-                    {/* Add child food bar */}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <select
-                        value={selectedChildFoodToAdd}
-                        onChange={(e) => setSelectedChildFoodToAdd(e.target.value)}
-                        className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"
-                      >
-                        <option value="">-- Chọn món trong thực đơn để thêm vào combo --</option>
-                        {availableSingleFoodsForCombo.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.name} ({Number(f.price).toLocaleString("vi-VN")} ₫)
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        disabled={!selectedChildFoodToAdd}
-                        onClick={() => handleAddComboItem(selectedChildFoodToAdd)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition active:scale-95"
-                      >
-                        <Plus size={14} /> Thêm vào combo
-                      </button>
+                      {/* Search single foods */}
+                      <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={comboFoodSearch}
+                          onChange={(e) => setComboFoodSearch(e.target.value)}
+                          placeholder="Tìm món trong thực đơn..."
+                          className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-8.5 pr-8 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500 placeholder:text-slate-400"
+                        />
+                        {comboFoodSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setComboFoodSearch("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {formErrors.comboItems && (
@@ -749,94 +750,125 @@ export function MerchantFoodsPage() {
                       </p>
                     )}
 
-                    {/* Selected items list */}
-                    {form.comboItems.length > 0 ? (
-                      <div className="space-y-2 mt-3">
-                        {form.comboItems.map((item) => {
-                          const childFood = foods.find((f) => f.id === item.foodId);
-                          const unitPrice = childFood ? Number(childFood.price) : 0;
-                          const linePrice = unitPrice * item.quantity;
+                    {/* Multi-dish interactive grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-80 overflow-y-auto pr-1">
+                      {filteredSingleFoods.length > 0 ? (
+                        filteredSingleFoods.map((food) => {
+                          const selectedItem = form.comboItems.find((ci) => ci.foodId === food.id);
+                          const isSelected = Boolean(selectedItem);
+                          const quantity = selectedItem?.quantity || 0;
+                          const foodPrice = Number(food.price);
 
                           return (
                             <div
-                              key={item.foodId}
-                              className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200/60 dark:border-amber-900/30 bg-white/90 dark:bg-slate-900/90 p-3 shadow-xs"
+                              key={food.id}
+                              className={`group relative flex items-center gap-3 p-2.5 rounded-2xl border transition-all select-none ${
+                                isSelected
+                                  ? "border-amber-500 bg-amber-500/10 dark:bg-amber-400/10 shadow-xs"
+                                  : "border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 hover:border-amber-300 dark:hover:border-amber-600/50"
+                              }`}
                             >
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                              {/* Clickable area for toggling selection */}
+                              <div
+                                onClick={() => handleToggleComboFood(food.id)}
+                                className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+                              >
+                                {/* Checkbox / Plus Indicator */}
+                                <div
+                                  className={`h-6 w-6 shrink-0 rounded-lg flex items-center justify-center transition-all ${
+                                    isSelected
+                                      ? "bg-amber-500 text-white shadow-xs scale-105"
+                                      : "border-2 border-slate-300 dark:border-slate-600 text-transparent group-hover:border-amber-400 group-hover:text-amber-500"
+                                  }`}
+                                >
+                                  {isSelected ? (
+                                    <Check size={14} strokeWidth={3} />
+                                  ) : (
+                                    <Plus size={13} strokeWidth={2.5} />
+                                  )}
+                                </div>
+
+                                {/* Food Image */}
+                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
                                   <ImageWithFallback
-                                    src={childFood?.imageUrl}
-                                    alt={childFood?.name ?? "Món"}
+                                    src={food.imageUrl}
+                                    alt={food.name}
                                     className="h-full w-full object-cover"
                                   />
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-black text-slate-900 dark:text-white truncate">
-                                    {childFood?.name ?? "Món không xác định"}
+
+                                {/* Food Details */}
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                    {food.name}
                                   </p>
-                                  <p className="text-[11px] font-semibold text-slate-400">
-                                    {unitPrice.toLocaleString("vi-VN")} ₫ / phần
+                                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono">
+                                    {foodPrice.toLocaleString("vi-VN")} ₫
                                   </p>
                                 </div>
                               </div>
 
-                              {/* Quantity controls */}
-                              <div className="flex items-center gap-3 shrink-0">
-                                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700">
+                              {/* Stepper controls when selected */}
+                              {isSelected && (
+                                <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-xl p-0.5 border border-amber-300 dark:border-amber-700 shadow-2xs shrink-0">
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateComboItemQuantity(item.foodId, -1)}
-                                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUpdateComboItemQuantity(food.id, -1);
+                                    }}
+                                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                                    title="Giảm số lượng"
                                   >
-                                    <Minus size={12} />
+                                    <Minus size={11} />
                                   </button>
-                                  <span className="px-2 text-xs font-black text-slate-900 dark:text-white min-w-[20px] text-center">
-                                    {item.quantity}
+                                  <span className="px-1 text-xs font-black text-amber-700 dark:text-amber-300 min-w-[18px] text-center font-mono">
+                                    {quantity}
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateComboItemQuantity(item.foodId, 1)}
-                                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUpdateComboItemQuantity(food.id, 1);
+                                    }}
+                                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                                    title="Tăng số lượng"
                                   >
-                                    <Plus size={12} />
+                                    <Plus size={11} />
                                   </button>
                                 </div>
-
-                                <span className="text-xs font-black text-cyan-600 dark:text-cyan-400 min-w-[70px] text-right font-mono">
-                                  {linePrice.toLocaleString("vi-VN")} ₫
-                                </span>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveComboItem(item.foodId)}
-                                  className="h-7 w-7 flex items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
+                              )}
                             </div>
                           );
-                        })}
+                        })
+                      ) : (
+                        <div className="col-span-full py-6 text-center text-xs text-slate-400">
+                          {comboFoodSearch
+                            ? `Không tìm thấy món nào với từ khóa "${comboFoodSearch}".`
+                            : "Quán chưa có món lẻ nào trong thực đơn. Vui lòng tạo món lẻ trước khi tạo combo."}
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Total Original Price Banner */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 px-4 py-3">
-                          <div>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                              Tổng giá trị gốc các món (Giá gốc trước giảm):
-                            </span>
-                            <span className="text-[11px] font-semibold text-slate-400">
-                              Chủ quán hãy nhập Giá bán Combo bên dưới thấp hơn giá này để tạo ưu đãi cho khách
-                            </span>
-                          </div>
+                    {/* Selected Summary & Original Price Banner */}
+                    {form.comboItems.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 px-4 py-3 mt-3">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <CheckCircle2 size={14} className="text-emerald-500" />
+                            Đã chọn {form.comboItems.length} món ({form.comboItems.reduce((s, i) => s + i.quantity, 0)} phần ăn)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                            Tổng giá gốc trước khi giảm (tổng tiền các món bán lẻ)
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-slate-400 block">Giá gốc (tiền lẻ):</span>
                           <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">
                             {calculatedOriginalPrice.toLocaleString("vi-VN")} ₫
                           </span>
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 italic">
-                        Chưa chọn món nào. Hãy chọn các món thành phần ở danh sách trên để cấu thành combo.
-                      </p>
                     )}
                   </div>
                 </div>
@@ -886,6 +918,50 @@ export function MerchantFoodsPage() {
                       </span>
                     )}
                   </label>
+
+                  {/* Quick discount buttons for combo */}
+                  {form.isCombo && calculatedOriginalPrice > 0 && (
+                    <div className="rounded-2xl border border-amber-200/70 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                          <Percent size={12} className="text-amber-500" />
+                          Set nhanh mức giảm giá cho combo:
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold">
+                          Bấm chọn để tự tính giá
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {[10, 15, 20, 25, 30].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => {
+                              const discounted = Math.round((calculatedOriginalPrice * (1 - pct / 100)) / 1000) * 1000;
+                              setForm((prev) => ({ ...prev, price: String(discounted) }));
+                              if (formErrors.price) setFormErrors((err) => ({ ...err, price: undefined }));
+                            }}
+                            className="px-2.5 py-1 rounded-xl border border-amber-300/80 dark:border-amber-700 bg-white dark:bg-slate-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 text-xs font-black text-amber-700 dark:text-amber-300 shadow-2xs transition active:scale-95"
+                          >
+                            -{pct}%
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const discountAmount = calculatedOriginalPrice >= 120000 ? 20000 : 10000;
+                            const discounted = Math.max(1000, calculatedOriginalPrice - discountAmount);
+                            setForm((prev) => ({ ...prev, price: String(discounted) }));
+                            if (formErrors.price) setFormErrors((err) => ({ ...err, price: undefined }));
+                          }}
+                          className="px-2.5 py-1 rounded-xl border border-emerald-300/80 dark:border-emerald-700 bg-white dark:bg-slate-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 text-xs font-black text-emerald-700 dark:text-emerald-300 shadow-2xs transition active:scale-95"
+                        >
+                          -{calculatedOriginalPrice >= 120000 ? "20.000₫" : "10.000₫"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <input
                     type="number"
                     min="0"
@@ -917,6 +993,14 @@ export function MerchantFoodsPage() {
                       </span>
                     </div>
                   )}
+
+                  {/* Promo voucher note */}
+                  <div className="flex items-start gap-2 rounded-xl border border-cyan-200/80 dark:border-cyan-800/40 bg-cyan-50/60 dark:bg-cyan-950/20 p-2.5 text-[11px] font-medium text-cyan-900 dark:text-cyan-300">
+                    <Tag size={13} className="text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="font-bold">Mã giảm giá Voucher:</strong> Quán muốn phát hành mã giảm giá (nhập mã lúc đặt đơn) hãy dùng mục <strong className="font-bold">"Chiến dịch khuyến mãi" (icon PROMO ở menu trái)</strong>.
+                    </span>
+                  </div>
                 </div>
 
                 {/* Mô tả */}
