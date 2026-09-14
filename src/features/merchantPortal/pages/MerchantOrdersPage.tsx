@@ -127,8 +127,8 @@ function getOrderStatusChipClass(status?: string | null) {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function getOrderTypeLabel(orderType?: string | null) {
-  return orderType?.trim().toLowerCase() === "offline" ? "Offline" : "Online";
+function getOrderTypeLabel(_orderType?: string | null) {
+  return "Dùng tại quán";
 }
 
 function getOrderTypeChipClass(orderType?: string | null) {
@@ -997,18 +997,6 @@ export default function MerchantOrdersPage() {
                             ? "Completed"
                             : selectedOrder.status,
                         )}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">
-                        Loại đơn
-                      </div>
-                      <div
-                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${getOrderTypeChipClass(
-                          selectedOrder.orderType,
-                        )}`}
-                      >
-                        {getOrderTypeLabel(selectedOrder.orderType)}
                       </div>
                     </div>
                     <div>

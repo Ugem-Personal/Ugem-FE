@@ -2,7 +2,6 @@ import {
   CheckCircle2,
   Clock,
   ChefHat,
-  PackageCheck,
   XCircle,
   AlertTriangle,
   Ban,
@@ -98,48 +97,42 @@ export function OrderStatusTimeline({
     );
   }
 
-  // Steps definition based on OrderType
+  // Streamlined 3-step timeline for Dine-in
   const steps: TimelineStep[] = [
     {
       key: "pending",
-      label: "Đã đặt đơn",
-      description: "Đã tạo đơn thành công",
+      label: "Đã đặt món",
+      description: "Đã gửi đơn đến quán",
       icon: Clock,
       timestamp: orderedAt,
     },
     {
       key: "accepted",
-      label: "Quán nhận đơn",
-      description: "Nhà hàng đã tiếp nhận",
-      icon: CheckCircle2,
-      timestamp: acceptedAt,
-    },
-    {
-      key: "preparing",
-      label: "Đang chế biến",
-      description: "Đang chuẩn bị món ăn",
+      label: "Quán đã nhận (Đang chuẩn bị)",
+      description: "Bếp đã tiếp nhận & đang làm món",
       icon: ChefHat,
-      timestamp: preparingAt,
-    },
-    {
-      key: "ready",
-      label: "Sẵn sàng tại bàn",
-      description: "Món đã chế biến xong, sẵn sàng phục vụ",
-      icon: PackageCheck,
-      timestamp: readyAt,
+      timestamp: acceptedAt || preparingAt || readyAt,
     },
     {
       key: "completed",
-      label: "Hoàn thành",
-      description: "Đã hoàn tất bữa ăn thành công",
+      label: "Hoàn tất bữa ăn",
+      description: "Món đã lên bàn & hoàn tất",
       icon: CheckCircle2,
       timestamp: completedAt,
     },
   ];
 
-  const statusOrder = ["pending", "accepted", "preparing", "ready", "completed"];
-  let currentIndex = statusOrder.indexOf(normalizedStatus);
-  if (currentIndex === -1) {
+  let currentIndex = 0;
+  if (normalizedStatus === "completed") {
+    currentIndex = 2;
+  } else if (
+    normalizedStatus === "accepted" ||
+    normalizedStatus === "preparing" ||
+    normalizedStatus === "ready" ||
+    normalizedStatus === "delivering"
+  ) {
+    currentIndex = 1;
+  } else {
     currentIndex = 0;
   }
 
