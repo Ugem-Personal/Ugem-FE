@@ -80,7 +80,7 @@ export function getMerchantOpenStatus(
     const endM = parseInt(match[4], 10);
 
     const startMinutes = startH * 60 + startM;
-    let endMinutes = endH * 60 + endM;
+    const endMinutes = endH * 60 + endM;
 
     // Overnight shift (e.g. 17:00 - 02:00)
     if (endMinutes < startMinutes) {

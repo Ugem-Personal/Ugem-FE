@@ -122,8 +122,10 @@ function getOrderStatusChipClass(status?: string | null) {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function getOrderTypeLabel(_orderType?: string | null) {
-  return "Dùng tại quán";
+function getOrderTypeLabel(orderType?: string | null) {
+  return orderType?.trim().toLowerCase() === "online"
+    ? "Giao hàng"
+    : "Dùng tại quán";
 }
 
 function getOrderTypeChipClass(orderType?: string | null) {

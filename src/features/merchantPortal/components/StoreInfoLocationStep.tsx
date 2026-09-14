@@ -79,6 +79,9 @@ export function StoreInfoLocationStep({
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<vietmapgl.Map | null>(null);
   const markerRef = useRef<vietmapgl.Marker | null>(null);
+  const applyCoordinatesRef = useRef<
+    ((lat: number, lng: number, shouldReverseGeocode?: boolean) => Promise<void>) | null
+  >(null);
 
   const [geocoding, setGeocoding] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -185,7 +188,7 @@ export function StoreInfoLocationStep({
 
           marker.on("dragend", () => {
             const pos = marker.getLngLat();
-            void applyCoordinates(
+            void applyCoordinatesRef.current?.(
               Number.parseFloat(pos.lat.toFixed(7)),
               Number.parseFloat(pos.lng.toFixed(7)),
               true,
@@ -210,6 +213,10 @@ export function StoreInfoLocationStep({
     ],
   );
 
+  useEffect(() => {
+    applyCoordinatesRef.current = applyCoordinates;
+  }, [applyCoordinates]);
+
   const placeMarker = useCallback(
     (map: vietmapgl.Map, coords: [number, number]) => {
       if (markerRef.current) {
@@ -225,7 +232,7 @@ export function StoreInfoLocationStep({
 
       marker.on("dragend", () => {
         const pos = marker.getLngLat();
-        void applyCoordinates(
+        void applyCoordinatesRef.current?.(
           Number.parseFloat(pos.lat.toFixed(7)),
           Number.parseFloat(pos.lng.toFixed(7)),
           true,
@@ -233,7 +240,7 @@ export function StoreInfoLocationStep({
       });
       markerRef.current = marker;
     },
-    [applyCoordinates, createMarkerElement],
+    [createMarkerElement],
   );
 
   useEffect(() => {

@@ -330,7 +330,9 @@ export default function VietMapGL({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<vietmapgl.Map | null>(null);
   const onMapClickRef = useRef(onMapClick);
-  onMapClickRef.current = onMapClick;
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
   const markerMapRef = useRef<
     Map<string, { marker: vietmapgl.Marker; popup: vietmapgl.Popup }>
   >(new Map());
