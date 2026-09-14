@@ -504,14 +504,14 @@ export default function CustomerProfilePage() {
         </div>
 
         {/* Hero Banner Box */}
-        <div className="relative overflow-hidden rounded-[36px] border border-slate-200/80 dark:border-white/10 bg-gradient-to-r from-slate-950 via-cyan-950/90 to-slate-950 p-8 shadow-2xl backdrop-blur-3xl mb-8 text-white">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="relative overflow-hidden rounded-[36px] border border-slate-200/80 dark:border-white/10 bg-gradient-to-br from-white via-cyan-50/50 to-slate-50 dark:bg-gradient-to-r dark:from-slate-950 dark:via-cyan-950/90 dark:to-slate-950 p-8 shadow-xl dark:shadow-2xl backdrop-blur-3xl mb-8 text-slate-950 dark:text-white transition-colors duration-300">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-cyan-500/10 dark:bg-cyan-500/20 blur-3xl pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row items-center md:items-end justify-between gap-6 pt-4">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
               {/* Avatar Frame */}
               <div className="relative group">
-                <div className="h-32 w-32 overflow-hidden rounded-3xl border-2 border-cyan-400/40 bg-slate-800 shadow-2xl shadow-cyan-500/20">
+                <div className="h-32 w-32 overflow-hidden rounded-3xl border-2 border-cyan-500/30 dark:border-cyan-400/40 bg-slate-100 dark:bg-slate-800 shadow-xl shadow-cyan-500/10 dark:shadow-cyan-500/20">
                   {displayedAvatarUrl ? (
                     <img
                       src={displayedAvatarUrl}
@@ -519,7 +519,7 @@ export default function CustomerProfilePage() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="grid h-full w-full place-items-center text-4xl font-black text-cyan-300">
+                    <div className="grid h-full w-full place-items-center text-4xl font-black text-cyan-600 dark:text-cyan-300">
                       {getInitial(displayName)}
                     </div>
                   )}
@@ -527,19 +527,19 @@ export default function CustomerProfilePage() {
               </div>
 
               <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-300">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
                   {roleLabel} Account
                 </div>
-                <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                <h2 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">
                   {displayName}
                 </h2>
-                <p className="mt-1 font-mono text-xs text-slate-300">{email}</p>
+                <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-300">{email}</p>
               </div>
             </div>
 
             {profile?.createdAt && (
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-300">
-                <Calendar className="h-4 w-4 text-cyan-400" />
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/5 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm dark:shadow-none">
+                <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                 Tham gia:{" "}
                 {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
               </div>
