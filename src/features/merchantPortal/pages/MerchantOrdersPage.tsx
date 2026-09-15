@@ -798,7 +798,9 @@ export default function MerchantOrdersPage() {
                           className="inline-flex items-center gap-1.5 rounded-2xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 shadow-xs transition"
                         >
                           <Printer size={15} />
-                          In hóa đơn
+                          {getOrderStatusKey(order.status) === "completed"
+                            ? "In lại hóa đơn"
+                            : "In bill thanh toán"}
                         </button>
                       ) : null}
 
@@ -1162,7 +1164,9 @@ export default function MerchantOrdersPage() {
                           className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition"
                         >
                           <Printer size={15} />
-                          In hóa đơn
+                          {getOrderStatusKey(selectedOrder.status) === "completed"
+                            ? "In lại hóa đơn"
+                            : "In bill thanh toán"}
                         </button>
                       ) : null}
 

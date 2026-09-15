@@ -53,6 +53,9 @@ export function MerchantBillPrintModal({
   if (!order) return null;
 
   const shortCode = order.orderId.split("-")[0]?.toUpperCase() || order.orderId;
+  const isPaid =
+    order.paymentStatus?.trim().toLowerCase() === "paid" ||
+    order.status?.trim().toLowerCase() === "completed";
   const transferContent = `THANH TOAN DON ${shortCode}`;
   const amount = Math.round(Number(order.finalPrice ?? 0));
   const hasBankTransfer =
@@ -77,7 +80,7 @@ export function MerchantBillPrintModal({
       <DialogContent className="max-w-md overflow-y-auto max-h-[90vh] rounded-3xl border border-slate-200/80 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-900 sm:p-8">
         <DialogHeader className="print:hidden">
           <DialogTitle className="text-lg font-black text-slate-950 dark:text-white flex items-center justify-between">
-            <span>Hóa Đơn Thanh Toán</span>
+            <span>{isPaid ? "Hóa Đơn Đã Thanh Toán" : "Bill Thanh Toán"}</span>
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
             Xem trước và in phiếu thanh toán cho khách hàng.
@@ -105,6 +108,12 @@ export function MerchantBillPrintModal({
               PHIẾU THANH TOÁN
             </div>
           </div>
+
+          {isPaid && (
+            <div className="my-3 rounded-lg border-2 border-emerald-600 px-3 py-2 text-center text-sm font-black uppercase tracking-[0.18em] text-emerald-700">
+              Đã thanh toán
+            </div>
+          )}
 
           {/* Order Info */}
           <div className="py-3 border-b border-dashed border-slate-300 space-y-1 text-[11px]">
@@ -258,7 +267,8 @@ export function MerchantBillPrintModal({
             onClick={handlePrint}
             className="gap-2 rounded-xl bg-cyan-500 text-slate-950 font-black hover:bg-cyan-400"
           >
-            <Printer className="h-4 w-4" /> In hóa đơn
+            <Printer className="h-4 w-4" />
+            {isPaid ? "In lại hóa đơn" : "In bill thanh toán"}
           </Button>
         </div>
       </DialogContent>

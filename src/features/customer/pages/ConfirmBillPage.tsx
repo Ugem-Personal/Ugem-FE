@@ -179,7 +179,6 @@ export default function ConfirmBillPage() {
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
-  const [bankTransferConfirmed, setBankTransferConfirmed] = useState(false);
   const [paymentMethodSyncing, setPaymentMethodSyncing] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -1013,35 +1012,6 @@ export default function ConfirmBillPage() {
                             </div>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Button: Customer confirms they made the transfer */}
-                      <div className="pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBankTransferConfirmed(true);
-                            notify.success("Đã ghi nhận bạn chuyển khoản! Quán sẽ kiểm tra và xác nhận đơn hàng.");
-                          }}
-                          disabled={bankTransferConfirmed}
-                          className={`w-full rounded-2xl p-3.5 text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer ${
-                            bankTransferConfirmed
-                              ? "bg-emerald-600 text-white cursor-default"
-                              : "bg-gradient-to-r from-cyan-500 to-indigo-600 text-white hover:from-cyan-400 hover:to-indigo-500 active:scale-98"
-                          }`}
-                        >
-                          {bankTransferConfirmed ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 text-white" />
-                              Đã báo chuyển khoản - Đang chờ quán kiểm tra
-                            </>
-                          ) : (
-                            <>
-                              <Check className="h-4 w-4" />
-                              Tôi đã chuyển khoản
-                            </>
-                          )}
-                        </button>
                       </div>
 
                       <div className="pt-3 border-t border-cyan-200/60 dark:border-cyan-900/40 flex items-center justify-between">
