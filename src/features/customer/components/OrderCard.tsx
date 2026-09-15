@@ -96,7 +96,7 @@ export function OrderCard({
 
   const isReadyToConfirm =
     !isPaid &&
-    (!isOfflineOrder || Boolean(order.bill)) &&
+    (!isOfflineOrder || Boolean(order.bill?.requestedAt)) &&
     isCustomerConfirmationReady(
       order.status,
       isOfflineOrder ? "Offline" : "Online",

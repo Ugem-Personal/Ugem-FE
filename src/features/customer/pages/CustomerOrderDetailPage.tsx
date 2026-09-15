@@ -60,6 +60,7 @@ type OrderDetailLocationState = {
 type PaymentBankInfo = {
   bankName?: string;
   bankAccount?: string;
+  requestedAt?: string;
 };
 
 function getPaymentBankInfo(value: unknown): PaymentBankInfo | null {
@@ -70,6 +71,8 @@ function getPaymentBankInfo(value: unknown): PaymentBankInfo | null {
     bankName: typeof record.bankName === "string" ? record.bankName : undefined,
     bankAccount:
       typeof record.bankAccount === "string" ? record.bankAccount : undefined,
+    requestedAt:
+      typeof record.requestedAt === "string" ? record.requestedAt : undefined,
   };
 }
 
@@ -509,7 +512,7 @@ export default function CustomerOrderDetailPage() {
     );
   const isConfirmationReady =
     !isCompleted &&
-    (!isOfflineOrder || paymentBankInfo !== null) &&
+    (!isOfflineOrder || Boolean(paymentBankInfo?.requestedAt)) &&
     isCustomerConfirmationReady(
       displayOrderStatus,
       isOfflineOrder ? "Offline" : "Online",

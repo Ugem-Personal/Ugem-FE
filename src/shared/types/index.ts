@@ -116,6 +116,7 @@ export type CustomerOrderSummary = {
     id?: string;
     status?: string;
     method?: string;
+    requestedAt?: string | null;
   } | null;
   orderedAt: string;
   notes?: string;
