@@ -92,7 +92,15 @@ function getOrderStatusKey(status?: string | null) {
 }
 
 function canPrintBill(status?: string | null) {
-  return getOrderStatusKey(status) === "completed";
+  return [
+    "ready",
+    "delivering",
+    "billconfirmed",
+    "cashpending",
+    "billupdated",
+    "billrejected",
+    "completed",
+  ].includes(getOrderStatusKey(status));
 }
 
 function getOrderStatusChipClass(status?: string | null) {
@@ -190,20 +198,20 @@ function canConfirmPayment(
   _billStatus?: string | null,
   paymentMethod?: string | null,
 ) {
-  if (paymentMethod?.trim().toLowerCase() !== "cash") return false;
+  const method = paymentMethod?.trim().toLowerCase();
+  if (method !== "cash" && method !== "banktransfer") return false;
 
   const isPaid = paymentStatus?.trim().toLowerCase() === "paid";
   if (isPaid) return false;
 
   const statusKey = getOrderStatusKey(status);
-  if (
-    !statusKey ||
-    ["rejected", "cancelled", "completed", "pending"].includes(statusKey)
-  ) {
-    return false;
-  }
-
-  return true;
+  return [
+    "ready",
+    "delivering",
+    "billconfirmed",
+    "cashpending",
+    "billupdated",
+  ].includes(statusKey);
 }
 
 function getLockedOrderMessage(status?: string | null) {
@@ -273,7 +281,7 @@ export default function MerchantOrdersPage() {
 
   async function handleOpenPrintBill(order: MerchantOrderSummary) {
     if (!canPrintBill(order.status)) {
-      notify.error("Chỉ có thể in hóa đơn sau khi khách hoàn tất bữa ăn.");
+      notify.error("Chỉ có thể in bill sau khi món đã được lên bàn cho khách.");
       return;
     }
 
@@ -1257,7 +1265,7 @@ export default function MerchantOrdersPage() {
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Nội dung chuyển khoản:</span>
                 <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                  UGEM {getShortOrderCode(bankConfirmOrder.orderId)}
+                  THANH TOAN DON {getShortOrderCode(bankConfirmOrder.orderId)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
