@@ -8,15 +8,20 @@ import {
   MapPin,
   RefreshCw,
   Utensils,
+  Printer,
+  CreditCard,
 } from "lucide-react";
 import {
   acceptOrder,
-  confirmCashPayment,
+  confirmManualPayment,
   getMerchantOrderDetail,
   getMerchantOrders,
+  getMyMerchantDetail,
   updateBill,
   updateMerchantOrderStatus,
 } from "../services";
+import { MerchantBillPrintModal } from "../components/MerchantBillPrintModal";
+import type { MerchantDetail } from "@/features/customer/types";
 import type {
   CustomerOrderDetailItem,
   MerchantOrderSummary,
@@ -247,10 +252,45 @@ export default function MerchantOrdersPage() {
   const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
   const [orderDetail, setOrderDetail] =
     useState<MerchantOrderDetailPayload | null>(null);
+  const [merchantInfo, setMerchantInfo] = useState<MerchantDetail | null>(null);
+  const [billPrintOrder, setBillPrintOrder] = useState<MerchantOrderSummary | null>(null);
+  const [billPrintDetail, setBillPrintDetail] = useState<any>(null);
+  const [billPrintOpen, setBillPrintOpen] = useState(false);
+  const [bankConfirmOrder, setBankConfirmOrder] = useState<MerchantOrderSummary | null>(null);
+  const [bankConfirmOpen, setBankConfirmOpen] = useState(false);
 
   const selectedOrder = orders.find(
     (order) => order.orderId === selectedOrderId,
   );
+
+  useEffect(() => {
+    void getMyMerchantDetail().then(setMerchantInfo).catch(() => {});
+  }, []);
+
+  async function handleOpenPrintBill(order: MerchantOrderSummary) {
+    setBillPrintOrder(order);
+    setBillPrintOpen(true);
+    try {
+      if (orderDetail && (orderDetail as any).orderId === order.orderId) {
+        setBillPrintDetail(orderDetail);
+      } else {
+        const detail = await getMerchantOrderDetail(order.orderId);
+        setBillPrintDetail(detail);
+      }
+    } catch (err) {
+      console.error("Failed to load order detail for printing", err);
+    }
+  }
+
+  function handleInitiatePaymentConfirm(order: MerchantOrderSummary) {
+    const method = order.paymentMethod?.trim().toLowerCase();
+    if (method === "banktransfer") {
+      setBankConfirmOrder(order);
+      setBankConfirmOpen(true);
+    } else {
+      void handleConfirmManualPayment(order);
+    }
+  }
 
   async function loadOrders(
     shouldCommit = () => true,
@@ -518,7 +558,7 @@ export default function MerchantOrdersPage() {
     }
   }
 
-  async function handleConfirmCashPayment(order: MerchantOrderSummary) {
+  async function handleConfirmManualPayment(order: MerchantOrderSummary) {
     if (order.paymentStatus?.toLowerCase() === "paid") {
       notify.error("Đơn hàng này đã được thanh toán.");
       return;
@@ -527,7 +567,7 @@ export default function MerchantOrdersPage() {
     setActionOrderId(order.orderId);
 
     try {
-      await confirmCashPayment(order.orderId);
+      await confirmManualPayment(order.orderId);
       notify.success("Đã xác nhận thanh toán và hoàn tất đơn hàng!");
       await loadOrders();
       if (detailOpen && selectedOrder?.orderId === order.orderId) {
@@ -734,6 +774,15 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
+                      <button
+                        type="button"
+                        onClick={() => void handleOpenPrintBill(order)}
+                        className="inline-flex items-center gap-1.5 rounded-2xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 shadow-xs transition"
+                      >
+                        <Printer size={15} />
+                        In hóa đơn
+                      </button>
+
                       {getOrderStatusKey(order.status) === "pending" ? (
                         <button
                           type="button"
@@ -767,12 +816,25 @@ export default function MerchantOrdersPage() {
                       ) ? (
                         <button
                           type="button"
-                          onClick={() => void handleConfirmCashPayment(order)}
+                          onClick={() => handleInitiatePaymentConfirm(order)}
                           disabled={actionOrderId === order.orderId}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                          className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-bold text-white shadow-xs transition disabled:opacity-50 ${
+                            order.paymentMethod?.toLowerCase() === "banktransfer"
+                              ? "bg-teal-600 hover:bg-teal-500"
+                              : "bg-emerald-600 hover:bg-emerald-500"
+                          }`}
                         >
-                          <Check size={16} />
-                          Xác nhận đã nhận tiền
+                          {order.paymentMethod?.toLowerCase() === "banktransfer" ? (
+                            <>
+                              <CreditCard size={16} />
+                              Xác nhận đã nhận chuyển khoản
+                            </>
+                          ) : (
+                            <>
+                              <Check size={16} />
+                              Xác nhận đã nhận tiền
+                            </>
+                          )}
                         </button>
                       ) : null}
 
@@ -1074,6 +1136,15 @@ export default function MerchantOrdersPage() {
                         </button>
                       ) : null}
 
+                      <button
+                        type="button"
+                        onClick={() => void handleOpenPrintBill(selectedOrder)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition"
+                      >
+                        <Printer size={15} />
+                        In hóa đơn
+                      </button>
+
                       {canConfirmPayment(
                         selectedOrder.status,
                         selectedOrder.paymentStatus,
@@ -1082,14 +1153,25 @@ export default function MerchantOrdersPage() {
                       ) ? (
                         <button
                           type="button"
-                          onClick={() =>
-                            void handleConfirmCashPayment(selectedOrder)
-                          }
+                          onClick={() => handleInitiatePaymentConfirm(selectedOrder)}
                           disabled={actionOrderId === selectedOrder.orderId}
-                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-xs transition disabled:opacity-50 ${
+                            selectedOrder.paymentMethod?.toLowerCase() === "banktransfer"
+                              ? "bg-teal-600 hover:bg-teal-500"
+                              : "bg-emerald-600 hover:bg-emerald-500"
+                          }`}
                         >
-                          <Check size={16} />
-                          Xác nhận đã nhận tiền
+                          {selectedOrder.paymentMethod?.toLowerCase() === "banktransfer" ? (
+                            <>
+                              <CreditCard size={16} />
+                              Xác nhận đã nhận chuyển khoản
+                            </>
+                          ) : (
+                            <>
+                              <Check size={16} />
+                              Xác nhận đã nhận tiền
+                            </>
+                          )}
                         </button>
                       ) : null}
                     </div>
@@ -1116,6 +1198,92 @@ export default function MerchantOrdersPage() {
 
         </div>
       </section>
+
+      {/* Bill Print Modal */}
+      <MerchantBillPrintModal
+        open={billPrintOpen}
+        onOpenChange={setBillPrintOpen}
+        order={billPrintOrder}
+        orderDetail={billPrintDetail}
+        merchantName={merchantInfo?.name}
+        merchantAddress={merchantInfo?.address}
+        merchantPhone={merchantInfo?.phone}
+        bankCode={merchantInfo?.bankCode}
+        bankAccountNumber={merchantInfo?.bankAccountNumber}
+        bankAccountName={merchantInfo?.bankAccountName}
+        bankTransferEnabled={merchantInfo?.bankTransferEnabled}
+      />
+
+      {/* Bank Transfer Confirmation Dialog */}
+      <Dialog open={bankConfirmOpen} onOpenChange={setBankConfirmOpen}>
+        <DialogContent className="max-w-md rounded-3xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl">
+          <DialogHeader className="text-left space-y-2">
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
+              <CreditCard className="h-5 w-5 text-cyan-500" />
+              Xác nhận nhận tiền chuyển khoản
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              Vui lòng kiểm tra ứng dụng ngân hàng và số dư tài khoản của bạn trước khi xác nhận.
+            </DialogDescription>
+          </DialogHeader>
+
+          {bankConfirmOrder && (
+            <div className="my-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-2.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Mã đơn hàng:</span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  #{getShortOrderCode(bankConfirmOrder.orderId)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Số tiền cần nhận:</span>
+                <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">
+                  {bankConfirmOrder.finalPrice.toLocaleString("vi-VN")}đ
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Nội dung chuyển khoản:</span>
+                <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                  UGEM {getShortOrderCode(bankConfirmOrder.orderId)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Khách hàng:</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {bankConfirmOrder.customerName || "Khách tại bàn"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl font-medium">
+            ⚠️ Khi xác nhận, đơn hàng sẽ được đánh dấu <strong>Hoàn tất (Completed)</strong> và cập nhật trạng thái thanh toán thành công.
+          </p>
+
+          <DialogFooter className="mt-4 flex flex-row justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setBankConfirmOpen(false)}
+              className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!bankConfirmOrder) return;
+                const order = bankConfirmOrder;
+                setBankConfirmOpen(false);
+                await handleConfirmManualPayment(order);
+              }}
+              disabled={actionOrderId != null}
+              className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-2 text-xs font-black text-white shadow-md hover:from-teal-500 hover:to-emerald-500 disabled:opacity-50 transition"
+            >
+              Xác nhận đã nhận đủ tiền
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

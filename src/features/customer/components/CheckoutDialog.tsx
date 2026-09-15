@@ -51,6 +51,7 @@ type CheckoutDialogProps = {
   merchantLongitude?: number;
   defaultRecipientName?: string;
   defaultOrderType?: CustomerOrderType;
+  bankTransferEnabled?: boolean;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (values: CheckoutFormData) => Promise<void>;
@@ -100,6 +101,7 @@ export function CheckoutDialog({
   merchantId,
   total,
   defaultRecipientName = "",
+  bankTransferEnabled = false,
   submitting,
   onOpenChange,
   onConfirm,
@@ -341,13 +343,15 @@ export function CheckoutDialog({
               <button
                 type="button"
                 onClick={() => setPaymentMethod("BankTransfer")}
+                disabled={!bankTransferEnabled}
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border text-xs font-black transition ${
                   paymentMethod === "BankTransfer"
                     ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-950/40 dark:text-cyan-300"
                     : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5"
-                }`}
+                } disabled:cursor-not-allowed disabled:opacity-40`}
               >
-                <WalletCards className="h-4 w-4" /> VietQR / Chuyển khoản
+                <WalletCards className="h-4 w-4" />
+                {bankTransferEnabled ? "VietQR / Chuyển khoản" : "Quán chưa bật QR"}
               </button>
             </div>
           </div>

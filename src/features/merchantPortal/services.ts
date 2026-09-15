@@ -207,10 +207,12 @@ export async function updateMerchantOrderStatus(
   return res.data;
 }
 
-export async function confirmCashPayment(orderId: string) {
-  const res = await api.patch(`/orders/${orderId}/cash/confirm`);
+export async function confirmManualPayment(orderId: string) {
+  const res = await api.patch(`/orders/${orderId}/payment/confirm`);
   return res.data;
 }
+
+export const confirmCashPayment = confirmManualPayment;
 
 export async function getMerchantCheckInQr(
   orderId: string,
@@ -417,6 +419,10 @@ export type UpdateMerchantPayload = {
   phone?: string;
   address?: string;
   openingHours?: string;
+  bankCode?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+  bankTransferEnabled?: boolean;
   logoUrl?: string;
   latitude?: number | null;
   longitude?: number | null;

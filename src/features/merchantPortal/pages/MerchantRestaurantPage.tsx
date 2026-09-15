@@ -22,6 +22,8 @@ import {
   QrCode,
   Trash2,
   AlertCircle,
+  Eye,
+  CreditCard,
 } from "lucide-react";
 
 import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
@@ -57,6 +59,10 @@ type MerchantEditForm = {
   phone: string;
   address: string;
   openingHours: string;
+  bankCode: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+  bankTransferEnabled: boolean;
   logoUrl: string;
   latitude?: number | null;
   longitude?: number | null;
@@ -230,6 +236,10 @@ function toEditForm(merchant?: MerchantDetail | null): MerchantEditForm {
     phone: merchant?.phone ?? "",
     address: merchant?.address ?? "",
     openingHours: merchant?.openingHours ?? "",
+    bankCode: merchant?.bankCode ?? "",
+    bankAccountNumber: merchant?.bankAccountNumber ?? "",
+    bankAccountName: merchant?.bankAccountName ?? "",
+    bankTransferEnabled: merchant?.bankTransferEnabled ?? false,
     logoUrl: merchant?.logoUrl ?? "",
     latitude: merchant?.latitude ?? (merchant?.lat ?? undefined),
     longitude: merchant?.longitude ?? (merchant?.lng ?? undefined),
@@ -316,6 +326,7 @@ async function resolveMerchantFromApprovedApplication(
 export function MerchantRestaurantPage() {
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [bankQrPreviewOpen, setBankQrPreviewOpen] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const reviewsRef = useRef<HTMLDivElement | null>(null);
@@ -476,6 +487,16 @@ export function MerchantRestaurantPage() {
       return;
     }
 
+    if (
+      form.bankTransferEnabled &&
+      (!form.bankCode.trim() ||
+        !/^\d{6,30}$/.test(form.bankAccountNumber.trim()) ||
+        !form.bankAccountName.trim())
+    ) {
+      notify.error("Vui lòng nhập đầy đủ và chính xác thông tin tài khoản ngân hàng (Số tài khoản từ 6-30 số).");
+      return;
+    }
+
     setSaving(true);
     const toastId = notify.loading("Đang cập nhật thông tin nhà hàng...");
 
@@ -495,6 +516,10 @@ export function MerchantRestaurantPage() {
         phone: form.phone.trim() || undefined,
         address: form.address.trim() || undefined,
         openingHours: form.openingHours.trim() || undefined,
+        bankCode: form.bankCode.trim() || null,
+        bankAccountNumber: form.bankAccountNumber.trim() || null,
+        bankAccountName: form.bankAccountName.trim() || null,
+        bankTransferEnabled: form.bankTransferEnabled,
         logoUrl: form.logoUrl.trim() || undefined,
         latitude: form.latitude ?? undefined,
         longitude: form.longitude ?? undefined,
@@ -696,6 +721,90 @@ export function MerchantRestaurantPage() {
                     onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
                     disabled={saving}
                   />
+
+                  {/* Bank Transfer Configuration */}
+                  <div className="md:col-span-2 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 dark:bg-cyan-950/20 p-5 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                          <p className="text-sm font-black text-slate-900 dark:text-white">
+                            Cấu hình tài khoản nhận chuyển khoản
+                          </p>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          Mã VietQR thanh toán sẽ chuyển tiền trực tiếp vào số tài khoản của quán.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!form.bankCode.trim() || !form.bankAccountNumber.trim()) {
+                              notify.error("Vui lòng nhập Mã ngân hàng và Số tài khoản trước khi xem thử QR.");
+                              return;
+                            }
+                            setBankQrPreviewOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-white dark:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-slate-700 shadow-xs transition"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Xem thử QR
+                        </button>
+
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                          <input
+                            type="checkbox"
+                            checked={form.bankTransferEnabled}
+                            onChange={(event) =>
+                              setForm((previous) => ({
+                                ...previous,
+                                bankTransferEnabled: event.target.checked,
+                              }))
+                            }
+                            disabled={saving}
+                            className="h-4 w-4 accent-cyan-500 rounded cursor-pointer"
+                          />
+                          Bật nhận chuyển khoản
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <EditField
+                        label="Ngân hàng (Mã hoặc tên viết tắt, ví dụ: MB, VCB, TCB, ACB)"
+                        value={form.bankCode}
+                        onChange={(value) =>
+                          setForm((previous) => ({ ...previous, bankCode: value.toUpperCase() }))
+                        }
+                        disabled={saving}
+                      />
+                      <EditField
+                        label="Số tài khoản ngân hàng"
+                        value={form.bankAccountNumber}
+                        onChange={(value) =>
+                          setForm((previous) => ({
+                            ...previous,
+                            bankAccountNumber: value.replace(/\D/g, ""),
+                          }))
+                        }
+                        disabled={saving}
+                      />
+                      <div className="sm:col-span-2">
+                        <EditField
+                          label="Tên chủ tài khoản (In hoa không dấu)"
+                          value={form.bankAccountName}
+                          onChange={(value) =>
+                            setForm((previous) => ({
+                              ...previous,
+                              bankAccountName: value.toUpperCase(),
+                            }))
+                          }
+                          disabled={saving}
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div className="md:col-span-2">
                     <RestaurantAddressPicker
                       address={form.address}
@@ -783,6 +892,18 @@ export function MerchantRestaurantPage() {
 
                 {/* Details Grid (8 cols) */}
                 <div className="lg:col-span-8 space-y-6">
+                  {(!merchant.bankTransferEnabled || !merchant.bankAccountNumber) && (
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-900 dark:text-amber-200">
+                        <p className="font-bold text-sm mb-0.5">Chưa kích hoạt nhận chuyển khoản ngân hàng</p>
+                        <p>
+                          Quán chưa cấu hình hoặc chưa bật nhận chuyển khoản. Khi thanh toán tại bàn, thực khách sẽ chỉ có thể chọn phương thức <strong>Tiền mặt</strong>. Vui lòng bấm <strong>"Chỉnh sửa hồ sơ"</strong> để cài đặt tài khoản ngân hàng của quán.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <InfoLine
                       icon={<MapPin className="h-4 w-4" />}
@@ -829,6 +950,42 @@ export function MerchantRestaurantPage() {
                       icon={<DollarSign className="h-4 w-4" />}
                       label="Khoảng giá"
                       value={merchant.priceRange || menuPriceRange || "Tự động theo menu"}
+                    />
+                    <InfoLine
+                      icon={<CreditCard className="h-4 w-4" />}
+                      label="Tài khoản nhận tiền"
+                      value={
+                        merchant.bankAccountNumber ? (
+                          <div className="space-y-1">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                              <span>{merchant.bankCode} - {merchant.bankAccountNumber}</span>
+                              <button
+                                type="button"
+                                onClick={() => setBankQrPreviewOpen(true)}
+                                className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" /> Xem QR
+                              </button>
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              Chủ TK: <span className="font-semibold text-slate-700 dark:text-slate-200">{merchant.bankAccountName || "---"}</span>
+                            </div>
+                            <div className="pt-1">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  merchant.bankTransferEnabled
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                    : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                                }`}
+                              >
+                                {merchant.bankTransferEnabled ? "✓ Đang nhận chuyển khoản" : "✕ Đang tắt chuyển khoản"}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Chưa cấu hình (Bấm Chỉnh sửa để cài đặt)</span>
+                        )
+                      }
                     />
                   </div>
 
@@ -1037,6 +1194,92 @@ export function MerchantRestaurantPage() {
           merchantName={merchant.name || ""}
           merchantAddress={merchant.address}
         />
+      )}
+
+      {/* Bank QR Preview Modal */}
+      {bankQrPreviewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-cyan-500" />
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  Xem thử mã VietQR
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBankQrPreviewOpen(false)}
+                className="rounded-xl p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {(() => {
+              const previewCode = isEditing ? form.bankCode.trim() : (merchant?.bankCode?.trim() || "");
+              const previewAcc = isEditing ? form.bankAccountNumber.trim() : (merchant?.bankAccountNumber?.trim() || "");
+              const previewName = isEditing ? form.bankAccountName.trim() : (merchant?.bankAccountName?.trim() || "");
+
+              if (!previewCode || !previewAcc) {
+                return (
+                  <div className="py-8 text-center text-xs text-slate-500">
+                    Chưa có đủ thông tin ngân hàng và số tài khoản để tạo mã QR.
+                  </div>
+                );
+              }
+
+              const qrUrl = `https://img.vietqr.io/image/${previewCode}-${previewAcc}-compact2.png?amount=50000&addInfo=TEST%20QR&accountName=${encodeURIComponent(previewName)}`;
+
+              return (
+                <div className="space-y-4">
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white p-3 shadow-inner flex justify-center">
+                    <img
+                      src={qrUrl}
+                      alt="VietQR Preview"
+                      className="w-full max-w-[240px] h-auto object-contain rounded-xl"
+                    />
+                  </div>
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Ngân hàng:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{previewCode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Số tài khoản:</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{previewAcc}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Chủ tài khoản:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{previewName || "---"}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-200/50 dark:border-white/5 pt-1.5">
+                      <span className="text-slate-500">Số tiền mẫu:</span>
+                      <span className="font-bold text-emerald-600">50.000đ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Nội dung mẫu:</span>
+                      <span className="font-mono font-bold text-cyan-600">TEST QR</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-center text-slate-400">
+                    Bạn có thể dùng ứng dụng ngân hàng quét thử để kiểm tra đúng tên người nhận.
+                  </p>
+                </div>
+              );
+            })()}
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setBankQrPreviewOpen(false)}
+                className="w-full h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

@@ -49,6 +49,7 @@ type Bill = {
   totalAmount?: number;
   bankName?: string;
   bankAccount?: string;
+  bankAccountName?: string;
   description?: string;
   qrCode?: string | null;
   items?: BillItem[];
@@ -130,18 +131,25 @@ function getBankTransferInfo(
 ) {
   const bankName = bill?.bankName ?? "";
   const bankAccount = bill?.bankAccount ?? "";
+  const bankAccountName = bill?.bankAccountName ?? "";
   const description = getBankTransferDescription(orderId);
 
   const amount = Math.round(Number(bill?.totalAmount ?? finalPrice ?? 0));
-  const qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(
-    bankAccount,
-  )}&bank=${encodeURIComponent(bankName)}&amount=${amount}&des=${encodeURIComponent(
-    description,
-  )}&template=qronly`;
+  const qrCode =
+    bankName && bankAccount
+      ? `https://img.vietqr.io/image/${encodeURIComponent(
+          bankName.trim(),
+        )}-${encodeURIComponent(
+          bankAccount.trim(),
+        )}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
+          description,
+        )}&accountName=${encodeURIComponent(bankAccountName.trim())}`
+      : null;
 
   return {
     bankName,
     bankAccount,
+    bankAccountName,
     description,
     amount,
     qrCode,
@@ -171,6 +179,7 @@ export default function ConfirmBillPage() {
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<BillPaymentMethod>("Cash");
+  const [bankTransferConfirmed, setBankTransferConfirmed] = useState(false);
   const [paymentMethodSyncing, setPaymentMethodSyncing] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -571,6 +580,11 @@ export default function ConfirmBillPage() {
     if (method === selectedPaymentMethod) return;
     if (!orderId) return;
 
+    if (method === "BankTransfer" && !bankTransferInfo.qrCode) {
+      notify.error("Quán chưa kích hoạt nhận chuyển khoản. Vui lòng thanh toán bằng Tiền mặt.");
+      return;
+    }
+
     setError(null);
     const previousMethod = selectedPaymentMethod;
     setSelectedPaymentMethod(method);
@@ -887,11 +901,15 @@ export default function ConfirmBillPage() {
                         <button
                           type="button"
                           onClick={() => handleSelectPaymentMethod("BankTransfer")}
-                          disabled={paymentMethodSyncing}
+                          disabled={paymentMethodSyncing || !bankTransferInfo.qrCode}
                           className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 underline underline-offset-4 cursor-pointer disabled:opacity-50"
                         >
                           <CreditCard className="h-3.5 w-3.5" />
-                          {paymentMethodSyncing ? "Đang chuyển..." : "Chuyển khoản SePay (QR)"}
+                          {paymentMethodSyncing
+                            ? "Đang chuyển..."
+                            : bankTransferInfo.qrCode
+                              ? "Chuyển khoản ngân hàng (QR)"
+                              : "Quán chưa bật chuyển khoản"}
                         </button>
                       </div>
                     </div>
@@ -900,7 +918,7 @@ export default function ConfirmBillPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 font-bold text-cyan-900 dark:text-cyan-200 text-sm">
                           <CreditCard className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                          Phương thức: Chuyển khoản ngân hàng (SePay)
+                          Phương thức: Chuyển khoản ngân hàng
                         </div>
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
                           <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
@@ -997,6 +1015,35 @@ export default function ConfirmBillPage() {
                         </div>
                       </div>
 
+                      {/* Button: Customer confirms they made the transfer */}
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBankTransferConfirmed(true);
+                            notify.success("Đã ghi nhận bạn chuyển khoản! Quán sẽ kiểm tra và xác nhận đơn hàng.");
+                          }}
+                          disabled={bankTransferConfirmed}
+                          className={`w-full rounded-2xl p-3.5 text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer ${
+                            bankTransferConfirmed
+                              ? "bg-emerald-600 text-white cursor-default"
+                              : "bg-gradient-to-r from-cyan-500 to-indigo-600 text-white hover:from-cyan-400 hover:to-indigo-500 active:scale-98"
+                          }`}
+                        >
+                          {bankTransferConfirmed ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-white" />
+                              Đã báo chuyển khoản - Đang chờ quán kiểm tra
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Tôi đã chuyển khoản
+                            </>
+                          )}
+                        </button>
+                      </div>
+
                       <div className="pt-3 border-t border-cyan-200/60 dark:border-cyan-900/40 flex items-center justify-between">
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           Muốn đổi sang tiền mặt?
@@ -1019,12 +1066,12 @@ export default function ConfirmBillPage() {
                     {selectedPaymentMethod === "Cash" ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                        Quán sẽ hoàn tất đơn ngay sau khi nhận đủ tiền mặt.
+                        Quán sẽ xác nhận và hoàn tất đơn ngay sau khi nhận đủ tiền mặt.
                       </span>
                     ) : (
                       <span className="flex items-center justify-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-                        Hệ thống sẽ tự động cập nhật ngay khi tài khoản nhận được tiền chuyển khoản.
+                        Quán sẽ kiểm tra tài khoản và xác nhận hoàn tất đơn ngay sau khi nhận được tiền.
                       </span>
                     )}
                   </div>

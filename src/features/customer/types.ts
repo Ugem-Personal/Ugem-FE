@@ -42,6 +42,10 @@ export type Merchant = {
   phone?: string;
   address?: string;
   openingHours?: string;
+  bankCode?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+  bankTransferEnabled?: boolean;
   logoUrl?: string;
   rating?: number;
   reviewCount?: number;

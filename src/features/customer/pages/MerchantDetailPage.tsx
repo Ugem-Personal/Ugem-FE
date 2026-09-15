@@ -1188,6 +1188,7 @@ export default function MerchantDetailPage() {
             merchantLongitude={merchant.longitude}
             defaultRecipientName={currentUser?.Name || ""}
             defaultOrderType="Offline"
+            bankTransferEnabled={merchant.bankTransferEnabled === true}
             submitting={ordering}
             onOpenChange={(open) => {
               setCheckoutOpen(open);
