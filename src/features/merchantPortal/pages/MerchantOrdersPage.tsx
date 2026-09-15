@@ -285,17 +285,29 @@ export default function MerchantOrdersPage() {
       return;
     }
 
-    setBillPrintOrder(order);
-    setBillPrintOpen(true);
+    setActionOrderId(order.orderId);
     try {
+      if (getOrderStatusKey(order.status) !== "completed") {
+        await updateBill(order.orderId, {
+          transferContent: `THANH TOAN DON ${getShortOrderCode(order.orderId)}`,
+        });
+      }
+
       if (orderDetail && (orderDetail as any).orderId === order.orderId) {
         setBillPrintDetail(orderDetail);
       } else {
         const detail = await getMerchantOrderDetail(order.orderId);
         setBillPrintDetail(detail);
       }
+
+      setBillPrintOrder(order);
+      setBillPrintOpen(true);
+      await loadOrders(() => true, { silent: true });
     } catch (err) {
       console.error("Failed to load order detail for printing", err);
+      notify.errorApi(err, "Không thể tạo bill thanh toán.");
+    } finally {
+      setActionOrderId(null);
     }
   }
 

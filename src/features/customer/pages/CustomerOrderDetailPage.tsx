@@ -435,7 +435,10 @@ export default function CustomerOrderDetailPage() {
 
     const refreshStatus = async () => {
       try {
-        const ordersRes = await getCustomerOrders();
+        const [ordersRes, billPayload] = await Promise.all([
+          getCustomerOrders(),
+          getBill(effectiveOrderId).catch(() => null),
+        ]);
         const refreshedSummary = (ordersRes.data ?? []).find(
           (order: CustomerOrderSummary) =>
             getCustomerOrderId(order) === effectiveOrderId,
@@ -444,6 +447,7 @@ export default function CustomerOrderDetailPage() {
         if (!active || !refreshedSummary) return;
 
         setFetchedSummaryOrder(refreshedSummary);
+        setPaymentBankInfo(getPaymentBankInfo(billPayload));
         const refreshedStatus = refreshedSummary.status;
 
         const previousStatus = lastKnownStatusRef.current;
@@ -505,6 +509,7 @@ export default function CustomerOrderDetailPage() {
     );
   const isConfirmationReady =
     !isCompleted &&
+    (!isOfflineOrder || paymentBankInfo !== null) &&
     isCustomerConfirmationReady(
       displayOrderStatus,
       isOfflineOrder ? "Offline" : "Online",

@@ -438,6 +438,7 @@ export async function updateBill(
   payload: {
     discount?: number;
     items?: { foodId: string; quantity?: number; unitPrice?: number }[];
+    transferContent?: string;
   },
 ) {
   const body = { orderId, ...(payload ?? {}) };
@@ -476,4 +477,3 @@ export async function checkStoreAvailability(query: {
   );
   return unwrapApiResponse(res.data);
 }
-
