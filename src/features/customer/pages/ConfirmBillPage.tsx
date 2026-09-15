@@ -436,7 +436,7 @@ export default function ConfirmBillPage() {
             replace: true,
           });
         } else {
-          navigate(`/orders/${encodeURIComponent(orderId)}`, {
+          navigate(`/customer/orders/${encodeURIComponent(orderId)}`, {
             replace: true,
           });
         }
@@ -501,7 +501,7 @@ export default function ConfirmBillPage() {
             replace: true,
           });
         } else {
-          navigate(`/orders/${encodeURIComponent(orderId)}`, {
+          navigate(`/customer/orders/${encodeURIComponent(orderId)}`, {
             replace: true,
           });
         }
