@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  AlertTriangle,
   Check,
   Eye,
   Info,
@@ -9,14 +8,12 @@ import {
   MapPin,
   RefreshCw,
   Utensils,
-  X,
 } from "lucide-react";
 import {
   acceptOrder,
   confirmCashPayment,
   getMerchantOrderDetail,
   getMerchantOrders,
-  rejectOrder,
   updateBill,
   updateMerchantOrderStatus,
 } from "../services";
@@ -234,13 +231,6 @@ function getLockedOrderMessage(status?: string | null) {
   return "Đơn mới đang chờ quán xác nhận.";
 }
 
-const QUICK_REJECT_REASONS = [
-  "Đơn không hợp lệ",
-  "Hết món / Hết nguyên liệu",
-  "Quán đang quá tải",
-  "Quán tạm thời không phục vụ đơn này",
-];
-
 export default function MerchantOrdersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlOrderId = searchParams.get("orderId");
@@ -257,11 +247,6 @@ export default function MerchantOrdersPage() {
   const [deliveryMapOpen, setDeliveryMapOpen] = useState(false);
   const [orderDetail, setOrderDetail] =
     useState<MerchantOrderDetailPayload | null>(null);
-
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectTargetOrder, setRejectTargetOrder] =
-    useState<MerchantOrderSummary | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
 
   const selectedOrder = orders.find(
     (order) => order.orderId === selectedOrderId,
@@ -423,38 +408,6 @@ export default function MerchantOrdersPage() {
     } catch (error) {
       console.error(error);
       notify.errorApi(error, "Không thể cập nhật trạng thái đã lên món.");
-    } finally {
-      setActionOrderId(null);
-    }
-  }
-
-  function handleRejectOrder(order: MerchantOrderSummary) {
-    if (getOrderStatusKey(order.status) !== "pending") {
-      notify.error(getLockedOrderMessage(order.status));
-      return;
-    }
-
-    setRejectTargetOrder(order);
-    setRejectReason("Đơn không hợp lệ");
-    setRejectDialogOpen(true);
-  }
-
-  async function confirmRejectOrder() {
-    if (!rejectTargetOrder || !rejectReason.trim()) return;
-
-    const { orderId } = rejectTargetOrder;
-    setActionOrderId(orderId);
-
-    try {
-      await rejectOrder(orderId, rejectReason.trim());
-      notify.success("Đã từ chối đơn hàng thành công.");
-      setRejectDialogOpen(false);
-      setRejectTargetOrder(null);
-      if (detailOpen) setDetailOpen(false);
-      await loadOrders();
-    } catch (error) {
-      console.error(error);
-      notify.errorApi(error, "Từ chối đơn thất bại.");
     } finally {
       setActionOrderId(null);
     }
@@ -782,27 +735,15 @@ export default function MerchantOrdersPage() {
                       </button>
 
                       {getOrderStatusKey(order.status) === "pending" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => void handleAcceptOrder(order)}
-                            disabled={actionOrderId === order.orderId}
-                            className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
-                          >
-                            <Check size={15} />
-                            Xác nhận đơn
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRejectOrder(order)}
-                            disabled={actionOrderId === order.orderId}
-                            className="inline-flex items-center gap-1.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50"
-                          >
-                            <X size={15} />
-                            Từ chối
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          onClick={() => void handleAcceptOrder(order)}
+                          disabled={actionOrderId === order.orderId}
+                          className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          <Check size={15} />
+                          Xác nhận đơn
+                        </button>
                       ) : null}
 
                       {getOrderStatusKey(order.status) === "accepted" ||
@@ -1095,31 +1036,15 @@ export default function MerchantOrdersPage() {
                   <DialogFooter className="absolute inset-x-0 bottom-0 z-20 gap-3 border-t border-slate-200 bg-white/95 px-6 py-4 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 sm:justify-between">
                     <div className="flex flex-wrap gap-2">
                       {getOrderStatusKey(selectedOrder.status) === "pending" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleAcceptOrder(selectedOrder)
-                            }
-                            disabled={actionOrderId === selectedOrder.orderId}
-                            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
-                          >
-                            <Check size={16} />
-                            Xác nhận đơn
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleRejectOrder(selectedOrder)
-                            }
-                            disabled={actionOrderId === selectedOrder.orderId}
-                            className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50"
-                          >
-                            <X size={16} />
-                            Từ chối đơn
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          onClick={() => void handleAcceptOrder(selectedOrder)}
+                          disabled={actionOrderId === selectedOrder.orderId}
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          <Check size={16} />
+                          Xác nhận đơn
+                        </button>
                       ) : null}
 
                       {getOrderStatusKey(selectedOrder.status) === "accepted" ||
@@ -1189,88 +1114,6 @@ export default function MerchantOrdersPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Reject Order Custom Modal */}
-          <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-            <DialogContent className="max-w-md border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 p-6 rounded-3xl text-slate-900 dark:text-white shadow-2xl backdrop-blur-2xl">
-              <DialogHeader className="text-left space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                    <AlertTriangle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <DialogTitle className="text-base sm:text-lg font-black text-slate-950 dark:text-white">
-                      Từ chối đơn hàng #
-                      {rejectTargetOrder
-                        ? getShortOrderCode(rejectTargetOrder.orderId)
-                        : ""}
-                    </DialogTitle>
-                    <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                      Chọn hoặc nhập lý do từ chối để phản hồi cho khách hàng.
-                    </DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="space-y-4 py-3">
-                <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                    Lý do nhanh
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {QUICK_REJECT_REASONS.map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setRejectReason(preset)}
-                        className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
-                          rejectReason === preset
-                            ? "border-rose-500 bg-rose-500/10 text-rose-600 dark:text-rose-400 shadow-xs"
-                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-                    Lý do chi tiết
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    placeholder="Nhập lý do chi tiết..."
-                    className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 p-3.5 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition resize-none"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter className="gap-2 sm:gap-0 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setRejectDialogOpen(false)}
-                  className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/10 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/20 transition"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="button"
-                  disabled={
-                    !rejectReason.trim() ||
-                    actionOrderId === rejectTargetOrder?.orderId
-                  }
-                  onClick={() => void confirmRejectOrder()}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-50"
-                >
-                  <X className="h-4 w-4" />
-                  Xác nhận từ chối
-                </button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </section>
     </main>

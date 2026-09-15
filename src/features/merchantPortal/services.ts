@@ -2,10 +2,7 @@ import { api } from "../../lib/axios";
 import type { ApiResponse, MerchantOrderSummary } from "@/shared/types";
 import type { MerchantDetail } from "@/features/customer/types";
 import type { CreateApplicationPayload, MerchantApplication } from "./types";
-import {
-  acceptMerchantOrder,
-  rejectMerchantOrder,
-} from "@/shared/services/merchantOrderService";
+import { acceptMerchantOrder } from "@/shared/services/merchantOrderService";
 import { generateCheckInQr } from "@/shared/services/checkInService";
 
 const APPLICATION_TYPE = "Merchant";
@@ -200,10 +197,6 @@ export async function getMerchantOrderDetail(orderId: string) {
 
 export async function acceptOrder(orderId: string) {
   return acceptMerchantOrder(orderId);
-}
-
-export async function rejectOrder(orderId: string, reason: string) {
-  return rejectMerchantOrder({ orderId, reason });
 }
 
 export async function updateMerchantOrderStatus(

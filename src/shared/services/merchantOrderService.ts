@@ -40,11 +40,3 @@ export async function acceptMerchantOrder(orderId: string) {
   const res = await api.post<ApiResponse<null>>(`/orders/${orderId}/accept`);
   return res.data;
 }
-
-export async function rejectMerchantOrder(payload: {
-  orderId: string;
-  reason: string;
-}) {
-  const res = await api.post<ApiResponse<null>>("/orders/reject", payload);
-  return res.data;
-}
