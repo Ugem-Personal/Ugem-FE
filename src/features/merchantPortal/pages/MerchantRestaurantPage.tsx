@@ -1229,7 +1229,8 @@ export function MerchantRestaurantPage() {
                 );
               }
 
-              const qrUrl = `https://img.vietqr.io/image/${previewCode}-${previewAcc}-compact2.png?amount=50000&addInfo=TEST%20QR&accountName=${encodeURIComponent(previewName)}`;
+              const previewContent = "THANH TOAN DON ABC12345";
+              const qrUrl = `https://img.vietqr.io/image/${previewCode}-${previewAcc}-compact2.png?amount=50000&addInfo=${encodeURIComponent(previewContent)}&accountName=${encodeURIComponent(previewName)}`;
 
               return (
                 <div className="space-y-4">
@@ -1259,7 +1260,7 @@ export function MerchantRestaurantPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Nội dung mẫu:</span>
-                      <span className="font-mono font-bold text-cyan-600">TEST QR</span>
+                      <span className="font-mono font-bold text-cyan-600">{previewContent}</span>
                     </div>
                   </div>
                   <p className="text-[11px] text-center text-slate-400">

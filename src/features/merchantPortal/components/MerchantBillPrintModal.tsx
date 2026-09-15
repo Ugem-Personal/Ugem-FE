@@ -53,7 +53,7 @@ export function MerchantBillPrintModal({
   if (!order) return null;
 
   const shortCode = order.orderId.split("-")[0]?.toUpperCase() || order.orderId;
-  const transferContent = `UGEM ${shortCode}`;
+  const transferContent = `THANH TOAN DON ${shortCode}`;
   const amount = Math.round(Number(order.finalPrice ?? 0));
   const hasBankTransfer =
     bankTransferEnabled && Boolean(bankCode) && Boolean(bankAccountNumber);
