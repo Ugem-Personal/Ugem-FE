@@ -91,6 +91,10 @@ function getOrderStatusKey(status?: string | null) {
   return normalizeOrderStatus(status);
 }
 
+function canPrintBill(status?: string | null) {
+  return getOrderStatusKey(status) === "completed";
+}
+
 function getOrderStatusChipClass(status?: string | null) {
   const statusKey = getOrderStatusKey(status);
 
@@ -268,6 +272,11 @@ export default function MerchantOrdersPage() {
   }, []);
 
   async function handleOpenPrintBill(order: MerchantOrderSummary) {
+    if (!canPrintBill(order.status)) {
+      notify.error("Chỉ có thể in hóa đơn sau khi khách hoàn tất bữa ăn.");
+      return;
+    }
+
     setBillPrintOrder(order);
     setBillPrintOpen(true);
     try {
@@ -774,14 +783,16 @@ export default function MerchantOrdersPage() {
                         Xem chi tiết
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => void handleOpenPrintBill(order)}
-                        className="inline-flex items-center gap-1.5 rounded-2xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 shadow-xs transition"
-                      >
-                        <Printer size={15} />
-                        In hóa đơn
-                      </button>
+                      {canPrintBill(order.status) ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenPrintBill(order)}
+                          className="inline-flex items-center gap-1.5 rounded-2xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 shadow-xs transition"
+                        >
+                          <Printer size={15} />
+                          In hóa đơn
+                        </button>
+                      ) : null}
 
                       {getOrderStatusKey(order.status) === "pending" ? (
                         <button
@@ -1136,14 +1147,16 @@ export default function MerchantOrdersPage() {
                         </button>
                       ) : null}
 
-                      <button
-                        type="button"
-                        onClick={() => void handleOpenPrintBill(selectedOrder)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition"
-                      >
-                        <Printer size={15} />
-                        In hóa đơn
-                      </button>
+                      {canPrintBill(selectedOrder.status) ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenPrintBill(selectedOrder)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-50 dark:bg-cyan-950/40 px-3.5 py-2 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition"
+                        >
+                          <Printer size={15} />
+                          In hóa đơn
+                        </button>
+                      ) : null}
 
                       {canConfirmPayment(
                         selectedOrder.status,
