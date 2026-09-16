@@ -6,6 +6,11 @@ const TOKEN_KEY = "ugem_access_token";
 const REFRESH_TOKEN_KEY = "ugem_refresh_token";
 const REFRESH_TOKEN_EXPIRES_KEY = "ugem_refresh_token_expires_at";
 const USER_KEY = "ugem_user";
+export const AUTH_SESSION_CHANGED_EVENT = "ugem:auth-session-changed";
+
+function notifyAuthSessionChanged() {
+  window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
+}
 
 export function saveAuthToken(
   accessToken: string,
@@ -25,6 +30,8 @@ export function saveAuthToken(
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_EXPIRES_KEY);
   }
+
+  notifyAuthSessionChanged();
 
   // // Debug log
   // console.log("[AUTH] Saved JWT Payload:", {
@@ -86,4 +93,5 @@ export function clearAuth() {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_EXPIRES_KEY);
   localStorage.removeItem(USER_KEY);
+  notifyAuthSessionChanged();
 }

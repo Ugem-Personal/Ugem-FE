@@ -8,7 +8,13 @@ import React, {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_V1_BASE_URL } from "@/lib/env";
-import { getAccessToken, getCurrentUser } from "@/features/auth/store";
+import { jwtDecode } from "jwt-decode";
+import {
+  AUTH_SESSION_CHANGED_EVENT,
+  getAccessToken,
+  getCurrentUser,
+} from "@/features/auth/store";
+import type { JwtPayload } from "@/features/auth/types";
 import { soundEngine } from "@/shared/lib/audio";
 import { notify } from "@/shared/lib/notify";
 import { getOrderStatusLabel } from "@/shared/lib/order-status";
@@ -89,16 +95,35 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     let isMounted = true;
 
+    const hasUsableAccessToken = (token: string | null): token is string => {
+      if (!token) return false;
+
+      try {
+        const { exp } = jwtDecode<JwtPayload>(token);
+        return typeof exp !== "number" || exp * 1000 > Date.now();
+      } catch {
+        return false;
+      }
+    };
+
+    const closeConnection = () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      if (isMounted) setIsConnected(false);
+    };
+
     const connectSSE = () => {
       const token = getAccessToken();
       const user = getCurrentUser();
 
-      if (!token || !user) {
-        setIsConnected(false);
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
+      if (!hasUsableAccessToken(token) || !user) {
+        closeConnection();
         return;
       }
 
@@ -126,7 +151,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
 
           if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
           reconnectTimerRef.current = setTimeout(() => {
-            if (isMounted && getAccessToken()) {
+            if (isMounted && hasUsableAccessToken(getAccessToken())) {
               connectSSE();
             }
           }, 5000);
@@ -232,15 +257,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
     window.addEventListener("storage", onStorageChange);
+    window.addEventListener(AUTH_SESSION_CHANGED_EVENT, connectSSE);
 
     return () => {
       isMounted = false;
       window.removeEventListener("storage", onStorageChange);
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
+      window.removeEventListener(AUTH_SESSION_CHANGED_EVENT, connectSSE);
+      closeConnection();
     };
   }, [queryClient]);
 
