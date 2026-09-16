@@ -256,6 +256,26 @@ export async function getMyMerchantStatistics() {
   return unwrapApiResponse(res.data);
 }
 
+export type MerchantAcquisitionAnalytics = {
+  views: number;
+  saves: number;
+  visits: number;
+  checkIns: number;
+  verifiedVisits: number;
+  repeatVisitors: number;
+  reviewCount: number;
+  acquisitionEvents: number;
+  conversionRate: number;
+  paidAcquisition: number;
+};
+
+export async function getMerchantAcquisitionAnalytics() {
+  const res = await api.get<ApiResponse<MerchantAcquisitionAnalytics>>(
+    "/moderation/merchant/analytics",
+  );
+  return res.data.data;
+}
+
 export type MerchantDashboardOverview = {
   merchant: {
     id: string;

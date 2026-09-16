@@ -14,6 +14,7 @@ import {
   Sparkles,
   TrendingUp,
   Utensils,
+  Users,
 } from "lucide-react";
 
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
@@ -21,6 +22,7 @@ import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
 import {
   getMerchantCampaignPerformance,
+  getMerchantAcquisitionAnalytics,
   getMerchantDashboardOverview,
   getMerchantOrderGrowthByYear,
   getMerchantRevenueByYear,
@@ -28,6 +30,7 @@ import {
   getMyMerchantStatistics,
   getMyMerchantViews,
   type MerchantCampaignPerformance,
+  type MerchantAcquisitionAnalytics,
   type MerchantDashboardOverview,
   type MerchantOrderGrowthByYear,
   type MerchantRevenueByYear,
@@ -64,6 +67,7 @@ export function MerchantViewStatisticsPage() {
   const [orderGrowth, setOrderGrowth] = useState<MerchantOrderGrowthByYear | null>(null);
   const [topFoods, setTopFoods] = useState<MerchantTopFoods | null>(null);
   const [campaigns, setCampaigns] = useState<MerchantCampaignPerformance | null>(null);
+  const [acquisition, setAcquisition] = useState<MerchantAcquisitionAnalytics | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -87,6 +91,7 @@ export function MerchantViewStatisticsPage() {
         growthData,
         foodData,
         campData,
+        acquisitionData,
       ] = await Promise.all([
         getMyMerchantViews().catch(() => null),
         getMyMerchantStatistics().catch(() => null),
@@ -95,6 +100,7 @@ export function MerchantViewStatisticsPage() {
         getMerchantOrderGrowthByYear(selectedYear).catch(() => null),
         getMerchantTopFoods(5).catch(() => null),
         getMerchantCampaignPerformance(10).catch(() => null),
+        getMerchantAcquisitionAnalytics().catch(() => null),
       ]);
 
       setViews(viewData);
@@ -104,6 +110,7 @@ export function MerchantViewStatisticsPage() {
       setOrderGrowth(growthData);
       setTopFoods(foodData);
       setCampaigns(campData);
+      setAcquisition(acquisitionData);
     } catch (loadError) {
       console.error(loadError);
       const message = getErrorMessage(loadError);
@@ -272,6 +279,13 @@ export function MerchantViewStatisticsPage() {
                   tone="indigo"
                   hint="Underrated Score"
                 />
+              </section>
+
+              <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard icon={<Eye size={18} />} label="Verified Visits" value={formatNumber(acquisition?.verifiedVisits)} tone="cyan" hint="Check-in đã xác minh" />
+                <KpiCard icon={<Users size={18} />} label="Repeat Visitors" value={formatNumber(acquisition?.repeatVisitors)} tone="blue" hint="Khách quay lại" />
+                <KpiCard icon={<TrendingUp size={18} />} label="Acquisition Events" value={formatNumber(acquisition?.acquisitionEvents)} tone="emerald" hint="Giá trị UGem tạo ra" />
+                <KpiCard icon={<BarChart3 size={18} />} label="Visit Conversion" value={`${((acquisition?.conversionRate ?? 0) * 100).toFixed(1)}%`} tone="amber" hint="Verified visits / views" />
               </section>
 
               {/* Financial & Platform Fee Breakdown Section */}
