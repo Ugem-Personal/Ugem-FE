@@ -62,65 +62,74 @@ export function MerchantViewStatisticsPage() {
 
   const [views, setViews] = useState<MerchantViewSummary | null>(null);
   const [stats, setStats] = useState<MerchantStatistics | null>(null);
-  const [dashboard, setDashboard] = useState<MerchantDashboardOverview | null>(null);
-  const [revenueByYear, setRevenueByYear] = useState<MerchantRevenueByYear | null>(null);
-  const [orderGrowth, setOrderGrowth] = useState<MerchantOrderGrowthByYear | null>(null);
+  const [dashboard, setDashboard] = useState<MerchantDashboardOverview | null>(
+    null,
+  );
+  const [revenueByYear, setRevenueByYear] =
+    useState<MerchantRevenueByYear | null>(null);
+  const [orderGrowth, setOrderGrowth] =
+    useState<MerchantOrderGrowthByYear | null>(null);
   const [topFoods, setTopFoods] = useState<MerchantTopFoods | null>(null);
-  const [campaigns, setCampaigns] = useState<MerchantCampaignPerformance | null>(null);
-  const [acquisition, setAcquisition] = useState<MerchantAcquisitionAnalytics | null>(null);
+  const [campaigns, setCampaigns] =
+    useState<MerchantCampaignPerformance | null>(null);
+  const [acquisition, setAcquisition] =
+    useState<MerchantAcquisitionAnalytics | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const loadStatistics = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
+  const loadStatistics = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-    setError("");
+      setError("");
 
-    try {
-      const [
-        viewData,
-        statisticData,
-        dashData,
-        revData,
-        growthData,
-        foodData,
-        campData,
-        acquisitionData,
-      ] = await Promise.all([
-        getMyMerchantViews().catch(() => null),
-        getMyMerchantStatistics().catch(() => null),
-        getMerchantDashboardOverview().catch(() => null),
-        getMerchantRevenueByYear(selectedYear).catch(() => null),
-        getMerchantOrderGrowthByYear(selectedYear).catch(() => null),
-        getMerchantTopFoods(5).catch(() => null),
-        getMerchantCampaignPerformance(10).catch(() => null),
-        getMerchantAcquisitionAnalytics().catch(() => null),
-      ]);
+      try {
+        const [
+          viewData,
+          statisticData,
+          dashData,
+          revData,
+          growthData,
+          foodData,
+          campData,
+          acquisitionData,
+        ] = await Promise.all([
+          getMyMerchantViews().catch(() => null),
+          getMyMerchantStatistics().catch(() => null),
+          getMerchantDashboardOverview().catch(() => null),
+          getMerchantRevenueByYear(selectedYear).catch(() => null),
+          getMerchantOrderGrowthByYear(selectedYear).catch(() => null),
+          getMerchantTopFoods(5).catch(() => null),
+          getMerchantCampaignPerformance(10).catch(() => null),
+          getMerchantAcquisitionAnalytics().catch(() => null),
+        ]);
 
-      setViews(viewData);
-      setStats(statisticData);
-      setDashboard(dashData);
-      setRevenueByYear(revData);
-      setOrderGrowth(growthData);
-      setTopFoods(foodData);
-      setCampaigns(campData);
-      setAcquisition(acquisitionData);
-    } catch (loadError) {
-      console.error(loadError);
-      const message = getErrorMessage(loadError);
-      setError(message);
-      notify.error(message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [selectedYear]);
+        setViews(viewData);
+        setStats(statisticData);
+        setDashboard(dashData);
+        setRevenueByYear(revData);
+        setOrderGrowth(growthData);
+        setTopFoods(foodData);
+        setCampaigns(campData);
+        setAcquisition(acquisitionData);
+      } catch (loadError) {
+        console.error(loadError);
+        const message = getErrorMessage(loadError);
+        setError(message);
+        notify.error(message);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [selectedYear],
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -163,25 +172,35 @@ export function MerchantViewStatisticsPage() {
                   Báo cáo & Thống kê kinh doanh
                 </h1>
                 <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Theo dõi lượt xem, doanh thu, đơn hàng, top món bán chạy và hiệu suất chiến dịch.
+                  Theo dõi lượt xem, doanh thu, đơn hàng, top món bán chạy và
+                  hiệu suất chiến dịch.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Year filter dropdown */}
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs">
-                  <Calendar size={14} className="text-cyan-600 dark:text-cyan-400" />
+                  <Calendar
+                    size={14}
+                    className="text-cyan-600 dark:text-cyan-400"
+                  />
                   <span>Năm:</span>
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
                     className="bg-transparent font-black outline-none cursor-pointer"
                   >
-                    {[currentYear, currentYear - 1, currentYear - 2].map((yr) => (
-                      <option key={yr} value={yr} className="bg-white dark:bg-slate-800">
-                        {yr}
-                      </option>
-                    ))}
+                    {[currentYear, currentYear - 1, currentYear - 2].map(
+                      (yr) => (
+                        <option
+                          key={yr}
+                          value={yr}
+                          className="bg-white dark:bg-slate-800"
+                        >
+                          {yr}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
 
@@ -247,14 +266,18 @@ export function MerchantViewStatisticsPage() {
                 <KpiCard
                   icon={<ReceiptText size={18} />}
                   label="Tổng đơn hàng"
-                  value={formatNumber(stats?.totalOrders ?? dashboard?.orders.total)}
+                  value={formatNumber(
+                    stats?.totalOrders ?? dashboard?.orders.total,
+                  )}
                   tone="amber"
                   hint={`Đã trả: ${formatNumber(dashboard?.orders.paid ?? 0)}`}
                 />
                 <KpiCard
                   icon={<Banknote size={18} />}
                   label="Tổng doanh thu"
-                  value={formatCurrency(stats?.totalRevenue ?? dashboard?.revenue.total)}
+                  value={formatCurrency(
+                    stats?.totalRevenue ?? dashboard?.revenue.total,
+                  )}
                   tone="emerald"
                   hint="Gross revenue"
                 />
@@ -282,10 +305,34 @@ export function MerchantViewStatisticsPage() {
               </section>
 
               <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={<Eye size={18} />} label="Verified Visits" value={formatNumber(acquisition?.verifiedVisits)} tone="cyan" hint="Check-in đã xác minh" />
-                <KpiCard icon={<Users size={18} />} label="Repeat Visitors" value={formatNumber(acquisition?.repeatVisitors)} tone="blue" hint="Khách quay lại" />
-                <KpiCard icon={<TrendingUp size={18} />} label="Acquisition Events" value={formatNumber(acquisition?.acquisitionEvents)} tone="emerald" hint="Giá trị UGem tạo ra" />
-                <KpiCard icon={<BarChart3 size={18} />} label="Visit Conversion" value={`${((acquisition?.conversionRate ?? 0) * 100).toFixed(1)}%`} tone="amber" hint="Verified visits / views" />
+                <KpiCard
+                  icon={<Eye size={18} />}
+                  label="Verified Visits"
+                  value={formatNumber(acquisition?.verifiedVisits)}
+                  tone="cyan"
+                  hint="Check-in đã xác minh"
+                />
+                <KpiCard
+                  icon={<Users size={18} />}
+                  label="Repeat Visitors"
+                  value={formatNumber(acquisition?.repeatVisitors)}
+                  tone="blue"
+                  hint="Khách quay lại"
+                />
+                <KpiCard
+                  icon={<TrendingUp size={18} />}
+                  label="Acquisition Events"
+                  value={formatNumber(acquisition?.acquisitionEvents)}
+                  tone="emerald"
+                  hint="Giá trị UGem tạo ra"
+                />
+                <KpiCard
+                  icon={<BarChart3 size={18} />}
+                  label="Visit Conversion"
+                  value={`${((acquisition?.conversionRate ?? 0) * 100).toFixed(1)}%`}
+                  tone="amber"
+                  hint="Verified visits / views"
+                />
               </section>
 
               {/* Financial & Platform Fee Breakdown Section */}
@@ -298,7 +345,8 @@ export function MerchantViewStatisticsPage() {
                         Phân bổ tài chính & Doanh thu
                       </h2>
                       <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Chi tiết doanh thu gộp, các khoản khấu trừ phí dịch vụ và giá trị thực nhận.
+                        Chi tiết doanh thu gộp, các khoản khấu trừ phí dịch vụ
+                        và giá trị thực nhận.
                       </p>
                     </div>
                   </div>
@@ -337,7 +385,9 @@ export function MerchantViewStatisticsPage() {
                       Tổng quan gian hàng
                     </h2>
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">
-                      {stats?.merchantName || dashboard?.merchant.name || "Nhà hàng của bạn"}
+                      {stats?.merchantName ||
+                        dashboard?.merchant.name ||
+                        "Nhà hàng của bạn"}
                     </p>
 
                     <div className="space-y-3">
@@ -362,7 +412,8 @@ export function MerchantViewStatisticsPage() {
                   </div>
 
                   <div className="mt-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200/60 dark:border-cyan-900/50 p-3.5 text-xs text-cyan-800 dark:text-cyan-300 font-medium">
-                    ✨ Mẹo: Tối ưu hóa thực đơn và cập nhật chiến dịch khuyến mãi để gia tăng lượt xem và doanh thu thực nhận!
+                    ✨ Mẹo: Tối ưu hóa thực đơn và cập nhật chiến dịch khuyến
+                    mãi để gia tăng lượt xem và doanh thu thực nhận!
                   </div>
                 </article>
               </section>
@@ -378,7 +429,8 @@ export function MerchantViewStatisticsPage() {
                         Doanh thu theo tháng (Năm {selectedYear})
                       </h2>
                       <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Thống kê tổng doanh thu phát sinh từ đơn hàng đã thanh toán qua các tháng.
+                        Thống kê tổng doanh thu phát sinh từ đơn hàng đã thanh
+                        toán qua các tháng.
                       </p>
                     </div>
                     <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
@@ -401,8 +453,12 @@ export function MerchantViewStatisticsPage() {
                           >
                             {/* Tooltip */}
                             <div className="pointer-events-none absolute -top-12 z-20 hidden rounded-xl bg-slate-950 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-xl group-hover:block whitespace-nowrap">
-                              <p className="text-cyan-400">T{m.month}: {formatCurrency(m.revenue)}</p>
-                              <p className="text-slate-300">{m.paidOrders} đơn hàng</p>
+                              <p className="text-cyan-400">
+                                T{m.month}: {formatCurrency(m.revenue)}
+                              </p>
+                              <p className="text-slate-300">
+                                {m.paidOrders} đơn hàng
+                              </p>
                             </div>
 
                             {/* Bar */}
@@ -458,8 +514,12 @@ export function MerchantViewStatisticsPage() {
                           >
                             {/* Tooltip */}
                             <div className="pointer-events-none absolute -top-14 z-20 hidden rounded-xl bg-slate-950 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-xl group-hover:block whitespace-nowrap">
-                              <p className="text-cyan-400">T{m.month}: {m.totalOrders} tổng đơn</p>
-                              <p className="text-emerald-400">✓ {m.completed} hoàn tất</p>
+                              <p className="text-cyan-400">
+                                T{m.month}: {m.totalOrders} tổng đơn
+                              </p>
+                              <p className="text-emerald-400">
+                                ✓ {m.completed} hoàn tất
+                              </p>
                             </div>
 
                             {/* Bar */}
@@ -493,7 +553,8 @@ export function MerchantViewStatisticsPage() {
                       Top 5 Món Ăn Bán Chạy Nhất
                     </h2>
                     <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Xếp hạng món ăn tạo ra số lượng bán và doanh thu cao nhất cho gian hàng.
+                      Xếp hạng món ăn tạo ra số lượng bán và doanh thu cao nhất
+                      cho gian hàng.
                     </p>
                   </div>
                 </div>
@@ -505,8 +566,12 @@ export function MerchantViewStatisticsPage() {
                         <tr>
                           <th className="px-6 py-3.5">Hạng</th>
                           <th className="px-6 py-3.5">Tên món ăn</th>
-                          <th className="px-6 py-3.5 text-right">Số lượng bán</th>
-                          <th className="px-6 py-3.5 text-right">Doanh thu tạo ra</th>
+                          <th className="px-6 py-3.5 text-right">
+                            Số lượng bán
+                          </th>
+                          <th className="px-6 py-3.5 text-right">
+                            Doanh thu tạo ra
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -560,7 +625,8 @@ export function MerchantViewStatisticsPage() {
                       Hiệu Suất Chiến Dịch Khuyến Mãi
                     </h2>
                     <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Thống kê doanh thu, số lượt đơn và giảm giá của các chiến dịch đã triển khai.
+                      Thống kê doanh thu, số lượt đơn và giảm giá của các chiến
+                      dịch đã triển khai.
                     </p>
                   </div>
                 </div>
@@ -575,8 +641,12 @@ export function MerchantViewStatisticsPage() {
                           <th className="px-6 py-3.5">Trạng thái</th>
                           <th className="px-6 py-3.5 text-right">Lượt dùng</th>
                           <th className="px-6 py-3.5 text-right">Số đơn</th>
-                          <th className="px-6 py-3.5 text-right">Doanh thu tạo ra</th>
-                          <th className="px-6 py-3.5 text-right">Tổng giảm giá</th>
+                          <th className="px-6 py-3.5 text-right">
+                            Doanh thu tạo ra
+                          </th>
+                          <th className="px-6 py-3.5 text-right">
+                            Tổng giảm giá
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -589,9 +659,13 @@ export function MerchantViewStatisticsPage() {
                               #{camp.rank}
                             </td>
                             <td className="px-6 py-4">
-                              <p className="font-bold text-slate-900 dark:text-white">{camp.name}</p>
+                              <p className="font-bold text-slate-900 dark:text-white">
+                                {camp.name}
+                              </p>
                               {camp.description ? (
-                                <p className="text-[10px] text-slate-400 truncate max-w-xs">{camp.description}</p>
+                                <p className="text-[10px] text-slate-400 truncate max-w-xs">
+                                  {camp.description}
+                                </p>
                               ) : null}
                             </td>
                             <td className="px-6 py-4">
@@ -653,17 +727,23 @@ function KpiCard({
 }) {
   const toneClass = {
     cyan: "bg-cyan-50 text-cyan-700 border-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-900/50",
-    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50",
-    amber: "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/50",
-    violet: "bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-900/50",
+    emerald:
+      "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50",
+    amber:
+      "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/50",
+    violet:
+      "bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-900/50",
     blue: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-900/50",
-    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-900/50",
+    indigo:
+      "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-900/50",
   }[tone];
 
   return (
     <article className="rounded-2xl border border-white/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-xl backdrop-blur-xl">
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className={`grid h-9 w-9 place-items-center rounded-xl border ${toneClass}`}>
+        <div
+          className={`grid h-9 w-9 place-items-center rounded-xl border ${toneClass}`}
+        >
           {icon}
         </div>
         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -692,17 +772,24 @@ function MetricBox({
   accent: "emerald" | "violet" | "amber" | "cyan";
 }) {
   const accentClass = {
-    emerald: "border-emerald-100 bg-emerald-50/50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300",
-    violet: "border-violet-100 bg-violet-50/50 text-violet-700 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300",
-    amber: "border-amber-100 bg-amber-50/50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300",
+    emerald:
+      "border-emerald-100 bg-emerald-50/50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300",
+    violet:
+      "border-violet-100 bg-violet-50/50 text-violet-700 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300",
+    amber:
+      "border-amber-100 bg-amber-50/50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300",
     cyan: "border-cyan-100 bg-cyan-50/50 text-cyan-700 dark:border-cyan-900/40 dark:bg-cyan-950/30 dark:text-cyan-300",
   }[accent];
 
   return (
     <div className={`rounded-2xl border p-4 ${accentClass}`}>
       <span className="text-xs font-bold block opacity-80">{label}</span>
-      <span className="mt-1.5 text-xl font-black block text-slate-950 dark:text-white">{value}</span>
-      <span className="mt-1 text-[11px] font-medium block opacity-75">{description}</span>
+      <span className="mt-1.5 text-xl font-black block text-slate-950 dark:text-white">
+        {value}
+      </span>
+      <span className="mt-1 text-[11px] font-medium block opacity-75">
+        {description}
+      </span>
     </div>
   );
 }
@@ -718,8 +805,12 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-3.5 py-2.5">
-      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</span>
-      <span className={`break-all text-right text-xs font-black text-slate-950 dark:text-white ${isMono ? "font-mono text-[11px]" : ""}`}>
+      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+        {label}
+      </span>
+      <span
+        className={`break-all text-right text-xs font-black text-slate-950 dark:text-white ${isMono ? "font-mono text-[11px]" : ""}`}
+      >
         {value}
       </span>
     </div>
