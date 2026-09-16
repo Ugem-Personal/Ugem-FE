@@ -14,6 +14,7 @@ import {
   UtensilsCrossed,
   LifeBuoy,
   QrCode,
+  ShieldAlert,
 } from "lucide-react";
 
 import { getCurrentUser } from "@/features/auth";
@@ -88,6 +89,11 @@ const merchantMenuItems: MerchantNavItem[] = [
     label: "Trung tâm hỗ trợ",
     icon: LifeBuoy,
     path: "/merchant/support",
+  },
+  {
+    label: "Hồ sơ & an toàn quán",
+    icon: ShieldAlert,
+    path: "/merchant/governance",
   },
 ];
 

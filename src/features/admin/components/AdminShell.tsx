@@ -12,6 +12,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeft,
+  ShieldAlert,
 } from "lucide-react";
 
 import ufindIcon from "@/assets/ufind-icon.png";
@@ -53,6 +54,12 @@ const adminNavItems = [
     description: "Truy vết thao tác",
     to: "/admin/audit-logs",
     icon: ScrollText,
+  },
+  {
+    label: "Moderation",
+    description: "Báo cáo & kiểm duyệt an toàn",
+    to: "/admin/moderation",
+    icon: ShieldAlert,
   },
   {
     label: "Thông báo",

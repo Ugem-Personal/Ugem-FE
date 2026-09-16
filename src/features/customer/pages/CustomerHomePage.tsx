@@ -1263,6 +1263,7 @@ export default function CustomerHomePage() {
               <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               {showRoutePanel ? "Ẩn chỉ đường" : "Hiện chỉ đường"}
             </Button>
+            <Link to="/customer/safety" className="hidden rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5 sm:inline-flex">Check-in &amp; báo cáo</Link>
             <UserAccountMenu fallbackName="Customer" />
           </div>
         </header>

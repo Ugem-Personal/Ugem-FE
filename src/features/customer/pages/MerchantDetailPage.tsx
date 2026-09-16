@@ -58,6 +58,12 @@ import {
   type CheckoutFormData,
 } from "../components/CheckoutDialog";
 
+import {
+  reportMerchantIncident,
+  type IncidentSeverity,
+  type IncidentType,
+} from "@/features/moderation/services";
+
 const DESCRIPTION_META_LABELS = [
   "Địa chỉ",
   "Loại hình quán",
@@ -292,6 +298,21 @@ export default function MerchantDetailPage() {
   });
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
+
+  const [showReportForm, setShowReportForm] = useState(false);
+
+  const [reportType, setReportType] = useState<IncidentType>("Other");
+
+  const [reportSeverity, setReportSeverity] =
+    useState<IncidentSeverity>("Medium");
+
+  const [reportDescription, setReportDescription] = useState("");
+
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const [reportError, setReportError] = useState("");
+
+  const [reportSuccess, setReportSuccess] = useState("");
 
   useEffect(() => {
     if (!CART_STORAGE_KEY) return;
@@ -718,6 +739,52 @@ export default function MerchantDetailPage() {
         ? merchant.rating
         : null;
 
+  const handleReportMerchant = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
+    if (!id) {
+      setReportError("Không tìm thấy thông tin quán.");
+      return;
+    }
+
+    if (reportDescription.trim().length < 10) {
+      setReportError("Mô tả phải có ít nhất 10 ký tự.");
+      return;
+    }
+
+    setReportLoading(true);
+    setReportError("");
+    setReportSuccess("");
+
+    try {
+      await reportMerchantIncident({
+        merchantId: id,
+        type: reportType,
+        severity: reportSeverity,
+        description: reportDescription.trim(),
+      });
+
+      setReportSuccess("Báo cáo đã được gửi thành công.");
+
+      setReportDescription("");
+      setReportType("Other");
+      setReportSeverity("Medium");
+
+      setTimeout(() => {
+        setShowReportForm(false);
+        setReportSuccess("");
+      }, 1500);
+    } catch (error) {
+      console.error(error);
+
+      setReportError("Không thể gửi báo cáo. Vui lòng thử lại.");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   return (
     <div
       className={`relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300 px-4 pt-6 ${
@@ -783,7 +850,8 @@ export default function MerchantDetailPage() {
           <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-100/70 dark:border-cyan-400/30 dark:bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-800 dark:text-cyan-300 backdrop-blur-md shadow-2xs">
-                <Flame className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Premium Merchant
+                <Flame className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />{" "}
+                Premium Merchant
               </div>
 
               <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl leading-tight text-slate-950 dark:text-white">
@@ -836,17 +904,47 @@ export default function MerchantDetailPage() {
                       ? "border-emerald-300/80 bg-emerald-50/90 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-300"
                       : "border-rose-300/80 bg-rose-50/90 text-rose-800 dark:border-rose-400/50 dark:bg-rose-500/20 dark:text-rose-200",
                   )}
-                  title={merchant.openingHours ? `Giờ mở cửa: ${merchant.openingHours}` : undefined}
+                  title={
+                    merchant.openingHours
+                      ? `Giờ mở cửa: ${merchant.openingHours}`
+                      : undefined
+                  }
                 >
                   <span
                     className={cn(
                       "h-2 w-2 rounded-full",
-                      openStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-rose-500",
+                      openStatus.isOpen
+                        ? "bg-emerald-500 animate-pulse"
+                        : "bg-rose-500",
                     )}
                   />
                   {openStatus.statusText}
                   {merchant.openingHours && ` (${merchant.openingHours})`}
                 </span>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 dark:border-rose-400/20 dark:bg-rose-950/20">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-black text-slate-900 dark:text-white">Báo cáo vấn đề</h2>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Báo cáo an toàn thực phẩm, vệ sinh, gian lận hoặc thông tin sai.</p>
+                  </div>
+                  <button type="button" onClick={() => { setShowReportForm((value) => !value); setReportError(""); }} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-500">
+                    {showReportForm ? "Đóng biểu mẫu" : "Báo cáo quán"}
+                  </button>
+                </div>
+                {showReportForm && <form onSubmit={handleReportMerchant} className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <select value={reportType} onChange={(event) => setReportType(event.target.value as IncidentType)} className="rounded-lg border bg-white px-3 py-2 text-sm dark:bg-slate-900">
+                    <option value="FoodSafety">An toàn thực phẩm</option><option value="Hygiene">Vệ sinh</option><option value="Fraud">Gian lận</option><option value="WrongInformation">Thông tin sai</option><option value="BadService">Dịch vụ không tốt</option><option value="Other">Khác</option>
+                  </select>
+                  <select value={reportSeverity} onChange={(event) => setReportSeverity(event.target.value as IncidentSeverity)} className="rounded-lg border bg-white px-3 py-2 text-sm dark:bg-slate-900">
+                    <option value="Low">Thấp</option><option value="Medium">Trung bình</option><option value="High">Cao</option><option value="Critical">Nghiêm trọng</option>
+                  </select>
+                  <textarea required minLength={10} value={reportDescription} onChange={(event) => setReportDescription(event.target.value)} placeholder="Mô tả vấn đề (ít nhất 10 ký tự)" className="min-h-24 rounded-lg border bg-white px-3 py-2 text-sm sm:col-span-2 dark:bg-slate-900" />
+                  {reportError && <p className="text-sm text-rose-700 sm:col-span-2">{reportError}</p>}
+                  {reportSuccess && <p className="text-sm text-emerald-700 sm:col-span-2">{reportSuccess}</p>}
+                  <button disabled={reportLoading} type="submit" className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50 sm:col-span-2">{reportLoading ? "Đang gửi..." : "Gửi báo cáo"}</button>
+                </form>}
               </div>
 
               {descriptionInfo.summary && (
@@ -872,7 +970,9 @@ export default function MerchantDetailPage() {
             <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => navigate(`/customer?tab=map&merchantId=${merchant.id}`)}
+                onClick={() =>
+                  navigate(`/customer?tab=map&merchantId=${merchant.id}`)
+                }
                 className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-400 px-5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition cursor-pointer"
               >
                 <Navigation className="h-4 w-4" />
@@ -906,10 +1006,13 @@ export default function MerchantDetailPage() {
             <Clock className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h4 className="text-sm font-black text-rose-950 dark:text-rose-200">
-                Nhà hàng hiện đang đóng cửa ({merchant.openingHours || "Ngoài giờ hoạt động"})
+                Nhà hàng hiện đang đóng cửa (
+                {merchant.openingHours || "Ngoài giờ hoạt động"})
               </h4>
               <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed font-medium">
-                Quán hiện tại không nhận đơn đặt hàng trực tiếp. Bạn vẫn có thể xem trước thực đơn bên dưới để chuẩn bị cho bữa ăn khi quán mở cửa nhé!
+                Quán hiện tại không nhận đơn đặt hàng trực tiếp. Bạn vẫn có thể
+                xem trước thực đơn bên dưới để chuẩn bị cho bữa ăn khi quán mở
+                cửa nhé!
               </p>
             </div>
           </div>
@@ -1000,7 +1103,8 @@ export default function MerchantDetailPage() {
               <strong className="font-black text-amber-950 dark:text-amber-100">
                 Ăn tại quán
               </strong>
-              : Bạn có thể chọn món vào giỏ để đặt trước tại bàn, hoặc gọi món trực tiếp với nhân viên.
+              : Bạn có thể chọn món vào giỏ để đặt trước tại bàn, hoặc gọi món
+              trực tiếp với nhân viên.
             </span>
           </div>
 
@@ -1072,7 +1176,8 @@ export default function MerchantDetailPage() {
                           </p>
                           {review.isVerifiedDiner && (
                             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400">
-                              <CheckCircle2 className="h-3 w-3" /> Đã ăn tại quán
+                              <CheckCircle2 className="h-3 w-3" /> Đã ăn tại
+                              quán
                             </span>
                           )}
                         </div>
@@ -1130,8 +1235,8 @@ export default function MerchantDetailPage() {
             onConfirm={() => {
               const isEditing = pendingMode === "edit";
               const availableToppings = getEffectiveFoodToppings(pendingFood);
-              const selectedToppings = availableToppings.filter(
-                (topping) => pendingToppingIds.includes(topping.id),
+              const selectedToppings = availableToppings.filter((topping) =>
+                pendingToppingIds.includes(topping.id),
               );
               if (isEditing) {
                 updateCartItem(

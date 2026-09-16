@@ -27,9 +27,22 @@ export async function verifyCheckIn(payload: CheckInRequest) {
 }
 
 export async function getCurrentCheckIns() {
-  const res = await api.get<ApiResponse<unknown>>("/check-in/current");
-  return res.data.data ?? null;
+  const res = await api.get<ApiResponse<CustomerCheckIn[]>>("/check-in/current");
+  return res.data.data ?? [];
 }
+
+export type CustomerCheckIn = {
+  id: string;
+  orderId: string | null;
+  merchant: { id: string; name: string; logoUrl: string | null; address: string };
+  amount: number;
+  checkedInAt: string | null;
+  verifiedAt: string | null;
+  disputedAt: string | null;
+  suspicious: boolean;
+  suspiciousReason: string | null;
+  status: "Pending" | "Verified" | "Rejected" | "Disputed" | "Expired";
+};
 
 export type MerchantCheckInStatistics = {
   totalCheckIns: number;

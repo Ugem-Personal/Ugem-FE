@@ -55,3 +55,45 @@ export async function disputeCheckIn(checkInId: string, reason?: string) {
   });
   return response.data.data;
 }
+
+export async function getMyIncidents() {
+  const response = await api.get("/moderation/incidents/mine");
+  return response.data.data as Array<Record<string, unknown>>;
+}
+
+export async function getMyClaims() {
+  const response = await api.get("/moderation/claims/mine");
+  return response.data.data as Array<Record<string, unknown>>;
+}
+
+export async function getMyRemovalRequests() {
+  const response = await api.get("/moderation/removal-requests/mine");
+  return response.data.data as Array<Record<string, unknown>>;
+}
+
+export async function getMerchantIncidents() {
+  const response = await api.get("/moderation/merchant/incidents");
+  return response.data.data as Array<Record<string, unknown>>;
+}
+
+export async function updateModeratedMerchant(
+  merchantId: string,
+  input: Record<string, unknown>,
+) {
+  const response = await api.patch(`/moderation/admin/merchants/${merchantId}`, input);
+  return response.data.data as Record<string, unknown>;
+}
+
+export async function getModerationQueue(kind: "incidents" | "claims" | "removal-requests" | "suggestions" | "suspicious-check-ins" | "merchants") {
+  const response = await api.get(`/moderation/admin/${kind}`);
+  return response.data.data as Array<Record<string, unknown>>;
+}
+
+export async function reviewModerationItem(
+  kind: "incidents" | "claims" | "removal-requests" | "suggestions",
+  id: string,
+  input: Record<string, unknown>,
+) {
+  const response = await api.patch(`/moderation/admin/${kind}/${id}`, input);
+  return response.data.data as Record<string, unknown>;
+}

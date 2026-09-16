@@ -1,4 +1,5 @@
 import { AdminShell } from "@/features/admin/components/AdminShell";
+import { StaffShell } from "@/features/admin/components/StaffShell";
 import { ProtectedRoute } from "@/shared/components/ProtectedRoute";
 import RouteErrorPage from "@/app/RouteErrorPage";
 import RouteLoadingBoundary from "@/app/RouteLoadingBoundary";
@@ -18,6 +19,9 @@ const AdminDashboardPage = lazy(
 );
 const AdminAuditLogsPage = lazy(
   () => import("@/features/admin/pages/AdminAuditLogsPage"),
+);
+const AdminModerationPage = lazy(
+  () => import("@/features/admin/pages/AdminModerationPage"),
 );
 const AdminApplicationsPage = lazy(
   () => import("@/features/admin/pages/AdminApplicationsPage"),
@@ -84,6 +88,9 @@ const CustomerOrdersPage = lazy(
 const CustomerProfilePage = lazy(
   () => import("@/features/customer/pages/CustomerProfilePage"),
 );
+const CustomerSafetyPage = lazy(
+  () => import("@/features/customer/pages/CustomerSafetyPage"),
+);
 const MerchantDetailPage = lazy(
   () => import("@/features/customer/pages/MerchantDetailPage"),
 );
@@ -120,6 +127,9 @@ const MerchantRestaurantPage = lazyNamed(
 const MerchantViewStatisticsPage = lazyNamed(
   () => import("@/features/merchantPortal/pages/MerchantViewStatisticsPage"),
   "MerchantViewStatisticsPage",
+);
+const MerchantGovernancePage = lazy(
+  () => import("@/features/merchantPortal/pages/MerchantGovernancePage"),
 );
 const MerchantSupportPage = lazy(
   () => import("@/features/support/pages/MerchantSupportPage"),
@@ -205,6 +215,14 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <CustomerProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/customer/safety",
+        element: (
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
+            <CustomerSafetyPage />
           </ProtectedRoute>
         ),
       },
@@ -333,6 +351,14 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Merchant"]}>
             <MerchantViewStatisticsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/merchant/governance",
+        element: (
+          <ProtectedRoute allowedRoles={["Merchant"]}>
+            <MerchantGovernancePage />
           </ProtectedRoute>
         ),
       },
@@ -501,6 +527,26 @@ const routers = createBrowserRouter([
             <AdminShell>
               <AdminAuditLogsPage />
             </AdminShell>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/admin/moderation",
+        element: (
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminShell>
+              <AdminModerationPage />
+            </AdminShell>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/staff/moderation",
+        element: (
+          <ProtectedRoute allowedRoles={["Staff", "Admin"]}>
+            <StaffShell activeItem="moderation">
+              <AdminModerationPage />
+            </StaffShell>
           </ProtectedRoute>
         ),
       },

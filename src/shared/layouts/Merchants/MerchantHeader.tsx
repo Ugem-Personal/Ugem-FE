@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles } from "lucide-react";
+import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles, ShieldAlert } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
@@ -15,6 +15,7 @@ const merchantItems = [
   ["Thống kê lượt xem", "/merchant/view-statistics", BarChart3],
 ] as const;
 
+
 const applicantItems = [
   ["Gửi hồ sơ quán", "/merchant/application/create", Store],
   ["Trạng thái xét duyệt", "/merchant/application/status", Timer],
@@ -24,7 +25,7 @@ export function MerchantHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const role = getCurrentUser()?.Role;
-  const items = role === "Customer" || role === "Reviewer" ? applicantItems : merchantItems;
+  const items = role === "Customer" || role === "Reviewer" ? applicantItems : [...merchantItems, ["Trust & Safety", "/merchant/governance", ShieldAlert] as const];
 
   const currentItem = items.find(([_, path]) => {
     if (path === "/merchant") return location.pathname === "/merchant";

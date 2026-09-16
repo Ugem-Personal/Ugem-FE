@@ -12,6 +12,7 @@ import {
   Store,
   UserCheck,
   LifeBuoy,
+  ShieldAlert,
 } from "lucide-react";
 
 import { UserAccountMenu } from "@/shared/components";
@@ -25,7 +26,8 @@ export type StaffNavItemKey =
   | "merchants"
   | "profile"
   | "reviewer-applications"
-  | "support";
+  | "support"
+  | "moderation";
 
 type StaffShellProps = {
   activeItem: StaffNavItemKey;
@@ -82,6 +84,13 @@ const staffNavItems = [
     to: "/staff/support",
     icon: LifeBuoy,
   },
+  {
+    key: "moderation",
+    label: "Moderation",
+    description: "Trust & safety queue",
+    to: "/staff/moderation",
+    icon: ShieldAlert,
+  },
 ] satisfies {
   key: StaffNavItemKey;
   label: string;
@@ -117,6 +126,10 @@ const staffPageTitles: Record<
   "reviewer-applications": {
     eyebrow: "Reviewer review",
     title: "Đơn đăng ký Reviewer",
+  },
+  moderation: {
+    eyebrow: "Trust & safety",
+    title: "Moderation",
   },
   support: {
     eyebrow: "Support operations",
