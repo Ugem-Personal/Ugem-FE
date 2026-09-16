@@ -512,10 +512,10 @@ export default function CustomerOrderDetailPage() {
     );
   const isConfirmationReady =
     !isCompleted &&
-    (!isOfflineOrder || Boolean(paymentBankInfo?.requestedAt)) &&
+    !isOfflineOrder &&
     isCustomerConfirmationReady(
       displayOrderStatus,
-      isOfflineOrder ? "Offline" : "Online",
+      "Online",
     );
   const canShowLoyaltyCard = isOfflineOrder
     ? [

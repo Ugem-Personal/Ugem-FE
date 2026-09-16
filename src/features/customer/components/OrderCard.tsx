@@ -96,10 +96,10 @@ export function OrderCard({
 
   const isReadyToConfirm =
     !isPaid &&
-    (!isOfflineOrder || Boolean(order.bill?.requestedAt)) &&
+    !isOfflineOrder &&
     isCustomerConfirmationReady(
       order.status,
-      isOfflineOrder ? "Offline" : "Online",
+      "Online",
     );
 
   const displayStatus = isPaid
@@ -110,7 +110,7 @@ export function OrderCard({
         ? "cashpending"
         : order.status;
 
-  let confirmButtonText = isOfflineOrder ? "Kiểm tra & Thanh toán bill" : "Đã nhận món";
+  let confirmButtonText = "Đã nhận món";
   let confirmButtonIcon = Check;
 
   if (isBillConfirmed) {

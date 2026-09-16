@@ -174,15 +174,6 @@ export default function CustomerOrdersPage() {
     const orderId = getCustomerOrderId(order);
     if (!orderId) return;
 
-    const isOffline =
-      order.orderType?.trim().toLowerCase() === "offline" ||
-      (order.deliveryAddress ?? "").toLowerCase().includes("tại quán");
-
-    if (isOffline) {
-      navigate(`/orders/confirm?orderId=${encodeURIComponent(orderId)}`);
-      return;
-    }
-
     try {
       await confirmReceived(orderId);
       notify.success("Đã xác nhận nhận hàng thành công.");
