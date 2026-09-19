@@ -72,13 +72,5 @@ export function isMerchantHiddenGem(merchant?: Merchant | null) {
   if (merchant.gemStatus) return merchant.gemStatus === "HiddenGem";
 
   const score = getDisplayUnderratedScore(merchant);
-  if (score !== null && score.percent >= 80) return true;
-
-  return (
-    typeof merchant.rating === "number" &&
-    Number.isFinite(merchant.rating) &&
-    merchant.rating >= 4.5 &&
-    typeof merchant.reviewCount === "number" &&
-    merchant.reviewCount >= 3
-  );
+  return score !== null && score.percent >= 80;
 }

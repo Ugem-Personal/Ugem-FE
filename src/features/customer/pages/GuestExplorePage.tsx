@@ -1143,7 +1143,7 @@ export default function GuestExplorePage() {
             <div className="guest-empty">
               <Compass size={25} />
               <strong>{hiddenGemsOnly ? "Chưa có Hidden Gem phù hợp quanh bạn" : selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong>
-              <span>{hiddenGemsOnly ? merchants.length ? `Đã tải ${merchants.length} quán quanh bạn. Chưa quán nào đạt tiêu chí Hidden Gem: điểm underrated từ 80% hoặc rating từ 4.5 với ít nhất 3 đánh giá.` : "Chưa có quán nào trong kết quả hiện tại đạt tiêu chí Hidden Gem." : selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span>
+              <span>{hiddenGemsOnly ? merchants.length ? `Đã tải ${merchants.length} quán quanh bạn, nhưng chưa quán nào được xếp Hidden Gem. Theo tiêu chí hiện tại cần rating từ 4.0, ít nhất 3 đánh giá, 3 lượt ghé xác thực và mức độ hiển thị thấp; rating cao một mình chưa đủ.` : "Chưa có quán nào trong kết quả hiện tại được xếp Hidden Gem." : selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span>
               {hiddenGemsOnly && merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
             </div>
           ) : (
