@@ -119,6 +119,7 @@ function mergeMerchantData(
       summary.address ||
       extractDescriptionField(description, "Địa chỉ"),
     description,
+    gemStatus: summary.gemStatus ?? detail?.gemStatus,
     email: detail?.email || summary.email,
     phone: detail?.phone || summary.phone,
     logoUrl: detail?.logoUrl || summary.logoUrl,
