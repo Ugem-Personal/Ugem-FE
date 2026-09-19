@@ -920,6 +920,159 @@
   font-weight: 700;
 }
 
+.guest-empty-gems {
+  min-height: 274px;
+  align-items: stretch;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #fbfdf9 0%, #f0f7ef 100%);
+  text-align: left;
+}
+
+.guest-empty-gem-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 15px;
+  background: #e2f3df;
+  color: var(--guest-green);
+}
+
+.guest-empty-gems > strong {
+  margin-top: 2px;
+  font-size: 17px;
+}
+
+.guest-empty-gems > span {
+  max-width: none;
+  font-size: 12px;
+}
+
+.guest-gem-guide {
+  display: grid;
+  width: min(100%, 720px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.guest-gem-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(7, 91, 67, 0.1);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.guest-gem-guide-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.guest-gem-guide-quality { background: #fff1ce; color: #c98a00; }
+.guest-gem-guide-exposure { background: #e0f2e6; color: var(--guest-green); }
+
+.guest-gem-guide-item > div:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.guest-gem-guide-item strong {
+  color: #26322c;
+  font-size: 12px;
+}
+
+.guest-gem-guide-item span {
+  color: var(--guest-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.guest-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 3px;
+}
+
+.guest-empty-secondary {
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid var(--guest-line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--guest-green);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.guest-empty-secondary:hover { border-color: var(--guest-green); transform: translateY(-1px); }
+
+.guest-gem-explanation {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(7, 91, 67, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f5fbf1 0%, #fffdf4 100%);
+}
+
+.guest-gem-explanation-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.guest-gem-explanation-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e3f2d9;
+  color: var(--guest-green);
+}
+
+.guest-gem-explanation-heading h3 {
+  margin: 0;
+  color: #17231e;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.guest-gem-explanation-heading p {
+  margin: 3px 0 0;
+  color: #68736d;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.guest-gem-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.guest-gem-signal-card {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.guest-gem-signal-card strong { color: #26322c; font-size: 12px; }
+.guest-gem-signal-card span { color: #68736d; font-size: 11px; }
+
 .guest-nearby {
   margin-top: 2px;
   padding: 18px 14px 14px;
@@ -1549,6 +1702,15 @@
 }
 
 @media (max-width: 640px) {
+  .guest-empty-gems {
+    padding: 20px 16px;
+  }
+
+  .guest-gem-guide,
+  .guest-gem-signal-grid {
+    grid-template-columns: 1fr;
+  }
+
   .guest-shell {
     width: calc(100% - 32px);
   }

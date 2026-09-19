@@ -1140,12 +1140,33 @@ export default function GuestExplorePage() {
           ) : error ? (
             <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
           ) : displayedMerchants.length === 0 ? (
-            <div className="guest-empty">
-              <Compass size={25} />
-              <strong>{hiddenGemsOnly ? "Chưa có Hidden Gem phù hợp quanh bạn" : selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong>
-              <span>{hiddenGemsOnly ? merchants.length ? `Đã tải ${merchants.length} quán quanh bạn, nhưng chưa quán nào được xếp Hidden Gem. Tiêu chí hiện tại cần rating từ 4.5, ít nhất 3 review, 3 lượt ghé xác thực và độ phổ biến thấp; rating cao một mình chưa đủ.` : "Chưa có quán nào trong kết quả hiện tại được xếp Hidden Gem." : selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span>
-              {hiddenGemsOnly && merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
-            </div>
+            hiddenGemsOnly ? (
+              <div className="guest-empty guest-empty-gems">
+                <div className="guest-empty-gem-icon"><Sparkles size={24} /></div>
+                <strong>{merchants.length > 0 ? "Chưa tìm thấy Hidden Gem quanh bạn" : "Khu vực này chưa có Hidden Gem"}</strong>
+                <span>UFind đã kiểm tra {merchants.length} quán gần vị trí của bạn.</span>
+                <div className="guest-gem-guide" aria-label="Tiêu chí Hidden Gem">
+                  <div className="guest-gem-guide-item">
+                    <div className="guest-gem-guide-icon guest-gem-guide-quality"><Star size={17} fill="currentColor" /></div>
+                    <div><strong>Chất lượng tốt</strong><span>Rating từ 4.5, có review và lượt ghé xác thực.</span></div>
+                  </div>
+                  <div className="guest-gem-guide-item">
+                    <div className="guest-gem-guide-icon guest-gem-guide-exposure"><Compass size={17} /></div>
+                    <div><strong>Ít được khám phá</strong><span>Ít lượt xem, lượt ghé và lượt lưu hơn các quán tương tự.</span></div>
+                  </div>
+                </div>
+                <div className="guest-empty-actions">
+                  {merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
+                  <button type="button" className="guest-empty-secondary" onClick={() => setEditingLocation(true)}>Đổi khu vực</button>
+                </div>
+              </div>
+            ) : (
+              <div className="guest-empty">
+                <Compass size={25} />
+                <strong>{selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong>
+                <span>{selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span>
+              </div>
+            )
           ) : (
             <div className="guest-merchant-grid">
               {displayedMerchants.slice(0, 5).map((merchant, index) => (
@@ -1292,6 +1313,30 @@ export default function GuestExplorePage() {
                 <p className="max-w-2xl whitespace-pre-line text-sm leading-6 text-[#68736D]">
                   {detail.description}
                 </p>
+              ) : null}
+              {isMerchantHiddenGem(detail) ? (
+                <section className="guest-gem-explanation" aria-labelledby="guest-gem-explanation-title">
+                  <div className="guest-gem-explanation-heading">
+                    <div className="guest-gem-explanation-icon"><Sparkles size={17} /></div>
+                    <div>
+                      <h3 id="guest-gem-explanation-title">Vì sao là Hidden Gem?</h3>
+                      <p>Quán có chất lượng tốt nhưng vẫn còn ít người khám phá trong khu vực.</p>
+                    </div>
+                  </div>
+                  <div className="guest-gem-signal-grid">
+                    <div className="guest-gem-signal-card">
+                      <strong>Chất lượng tốt</strong>
+                      <span>⭐ {detail.gemSignals?.rating?.toFixed(1) ?? detail.rating?.toFixed(1) ?? "—"} rating</span>
+                      <span>✓ {detail.gemSignals?.verifiedReviews ?? detail.reviewCount ?? 0} review xác thực</span>
+                      <span>✓ {detail.gemSignals?.verifiedVisits ?? detail.checkInCount ?? 0} lượt ghé xác thực</span>
+                    </div>
+                    <div className="guest-gem-signal-card">
+                      <strong>Ít được khám phá</strong>
+                      <span>{typeof detail.gemSignals?.exposureScore === "number" && detail.gemSignals.exposureScore > 0 ? `Điểm phổ biến ${detail.gemSignals.exposureScore.toFixed(1)}` : "Dữ liệu phổ biến đang được cập nhật"}</span>
+                      <span>Được chọn từ tín hiệu tự nhiên trong 90 ngày</span>
+                    </div>
+                  </div>
+                </section>
               ) : null}
             </div>
 

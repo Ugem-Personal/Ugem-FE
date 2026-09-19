@@ -42,6 +42,16 @@ export type SponsoredCampaign = {
   endAt?: string;
 };
 
+export type GemSignals = {
+  qualityScore?: number;
+  exposureScore?: number;
+  underratedScore?: number;
+  rating?: number;
+  verifiedReviews?: number;
+  verifiedVisits?: number;
+  exposureWindowDays?: number;
+};
+
 export type Merchant = {
   id: string;
   name?: string;
@@ -65,6 +75,7 @@ export type Merchant = {
   strengthIndex?: number;
   isUnderrated?: boolean;
   gemStatus?: "HiddenGem" | "RisingGem" | "HallOfFame" | null;
+  gemSignals?: GemSignals;
   distance?: number;
   latitude?: number;
   longitude?: number;
