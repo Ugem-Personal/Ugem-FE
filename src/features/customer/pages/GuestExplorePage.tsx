@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { ModeToggle } from "@/shared/components";
 import ufindLogo from "@/assets/ufind-logo.png";
 import {
   getDiscoveryOptions,
@@ -49,9 +48,9 @@ import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
 type Coords = { latitude: number; longitude: number };
 type LocationMode = "current" | "custom";
 
-const DEFAULT_COORDS: Coords = {
-  latitude: 10.762622,
-  longitude: 106.660172,
+const MAP_PICKER_DEFAULT_COORDS: Coords = {
+  latitude: 16,
+  longitude: 108,
 };
 
 function isValidVietnamCoords({ latitude, longitude }: Coords) {
@@ -72,8 +71,8 @@ const EMPTY_DISCOVERY_OPTIONS: DiscoveryOptions = {
   foodCategories: [],
 };
 
-const MASCOT_LOOP_CROSSFADE_SECONDS = 0.8;
-const MASCOT_LOOP_CROSSFADE_MS = 480;
+const MASCOT_LOOP_CROSSFADE_SECONDS = 1.45;
+const MASCOT_LOOP_CROSSFADE_MS = 520;
 
 function GuestMascotVideo() {
   const videosRef = useRef<Array<HTMLVideoElement | null>>([null, null]);
@@ -83,11 +82,15 @@ function GuestMascotVideo() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
   const [crossfading, setCrossfading] = useState(false);
+  const monitorFrameRef = useRef<number | null>(null);
 
   useEffect(
     () => () => {
       if (transitionTimerRef.current !== null) {
         window.clearTimeout(transitionTimerRef.current);
+      }
+      if (monitorFrameRef.current !== null) {
+        window.cancelAnimationFrame(monitorFrameRef.current);
       }
     },
     [],
@@ -131,6 +134,24 @@ function GuestMascotVideo() {
         currentVideo.loop = true;
       });
   }
+
+  useEffect(() => {
+    const monitor = () => {
+      const activeIndex = activeIndexRef.current;
+      const video = videosRef.current[activeIndex];
+      if (video && !video.paused && Number.isFinite(video.duration)) {
+        blendIntoNextGreeting(activeIndex);
+      }
+      monitorFrameRef.current = window.requestAnimationFrame(monitor);
+    };
+
+    monitorFrameRef.current = window.requestAnimationFrame(monitor);
+    return () => {
+      if (monitorFrameRef.current !== null) {
+        window.cancelAnimationFrame(monitorFrameRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div
@@ -296,9 +317,9 @@ export default function GuestExplorePage() {
   const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
-  const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
+  const [coords, setCoords] = useState<Coords | null>(null);
   const [locationMode, setLocationMode] = useState<LocationMode>("custom");
-  const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh (mặc định)");
+  const [locationLabel, setLocationLabel] = useState("Đang xác định vị trí…");
   const [locationInput, setLocationInput] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState<
     GeocodeResult[]
@@ -313,12 +334,14 @@ export default function GuestExplorePage() {
   const [priceRange, setPriceRange] = useState("");
   const [restaurantFilter, setRestaurantFilter] = useState("");
   const [requestVersion, setRequestVersion] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [detail, setDetail] = useState<MerchantDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
+  const autoLocationRequestedRef = useRef(false);
+  const locationSelectionVersionRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -351,7 +374,9 @@ export default function GuestExplorePage() {
       setLocationSuggesting(true);
       setLocationSuggestionError("");
       void searchGeocodeAddress(query, {
-        proximity: { lat: coords.latitude, lng: coords.longitude },
+        proximity: coords
+          ? { lat: coords.latitude, lng: coords.longitude }
+          : undefined,
         size: 6,
       })
         .then((results) => {
@@ -377,7 +402,7 @@ export default function GuestExplorePage() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [coords.latitude, coords.longitude, editingLocation, locationInput]);
+  }, [coords, editingLocation, locationInput]);
 
   useEffect(() => {
     let active = true;
@@ -385,6 +410,16 @@ export default function GuestExplorePage() {
     setError("");
     setSponsoredLoading(true);
     setSponsoredError("");
+
+    if (!coords) {
+      setMerchants([]);
+      setSponsoredMerchants([]);
+      setLoading(false);
+      setSponsoredLoading(false);
+      return () => {
+        active = false;
+      };
+    }
 
     const query = {
       latitude: coords.latitude,
@@ -431,8 +466,7 @@ export default function GuestExplorePage() {
     };
   }, [
     activeKeyword,
-    coords.latitude,
-    coords.longitude,
+    coords,
     priceRange,
     requestVersion,
     restaurantFilter,
@@ -523,6 +557,11 @@ export default function GuestExplorePage() {
 
   function handleSearch(event: FormEvent) {
     event.preventDefault();
+    if (!coords) {
+      setEditingLocation(true);
+      setLocationError("Hãy bật GPS hoặc chọn khu vực trước khi tìm quán.");
+      return;
+    }
     setHiddenGemsOnly(false);
     setSelectedCuisineTab("all");
     setSelectedMainDishType("");
@@ -556,9 +595,12 @@ export default function GuestExplorePage() {
   ) {
     if (!isValidVietnamCoords(nextCoords)) {
       setLocationError("Vị trí phải nằm trong Việt Nam. Hãy chọn lại địa điểm.");
+      setLocationLabel("Chọn khu vực tìm kiếm");
+      setEditingLocation(true);
       return false;
     }
 
+    locationSelectionVersionRef.current += 1;
     setLocationError("");
     setLocationSuggestionError("");
     setLocationSuggestions([]);
@@ -570,9 +612,11 @@ export default function GuestExplorePage() {
     return true;
   }
 
-  async function useCurrentLocation() {
+  function requestCurrentLocation() {
     if (!navigator.geolocation) {
       setLocationError("Trình duyệt không hỗ trợ lấy vị trí hiện tại.");
+      setLocationLabel("Chọn khu vực tìm kiếm");
+      setEditingLocation(true);
       return;
     }
 
@@ -584,27 +628,37 @@ export default function GuestExplorePage() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-
-        void reverseGeocode(nextCoords.latitude, nextCoords.longitude)
-          .then((result) =>
-            applyLocation(
-              nextCoords,
-              result?.address || "Vị trí hiện tại",
-              "current",
-            ),
-          )
-          .catch(() => applyLocation(nextCoords, "Vị trí hiện tại", "current"))
-          .finally(() => setLocationBusy(false));
-      },
-      () => {
         setLocationBusy(false);
-        setLocationError(
-          "Không lấy được vị trí. Hãy cấp quyền Location hoặc nhập địa điểm thủ công.",
-        );
+        if (!applyLocation(nextCoords, "Vị trí hiện tại", "current")) return;
+        const selectionVersion = locationSelectionVersionRef.current;
+        void reverseGeocode(nextCoords.latitude, nextCoords.longitude)
+          .then((result) => {
+            const address = cleanAddress(result?.address || "");
+            if (address && selectionVersion === locationSelectionVersionRef.current) {
+              setLocationLabel(address);
+            }
+          })
+          .catch(() => undefined);
       },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+      (error) => {
+        setLocationBusy(false);
+        setLocationLabel("Chọn khu vực tìm kiếm");
+        setEditingLocation(true);
+        setLocationError(error.code === error.PERMISSION_DENIED
+          ? "Bạn chưa cấp quyền vị trí. Hãy bật quyền định vị hoặc nhập khu vực muốn tìm."
+          : "Chưa xác định được vị trí. Hãy thử lại hoặc nhập khu vực muốn tìm.");
+      },
+      { enableHighAccuracy: false, timeout: 12_000, maximumAge: 60_000 },
     );
   }
+
+  // The ref keeps the automatic GPS prompt to one request in React StrictMode.
+  useEffect(() => {
+    if (autoLocationRequestedRef.current) return;
+    autoLocationRequestedRef.current = true;
+    requestCurrentLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function applyManualLocation(event: FormEvent) {
     event.preventDefault();
@@ -618,7 +672,9 @@ export default function GuestExplorePage() {
       const candidates = locationSuggestions.length
         ? locationSuggestions
         : await searchGeocodeAddress(query, {
-            proximity: { lat: coords.latitude, lng: coords.longitude },
+            proximity: coords
+              ? { lat: coords.latitude, lng: coords.longitude }
+              : undefined,
             size: 5,
           });
       const validCandidates = candidates.filter((result) =>
@@ -749,23 +805,23 @@ export default function GuestExplorePage() {
         <div className="guest-shell guest-nav-inner">
           <Link to="/explore" className="guest-brand" aria-label="UFind — Khám phá quán ăn"><img src={ufindLogo} alt="UFind" /></Link>
           <nav className="guest-primary-nav" aria-label="Điều hướng chính"><a href="#discover">Khám phá</a><a href="#nearby">Gần bạn</a><a href="#hidden-gems">Hidden Gems</a></nav>
-          <div className="guest-account-nav"><ModeToggle /><Link to="/login" className="guest-login">Đăng nhập</Link><Link to="/register" className="guest-register">Đăng ký</Link></div>
+          <div className="guest-account-nav"><Link to="/login" className="guest-login">Đăng nhập</Link><Link to="/register" className="guest-register">Đăng ký</Link></div>
         </div>
       </header>
 
       <section className="guest-hero">
         <div className="guest-shell guest-hero-grid">
           <div className="guest-hero-copy">
-            <span className="guest-hero-badge"><Sparkles size={14} /> Khám phá quán ngon quanh bạn</span>
-            <h1>Những quán ngon <span>không phải lúc nào</span> cũng nằm ở nơi đông người nhất.</h1>
-            <p>Khám phá những địa điểm chất lượng nhưng chưa được nhiều người biết đến, dựa trên trải nghiệm thực tế từ cộng đồng UFind.</p>
+            <span className="guest-hero-badge"><Sparkles size={16} /> Khám phá quán ngon theo vị trí của bạn</span>
+            <h1>Quán ngon đôi khi nằm ở <span>những góc phố ít người để ý.</span></h1>
+            <p>Tìm địa điểm hợp gu qua đánh giá và trải nghiệm thật từ cộng đồng UFind.</p>
             <form onSubmit={handleSearch} className="guest-search">
               <div className="guest-search-input">
                 <Search size={19} aria-hidden="true" />
                 <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm món ăn hoặc tên quán..." aria-label="Tìm món ăn hoặc tên quán" />
                 {keyword ? <button type="button" onClick={() => setKeyword("")} aria-label="Xóa từ khóa"><X size={16} /></button> : null}
               </div>
-              <button type="button" className="guest-search-location" onClick={() => setEditingLocation((value) => !value)} aria-expanded={editingLocation} title={locationMode === "current" ? "Đang dùng vị trí hiện tại — nhấn để thay đổi" : "Thay đổi khu vực tìm kiếm"}>
+              <button type="button" className="guest-search-location" onClick={() => setEditingLocation((value) => !value)} aria-expanded={editingLocation} aria-label={`${locationMode === "current" ? "Đang dùng vị trí GPS" : "Khu vực tìm kiếm"}: ${locationLabel}. Nhấn để thay đổi.`} title={locationLabel}>
                 <MapPin size={18} /><span>{locationLabel}</span><ChevronDown size={15} />
               </button>
               <button type="submit" className="guest-search-submit">Khám phá <ArrowRight size={17} /></button>
@@ -773,10 +829,11 @@ export default function GuestExplorePage() {
 
             {editingLocation ? (
               <div className="guest-location-editor">
+                <p className="guest-location-label">Bạn muốn tìm ở đâu?</p>
                 <form onSubmit={applyManualLocation} className="guest-location-form">
                   <label>
                     <span className="sr-only">Khu vực muốn tìm</span>
-                    <input value={locationInput} onChange={(event) => { setLocationInput(event.target.value); setLocationSuggestions([]); setLocationSuggesting(false); setLocationError(""); setLocationSuggestionError(""); }} placeholder="Nhập phường, quận hoặc thành phố..." autoComplete="off" aria-autocomplete="list" aria-expanded={locationSuggestions.length > 0} aria-controls="guest-location-suggestions" aria-invalid={Boolean(locationError || locationSuggestionError)} />
+                    <input value={locationInput} onChange={(event) => { setLocationInput(event.target.value); setLocationSuggestions([]); setLocationSuggesting(false); setLocationError(""); setLocationSuggestionError(""); }} placeholder="Ví dụ: Phường Bến Nghé, Quận 1" autoComplete="off" aria-autocomplete="list" aria-expanded={locationSuggestions.length > 0} aria-controls="guest-location-suggestions" aria-invalid={Boolean(locationError || locationSuggestionError)} />
                     {locationSuggesting ? <LoaderCircle className="animate-spin" size={17} /> : null}
                   </label>
                   <button type="submit" disabled={locationBusy || !locationInput.trim()}>{locationBusy ? "Đang tìm..." : "Áp dụng"}</button>
@@ -792,7 +849,7 @@ export default function GuestExplorePage() {
                 ) : null}
                 {locationSuggestionError ? <p className="guest-location-error" role="alert">{locationSuggestionError}</p> : null}
                 <div className="guest-location-actions">
-                  <button type="button" onClick={useCurrentLocation} disabled={locationBusy}><Navigation size={15} /> Dùng vị trí hiện tại</button>
+                  <button type="button" onClick={requestCurrentLocation} disabled={locationBusy}><Navigation size={15} /> Dùng vị trí GPS</button>
                   <button type="button" onClick={() => setShowMapPicker(true)}><Map size={15} /> Chọn trên bản đồ</button>
                 </div>
                 {locationError ? <p className="guest-location-error" role="alert">{locationError}</p> : null}
@@ -881,12 +938,14 @@ export default function GuestExplorePage() {
 
         <section className="guest-discovery" id="discover" aria-labelledby="guest-discovery-heading">
           <div className="guest-section-heading">
-            <div><p className="guest-eyebrow">UFind Discovery</p><h2 id="guest-discovery-heading">Quán đáng khám phá quanh bạn</h2><p>Những địa điểm chất lượng nhưng chưa được nhiều người biết đến.</p></div>
+            <div><p className="guest-eyebrow">UFind Discovery</p><h2 id="guest-discovery-heading">Hidden Gems được cộng đồng yêu thích</h2><p>Địa điểm chất lượng, được chọn lọc từ trải nghiệm thực tế.</p></div>
             <div className="guest-section-actions"><span aria-live="polite">{loading ? "Đang tìm địa điểm..." : displayedMerchants.length + " địa điểm"}</span><a href="#nearby">Xem tất cả <ArrowRight size={15} /></a></div>
           </div>
 
           {loading ? (
             <div className="guest-loading"><LoaderCircle className="animate-spin" size={26} /><span>Đang tìm quán ngon quanh bạn...</span></div>
+          ) : !coords ? (
+            <div className="guest-empty"><MapPin size={24} /><strong>Chọn vị trí để bắt đầu khám phá</strong><span>Bật GPS hoặc nhập khu vực bạn muốn tìm.</span><button type="button" onClick={() => setEditingLocation(true)}>Chọn khu vực</button></div>
           ) : error ? (
             <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
           ) : displayedMerchants.length === 0 ? (
@@ -908,22 +967,33 @@ export default function GuestExplorePage() {
         <section className="guest-nearby" id="nearby" aria-labelledby="guest-nearby-heading">
           <div className="guest-nearby-heading">
             <div className="guest-pin-mark"><MapPin size={20} fill="currentColor" /></div>
-            <div><h2 id="guest-nearby-heading">Khám phá quanh bạn</h2><p>Xem các địa điểm trên bản đồ và tìm quán ngon gần nhất.</p></div>
+            <div><h2 id="guest-nearby-heading">Bản đồ quán ăn</h2><p>Xem địa chỉ và khoảng cách để chọn điểm ghé thuận tiện.</p></div>
             <button type="button" onClick={() => setShowMapPicker(true)}>Xem bản đồ lớn <ArrowRight size={15} /></button>
           </div>
           <div className="guest-nearby-body">
             <div className="guest-map-canvas">
-              <NearbyMerchantsMap
-                center={coords}
-                merchants={displayedMerchants}
-                selectedMerchantId={selectedMerchantId}
-                onSelectMerchantId={(id) => {
-                  setSelectedMerchantId(id);
-                  const merchant = merchants.find((item) => item.id === id);
-                  if (merchant) void openMerchant(merchant);
-                }}
-              />
-              <span className="guest-map-current"><span />{locationLabel}</span>
+              {coords ? (
+                <>
+                  <NearbyMerchantsMap
+                    center={coords}
+                    merchants={displayedMerchants}
+                    selectedMerchantId={selectedMerchantId}
+                    onSelectMerchantId={(id) => {
+                      setSelectedMerchantId(id);
+                      const merchant = merchants.find((item) => item.id === id);
+                      if (merchant) void openMerchant(merchant);
+                    }}
+                  />
+                  <span className="guest-map-current" title={locationLabel}><span />{locationLabel}</span>
+                </>
+              ) : (
+                <div className="guest-map-no-location">
+                  <MapPin size={28} />
+                  <strong>Chọn vị trí để xem quán gần bạn</strong>
+                  <p>Bật GPS hoặc nhập khu vực muốn khám phá.</p>
+                  <button type="button" onClick={() => setEditingLocation(true)}>Chọn khu vực</button>
+                </div>
+              )}
             </div>
             <div className="guest-map-list">
               {displayedMerchants.slice(0, 3).map((merchant) => {
@@ -931,12 +1001,12 @@ export default function GuestExplorePage() {
                 return (
                   <button key={merchant.id} type="button" className={selectedMerchantId === merchant.id ? "guest-map-item is-selected" : "guest-map-item"} onClick={() => { setSelectedMerchantId(merchant.id); void openMerchant(merchant); }}>
                     <span className="guest-map-thumb">{thumb ? <img src={thumb} alt="" /> : <Store size={18} />}</span>
-                    <span className="guest-map-copy"><strong>{merchant.name || "Chưa cập nhật tên quán"}</strong><small>{merchant.restaurantType || merchant.mainDishType || "Chưa cập nhật"}{merchant.priceRange ? ` · ${merchant.priceRange}` : ""}</small><span className="guest-rating"><Star size={13} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Chưa có đánh giá"}{typeof merchant.reviewCount === "number" ? <> <i /> {merchant.reviewCount} đánh giá</> : null}</span></span>
+                    <span className="guest-map-copy"><strong>{merchant.name || "Chưa cập nhật tên quán"}</strong>{merchant.address ? <small>{cleanAddress(merchant.address)}</small> : null}<small>{merchant.restaurantType || merchant.mainDishType || "Chưa cập nhật"}{merchant.priceRange ? ` · ${merchant.priceRange}` : ""}</small><span className="guest-rating"><Star size={13} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Chưa có đánh giá"}{typeof merchant.reviewCount === "number" ? <> <i /> {merchant.reviewCount} đánh giá</> : null}</span></span>
                     <small className="guest-map-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</small>
                   </button>
                 );
               })}
-              {!displayedMerchants.length ? <div className="guest-map-empty">{error ? "Không có dữ liệu quán để hiển thị trên bản đồ." : "Không có quán phù hợp với bộ lọc hiện tại."}</div> : null}
+              {!displayedMerchants.length ? <div className="guest-map-empty">{!coords ? "Địa chỉ quán sẽ hiện ở đây sau khi bạn chọn vị trí." : error ? "Không có dữ liệu quán để hiển thị trên bản đồ." : "Không có quán phù hợp với bộ lọc hiện tại."}</div> : null}
             </div>
           </div>
         </section>
@@ -1105,7 +1175,7 @@ export default function GuestExplorePage() {
       <VietMapLocationPickerModal
         isOpen={showMapPicker}
         onClose={() => setShowMapPicker(false)}
-        initialCoords={coords}
+        initialCoords={coords ?? MAP_PICKER_DEFAULT_COORDS}
         initialAddress={locationLabel}
         onConfirm={(pickedCoords, pickedAddress) => {
           applyLocation(pickedCoords, pickedAddress, "custom");

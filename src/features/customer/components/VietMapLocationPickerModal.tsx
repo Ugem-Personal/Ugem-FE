@@ -28,7 +28,7 @@ interface VietMapLocationPickerModalProps {
   ) => void;
 }
 
-const DEFAULT_CENTER: [number, number] = [106.660172, 10.762622]; // [lng, lat]
+const DEFAULT_CENTER: [number, number] = [108, 16]; // [lng, lat], central Vietnam
 const VIETNAM_BOUNDS = {
   minLat: 8,
   maxLat: 24,
