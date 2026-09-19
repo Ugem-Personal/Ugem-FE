@@ -430,6 +430,25 @@ export default function GuestExplorePage() {
     setRequestVersion((value) => value + 1);
   }
 
+  function handleAiDiscover() {
+    setKeyword("");
+    setActiveKeyword("");
+    setHiddenGemsOnly(true);
+    setSelectedCuisineTab("all");
+    setSelectedMainDishType("");
+    setSortBy("distance");
+    setPriceRange("");
+    setRestaurantFilter("");
+    setRequestVersion((value) => value + 1);
+
+    document.getElementById("discover")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
+  }
+
   function chooseCuisineTab(mainDishType: string) {
     if (mainDishType === selectedMainDishType && !hiddenGemsOnly) return;
     setHiddenGemsOnly(false);
@@ -700,15 +719,40 @@ export default function GuestExplorePage() {
             ) : null}
           </div>
 
-          <div className="guest-hero-art" aria-label="Không gian quán ăn và món ngon">
-            <div className="guest-hero-photo">
-              <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=88" alt="Không gian ấm cúng tại một nhà hàng địa phương" fetchPriority="high" />
-              <span className="guest-photo-sign">UFind<br />LOCAL FINDS</span>
+          <div className="guest-hero-mascot" aria-label="Gem, trợ lý khám phá UGem">
+            <div className="guest-mascot-video-wrap">
+              <video
+                className="guest-mascot-video"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                aria-label="Gem - trợ lý khám phá UGem"
+              >
+                <source src="/videos/ugem-greeting.mp4" type="video/mp4" />
+              </video>
             </div>
-            <div className="guest-note">Small places<br /><strong>Big stories</strong></div>
-            <div className="guest-food-polaroid"><img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=720&q=85" alt="Tô mì nóng với rau thơm" /></div>
-            <span className="guest-hand-note guest-note-left">Good<br />Food<br />Bright<br />Days</span>
-            <span className="guest-hand-note guest-note-bottom">Hidden Gems<br />are everywhere</span>
+
+            <div className="guest-mascot-message">
+              <span className="guest-mascot-status">
+                <Sparkles size={13} />
+                UGem AI
+              </span>
+
+              <strong>Chào bạn! Mình là Gem 👋</strong>
+
+              <p>Để mình giúp bạn tìm một Hidden Gem hợp gu nhé.</p>
+
+              <button
+                type="button"
+                className="guest-ai-discover"
+                onClick={handleAiDiscover}
+              >
+                <Sparkles size={16} />
+                Khám phá bằng AI
+              </button>
+            </div>
           </div>
         </div>
       </section>
