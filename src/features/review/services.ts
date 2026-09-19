@@ -17,8 +17,14 @@ export type ReviewDetail = {
 export type Review = {
   reviewId: string;
   userId?: string;
-  orderId?: string;
+  orderId?: string | null;
+  checkInId?: string | null;
   merchantId?: string;
+  merchant?: {
+    id: string;
+    name: string;
+    logoUrl?: string | null;
+  } | null;
   title?: string;
   name?: string;
   content?: string;
@@ -32,8 +38,9 @@ export type Review = {
 };
 
 export type CreateMerchantReviewPayload = {
-  merchantId: string;
-  orderId: string;
+  merchantId?: string;
+  orderId?: string;
+  checkInId?: string;
   rating: number;
   content?: string;
   imageUrl?: string;
@@ -42,6 +49,13 @@ export type CreateMerchantReviewPayload = {
     content?: string;
     rating: number;
   }[];
+};
+
+export type CreateVerifiedVisitReviewPayload = {
+  checkInId: string;
+  rating: number;
+  content?: string;
+  imageUrl?: string;
 };
 
 export type UpdateMerchantReviewPayload = {
@@ -114,6 +128,16 @@ export async function createMerchantReview(
 
 export async function createReview(payload: CreateMerchantReviewPayload) {
   return createMerchantReview(payload);
+}
+
+export async function createVerifiedVisitReview(
+  payload: CreateVerifiedVisitReviewPayload,
+) {
+  const res = await api.post<ApiResponse<Review>>(
+    "/reviews/merchant",
+    payload,
+  );
+  return res.data.data;
 }
 
 export async function updateMerchantReview(

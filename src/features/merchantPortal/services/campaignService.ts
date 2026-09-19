@@ -31,6 +31,11 @@ export type Campaign = {
   quantity: number;
   usedCount: number;
   maxUsagePerUser: number;
+  verifiedVisitLimit?: number | null;
+  maxVerifiedVisitsPerCustomer: number;
+  verifiedVisits?: number;
+  remainingVerifiedVisits?: number | null;
+  status?: CampaignStatus;
   isGlobal: boolean;
   isNewUserOnly: boolean;
   isActive: boolean;
@@ -38,6 +43,14 @@ export type Campaign = {
   endDate: string;
   merchantId?: string | null;
 };
+
+export type CampaignStatus =
+  | "Upcoming"
+  | "Active"
+  | "Expired"
+  | "Disabled"
+  | "OutOfUsage"
+  | "VisitLimitReached";
 
 export type CreateCampaignPayload = {
   code: string;
@@ -47,8 +60,8 @@ export type CreateCampaignPayload = {
   isPercentage: boolean;
   minOrderAmount?: number;
   maxDiscountAmount?: number;
-  quantity: number;
-  maxUsagePerUser: number;
+  verifiedVisitLimit?: number | null;
+  maxVerifiedVisitsPerCustomer: number;
   isGlobal: boolean;
   isNewUserOnly: boolean;
   startDate: string;
@@ -69,8 +82,8 @@ function toCampaignApiPayload(payload: CreateCampaignPayload) {
     discountValue: payload.discountValue,
     minimumOrderAmount: payload.minOrderAmount,
     maximumDiscount: payload.maxDiscountAmount,
-    usageLimit: payload.quantity,
-    maxUsagePerUser: payload.maxUsagePerUser,
+    verifiedVisitLimit: payload.verifiedVisitLimit,
+    maxVerifiedVisitsPerCustomer: payload.maxVerifiedVisitsPerCustomer,
     isGlobal: payload.isGlobal,
     isNewUserOnly: payload.isNewUserOnly,
     startAt: payload.startDate,

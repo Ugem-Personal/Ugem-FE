@@ -2,10 +2,13 @@ import { api } from "@/lib/axios";
 import type { ApiResponse } from "@/shared/types";
 
 export type GenerateQrParams = {
-  orderId: string;
+  /** Legacy order QR. Omit for a UFind DirectVisit QR. */
+  orderId?: string;
+  /** Optional campaign attribution embedded in a UFind DirectVisit token. */
+  campaignId?: string;
 };
 
-export async function generateCheckInQr(params: GenerateQrParams) {
+export async function generateCheckInQr(params: GenerateQrParams = {}) {
   const res = await api.get<Blob>("/check-in/generate-qr", {
     params,
     responseType: "blob",
@@ -15,7 +18,8 @@ export async function generateCheckInQr(params: GenerateQrParams) {
 }
 
 export type CheckInRequest = {
-  orderId: string;
+  /** Legacy order check-in. DirectVisit QR omits this field. */
+  orderId?: string;
   checkInToken: string;
   latitude: number;
   longitude: number;

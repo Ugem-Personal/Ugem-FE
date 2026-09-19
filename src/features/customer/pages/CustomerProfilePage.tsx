@@ -24,8 +24,6 @@ import {
   History,
   QrCode,
   Star,
-  ChevronRight,
-  TrendingUp,
   TicketPercent,
   Check,
   Copy,
@@ -64,6 +62,7 @@ import {
 import {
   getMyRedeemedVouchers,
   getReviewerProfile,
+  subscribeToCustomerContributionUpdates,
   redeemVoucher,
   type RedeemedVoucher,
   type ReviewerProfileData,
@@ -130,79 +129,70 @@ function getErrorMessage(error: unknown) {
     : "Có lỗi xảy ra, vui lòng thử lại.";
 }
 
-function getRankDetails(points: number, rankStr?: string) {
-  let currentTier = "Bronze";
-  let tierName = "Đồng";
-  let tierIcon = "🥉";
-  let nextTierName = "Bạc";
-  let minPoints = 0;
-  let nextTierPoints = 100;
-  let bgGradient =
-    "from-amber-950/90 via-stone-900 to-amber-900/70 border-amber-600/40 text-amber-100 shadow-amber-500/10";
-  let badgeColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
-  let glowColor = "bg-amber-500/15";
+function getRankDetails(rankStr?: string) {
+  const detailsByRank: Record<
+    string,
+    {
+      tierName: string;
+      tierIcon: string;
+      bgGradient: string;
+      badgeColor: string;
+      glowColor: string;
+    }
+  > = {
+    Bronze: {
+      tierName: "Đồng",
+      tierIcon: "🥉",
+      bgGradient:
+        "from-amber-950/90 via-stone-900 to-amber-900/70 border-amber-600/40 text-amber-100 shadow-amber-500/10",
+      badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+      glowColor: "bg-amber-500/15",
+    },
+    Silver: {
+      tierName: "Bạc",
+      tierIcon: "🥈",
+      bgGradient:
+        "from-slate-800 via-slate-900 to-zinc-800 border-slate-400/40 text-slate-100 shadow-slate-500/10",
+      badgeColor: "bg-slate-300/20 text-slate-200 border-slate-300/40",
+      glowColor: "bg-slate-400/15",
+    },
+    Gold: {
+      tierName: "Vàng",
+      tierIcon: "🥇",
+      bgGradient:
+        "from-amber-900/90 via-yellow-950 to-amber-800/80 border-amber-400/50 text-amber-100 shadow-amber-500/15",
+      badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/50",
+      glowColor: "bg-amber-400/20",
+    },
+    Platinum: {
+      tierName: "Bạch kim",
+      tierIcon: "🏆",
+      bgGradient:
+        "from-violet-950 via-slate-950 to-indigo-950 border-violet-400/50 text-violet-100 shadow-violet-500/20",
+      badgeColor: "bg-violet-500/20 text-violet-300 border-violet-400/40",
+      glowColor: "bg-violet-500/20",
+    },
+    Diamond: {
+      tierName: "Kim Cương",
+      tierIcon: "💎",
+      bgGradient:
+        "from-cyan-950 via-slate-950 to-indigo-950 border-cyan-400/50 text-cyan-100 shadow-cyan-500/20",
+      badgeColor: "bg-cyan-500/20 text-cyan-300 border-cyan-400/40",
+      glowColor: "bg-cyan-500/20",
+    },
+  };
 
-  if (points >= 1000 || rankStr === "Diamond") {
-    currentTier = "Diamond";
-    tierName = "Kim Cương";
-    tierIcon = "💎";
-    nextTierName = "Tối Cao";
-    minPoints = 1000;
-    nextTierPoints = 1000;
-    bgGradient =
-      "from-cyan-950 via-slate-950 to-indigo-950 border-cyan-400/50 text-cyan-100 shadow-cyan-500/20";
-    badgeColor = "bg-cyan-500/20 text-cyan-300 border-cyan-400/40";
-    glowColor = "bg-cyan-500/20";
-  } else if (points >= 300 || rankStr === "Gold") {
-    currentTier = "Gold";
-    tierName = "Vàng";
-    tierIcon = "🥇";
-    nextTierName = "Kim Cương";
-    minPoints = 300;
-    nextTierPoints = 1000;
-    bgGradient =
-      "from-amber-900/90 via-yellow-950 to-amber-800/80 border-amber-400/50 text-amber-100 shadow-amber-500/15";
-    badgeColor = "bg-amber-400/20 text-amber-300 border-amber-400/40";
-    glowColor = "bg-amber-400/20";
-  } else if (points >= 100 || rankStr === "Silver") {
-    currentTier = "Silver";
-    tierName = "Bạc";
-    tierIcon = "🥈";
-    nextTierName = "Vàng";
-    minPoints = 100;
-    nextTierPoints = 300;
-    bgGradient =
-      "from-slate-800 via-slate-900 to-zinc-800 border-slate-400/40 text-slate-100 shadow-slate-500/10";
-    badgeColor = "bg-slate-300/20 text-slate-200 border-slate-300/40";
-    glowColor = "bg-slate-400/15";
-  }
-
-  const isMaxTier = currentTier === "Diamond";
-  const progressPercent = isMaxTier
-    ? 100
-    : Math.min(
-        100,
-        Math.max(
-          0,
-          Math.round(
-            ((points - minPoints) / (nextTierPoints - minPoints)) * 100,
-          ),
-        ),
-      );
-  const pointsToNext = Math.max(0, nextTierPoints - points);
-
+  const currentTier = rankStr && detailsByRank[rankStr] ? rankStr : "Unknown";
   return {
     currentTier,
-    tierName,
-    tierIcon,
-    nextTierName,
-    nextTierPoints,
-    progressPercent,
-    pointsToNext,
-    isMaxTier,
-    bgGradient,
-    badgeColor,
-    glowColor,
+    ...(detailsByRank[currentTier] ?? {
+      tierName: "Chưa có dữ liệu",
+      tierIcon: "💎",
+      bgGradient:
+        "from-slate-800 via-slate-900 to-zinc-800 border-slate-400/40 text-slate-100 shadow-slate-500/10",
+      badgeColor: "bg-slate-300/20 text-slate-200 border-slate-300/40",
+      glowColor: "bg-slate-400/15",
+    }),
   };
 }
 
@@ -220,7 +210,7 @@ export default function CustomerProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-  // Reviewer Points & Rank
+  // UFind contribution profile + legacy voucher compatibility data
   const [reviewerProfile, setReviewerProfile] =
     useState<ReviewerProfileData | null>(null);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
@@ -404,6 +394,12 @@ export default function CustomerProfilePage() {
     };
   }, [loadProfile, loadPoints, loadVouchers, refreshReviewerSessionIfNeeded]);
 
+  useEffect(() => {
+    return subscribeToCustomerContributionUpdates(() => {
+      void loadPoints();
+    });
+  }, [loadPoints]);
+
   async function handleAvatarUpload(file?: File) {
     if (!file) return;
 
@@ -573,9 +569,10 @@ export default function CustomerProfilePage() {
     }
   }
 
-  const currentPoints = reviewerProfile?.reviewerPoints ?? 0;
-  const currentRank = reviewerProfile?.reviewerRank || "Bronze";
-  const rankInfo = getRankDetails(currentPoints, currentRank);
+  const gemPoints = reviewerProfile?.gemPoints ?? 0;
+  const contributionRank = reviewerProfile?.contributionRank ?? "Chưa có dữ liệu";
+  const legacyReviewerPoints = reviewerProfile?.reviewerPoints ?? 0;
+  const rankInfo = getRankDetails(contributionRank);
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300 px-4 py-8">
@@ -812,7 +809,7 @@ export default function CustomerProfilePage() {
 
           </div>
 
-          {/* Reviewer Points & Rank Membership Section (FULL WIDTH) */}
+          {/* UFind Gem Points & Contribution Rank */}
           <div className="col-span-12 space-y-6">
             <div className="rounded-[32px] border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 p-6 md:p-8 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
@@ -822,13 +819,10 @@ export default function CustomerProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      Thẻ Thành Viên & Điểm Thưởng UFind
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold">
-                        1 điểm = 100đ
-                      </span>
+                      Gem Points & Contribution Rank
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Tích lũy điểm khi Check-in tại bàn hoặc viết đánh giá để trừ trực tiếp vào hóa đơn ăn uống
+                      Điểm đóng góp UFind được cập nhật từ Verified Visit và Verified Review.
                     </p>
                   </div>
                 </div>
@@ -885,15 +879,15 @@ export default function CustomerProfilePage() {
                       </p>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-4xl sm:text-5xl font-black tracking-tight text-white drop-shadow-md">
-                          {currentPoints.toLocaleString("vi-VN")}
+                          {gemPoints.toLocaleString("vi-VN")}
                         </span>
                         <span className="text-base font-bold text-amber-300">
-                          Điểm
+                          Gem Points
                         </span>
                       </div>
                       <div className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-black/40 border border-white/10 px-3 py-1 text-xs font-mono font-bold text-emerald-300 backdrop-blur-md">
                         <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                        Trừ ngay = {(currentPoints * 100).toLocaleString("vi-VN")} đ khi gọi món
+                        Điểm phản ánh đóng góp đã được BE xác minh
                       </div>
                     </div>
 
@@ -909,109 +903,74 @@ export default function CustomerProfilePage() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-mono text-slate-400 uppercase">
-                          Quy chuẩn
+                          Contribution Rank
                         </p>
                         <p className="text-xs font-mono font-bold text-cyan-300">
-                          1 Point = 100 VNĐ
+                          {contributionRank}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Rank Progression & Perks */}
+                {/* Contribution explanation */}
                 <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
-                  {/* Progress to next Tier */}
                   <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 p-5">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <TrendingUp className="h-4 w-4 text-cyan-500" />
-                        Tiến trình lên hạng:{" "}
-                        <span className="text-cyan-600 dark:text-cyan-400 font-black">
-                          {rankInfo.tierName}
-                        </span>
-                        {!rankInfo.isMaxTier && (
-                          <>
-                            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-amber-500 font-black">
-                              {rankInfo.nextTierName}
-                            </span>
-                          </>
-                        )}
-                      </span>
-                      <span className="font-mono font-black text-slate-900 dark:text-white">
-                        {rankInfo.isMaxTier
-                          ? "Hạng Tối Đa"
-                          : `${currentPoints} / ${rankInfo.nextTierPoints} Điểm`}
-                      </span>
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <ShieldCheck className="h-4 w-4 text-cyan-500" />
+                      Contribution Rank do BE trả về
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="h-3 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 via-amber-400 to-amber-500 rounded-full transition-all duration-700 shadow-sm"
-                        style={{ width: `${rankInfo.progressPercent}%` }}
-                      />
-                    </div>
-
-                    <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      <span>
+                    <div className="mt-3 flex items-center justify-between rounded-xl bg-white/70 dark:bg-white/5 px-4 py-3">
+                      <span className="text-sm font-black text-slate-900 dark:text-white">
                         {rankInfo.tierIcon} {rankInfo.tierName}
                       </span>
-                      {!rankInfo.isMaxTier ? (
-                        <span>
-                          Cần thêm{" "}
-                          <strong className="text-amber-500">
-                            {rankInfo.pointsToNext} điểm
-                          </strong>{" "}
-                          để lên hạng {rankInfo.nextTierName}
-                        </span>
-                      ) : (
-                        <span className="text-cyan-400 font-bold">
-                          🎉 Đang sở hữu cấp bậc VIP Kim Cương
-                        </span>
-                      )}
+                      <span className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                        {contributionRank}
+                      </span>
                     </div>
+                    <p className="mt-3 text-[11px] leading-5 text-slate-600 dark:text-slate-400">
+                      Hạng được tính và trả về từ hệ thống đóng góp UFind. Ứng dụng không tự đặt ngưỡng hạng.
+                    </p>
                   </div>
 
-                  {/* 3 Steps to Earn Points */}
+                  {/* Contribution actions */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
                       <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold text-xs mb-1">
                         <QrCode className="h-4 w-4" />
-                        <span>Check-in Bàn</span>
+                        <span>Ghé quán xác minh</span>
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Quét QR tại bàn ăn
+                        Hoàn tất Verified Visit
                       </p>
                       <p className="mt-2 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        +10 Điểm
+                        Gem Points từ BE
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
                       <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs mb-1">
                         <Star className="h-4 w-4" />
-                        <span>Đánh giá quán</span>
+                        <span>Viết đánh giá</span>
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Kèm ảnh chụp món ăn
+                        Gửi review sau Check-in
                       </p>
                       <p className="mt-2 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        +15 ~ 20 Điểm
+                        Gem Points từ BE
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 flex flex-col justify-between">
                       <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs mb-1">
                         <Gift className="h-4 w-4" />
-                        <span>Trừ tiền bill</span>
+                        <span>Review có hình ảnh</span>
                       </div>
                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Chọn dùng điểm khi order
+                        Đóng góp thêm ngữ cảnh cho cộng đồng
                       </p>
                       <p className="mt-2 text-xs font-black text-cyan-600 dark:text-cyan-400">
-                        1đ = 100 VNĐ
+                        Không phải tiền thanh toán
                       </p>
                     </div>
                   </div>
@@ -1032,14 +991,14 @@ export default function CustomerProfilePage() {
                   </div>
                   <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 font-bold text-xs shadow-sm">
                     <Coins className="h-4 w-4 text-amber-500" />
-                    <span>Khả dụng: {currentPoints.toLocaleString("vi-VN")} điểm</span>
+                    <span>Voucher points legacy: {legacyReviewerPoints.toLocaleString("vi-VN")} điểm</span>
                   </div>
                 </div>
 
                 {/* Voucher Catalog Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {VOUCHER_CATALOG.map((v) => {
-                    const canAfford = currentPoints >= v.cost;
+                    const canAfford = legacyReviewerPoints >= v.cost;
                     return (
                       <div
                         key={v.tier}
@@ -1084,7 +1043,7 @@ export default function CustomerProfilePage() {
                                 Đổi ngay
                               </>
                             ) : (
-                              `Cần thêm ${v.cost - currentPoints} điểm`
+                              `Cần thêm ${v.cost - legacyReviewerPoints} điểm`
                             )}
                           </Button>
                         </div>
@@ -1204,7 +1163,7 @@ export default function CustomerProfilePage() {
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <History className="h-4 w-4 text-slate-400" />
-                    Lịch sử giao dịch điểm thưởng
+                    Lịch sử điểm legacy (Reviewer/Voucher)
                   </h4>
                   <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                     {reviewerProfile?.pointTransactions?.length ?? 0} giao dịch
@@ -1227,8 +1186,7 @@ export default function CustomerProfilePage() {
                       Chưa có lịch sử giao dịch điểm
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                      Hãy quét mã QR tại bàn khi ghé quán ăn hoặc viết đánh giá
-                      chân thực để nhận ngay những điểm thưởng đầu tiên!
+                      Đây là ledger legacy của Reviewer/Voucher, không phải lịch sử Gem Points UFind.
                     </p>
                   </div>
                 ) : (
@@ -1269,21 +1227,21 @@ export default function CustomerProfilePage() {
                                     <Gift className="h-3 w-3" />
                                   )}
                                   {tx.type === "CHECK_IN"
-                                    ? "CHECK-IN BÀN"
+                                    ? "LEGACY CHECK-IN"
                                     : tx.type === "REVIEW"
-                                      ? "ĐÁNH GIÁ QUÁN"
+                                      ? "LEGACY REVIEW"
                                       : tx.type === "REVIEW_PHOTO"
-                                        ? "REVIEW KÈM ẢNH"
+                                        ? "LEGACY REVIEW ẢNH"
                                         : tx.type === "POINT_REDEMPTION"
-                                          ? "ĐỔI ĐIỂM TRỪ BILL"
-                                          : tx.type}
+                                          ? "LEGACY ĐỔI ĐIỂM"
+                                          : `LEGACY ${tx.type}`}
                                 </span>
                               </td>
                               <td className="py-3.5 pr-2 text-slate-700 dark:text-slate-200 font-bold max-w-xs truncate">
                                 {tx.reason ||
                                   (isPositive
-                                    ? "Thưởng tương tác UFind"
-                                    : "Giảm giá hóa đơn món")}
+                                    ? "Legacy reviewer reward"
+                                    : "Legacy voucher redemption")}
                               </td>
                               <td
                                 className={`py-3.5 text-right font-black font-mono ${
@@ -1542,7 +1500,7 @@ export default function CustomerProfilePage() {
                     Điểm hiện có:
                   </span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {currentPoints.toLocaleString("vi-VN")} điểm
+                    {legacyReviewerPoints.toLocaleString("vi-VN")} điểm
                   </span>
                 </div>
                 <div className="flex justify-between text-rose-600 dark:text-rose-400">
@@ -1556,7 +1514,7 @@ export default function CustomerProfilePage() {
                     Điểm còn lại sau khi đổi:
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {(currentPoints - selectedVoucherTier.cost).toLocaleString(
+                    {(legacyReviewerPoints - selectedVoucherTier.cost).toLocaleString(
                       "vi-VN",
                     )}{" "}
                     điểm

@@ -25,7 +25,7 @@ import {
   Clock,
   AlertTriangle,
   ChevronLeft,
-  Tag,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSafeBack } from "@/shared/hooks/useSafeBack";
@@ -46,10 +46,12 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { MerchantHeader } from "@/shared/layouts/Merchants/MerchantHeader";
 import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
+import { TableQrGeneratorModal } from "../components/TableQrGeneratorModal";
 
 import {
   getMyMerchantStatistics,
   getMyMerchantViews,
+  getMerchantCampaignPerformance,
   type MerchantStatistics,
 } from "../services";
 import {
@@ -57,6 +59,7 @@ import {
   deleteCampaign,
   getCampaigns,
   type Campaign,
+  type CampaignStatus,
   type CreateCampaignPayload,
   type UpdateCampaignPayload,
   updateCampaign,
@@ -135,8 +138,8 @@ type CampaignFormState = {
   isPercentage: boolean;
   minOrderAmount: string;
   maxDiscountAmount: string;
-  quantity: string;
-  maxUsagePerUser: string;
+  verifiedVisitLimit: string;
+  maxVerifiedVisitsPerCustomer: string;
   isNewUserOnly: boolean;
   isActive: boolean;
   startDate: string;
@@ -202,6 +205,12 @@ function isCampaignExpired(campaign: Campaign) {
   return new Date(campaign.endDate).getTime() < Date.now();
 }
 
+function getCampaignStatus(campaign: Campaign): CampaignStatus {
+  if (campaign.status) return campaign.status;
+  if (isCampaignExpired(campaign)) return "Expired";
+  return campaign.isActive ? "Active" : "Disabled";
+}
+
 function getCampaignDiscountLabel(campaign: Campaign) {
   if (campaign.isPercentage) {
     return `${campaign.discountValue.toLocaleString("vi-VN")} %`;
@@ -222,8 +231,8 @@ function createEmptyCampaignForm(): CampaignFormState {
     isPercentage: true,
     minOrderAmount: "",
     maxDiscountAmount: "",
-    quantity: "",
-    maxUsagePerUser: "",
+    verifiedVisitLimit: "100",
+    maxVerifiedVisitsPerCustomer: "1",
     isNewUserOnly: false,
     isActive: true,
     startDate: toDateTimeLocalValue(now.toISOString()),
@@ -248,8 +257,14 @@ function campaignToForm(campaign: Campaign): CampaignFormState {
       campaign.maxDiscountAmount === undefined
         ? ""
         : String(campaign.maxDiscountAmount),
-    quantity: String(campaign.quantity ?? ""),
-    maxUsagePerUser: String(campaign.maxUsagePerUser ?? ""),
+    verifiedVisitLimit:
+      campaign.verifiedVisitLimit === null ||
+      campaign.verifiedVisitLimit === undefined
+        ? ""
+        : String(campaign.verifiedVisitLimit),
+    maxVerifiedVisitsPerCustomer: String(
+      campaign.maxVerifiedVisitsPerCustomer ?? 1,
+    ),
     isNewUserOnly: campaign.isNewUserOnly,
     isActive: campaign.isActive,
     startDate: toDateTimeLocalValue(campaign.startDate),
@@ -272,8 +287,12 @@ function buildCampaignPayload(form: CampaignFormState): CreateCampaignPayload {
       form.isPercentage && form.maxDiscountAmount.trim() !== ""
         ? Number(form.maxDiscountAmount)
         : undefined,
-    quantity: Number.parseInt(form.quantity, 10) || 0,
-    maxUsagePerUser: Number.parseInt(form.maxUsagePerUser, 10) || 0,
+    verifiedVisitLimit:
+      form.verifiedVisitLimit.trim() === ""
+        ? null
+        : Number.parseInt(form.verifiedVisitLimit, 10),
+    maxVerifiedVisitsPerCustomer:
+      Number.parseInt(form.maxVerifiedVisitsPerCustomer, 10) || 1,
     isGlobal: false,
     isNewUserOnly: form.isNewUserOnly,
     startDate: fromDateTimeLocalValue(form.startDate),
@@ -292,6 +311,7 @@ export function MerchantCampaignPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
+  const [qrCampaign, setQrCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "expired" | "inactive">("all");
   const [form, setForm] = useState<CampaignFormState>(() =>
@@ -303,7 +323,40 @@ export function MerchantCampaignPage() {
 
     try {
       const data = await getCampaigns();
-      setCampaigns(data);
+      let performanceByCampaignId = new Map<
+        string,
+        {
+          verifiedVisits?: number;
+          remainingVerifiedVisits?: number | null;
+          status?: CampaignStatus;
+        }
+      >();
+
+      try {
+        const performance = await getMerchantCampaignPerformance(
+          Math.max(data.length, 10),
+        );
+        performanceByCampaignId = new Map(
+          performance.items.map((item) => [item.campaignId, item]),
+        );
+      } catch (performanceError) {
+        // Campaign management remains usable if analytics is temporarily unavailable.
+        console.error("Không tải được campaign Verified Visit metrics", performanceError);
+      }
+
+      setCampaigns(
+        data.map((campaign) => {
+          const performance = performanceByCampaignId.get(campaign.id);
+          return performance
+            ? {
+                ...campaign,
+                verifiedVisits: performance.verifiedVisits,
+                remainingVerifiedVisits: performance.remainingVerifiedVisits,
+                status: performance.status,
+              }
+            : campaign;
+        }),
+      );
     } catch (error) {
       console.error(error);
       notify.error("Không tải được danh sách campaign.");
@@ -332,10 +385,12 @@ export function MerchantCampaignPage() {
         return haystack.includes(term);
       })
       .filter((campaign) => {
-        const expired = isCampaignExpired(campaign);
-        if (statusFilter === "active") return campaign.isActive && !expired;
-        if (statusFilter === "expired") return expired;
-        if (statusFilter === "inactive") return !campaign.isActive && !expired;
+        const status = getCampaignStatus(campaign);
+        if (statusFilter === "active") return status === "Active";
+        if (statusFilter === "expired") return status === "Expired";
+        if (statusFilter === "inactive") {
+          return status === "Disabled" || status === "VisitLimitReached";
+        }
         return true;
       });
   }, [campaigns, searchTerm, statusFilter]);
@@ -361,9 +416,11 @@ export function MerchantCampaignPage() {
   const stats = useMemo(() => {
     const total = campaigns.length;
     const active = campaigns.filter(
-      (c) => c.isActive && !isCampaignExpired(c),
+      (c) => getCampaignStatus(c) === "Active",
     ).length;
-    const expired = campaigns.filter((c) => isCampaignExpired(c)).length;
+    const expired = campaigns.filter(
+      (c) => getCampaignStatus(c) === "Expired",
+    ).length;
     const global = campaigns.filter((c) => c.isGlobal).length;
     const mine = campaigns.filter((c) => !c.isGlobal).length;
     return { total, active, expired, global, mine };
@@ -417,7 +474,13 @@ export function MerchantCampaignPage() {
   }
 
   async function handleToggleStatus(campaign: Campaign) {
-    if (isCampaignExpired(campaign) || togglingId) return;
+    if (
+      getCampaignStatus(campaign) === "Expired" ||
+      getCampaignStatus(campaign) === "VisitLimitReached" ||
+      togglingId
+    ) {
+      return;
+    }
 
     const nextStatus = !campaign.isActive;
     const toastId = "merchant-campaign-status";
@@ -427,7 +490,17 @@ export function MerchantCampaignPage() {
     try {
       const updated = await updateCampaignStatus(campaign.id, nextStatus);
       setCampaigns((current) =>
-        current.map((item) => (item.id === campaign.id ? updated : item)),
+        current.map((item) =>
+          item.id === campaign.id
+            ? {
+                ...item,
+                ...updated,
+                verifiedVisits: item.verifiedVisits,
+                remainingVerifiedVisits: item.remainingVerifiedVisits,
+                status: nextStatus ? "Active" : "Disabled",
+              }
+            : item,
+        ),
       );
       setForm((current) =>
         current.id === campaign.id
@@ -472,6 +545,24 @@ export function MerchantCampaignPage() {
 
     if (!form.startDate || !form.endDate) {
       notify.error("Vui lòng chọn thời gian bắt đầu và kết thúc.");
+      return;
+    }
+
+    const maxVisitsPerCustomer = Number.parseInt(
+      form.maxVerifiedVisitsPerCustomer,
+      10,
+    );
+    if (!Number.isInteger(maxVisitsPerCustomer) || maxVisitsPerCustomer <= 0) {
+      notify.error("Giới hạn lượt ghé mỗi khách phải lớn hơn 0.");
+      return;
+    }
+
+    const verifiedVisitLimit = Number.parseInt(form.verifiedVisitLimit, 10);
+    if (
+      form.verifiedVisitLimit.trim() !== "" &&
+      (!Number.isInteger(verifiedVisitLimit) || verifiedVisitLimit <= 0)
+    ) {
+      notify.error("Giới hạn lượt ghé đã xác minh phải lớn hơn 0.");
       return;
     }
 
@@ -536,11 +627,11 @@ export function MerchantCampaignPage() {
 
               <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-50 dark:border-cyan-900/50 dark:bg-cyan-950/40 px-3 py-1 text-xs font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
                 <Megaphone className="h-3.5 w-3.5" />
-                Chiến dịch ưu đãi
+                 Sponsored Discovery
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                Quản lý chương trình khuyến mãi
+                Quản lý Sponsored Campaign
                 <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
               </h1>
             </div>
@@ -562,7 +653,7 @@ export function MerchantCampaignPage() {
           </div>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            {/* Form Create / Edit Campaign */}
+              {/* Form Create / Edit Sponsored Campaign */}
             <article className="rounded-3xl border border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
               <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4 mb-6">
                 <div>
@@ -571,8 +662,8 @@ export function MerchantCampaignPage() {
                   </h2>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {form.id
-                      ? "Cập nhật các thông số chương trình khuyến mãi hiện tại."
-                      : "Thiết lập mã giảm giá, mức giảm và thời hạn áp dụng."}
+                      ? "Cập nhật Sponsored Discovery và giới hạn Verified Visit."
+                      : "Thiết lập Sponsored Discovery, ưu đãi và giới hạn Verified Visit."}
                   </p>
                 </div>
 
@@ -618,7 +709,7 @@ export function MerchantCampaignPage() {
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
                       <span>Hình thức giảm giá <span className="text-rose-500">*</span></span>
                       <span className="text-[11px] font-medium text-slate-400">
-                        {form.isPercentage ? "Giảm theo % giá trị hoá đơn" : "Giảm số tiền cố định trực tiếp"}
+                        {form.isPercentage ? "Giảm theo % giá trị ưu đãi" : "Giảm số tiền cố định trực tiếp"}
                       </span>
                     </label>
                     <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
@@ -710,9 +801,9 @@ export function MerchantCampaignPage() {
                   {/* Đơn tối thiểu */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>Đơn tối thiểu (VNĐ)</span>
+                      <span>Điều kiện ưu đãi tối thiểu (VNĐ)</span>
                       <span className="text-[11px] font-normal lowercase text-slate-400">
-                        để trống = 0đ
+                        legacy voucher compatibility
                       </span>
                     </label>
                     <div className="relative">
@@ -735,14 +826,17 @@ export function MerchantCampaignPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Tổng số lượng
+                      Giới hạn lượt ghé đã xác minh
                     </label>
                     <Input
                       type="number"
                       min="0"
-                      value={form.quantity}
+                      value={form.verifiedVisitLimit}
                       onChange={(e) =>
-                        setForm((c) => ({ ...c, quantity: e.target.value }))
+                        setForm((c) => ({
+                          ...c,
+                          verifiedVisitLimit: e.target.value,
+                        }))
                       }
                       placeholder="100"
                       className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -751,14 +845,17 @@ export function MerchantCampaignPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Số lần / Khách
+                      Số lượt tối đa mỗi khách
                     </label>
                     <Input
                       type="number"
                       min="1"
-                      value={form.maxUsagePerUser}
+                      value={form.maxVerifiedVisitsPerCustomer}
                       onChange={(e) =>
-                        setForm((c) => ({ ...c, maxUsagePerUser: e.target.value }))
+                        setForm((c) => ({
+                          ...c,
+                          maxVerifiedVisitsPerCustomer: e.target.value,
+                        }))
                       }
                       placeholder="1"
                       className="h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -835,20 +932,20 @@ export function MerchantCampaignPage() {
                   </label>
                 </div>
 
-                {/* Live Preview Box */}
+                {/* Sponsored Preview Box */}
                 <div className="rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50/60 to-emerald-50/40 dark:border-cyan-900/50 dark:from-cyan-950/30 dark:to-emerald-950/20 p-4">
                   <div className="flex items-center gap-1.5 mb-2 text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
-                    <Tag className="h-3.5 w-3.5" />
-                    Xem trước hiển thị với khách hàng
+                    <Megaphone className="h-3.5 w-3.5" />
+                    Sponsored Preview
                   </div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-lg bg-cyan-600 text-white font-mono font-black text-xs tracking-wider">
-                          {form.code.trim() ? form.code.trim().toUpperCase() : "MÃ_GIẢM_GIÁ"}
-                        </span>
                         <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
                           {form.title.trim() || "Tiêu đề chương trình"}
+                        </span>
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-300">
+                          Được tài trợ
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-300">
@@ -858,7 +955,7 @@ export function MerchantCampaignPage() {
                               Giảm {form.isPercentage ? `${form.discountValue}%` : formatCurrency(Number(form.discountValue))}
                             </strong>
                             {form.isPercentage && form.maxDiscountAmount ? ` (Tối đa ${formatCurrency(Number(form.maxDiscountAmount))})` : ""}
-                            {form.minOrderAmount ? ` cho đơn từ ${formatCurrency(Number(form.minOrderAmount))}` : " cho mọi đơn hàng"}
+                            {form.minOrderAmount ? ` áp dụng từ ${formatCurrency(Number(form.minOrderAmount))}` : " áp dụng tại quán"}
                           </>
                         ) : (
                           "Nhập mức giảm giá để xem trước ưu đãi áp dụng..."
@@ -904,7 +1001,7 @@ export function MerchantCampaignPage() {
                     Danh sách chiến dịch
                   </h2>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Theo dõi các chương trình đang mở và lịch sử khuyến mãi.
+                  Theo dõi Sponsored Discovery và hiệu quả Verified Visit.
                   </p>
                 </div>
 
@@ -970,7 +1067,8 @@ export function MerchantCampaignPage() {
                   </div>
                 ) : visibleCampaigns.length > 0 ? (
                   visibleCampaigns.map((campaign) => {
-                    const expired = isCampaignExpired(campaign);
+                    const campaignStatus = getCampaignStatus(campaign);
+                    const expired = campaignStatus === "Expired";
                     const canEdit = isCampaignEditable(campaign);
 
                     return (
@@ -1001,11 +1099,15 @@ export function MerchantCampaignPage() {
                                 </Badge>
                               )}
 
-                              {expired ? (
+                              {campaignStatus === "Expired" ? (
                                 <Badge className="bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px]">
                                   Hết hạn
                                 </Badge>
-                              ) : campaign.isActive ? (
+                              ) : campaignStatus === "VisitLimitReached" ? (
+                                <Badge className="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px]">
+                                  Đủ lượt ghé
+                                </Badge>
+                              ) : campaignStatus === "Active" ? (
                                 <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px]">
                                   Đang chạy
                                 </Badge>
@@ -1031,7 +1133,9 @@ export function MerchantCampaignPage() {
                                 <Clock size={11} /> {formatDateTime(campaign.startDate)} → {formatDateTime(campaign.endDate)}
                               </span>
                               <span>•</span>
-                              <span>Đã dùng: {campaign.usedCount}/{campaign.quantity}</span>
+                              <span>
+                                Verified Visits: {campaign.verifiedVisits ?? "—"} / {campaign.verifiedVisitLimit ?? "∞"}
+                              </span>
                             </div>
                           </div>
 
@@ -1040,19 +1144,21 @@ export function MerchantCampaignPage() {
                               {getCampaignDiscountLabel(campaign)}
                             </span>
 
-                            {canEdit && !expired && (
+                            {canEdit &&
+                              !expired &&
+                              campaignStatus !== "VisitLimitReached" && (
                               <button
                                 type="button"
                                 role="switch"
                                 aria-checked={campaign.isActive}
                                 aria-label={
-                                  campaign.isActive
-                                    ? "Tạm dừng chiến dịch"
+                                   campaignStatus === "Active"
+                                     ? "Tạm dừng chiến dịch"
                                     : "Kích hoạt chiến dịch"
                                 }
                                 title={
-                                  campaign.isActive
-                                    ? "Bấm để tạm dừng"
+                                   campaignStatus === "Active"
+                                     ? "Bấm để tạm dừng"
                                     : "Bấm để kích hoạt"
                                 }
                                 disabled={togglingId === campaign.id}
@@ -1065,8 +1171,8 @@ export function MerchantCampaignPage() {
                               >
                                 <span
                                   className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
-                                    campaign.isActive
-                                      ? "bg-emerald-500"
+                                     campaignStatus === "Active"
+                                       ? "bg-emerald-500"
                                       : "bg-slate-300 dark:bg-slate-600"
                                   }`}
                                 >
@@ -1079,10 +1185,10 @@ export function MerchantCampaignPage() {
                                   />
                                 </span>
                                 <span className="shrink-0">
-                                  {togglingId === campaign.id
-                                    ? "Đang đổi..."
-                                    : campaign.isActive
-                                      ? "Đang chạy"
+                                   {togglingId === campaign.id
+                                     ? "Đang đổi..."
+                                     : campaignStatus === "Active"
+                                       ? "Đang chạy"
                                       : "Tạm dừng"}
                                 </span>
                               </button>
@@ -1097,6 +1203,18 @@ export function MerchantCampaignPage() {
                               >
                                 <Eye size={14} />
                               </button>
+
+                              {campaignStatus === "Active" && (
+                                <button
+                                  type="button"
+                                  onClick={() => setQrCampaign(campaign)}
+                                  className="p-1.5 rounded-lg border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50"
+                                  aria-label="Tạo QR Verified Visit cho campaign"
+                                  title="Tạo QR Verified Visit cho campaign"
+                                >
+                                  <QrCode size={14} />
+                                </button>
+                              )}
 
                               {canEdit && (
                                 <button
@@ -1138,6 +1256,17 @@ export function MerchantCampaignPage() {
           </section>
         </div>
 
+        <TableQrGeneratorModal
+          open={Boolean(qrCampaign)}
+          onOpenChange={(open) => {
+            if (!open) setQrCampaign(null);
+          }}
+          merchantId=""
+          merchantName="UFind Merchant"
+          campaignId={qrCampaign?.id}
+          campaignTitle={qrCampaign?.title}
+        />
+
         {/* Dialog Confirm Delete */}
         <Dialog open={Boolean(campaignToDelete)} onOpenChange={(o) => !o && setCampaignToDelete(null)}>
           <DialogContent className="max-w-md">
@@ -1147,7 +1276,7 @@ export function MerchantCampaignPage() {
                 Xác nhận xóa chiến dịch
               </DialogTitle>
               <DialogDescription className="text-xs font-medium text-slate-600 dark:text-slate-400 pt-2">
-                Bạn có chắc chắn muốn xóa mã khuyến mãi <span className="font-extrabold text-slate-900 dark:text-white">"{campaignToDelete?.code}"</span> ({campaignToDelete?.title})?
+                 Bạn có chắc chắn muốn xóa Sponsored Campaign <span className="font-extrabold text-slate-900 dark:text-white">"{campaignToDelete?.code}"</span> ({campaignToDelete?.title})?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="pt-3">
@@ -1177,7 +1306,7 @@ export function MerchantCampaignPage() {
                     {selectedCampaign.title}
                   </DialogTitle>
                   <DialogDescription className="text-xs font-medium text-slate-500">
-                    Chi tiết chương trình khuyến mãi mã: <span className="font-bold text-cyan-600">{selectedCampaign.code}</span>
+                     Chi tiết Sponsored Campaign: <span className="font-bold text-cyan-600">{selectedCampaign.code}</span>
                   </DialogDescription>
                 </DialogHeader>
 
@@ -1190,21 +1319,21 @@ export function MerchantCampaignPage() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 font-medium block">Đơn tối thiểu:</span>
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">
-                        {formatOptionalCurrency(selectedCampaign.minOrderAmount)}
-                      </span>
-                    </div>
-                    <div>
                       <span className="text-slate-400 font-medium block">Giảm tối đa:</span>
                       <span className="text-sm font-bold text-slate-900 dark:text-white">
                         {formatOptionalCurrency(selectedCampaign.maxDiscountAmount)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 font-medium block">Lượt sử dụng:</span>
+                      <span className="text-slate-400 font-medium block">Verified Visits:</span>
                       <span className="text-sm font-bold text-slate-900 dark:text-white">
-                        {selectedCampaign.usedCount} / {selectedCampaign.quantity} lượt
+                        {selectedCampaign.verifiedVisits ?? "—"} / {selectedCampaign.verifiedVisitLimit ?? "∞"} lượt
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Giới hạn mỗi khách:</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
+                        {selectedCampaign.maxVerifiedVisitsPerCustomer ?? 1} lượt
                       </span>
                     </div>
                   </div>

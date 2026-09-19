@@ -57,10 +57,33 @@ export type PointTransaction = {
 };
 
 export type ReviewerProfileData = {
+  gemPoints: number;
+  contributionRank: string;
+  /** @deprecated Database compatibility alias. Use gemPoints. */
   reviewerPoints: number;
+  /** @deprecated Legacy reviewer/affiliate rank. Use contributionRank. */
   reviewerRank: string;
   pointTransactions: PointTransaction[];
 };
+
+export const CUSTOMER_CONTRIBUTION_UPDATED_EVENT =
+  "ufind:customer-contribution-updated";
+
+export function notifyCustomerContributionUpdated() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CUSTOMER_CONTRIBUTION_UPDATED_EVENT));
+  }
+}
+
+export function subscribeToCustomerContributionUpdates(listener: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  window.addEventListener(CUSTOMER_CONTRIBUTION_UPDATED_EVENT, listener);
+  return () =>
+    window.removeEventListener(CUSTOMER_CONTRIBUTION_UPDATED_EVENT, listener);
+}
 
 export async function getReviewerProfile() {
   const { data } = await api.get<ApiResponse<ReviewerProfileData>>(
@@ -105,5 +128,3 @@ export async function getMyRedeemedVouchers() {
   );
   return data.data;
 }
-
-

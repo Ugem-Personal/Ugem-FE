@@ -4,6 +4,7 @@ import {
   BarChart3,
   CheckCircle2,
   Eye,
+  Megaphone,
   QrCode,
   ShoppingBag,
   Sparkles,
@@ -24,13 +25,18 @@ import { MerchantStatusBadge } from "@/shared/components";
 import {
   getMyMerchantDetail,
   getMyMerchantStatistics,
+  getMerchantAnalytics,
+  type MerchantAnalytics,
   type MerchantStatistics,
 } from "../services";
 import type { MerchantDetail } from "@/features/customer/types";
 
+const showLegacyOrderQuickAction = false;
+
 export function MerchantPortalPage() {
   const { data: applications = [], isLoading: isLoadingApp } = useMyApplications();
   const [stats, setStats] = useState<MerchantStatistics | null>(null);
+  const [analytics, setAnalytics] = useState<MerchantAnalytics | null>(null);
   const [merchant, setMerchant] = useState<MerchantDetail | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [qrModalOpen, setQrModalOpen] = useState(false);
@@ -44,9 +50,10 @@ export function MerchantPortalPage() {
       setLoadingData(true);
 
       try {
-        const [merchantRes, statsRes] = await Promise.allSettled([
+        const [merchantRes, statsRes, analyticsRes] = await Promise.allSettled([
           getMyMerchantDetail(),
           getMyMerchantStatistics(),
+          getMerchantAnalytics(),
         ]);
 
         if (!active) return;
@@ -57,6 +64,10 @@ export function MerchantPortalPage() {
 
         if (statsRes.status === "fulfilled") {
           setStats(statsRes.value);
+        }
+
+        if (analyticsRes.status === "fulfilled") {
+          setAnalytics(analyticsRes.value);
         }
       } catch (error) {
         console.error(error);
@@ -122,7 +133,133 @@ export function MerchantPortalPage() {
         )}
       </section>
 
-          {/* Business KPI Statistics (Real Backend Data) */}
+          {/* UFind Core KPI hierarchy */}
+          {merchant && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                    UFind Core
+                  </p>
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white">
+                    Verified Visit performance
+                  </h2>
+                </div>
+                <Link
+                  to="/merchant/view-statistics"
+                  className="text-xs font-bold text-cyan-600 hover:text-cyan-500"
+                >
+                  Open analytics
+                </Link>
+              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <PortalKpiCard
+                  icon={Eye}
+                  label="Verified Visits"
+                  value={loadingData ? "..." : (analytics?.visits.verifiedVisits ?? 0).toLocaleString("vi-VN")}
+                  subtext="Valid physical visits"
+                  color="cyan"
+                />
+                <PortalKpiCard
+                  icon={UserCheck}
+                  label="Unique Visitors"
+                  value={loadingData ? "..." : (analytics?.visits.uniqueVisitors ?? 0).toLocaleString("vi-VN")}
+                  subtext="Distinct customers"
+                  color="indigo"
+                />
+                <PortalKpiCard
+                  icon={TrendingUp}
+                  label="Repeat Visitors"
+                  value={loadingData ? "..." : (analytics?.visits.repeatVisitors ?? 0).toLocaleString("vi-VN")}
+                  subtext="Distinct customers with repeat visits"
+                  color="amber"
+                />
+                <PortalKpiCard
+                  icon={CheckCircle2}
+                  label="Repeat Visits"
+                  value={loadingData ? "..." : (analytics?.visits.repeatVisits ?? 0).toLocaleString("vi-VN")}
+                  subtext="Verified visits from returning visitors"
+                  color="indigo"
+                />
+                <PortalKpiCard
+                  icon={Megaphone}
+                  label="Sponsored Campaign"
+                  value={loadingData ? "..." : (analytics?.visits.campaignVerifiedVisits ?? 0).toLocaleString("vi-VN")}
+                  subtext="Sponsored attribution"
+                  color="emerald"
+                />
+                <PortalKpiCard
+                  icon={Store}
+                  label="Organic / Direct"
+                  value={loadingData ? "..." : (analytics?.visits.nonCampaignVerifiedVisits ?? 0).toLocaleString("vi-VN")}
+                  subtext="Non-campaign verified visits"
+                  color="indigo"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <PortalKpiCard
+                  icon={Sparkles}
+                  label="Reviews"
+                  value={loadingData ? "..." : (analytics?.reviews.reviewCount ?? 0).toLocaleString("vi-VN")}
+                  subtext={`${analytics?.reviews.reviewConversionRate ?? 0}% review conversion`}
+                  color="cyan"
+                />
+                <PortalKpiCard
+                  icon={BarChart3}
+                  label="Visit Conversion"
+                  value={loadingData ? "..." : `${analytics?.conversion.visitConversionRate ?? 0}%`}
+                  subtext="Verified visits / views"
+                  color="indigo"
+                />
+              </div>
+              <article className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-black text-slate-950 dark:text-white">
+                      <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      PPVV Billing Preview
+                    </h3>
+                    <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Ước tính theo Verified Visit đủ điều kiện. Chưa phát sinh thanh toán thực tế.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-amber-300 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                    {analytics?.billingPreview.billingStatus === "PreviewOnly" ? "Preview only" : "—"}
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-amber-200/70 bg-white/70 p-3 dark:border-amber-900/40 dark:bg-slate-900/40">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Billable Verified Visits</p>
+                    <p className="mt-1 text-lg font-black text-slate-950 dark:text-white">
+                      {loadingData ? "..." : (analytics?.billingPreview.billableVerifiedVisits ?? 0).toLocaleString("vi-VN")}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200/70 bg-white/70 p-3 dark:border-amber-900/40 dark:bg-slate-900/40">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rate / visit</p>
+                    <p className="mt-1 text-lg font-black text-slate-950 dark:text-white">
+                      {loadingData ? "..." : analytics?.billingPreview.feePerVerifiedVisit == null
+                        ? "—"
+                        : `${analytics.billingPreview.feePerVerifiedVisit.toLocaleString("vi-VN")} ${analytics.billingPreview.currency ?? ""}`.trim()}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200/70 bg-white/70 p-3 dark:border-amber-900/40 dark:bg-slate-900/40">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Estimated Amount</p>
+                    <p className="mt-1 text-lg font-black text-slate-950 dark:text-white">
+                      {loadingData ? "..." : analytics?.billingPreview.estimatedAmount == null
+                        ? "—"
+                        : `${analytics.billingPreview.estimatedAmount.toLocaleString("vi-VN")} ${analytics.billingPreview.currency ?? ""}`.trim()}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </section>
+          )}
+
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Legacy Commerce (optional)
+          </p>
+
+          {/* Legacy commerce KPI compatibility */}
           {merchant && (
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <PortalKpiCard
@@ -265,12 +402,12 @@ export function MerchantPortalPage() {
                 title="Quản lý Món ăn"
                 desc="Cập nhật thực đơn, giá bán"
               />
-              <QuickActionCard
+              {showLegacyOrderQuickAction && (<QuickActionCard
                 to="/merchant/orders"
                 icon={ShoppingBag}
                 title="Đơn hàng"
                 desc="Theo dõi & xử lý đơn món"
-              />
+              />)}
               <QuickActionCard
                 to="/merchant/restaurant"
                 icon={Store}

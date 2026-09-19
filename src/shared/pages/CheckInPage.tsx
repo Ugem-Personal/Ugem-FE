@@ -41,6 +41,17 @@ export default function CheckInPage() {
           return;
         }
 
+        // Direct Visit QR codes are generated with /check-in?checkInToken=...
+        // Keep the legacy order flow below, but hand new QR visits to the
+        // customer-owned Verified Visit page.
+        if (checkInToken && !orderId) {
+          navigate(
+            `/customer/check-in?checkInToken=${encodeURIComponent(checkInToken)}`,
+            { replace: true },
+          );
+          return;
+        }
+
         // Order QR should open the bill confirmation flow first. Check-in is
         // created only after the order payment is completed.
         if (orderId && checkInToken) {

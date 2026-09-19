@@ -11,7 +11,6 @@ import {
   Navigation,
   Route,
   Search,
-  ShoppingBag,
   Sparkles,
   Store,
   Utensils,
@@ -34,10 +33,13 @@ import MerchantCard from "../components/MerchantCard";
 import { MerchantCardSkeleton } from "../components/MerchantCardSkeleton";
 import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
 import VietMapLocationPickerModal from "../components/VietMapLocationPickerModal";
-import { getNearbyMerchants } from "../services/merchantService";
+import {
+  getNearbyMerchants,
+  getSponsoredMerchants,
+} from "../services/merchantService";
 import { getWishlist } from "../services/wishlistService";
 import { getCurrentUser } from "@/features/auth";
-import type { Merchant } from "../types";
+import type { Merchant, SponsoredMerchant } from "../types";
 import { useVietMapRoute } from "@/shared/hooks/useVietMapRoute";
 import { isMerchantOpenNow } from "@/shared/utils/openingHours";
 import {
@@ -252,6 +254,10 @@ export default function CustomerHomePage() {
     searchParams.get("tab") === "map" || searchParams.get("mode") === "dinein";
 
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [sponsoredMerchants, setSponsoredMerchants] = useState<
+    SponsoredMerchant[]
+  >([]);
+  const [sponsoredLoading, setSponsoredLoading] = useState(false);
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
     DEFAULT_DISCOVERY_OPTIONS,
   );
@@ -428,16 +434,36 @@ export default function CustomerHomePage() {
       radiusKmToUse?: number,
     ) => {
       setLoading(true);
+      setSponsoredLoading(true);
 
       try {
-        const data = await getNearbyMerchants({
+        const query = {
           latitude: coordsToUse.latitude,
           longitude: coordsToUse.longitude,
           keyword: searchKeyword,
           categoryId: categoryIdToUse || undefined,
           priceRange: priceRangeToUse || undefined,
           radiusKm: radiusKmToUse ?? selectedRadiusKm,
-        });
+        };
+        const [organicResult, sponsoredResult] = await Promise.allSettled([
+          getNearbyMerchants(query),
+          getSponsoredMerchants(query),
+        ]);
+
+        setSponsoredMerchants(
+          sponsoredResult.status === "fulfilled" ? sponsoredResult.value : [],
+        );
+        if (sponsoredResult.status === "rejected") {
+          console.error("Sponsored discovery unavailable", sponsoredResult.reason);
+        }
+
+        if (organicResult.status === "rejected") {
+          setMerchants([]);
+          setSelectedMerchantId(null);
+          throw organicResult.reason;
+        }
+
+        const data = organicResult.value;
 
         setMerchants(data);
         setSelectedMerchantId((prev) =>
@@ -450,6 +476,7 @@ export default function CustomerHomePage() {
         notify.error("Không tải được danh sách quán.");
       } finally {
         setLoading(false);
+        setSponsoredLoading(false);
       }
     },
     [selectedRadiusKm],
@@ -853,10 +880,6 @@ export default function CustomerHomePage() {
     clearRoute();
   }
 
-  function handleOpenMyOrders() {
-    navigate("/customer/orders");
-  }
-
   function handleOpenWishlist() {
     navigate("/customer/wishlist");
   }
@@ -1208,6 +1231,69 @@ export default function CustomerHomePage() {
     );
   }
 
+  function renderSponsoredSection() {
+    if (sponsoredLoading) {
+      return (
+        <section className="mt-10" aria-labelledby="sponsored-heading">
+          <div className="mb-5">
+            <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+              Sponsored
+            </p>
+            <h2
+              id="sponsored-heading"
+              className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white"
+            >
+              Được tài trợ
+            </h2>
+          </div>
+          <MerchantCardSkeleton count={3} />
+        </section>
+      );
+    }
+
+    if (sponsoredMerchants.length === 0) return null;
+
+    return (
+      <section className="mt-10" aria-labelledby="sponsored-heading">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+              Sponsored
+            </p>
+            <h2
+              id="sponsored-heading"
+              className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white"
+            >
+              Được tài trợ
+            </h2>
+          </div>
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-black text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            Nội dung quảng bá
+          </span>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {sponsoredMerchants.map((merchant) => (
+            <MerchantCard
+              key={`sponsored-${merchant.id}-${merchant.sponsoredCampaign.id}`}
+              merchant={merchant}
+              orderMode="offline"
+              backTo="/customer"
+              isWishlisted={wishlistIds.has(merchant.id)}
+              onWishlistToggle={(nextSaved) => {
+                setWishlistIds((prev) => {
+                  const next = new Set(prev);
+                  if (nextSaved) next.add(merchant.id);
+                  else next.delete(merchant.id);
+                  return next;
+                });
+              }}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   const mapCanvas = (
     <NearbyMerchantsMap
       center={candidateLocation ?? coords}
@@ -1279,15 +1365,6 @@ export default function CustomerHomePage() {
                   <span className="flex items-center rounded-full bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-xs font-black tracking-wide text-cyan-800 dark:text-cyan-300 shadow-2xs">
                     {merchantCountText}
                   </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleOpenMyOrders}
-                    className="h-7 gap-1 rounded-xl border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950 px-2.5 text-[11px] font-black text-cyan-800 dark:text-cyan-300 shadow-2xs hover:bg-cyan-100 dark:hover:bg-cyan-900"
-                  >
-                    <ShoppingBag className="h-3 w-3" /> Đơn hàng
-                  </Button>
                 </div>
               </div>
 
@@ -1477,14 +1554,6 @@ export default function CustomerHomePage() {
               <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
               <span className="hidden md:inline">Quán yêu thích</span>
             </Button>
-            <Button
-              type="button"
-              onClick={handleOpenMyOrders}
-              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl bg-slate-900 dark:bg-cyan-500 px-3 sm:px-5 text-xs sm:text-sm font-black text-white dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400 shrink-0"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden md:inline">Đơn hàng của tôi</span>
-            </Button>
             <UserAccountMenu fallbackName="Customer" />
           </div>
         </div>
@@ -1568,7 +1637,7 @@ export default function CustomerHomePage() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-                UFind Recommended
+                Organic · UFind Recommended
               </p>
               <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
                 Địa điểm quanh bạn
@@ -1584,6 +1653,7 @@ export default function CustomerHomePage() {
 
           {renderMerchantListContent(false)}
         </section>
+        {renderSponsoredSection()}
       </main>
 
       <VietMapLocationPickerModal

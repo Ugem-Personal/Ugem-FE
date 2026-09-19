@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ArrowRight,
-  ChevronRight,
+  ChevronDown,
   LoaderCircle,
   Map,
   MapPin,
@@ -13,13 +13,14 @@ import {
   Star,
   Store,
   Tag,
-  Utensils,
   X,
-  Gift,
+  Heart,
+  Compass,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { BrandLogo, ModeToggle } from "@/shared/components";
+import { ModeToggle } from "@/shared/components";
+import ufindLogo from "@/assets/ufind-logo.png";
 import {
   DEFAULT_DISCOVERY_OPTIONS,
   getDiscoveryOptions,
@@ -29,9 +30,15 @@ import { cleanAddress } from "@/shared/utils/address";
 import {
   getMerchantDetail,
   getNearbyMerchants,
+  getSponsoredMerchants,
 } from "../services/merchantService";
-import type { Merchant, MerchantDetail } from "../types";
+import type {
+  Merchant,
+  MerchantDetail,
+  SponsoredMerchant,
+} from "../types";
 import { getDisplayUnderratedScore } from "../utils/underratedScore";
+import "./GuestExplorePage.css";
 import {
   type GeocodeResult,
   reverseGeocode,
@@ -88,7 +95,7 @@ function MerchantVisual({
   const menuImage = merchant.menu
     ?.find((item) => item.imageUrl?.trim())
     ?.imageUrl?.trim();
-  const image = logoImage || menuImage;
+  const image = menuImage || logoImage;
   const [failedImage, setFailedImage] = useState(false);
   const underratedScore = getDisplayUnderratedScore(merchant);
   const isHiddenGem = underratedScore !== null && underratedScore.percent >= 80;
@@ -107,23 +114,19 @@ function MerchantVisual({
   const gradientClass = RICH_FOOD_GRADIENTS[index % RICH_FOOD_GRADIENTS.length];
 
   return (
-    <div className="relative h-48 sm:h-52 overflow-hidden bg-slate-900">
+    <div className="guest-merchant-photo group/photo">
       {image && !failedImage ? (
         <img
           src={image}
           alt={merchant.name || "Quán ăn trên UFind"}
-          className={
-            logoImage
-              ? "h-full w-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-              : "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
-          }
+          className={`guest-merchant-image ${menuImage ? "is-cover" : "is-contain"}`}
           onError={() => setFailedImage(true)}
         />
       ) : (
         <div
-          className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-linear-to-br ${gradientClass} p-4 text-white text-center`}
+          className={`guest-merchant-placeholder bg-linear-to-br ${gradientClass}`}
         >
-          <div className="grid h-13 w-13 place-items-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-lg">
+          <div className="guest-placeholder-icon">
             <Store className="h-6 w-6" />
           </div>
           <span className="text-xs font-black tracking-widest uppercase text-white/90">
@@ -132,12 +135,11 @@ function MerchantVisual({
         </div>
       )}
 
-      {/* Soft dark bottom gradient overlay */}
-      <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+      <div className="guest-photo-shade" />
 
       {isHiddenGem ? (
-        <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-slate-950/60 px-3 py-1 text-[11px] font-extrabold text-white shadow-md backdrop-blur-md">
-          <Sparkles className="h-3 w-3 text-cyan-300" />
+        <span className="guest-photo-gem">
+          <Sparkles className="h-3 w-3" />
           Hidden gem
         </span>
       ) : null}
@@ -147,6 +149,10 @@ function MerchantVisual({
 
 export default function GuestExplorePage() {
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [sponsoredMerchants, setSponsoredMerchants] = useState<
+    SponsoredMerchant[]
+  >([]);
+  const [sponsoredLoading, setSponsoredLoading] = useState(true);
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
     DEFAULT_DISCOVERY_OPTIONS,
   );
@@ -174,6 +180,8 @@ export default function GuestExplorePage() {
   const [error, setError] = useState("");
   const [detail, setDetail] = useState<MerchantDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -219,7 +227,7 @@ export default function GuestExplorePage() {
   useEffect(() => {
     let active = true;
 
-    const request = getNearbyMerchants({
+    const query = {
       latitude: coords.latitude,
       longitude: coords.longitude,
       keyword: activeKeyword || undefined,
@@ -227,19 +235,34 @@ export default function GuestExplorePage() {
       restaurantType: restaurantFilter || undefined,
       mainDishType: selectedMainDishType || undefined,
       radiusKm: 15,
-    });
+    };
 
-    request
-      .then((items) => active && setMerchants(items))
-      .catch(() => {
-        if (active) {
+    Promise.allSettled([getNearbyMerchants(query), getSponsoredMerchants(query)])
+      .then(([organicResult, sponsoredResult]) => {
+        if (!active) return;
+
+        if (organicResult.status === "fulfilled") {
+          setMerchants(organicResult.value);
+          setError("");
+        } else {
           setMerchants([]);
           setError(
             "Chưa tải được danh sách quán. Hãy kiểm tra kết nối dịch vụ backend.",
           );
         }
+
+        setSponsoredMerchants(
+          sponsoredResult.status === "fulfilled" ? sponsoredResult.value : [],
+        );
+        if (sponsoredResult.status === "rejected") {
+          console.error("Sponsored discovery unavailable", sponsoredResult.reason);
+        }
       })
-      .finally(() => active && setLoading(false));
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+        setSponsoredLoading(false);
+      });
 
     return () => {
       active = false;
@@ -273,6 +296,12 @@ export default function GuestExplorePage() {
 
   const displayedMerchants = useMemo(() => {
     let list = merchants;
+    if (selectedCuisineTab === "all") {
+      list = list.filter((merchant) => {
+        const score = getDisplayUnderratedScore(merchant);
+        return score !== null && score.percent >= 80;
+      });
+    }
     if (selectedCuisineTab === "combo") {
       list = list.filter((m) => m.menu?.some((food) => food.isCombo));
     }
@@ -307,11 +336,6 @@ export default function GuestExplorePage() {
       return 0;
     });
   }, [merchants, selectedCuisineTab, sortBy]);
-
-  const resultLabel = useMemo(() => {
-    if (loading) return "Đang tìm những địa điểm phù hợp…";
-    return `${displayedMerchants.length} địa điểm đang sẵn sàng khám phá`;
-  }, [loading, displayedMerchants.length]);
 
   const hasActiveFilters = Boolean(
     activeKeyword ||
@@ -445,7 +469,17 @@ export default function GuestExplorePage() {
     setDetailLoading(true);
     setDetail({ ...merchant, foods: merchant.menu ?? [] });
     try {
-      setDetail(await getMerchantDetail(merchant.id));
+      const detailResult = await getMerchantDetail(merchant.id);
+      setDetail(
+        merchant.isSponsored && merchant.sponsoredCampaign
+          ? {
+              ...detailResult,
+              discoveryType: "Sponsored",
+              isSponsored: true,
+              sponsoredCampaign: merchant.sponsoredCampaign,
+            }
+          : detailResult,
+      );
     } catch {
       // Keep public summary visible
     } finally {
@@ -453,487 +487,241 @@ export default function GuestExplorePage() {
     }
   }
 
+  function renderSponsoredSection() {
+    if (sponsoredLoading) {
+      return (
+        <section className="guest-sponsored-inner" aria-labelledby="guest-sponsored-heading">
+          <div className="guest-sponsored-title-row">
+            <div>
+              <p className="guest-eyebrow guest-sponsored-eyebrow">Được tài trợ</p>
+              <h2 id="guest-sponsored-heading">Địa điểm được yêu thích</h2>
+            </div>
+            <span className="guest-sponsored-all">Xem tất cả <ArrowRight size={15} /></span>
+          </div>
+          <div className="guest-sponsored-grid">
+            <div className="guest-sponsored-skeleton" />
+            <div className="guest-sponsored-skeleton" />
+            <div className="guest-sponsored-skeleton" />
+          </div>
+        </section>
+      );
+    }
+
+    if (sponsoredMerchants.length === 0) return null;
+
+    return (
+      <section className="guest-sponsored-inner" aria-labelledby="guest-sponsored-heading">
+        <div className="guest-sponsored-title-row">
+          <div>
+            <p className="guest-eyebrow guest-sponsored-eyebrow">Được tài trợ</p>
+            <h2 id="guest-sponsored-heading">Khám phá địa điểm nổi bật</h2>
+          </div>
+          <a className="guest-sponsored-all" href="#discover">Xem tất cả <ArrowRight size={15} /></a>
+        </div>
+        <div className="guest-sponsored-grid">
+          {sponsoredMerchants.map((merchant, index) => (
+            <button
+              key={`guest-sponsored-${merchant.id}-${merchant.sponsoredCampaign.id}`}
+              type="button"
+              onClick={() => void openMerchant(merchant)}
+              className="guest-sponsored-card"
+            >
+              <MerchantVisual merchant={merchant} index={index} />
+              <div className="guest-sponsored-copy">
+                <span className="guest-sponsored-badge">
+                  <Sparkles size={11} /> Được tài trợ
+                </span>
+                <h3>
+                  {merchant.name || "Quán trên UFind"}
+                </h3>
+                <p>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$$"}</p>
+                <span className="guest-sponsored-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span>
+              </div>
+              <span className="guest-sponsored-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <main className="min-h-screen overflow-x-clip bg-slate-50 pb-20 font-sans text-slate-900 selection:bg-cyan-500 selection:text-white transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
-      {/* Background glow effects */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-cyan-500/10 dark:bg-cyan-600/15 blur-[140px]" />
-        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/10 dark:bg-indigo-600/15 blur-[140px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-      </div>
-
-      {/* Sticky navigation surface keeps scrolled content from showing above it. */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-slate-50/90 px-4 py-3 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 sm:px-6 lg:px-8">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/85 px-4 shadow-lg transition-colors duration-300 dark:border-white/10 dark:bg-slate-900/85 sm:px-6">
-          <Link
-            to="/explore"
-            className="flex items-center gap-3"
-            aria-label="UFind Guest Explore"
-          >
-            <BrandLogo className="h-8 w-auto transition-transform hover:scale-105" />
-          </Link>
-
-          <nav className="flex items-center gap-3" aria-label="Tài khoản">
-            <ModeToggle />
-            <Link
-              to="/login"
-              className="inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              to="/register"
-              className="hidden h-10 items-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/25 transition hover:bg-cyan-400 active:scale-95 sm:inline-flex"
-            >
-              Tạo tài khoản <ArrowRight className="h-4 w-4" />
-            </Link>
-          </nav>
+    <main className="guest-page">
+      <header className="guest-nav">
+        <div className="guest-shell guest-nav-inner">
+          <Link to="/explore" className="guest-brand" aria-label="UFind — Khám phá quán ăn"><img src={ufindLogo} alt="UFind" /></Link>
+          <nav className="guest-primary-nav" aria-label="Điều hướng chính"><a href="#discover">Khám phá</a><a href="#nearby">Gần bạn</a><a href="#hidden-gems">Hidden Gems</a></nav>
+          <div className="guest-account-nav"><ModeToggle /><Link to="/login" className="guest-login">Đăng nhập</Link><Link to="/register" className="guest-register">Đăng ký</Link></div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-12 pt-10 sm:px-6 lg:px-8">
-        <div className="relative mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-6xl">
-            Tìm kiếm địa điểm ẩm thực <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-cyan-600 via-teal-500 to-amber-500 dark:from-cyan-400 dark:via-teal-300 dark:to-amber-300 bg-clip-text text-transparent">
-              tự do không giới hạn.
-            </span>
-          </h1>
-
-          <p className="mt-4 max-w-2xl mx-auto text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
-            Tra cứu vị trí, khoảng cách và thực đơn công khai của các địa điểm
-            nổi tiếng ngay tức thì.
-          </p>
-
-          {/* Floating Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="mt-8 mx-auto max-w-3xl flex flex-col sm:flex-row gap-3 p-2.5 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 shadow-2xl transition-colors duration-300"
-          >
-            <label className="flex h-14 flex-1 items-center gap-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 px-5 transition focus-within:ring-2 focus-within:ring-cyan-500/40">
-              <Search className="h-5 w-5 text-cyan-500 dark:text-cyan-400 shrink-0" />
-              <input
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-                placeholder="Nhập tên quán hoặc món ăn..."
-                aria-label="Tìm theo tên quán hoặc món ăn"
-                className="h-full w-full bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:text-sm"
-              />
-              {keyword && (
-                <button
-                  type="button"
-                  onClick={() => setKeyword("")}
-                  aria-label="Xóa từ khóa"
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-950 dark:text-slate-500 dark:hover:bg-white/5 dark:hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </label>
-            <button
-              type="submit"
-              className="inline-flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-400 hover:to-blue-500 active:scale-95"
-            >
-              Tìm ngay <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Main Content Area */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Guest discovery filters */}
-        <div className="mb-6 rounded-3xl border border-slate-200/80 bg-white/80 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0 lg:max-w-xl">
-              <p className="text-[11px] font-mono font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                Phạm vi tìm kiếm
-              </p>
-              <div
-                className="mt-2 flex flex-wrap gap-2"
-                role="group"
-                aria-label="Chọn cách xác định khu vực tìm kiếm"
-              >
-                <button
-                  type="button"
-                  aria-pressed={locationMode === "current"}
-                  disabled={locationBusy}
-                  onClick={useCurrentLocation}
-                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-wait disabled:opacity-50 ${
-                    locationMode === "current"
-                      ? "border-cyan-500 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
-                  }`}
-                >
-                  {locationBusy ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Navigation className="h-4 w-4" />
-                  )}
-                  Vị trí hiện tại
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={locationMode === "custom"}
-                  aria-expanded={editingLocation}
-                  onClick={() =>
-                    setEditingLocation((value) =>
-                      locationMode === "custom" ? !value : true,
-                    )
-                  }
-                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
-                    locationMode === "custom"
-                      ? "border-cyan-500 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
-                  }`}
-                >
-                  <MapPin className="h-4 w-4" />
-                  Khu vực khác
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowMapPicker(true)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-black text-slate-700 hover:border-cyan-500/40 hover:bg-cyan-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                >
-                  <Map className="h-4 w-4 text-cyan-500" />
-                  Chọn trên bản đồ
-                </button>
+      <section className="guest-hero">
+        <div className="guest-shell guest-hero-grid">
+          <div className="guest-hero-copy">
+            <span className="guest-hero-badge"><Sparkles size={14} /> Khám phá những Hidden Gems quanh bạn</span>
+            <h1>Những quán ngon <span>không phải lúc nào</span> cũng nằm ở nơi đông người nhất.</h1>
+            <p>Khám phá những địa điểm chất lượng nhưng chưa được nhiều người biết đến, dựa trên trải nghiệm thực tế từ cộng đồng UFind.</p>
+            <form onSubmit={handleSearch} className="guest-search">
+              <div className="guest-search-input">
+                <Search size={19} aria-hidden="true" />
+                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm món ăn, tên quán hoặc khu vực..." aria-label="Tìm món ăn, tên quán hoặc khu vực" />
+                {keyword ? <button type="button" onClick={() => setKeyword("")} aria-label="Xóa từ khóa"><X size={16} /></button> : null}
               </div>
-              <div className="mt-3 flex min-w-0 items-start gap-2 text-sm font-black text-slate-950 dark:text-white">
-                <MapPin className="h-4 w-4 shrink-0 text-cyan-500" />
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    {locationMode === "current"
-                      ? "Đang tìm gần bạn"
-                      : "Đang tìm quanh điểm đã chọn"}
-                  </span>
-                  <span className="mt-0.5 block truncate" title={locationLabel}>
-                    {locationLabel}
-                  </span>
-                </span>
-              </div>
-            </div>
+              <button type="button" className="guest-search-location" onClick={() => setEditingLocation((value) => !value)} aria-expanded={editingLocation} title={locationMode === "current" ? "Đang dùng vị trí hiện tại — nhấn để thay đổi" : "Thay đổi khu vực tìm kiếm"}>
+                <MapPin size={18} /><span>{locationLabel}</span><ChevronDown size={15} />
+              </button>
+              <button type="submit" className="guest-search-submit">Khám phá <ArrowRight size={17} /></button>
+            </form>
 
-            <div className="flex flex-1 flex-col gap-2 sm:flex-row lg:max-w-3xl lg:justify-end">
-              <label className="relative min-w-36 flex-1 lg:max-w-48">
-                <span className="sr-only">Sắp xếp</span>
-                <select
-                  value={sortBy}
-                  onChange={(event) => {
-                    setSortBy(event.target.value as typeof sortBy);
-                  }}
-                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
-                >
-                  <option value="distance">📍 Gần tôi nhất</option>
-                  <option value="rating">⭐ Đánh giá cao nhất</option>
-                  <option value="reviews">🔥 Nhiều đánh giá nhất</option>
-                  <option value="combo">🍱 Ưu đãi & Combo hot</option>
-                </select>
-              </label>
-
-              <label className="relative min-w-36 flex-1 lg:max-w-48">
-                <span className="sr-only">Mức giá</span>
-                <select
-                  value={priceRange}
-                  onChange={(event) => {
-                    setLoading(true);
-                    setPriceRange(event.target.value);
-                  }}
-                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
-                >
-                  <option value="">Tất cả mức giá</option>
-                  {discoveryOptions.priceRanges.map((price) => (
-                    <option key={price} value={price}>
-                      {price}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="relative min-w-44 flex-1 lg:max-w-56">
-                <span className="sr-only">Loại hình quán</span>
-                <select
-                  value={restaurantFilter}
-                  onChange={(event) => {
-                    setLoading(true);
-                    setRestaurantFilter(event.target.value);
-                  }}
-                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-3 focus:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
-                >
-                  <option value="">Tất cả loại hình quán</option>
-                  {discoveryOptions.restaurantTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </div>
-
-          {editingLocation ? (
-            <form
-              onSubmit={applyManualLocation}
-              className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-white/10 sm:flex-row"
-            >
-              <div className="relative min-w-0 flex-1">
-                <label className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-500 focus-within:ring-3 focus-within:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-800">
-                  <Search className="h-4 w-4 shrink-0 text-slate-400" />
-                  <input
-                    value={locationInput}
-                    onChange={(event) => {
-                      setLocationInput(event.target.value);
-                      setLocationSuggestions([]);
-                      setLocationSuggesting(false);
-                      setLocationError("");
-                    }}
-                    placeholder="Nhập phường, quận/huyện hoặc tỉnh/thành..."
-                    aria-label="Nhập khu vực muốn tìm quán"
-                    autoComplete="off"
-                    aria-autocomplete="list"
-                    aria-expanded={locationSuggestions.length > 0}
-                    aria-controls="guest-location-suggestions"
-                    className="h-full w-full bg-transparent text-base font-medium text-slate-950 outline-none placeholder:text-slate-400 dark:text-white sm:text-sm"
-                  />
-                  {locationSuggesting ? (
-                    <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-cyan-500" />
-                  ) : null}
-                </label>
-
-                {locationSuggestions.length > 0 ? (
-                  <div
-                    id="guest-location-suggestions"
-                    role="listbox"
-                    aria-label="Gợi ý địa điểm"
-                    className="absolute inset-x-0 top-[calc(100%+8px)] z-50 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-white/10 dark:bg-slate-800"
-                  >
+            {editingLocation ? (
+              <div className="guest-location-editor">
+                <form onSubmit={applyManualLocation} className="guest-location-form">
+                  <label>
+                    <span className="sr-only">Khu vực muốn tìm</span>
+                    <input value={locationInput} onChange={(event) => { setLocationInput(event.target.value); setLocationSuggestions([]); setLocationSuggesting(false); setLocationError(""); }} placeholder="Nhập phường, quận hoặc thành phố..." autoComplete="off" aria-autocomplete="list" aria-expanded={locationSuggestions.length > 0} aria-controls="guest-location-suggestions" />
+                    {locationSuggesting ? <LoaderCircle className="animate-spin" size={17} /> : null}
+                  </label>
+                  <button type="submit" disabled={locationBusy || !locationInput.trim()}>{locationBusy ? "Đang tìm..." : "Áp dụng"}</button>
+                </form>
+                {locationSuggestions.length ? (
+                  <div id="guest-location-suggestions" className="guest-location-suggestions" role="listbox" aria-label="Gợi ý địa điểm">
                     {locationSuggestions.map((suggestion) => (
-                      <button
-                        key={`${suggestion.ref_id}-${suggestion.lat}-${suggestion.lng}`}
-                        type="button"
-                        role="option"
-                        aria-selected="false"
-                        onClick={() => chooseLocationSuggestion(suggestion)}
-                        className="flex min-h-12 w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-cyan-50 focus-visible:bg-cyan-50 focus-visible:outline-none dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-                      >
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-500" />
-                        <span className="min-w-0">
-                          <strong className="block truncate text-xs font-black text-slate-950 dark:text-white">
-                            {suggestion.name || suggestion.display}
-                          </strong>
-                          <span className="mt-0.5 block line-clamp-2 text-[11px] font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                            {cleanAddress(
-                              suggestion.display || suggestion.address,
-                            )}
-                          </span>
-                        </span>
+                      <button key={suggestion.ref_id + "-" + suggestion.lat + "-" + suggestion.lng} type="button" role="option" aria-selected="false" onClick={() => chooseLocationSuggestion(suggestion)}>
+                        <MapPin size={16} /><span><strong>{suggestion.name || suggestion.display}</strong><small>{cleanAddress(suggestion.display || suggestion.address)}</small></span>
                       </button>
                     ))}
                   </div>
                 ) : null}
-              </div>
-              <button
-                type="submit"
-                disabled={locationBusy || !locationInput.trim()}
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {locationBusy ? "Đang tìm..." : "Áp dụng"}
-              </button>
-            </form>
-          ) : null}
-
-          {locationError ? (
-            <p
-              className="mt-3 text-xs font-semibold text-rose-600 dark:text-rose-400"
-              role="alert"
-            >
-              {locationError}
-            </p>
-          ) : null}
-        </div>
-
-        {/* Categories / Cuisine Bar */}
-        <div
-          className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-none"
-          aria-label="Nhóm món và ẩm thực"
-        >
-          {CUISINE_QUICK_TABS.map((tab) => {
-            const isSelected = selectedCuisineTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => chooseCuisineTab(tab)}
-                aria-pressed={isSelected}
-                className={`h-11 shrink-0 rounded-2xl px-5 text-xs font-black transition duration-200 ${
-                  isSelected
-                    ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25"
-                    : "border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Results Header */}
-        <div className="mb-6 mt-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
-          <div>
-            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
-              Địa điểm gợi ý
-            </h2>
-          </div>
-          <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-            <p
-              className="text-left text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 sm:text-right sm:text-xs"
-              aria-live="polite"
-            >
-              {resultLabel}
-            </p>
-            {hasActiveFilters ? (
-              <button
-                type="button"
-                onClick={resetDiscoveryFilters}
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-black text-cyan-700 transition hover:bg-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:text-cyan-300"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Xóa bộ lọc
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Merchant Cards Grid */}
-        {loading ? (
-          <div className="grid min-h-64 place-items-center rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-8">
-            <div className="text-center text-slate-500 dark:text-slate-400">
-              <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-cyan-500 dark:text-cyan-400" />
-              <p className="mt-3 text-xs font-bold font-mono">
-                Đang tải địa điểm...
-              </p>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="rounded-3xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-8 text-center font-bold text-amber-700 dark:text-amber-300 text-xs">
-            {error}
-          </div>
-        ) : displayedMerchants.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-12 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-              <Utensils className="h-6 w-6" />
-            </div>
-            <h3 className="mt-4 text-base font-black text-slate-950 dark:text-white">
-              Chưa tìm thấy địa điểm
-            </h3>
-            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-              Thử thay đổi vị trí hoặc xóa các bộ lọc đang chọn.
-            </p>
-            {hasActiveFilters ? (
-              <button
-                type="button"
-                onClick={resetDiscoveryFilters}
-                className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Xóa bộ lọc
-              </button>
-            ) : null}
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedMerchants.map((merchant, index) => (
-              <button
-                key={merchant.id}
-                type="button"
-                onClick={() => void openMerchant(merchant)}
-                className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-500/40 hover:shadow-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transform-none dark:border-white/10 dark:bg-slate-900/60"
-              >
-                <MerchantVisual merchant={merchant} index={index} />
-                <div className="p-6">
-                  <div className="flex items-start gap-3">
-                    <h3 className="line-clamp-1 text-base font-black tracking-tight text-slate-950 dark:text-white transition-colors group-hover:text-cyan-600 dark:group-hover:text-cyan-400">
-                      {merchant.name || "Quán trên UFind"}
-                    </h3>
-                  </div>
-
-                  {merchant.address ? (
-                    <p className="mt-2 flex items-start gap-2 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-500 dark:text-cyan-400" />
-                      <span className="min-w-0 flex-1 wrap-break-word">
-                        {cleanAddress(merchant.address)}
-                      </span>
-                    </p>
-                  ) : null}
-
-                  {merchant.restaurantType || merchant.mainDishType ? (
-                    <p className="mt-3 flex items-start gap-2 text-[11px] font-bold leading-relaxed text-slate-500 dark:text-slate-400">
-                      <Store className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
-                      <span>
-                        {[merchant.restaurantType, merchant.mainDishType]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {typeof merchant.distance === "number" &&
-                    Number.isFinite(merchant.distance) ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
-                        <Navigation className="h-3.5 w-3.5" />
-                        {locationMode === "current"
-                          ? "Cách bạn "
-                          : "Cách điểm đã chọn "}
-                        {formatDistance(merchant.distance)}
-                      </span>
-                    ) : null}
-
-                    {merchant.priceRange ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300">
-                        <Tag className="h-3.5 w-3.5" />
-                        {merchant.priceRange}
-                      </span>
-                    ) : null}
-
-                    {merchant.menu?.some((food) => food.isCombo) ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-black text-amber-700 dark:text-amber-300">
-                        🍱 Có Combo ưu đãi
-                      </span>
-                    ) : null}
-
-                    {merchant.hasActiveCampaign ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                        <Gift className="h-3.5 w-3.5" />
-                        Khuyến mãi
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between text-xs font-bold">
-                    {typeof merchant.rating === "number" ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl bg-amber-500/10 px-3 py-1 text-amber-700 dark:text-amber-300 border border-amber-500/20 font-mono">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500 dark:text-amber-400" />
-                        {merchant.rating.toFixed(1)}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px]">
-                        ĐỊA ĐIỂM MỚI
-                      </span>
-                    )}
-
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/10 px-3.5 py-1.5 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-slate-950 transition">
-                      Xem Menu <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
+                <div className="guest-location-actions">
+                  <button type="button" onClick={useCurrentLocation} disabled={locationBusy}><Navigation size={15} /> Dùng vị trí hiện tại</button>
+                  <button type="button" onClick={() => setShowMapPicker(true)}><Map size={15} /> Chọn trên bản đồ</button>
+                  {locationError ? <span role="alert">{locationError}</span> : null}
                 </div>
-              </button>
-            ))}
+              </div>
+            ) : null}
           </div>
-        )}
+
+          <div className="guest-hero-art" aria-label="Không gian quán ăn và món ngon">
+            <div className="guest-hero-photo">
+              <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=88" alt="Không gian ấm cúng tại một nhà hàng địa phương" fetchPriority="high" />
+              <span className="guest-photo-sign">Tiệm Ăn<br />Nhà Mộc</span>
+            </div>
+            <div className="guest-note">Small places<br /><strong>Big stories</strong></div>
+            <div className="guest-food-polaroid"><img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=720&q=85" alt="Tô mì nóng với rau thơm" /></div>
+            <span className="guest-hand-note guest-note-left">Good<br />Food<br />Bright<br />Days</span>
+            <span className="guest-hand-note guest-note-bottom">Hidden Gems<br />are everywhere</span>
+          </div>
+        </div>
       </section>
 
+      <div className="guest-shell guest-content">
+        <div className="guest-category-row" id="hidden-gems" role="group" aria-label="Khám phá theo món ăn">
+          {CUISINE_QUICK_TABS.filter((tab) => ["all", "bun-pho", "com", "tra-sua", "an-vat", "lau-nuong", "mon-viet"].includes(tab.id)).map((tab) => {
+            const isSelected = selectedCuisineTab === tab.id;
+            const label = tab.id === "all" ? "💎 Hidden Gems" : tab.label;
+            return <button key={tab.id} type="button" onClick={() => chooseCuisineTab(tab)} aria-pressed={isSelected} className={isSelected ? "guest-category is-active" : "guest-category"}>{label}</button>;
+          })}
+          <button type="button" className={filtersExpanded ? "guest-category is-active" : "guest-category"} onClick={() => setFiltersExpanded((value) => !value)} aria-expanded={filtersExpanded}>Khác <ChevronDown size={14} /></button>
+          <button type="button" className="guest-filter-button" onClick={() => setFiltersExpanded((value) => !value)} aria-expanded={filtersExpanded} aria-label="Mở bộ lọc tìm kiếm"><Tag size={15} /> Lọc</button>
+        </div>
+
+        {filtersExpanded ? (
+          <div className="guest-filter-panel">
+            <div className="guest-more-categories">
+              {CUISINE_QUICK_TABS.filter((tab) => !["all", "bun-pho", "com", "tra-sua", "an-vat", "lau-nuong", "mon-viet"].includes(tab.id)).map((tab) => (
+                <button key={tab.id} type="button" onClick={() => chooseCuisineTab(tab)} aria-pressed={selectedCuisineTab === tab.id} className={selectedCuisineTab === tab.id ? "guest-category is-active" : "guest-category"}>{tab.label}</button>
+              ))}
+            </div>
+            <label><span>Sắp xếp</span><select value={sortBy} onChange={(event) => setSortBy(event.target.value as typeof sortBy)}><option value="distance">Gần bạn nhất</option><option value="rating">Đánh giá cao nhất</option><option value="reviews">Nhiều đánh giá nhất</option><option value="combo">Có combo ưu đãi</option></select></label>
+            <label><span>Mức giá</span><select value={priceRange} onChange={(event) => { setLoading(true); setPriceRange(event.target.value); }}><option value="">Tất cả mức giá</option>{discoveryOptions.priceRanges.map((price) => <option key={price} value={price}>{price}</option>)}</select></label>
+            <label><span>Loại hình quán</span><select value={restaurantFilter} onChange={(event) => { setLoading(true); setRestaurantFilter(event.target.value); }}><option value="">Tất cả loại hình</option>{discoveryOptions.restaurantTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+            {hasActiveFilters ? <button type="button" className="guest-reset-filters" onClick={resetDiscoveryFilters}><RotateCcw size={14} /> Xóa bộ lọc</button> : null}
+          </div>
+        ) : null}
+
+        <section className="guest-discovery" id="discover" aria-labelledby="guest-discovery-heading">
+          <div className="guest-section-heading">
+            <div><p className="guest-eyebrow">UFind Discovery</p><h2 id="guest-discovery-heading">Quán đáng khám phá quanh bạn</h2><p>Những địa điểm chất lượng nhưng chưa được nhiều người biết đến.</p></div>
+            <div className="guest-section-actions"><span aria-live="polite">{loading ? "Đang tìm địa điểm..." : displayedMerchants.length + " địa điểm"}</span><a href="#nearby">Xem tất cả <ArrowRight size={15} /></a></div>
+          </div>
+
+          {loading ? (
+            <div className="guest-loading"><LoaderCircle className="animate-spin" size={26} /><span>Đang tìm quán ngon quanh bạn...</span></div>
+          ) : error ? (
+            <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
+          ) : displayedMerchants.length === 0 ? (
+            <div className="guest-empty"><Compass size={25} /><strong>Chưa tìm thấy Hidden Gem phù hợp</strong><span>Thử một nhóm món khác hoặc đổi khu vực khám phá.</span></div>
+          ) : (
+            <div className="guest-merchant-grid">
+              {displayedMerchants.slice(0, 5).map((merchant, index) => (
+                <button key={merchant.id} type="button" onClick={() => void openMerchant(merchant)} className="guest-merchant-card">
+                  <span className="guest-card-heart" aria-hidden="true"><Heart size={17} /></span>
+                  <MerchantVisual merchant={merchant} index={index} />
+                  <span className="guest-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</span>
+                  <span className="guest-merchant-info"><strong>{merchant.name || "Quán trên UFind"}</strong><span>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$"}</span><span className="guest-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span></span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="guest-nearby" id="nearby" aria-labelledby="guest-nearby-heading">
+          <div className="guest-nearby-heading">
+            <div className="guest-pin-mark"><MapPin size={20} fill="currentColor" /></div>
+            <div><h2 id="guest-nearby-heading">Khám phá quanh bạn</h2><p>Xem các địa điểm trên bản đồ và tìm quán ngon gần nhất.</p></div>
+            <button type="button" onClick={() => setShowMapPicker(true)}>Xem bản đồ lớn <ArrowRight size={15} /></button>
+          </div>
+          <div className="guest-nearby-body">
+            <div className="guest-map-canvas" role="img" aria-label={"Bản đồ khám phá quanh " + locationLabel}>
+              <div className="guest-map-art" aria-hidden="true">
+                <span className="guest-map-water" />
+                <span className="guest-map-road guest-road-main" />
+                <span className="guest-map-road guest-road-cross" />
+                <span className="guest-map-road guest-road-side" />
+                <span className="guest-map-road guest-road-ring" />
+                <span className="guest-map-neighborhood guest-neighborhood-city">HỒ CHÍ MINH</span>
+                <span className="guest-map-neighborhood guest-neighborhood-one">QUẬN 3</span>
+                <span className="guest-map-neighborhood guest-neighborhood-two">BÌNH THẠNH</span>
+                <span className="guest-map-pin guest-pin-one"><MapPin size={19} fill="currentColor" /></span>
+                <span className="guest-map-pin guest-pin-two"><MapPin size={22} fill="currentColor" /></span>
+                <span className="guest-map-pin guest-pin-three"><MapPin size={19} fill="currentColor" /></span>
+                <span className="guest-map-user-dot" />
+                {merchants[0] ? <span className="guest-map-popover"><span className="guest-map-popover-dot" />{merchants[0].name || "Quán gần bạn"}<small>{typeof merchants[0].distance === "number" ? formatDistance(merchants[0].distance) : "Gần bạn"}</small></span> : null}
+              </div>
+              <span className="guest-map-current"><span />{locationLabel}</span>
+            </div>
+            <div className="guest-map-list">
+              {(displayedMerchants.length ? displayedMerchants : merchants).slice(0, 3).map((merchant) => {
+                const thumb = merchant.menu?.find((item) => item.imageUrl?.trim())?.imageUrl || merchant.logoUrl;
+                return (
+                  <button key={merchant.id} type="button" className={selectedMerchantId === merchant.id ? "guest-map-item is-selected" : "guest-map-item"} onClick={() => { setSelectedMerchantId(merchant.id); void openMerchant(merchant); }}>
+                    <span className="guest-map-thumb">{thumb ? <img src={thumb} alt="" /> : <Store size={18} />}</span>
+                    <span className="guest-map-copy"><strong>{merchant.name || "Quán trên UFind"}</strong><small>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$"}</small><span className="guest-rating"><Star size={13} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span></span>
+                    <small className="guest-map-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</small>
+                  </button>
+                );
+              })}
+              {!displayedMerchants.length && !merchants.length ? <div className="guest-map-empty">Các quán gần bạn sẽ hiện ở đây.</div> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="guest-how" aria-labelledby="guest-how-heading">
+          <h2 id="guest-how-heading">Vì sao review trên UFind đáng tin hơn?</h2>
+          <div className="guest-how-steps">
+            <article><span className="guest-how-icon is-search"><Search size={27} /></span><div><strong>Khám phá</strong><p>Những quán thật, trải nghiệm thật từ cộng đồng.</p></div><ArrowRight className="guest-how-arrow" size={20} /></article>
+            <article><span className="guest-how-icon is-place"><MapPin size={25} fill="currentColor" /></span><div><strong>Ghé quán thật</strong><p>Chỉ những đánh giá từ người đã ghé (Verified Visit).</p></div><ArrowRight className="guest-how-arrow" size={20} /></article>
+            <article><span className="guest-how-icon is-star"><Star size={27} fill="currentColor" /></span><div><strong>Review chân thực</strong><p>Chia sẻ cảm nhận, giúp bạn tìm được những địa điểm xứng đáng.</p></div></article>
+          </div>
+        </section>
+
+        <section className="guest-sponsored" aria-label="Địa điểm được tài trợ">{renderSponsoredSection()}</section>
+
+        <section className="guest-signup-cta">
+          <div><p className="guest-eyebrow">UFind community</p><h2>Tìm được quán đáng thử rồi?</h2><p>Tạo tài khoản để lưu lại, chia sẻ trải nghiệm và khám phá thêm nhiều Hidden Gems khác.</p></div>
+          <Link to="/register">Tạo tài khoản <ArrowRight size={16} /></Link>
+        </section>
+      </div>
       {/* Detail Modal */}
       {detail ? (
         <div
@@ -1060,7 +848,11 @@ export default function GuestExplorePage() {
               </div>
               <Link
                 to={`/login?returnUrl=${encodeURIComponent(
-                  `/customer/merchants/${detail.id}?backTo=${encodeURIComponent("/customer")}`,
+                  `/customer/merchants/${detail.id}?backTo=${encodeURIComponent("/customer")}${
+                    detail.isSponsored && detail.sponsoredCampaign
+                      ? `&campaignId=${encodeURIComponent(detail.sponsoredCampaign.id)}`
+                      : ""
+                  }`,
                 )}`}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 active:scale-95"
               >

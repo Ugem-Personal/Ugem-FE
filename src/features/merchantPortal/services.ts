@@ -3,7 +3,10 @@ import type { ApiResponse, MerchantOrderSummary } from "@/shared/types";
 import type { MerchantDetail } from "@/features/customer/types";
 import type { CreateApplicationPayload, MerchantApplication } from "./types";
 import { acceptMerchantOrder } from "@/shared/services/merchantOrderService";
-import { generateCheckInQr } from "@/shared/services/checkInService";
+import {
+  generateCheckInQr,
+  type GenerateQrParams,
+} from "@/shared/services/checkInService";
 
 const APPLICATION_TYPE = "Merchant";
 
@@ -214,12 +217,24 @@ export async function confirmManualPayment(orderId: string) {
 
 export const confirmCashPayment = confirmManualPayment;
 
-export async function getMerchantCheckInQr(
+export function getMerchantCheckInQr(
   orderId: string,
+  _billAlreadyConfirmed?: boolean,
+): Promise<string>;
+export function getMerchantCheckInQr(
+  params?: GenerateQrParams,
+  _billAlreadyConfirmed?: boolean,
+): Promise<string>;
+export async function getMerchantCheckInQr(
+  orderOrParams: string | GenerateQrParams = {},
   _billAlreadyConfirmed = false,
 ) {
   void _billAlreadyConfirmed;
-  const blob = await generateCheckInQr({ orderId });
+  const params =
+    typeof orderOrParams === "string"
+      ? { orderId: orderOrParams }
+      : orderOrParams;
+  const blob = await generateCheckInQr(params);
   return URL.createObjectURL(blob);
 }
 
@@ -262,18 +277,92 @@ export type MerchantAcquisitionAnalytics = {
   visits: number;
   checkIns: number;
   verifiedVisits: number;
+  uniqueVisitors: number;
   repeatVisitors: number;
+  repeatVisits: number;
+  campaignVerifiedVisits: number;
+  nonCampaignVerifiedVisits: number;
   reviewCount: number;
+  reviewConversionRate: number;
   acquisitionEvents: number;
   conversionRate: number;
   paidAcquisition: number;
+  billingPreview?: MerchantAnalytics["billingPreview"];
 };
 
-export async function getMerchantAcquisitionAnalytics() {
-  const res = await api.get<ApiResponse<MerchantAcquisitionAnalytics>>(
-    "/moderation/merchant/analytics",
+export type MerchantAnalytics = {
+  merchant: {
+    id: string;
+    name: string;
+  };
+  period: {
+    from: string | null;
+    to: string | null;
+  };
+  traffic: {
+    totalViews: number;
+    organicViews: number;
+    sponsoredViews: number;
+    viewsBySource: Record<string, number>;
+    saves: number;
+  };
+  visits: {
+    verifiedVisits: number;
+    uniqueVisitors: number;
+    repeatVisitors: number;
+    repeatVisits: number;
+    campaignVerifiedVisits: number;
+    nonCampaignVerifiedVisits: number;
+  };
+  reviews: {
+    reviewCount: number;
+    reviewConversionRate: number;
+  };
+  conversion: {
+    visitConversionRate: number;
+    sponsoredConversionRate: number;
+    nonCampaignConversionRate: number;
+  };
+  billingPreview: {
+    billableVerifiedVisits: number;
+    feePerVerifiedVisit: number | null;
+    estimatedAmount: number | null;
+    currency: string | null;
+    isEstimate: true;
+    billingStatus: "PreviewOnly";
+  };
+};
+
+export async function getMerchantAnalytics() {
+  const res = await api.get<ApiResponse<MerchantAnalytics> | MerchantAnalytics>(
+    "/dashboard/merchant/analytics",
   );
-  return res.data.data;
+  return unwrapApiResponse(res.data);
+}
+
+export async function getMerchantAcquisitionAnalytics() {
+  // Compatibility adapter for older screens. The source is now the UFind
+  // Merchant Analytics endpoint rather than the legacy moderation aggregate.
+  const analytics = await getMerchantAnalytics();
+
+  return {
+    views: analytics.traffic.totalViews,
+    saves: analytics.traffic.saves,
+    visits: analytics.visits.verifiedVisits,
+    checkIns: analytics.visits.verifiedVisits,
+    verifiedVisits: analytics.visits.verifiedVisits,
+    uniqueVisitors: analytics.visits.uniqueVisitors,
+    repeatVisitors: analytics.visits.repeatVisitors,
+    repeatVisits: analytics.visits.repeatVisits,
+    campaignVerifiedVisits: analytics.visits.campaignVerifiedVisits,
+    nonCampaignVerifiedVisits: analytics.visits.nonCampaignVerifiedVisits,
+    reviewCount: analytics.reviews.reviewCount,
+    reviewConversionRate: analytics.reviews.reviewConversionRate,
+    acquisitionEvents: analytics.visits.verifiedVisits,
+    conversionRate: analytics.conversion.visitConversionRate / 100,
+    paidAcquisition: 0,
+    billingPreview: analytics.billingPreview,
+  } satisfies MerchantAcquisitionAnalytics;
 }
 
 export type MerchantDashboardOverview = {
@@ -355,9 +444,29 @@ export type MerchantCampaignPerformanceItem = {
   totalDiscount: number;
   averageOrderValue: number;
   isActive: boolean;
-  status: "Upcoming" | "Active" | "Expired" | "Disabled" | "OutOfUsage";
+  status:
+    | "Upcoming"
+    | "Active"
+    | "Expired"
+    | "Disabled"
+    | "OutOfUsage"
+    | "VisitLimitReached";
   startAt: string;
   endAt: string;
+  verifiedVisitLimit?: number | null;
+  verifiedVisits?: number;
+  remainingVerifiedVisits?: number | null;
+  maxVerifiedVisitsPerCustomer?: number;
+  uniqueVisitors?: number;
+  repeatVisits?: number;
+  billingPreview?: {
+    billableVerifiedVisits: number;
+    feePerVerifiedVisit: number | null;
+    estimatedAmount: number | null;
+    currency: string | null;
+    isEstimate: true;
+    billingStatus: "PreviewOnly";
+  };
 };
 
 export type MerchantCampaignPerformance = {

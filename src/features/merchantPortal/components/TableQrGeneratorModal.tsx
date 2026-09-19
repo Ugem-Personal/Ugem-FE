@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BrandLogo } from "@/shared/components";
+import { notify } from "@/shared/lib/notify";
+import { generateCheckInQr } from "@/shared/services/checkInService";
 
 interface TableQrGeneratorModalProps {
   open: boolean;
@@ -23,6 +25,8 @@ interface TableQrGeneratorModalProps {
   merchantId: string;
   merchantName: string;
   merchantAddress?: string;
+  campaignId?: string;
+  campaignTitle?: string;
 }
 
 const DEFAULT_TABLES = [
@@ -43,18 +47,52 @@ const DEFAULT_TABLES = [
 export function TableQrGeneratorModal({
   open,
   onOpenChange,
-  merchantId,
   merchantName,
   merchantAddress,
+  campaignId,
+  campaignTitle,
 }: TableQrGeneratorModalProps) {
   const [selectedTable, setSelectedTable] = useState<string>("Bàn 01");
   const [customTable, setCustomTable] = useState<string>("");
+  const [qrImageUrl, setQrImageUrl] = useState("");
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   const activeTableName = customTable.trim() || selectedTable;
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const checkInUrl = baseUrl + "/check-in?merchantId=" + encodeURIComponent(merchantId) + "&table=" + encodeURIComponent(activeTableName);
 
-  const qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(checkInUrl) + "&bgcolor=ffffff&color=090d16&margin=1";
+  useEffect(() => {
+    if (!open) return;
+
+    let active = true;
+    let objectUrl: string | null = null;
+    setQrLoading(true);
+    setQrError(null);
+    setQrImageUrl("");
+
+    void generateCheckInQr(campaignId ? { campaignId } : {})
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setQrImageUrl(objectUrl);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error("Cannot generate merchant check-in QR", error);
+        setQrError(
+          error instanceof Error
+            ? error.message
+            : "KhÃ´ng thá»ƒ táº¡o mÃ£ QR check-in.",
+        );
+      })
+      .finally(() => {
+        if (active) setQrLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [campaignId, open]);
 
   function handlePrint() {
     window.print();
@@ -74,6 +112,11 @@ export function TableQrGeneratorModal({
             Tạo & In Mã QR Bàn Ăn
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+            {campaignId && (
+              <span className="mb-1 block font-bold text-cyan-700 dark:text-cyan-300">
+                Campaign QR: {campaignTitle || campaignId}
+              </span>
+            )}
             In thẻ mã QR đặt trên bàn để thực khách quét gọi món và xác thực GPS Check-in nhận ưu đãi.
           </DialogDescription>
         </DialogHeader>
@@ -145,6 +188,12 @@ export function TableQrGeneratorModal({
                 className="w-full h-full object-contain"
               />
             </div>
+            {qrLoading && (
+              <p className="text-xs font-bold text-slate-500">Äang táº¡o QR...</p>
+            )}
+            {!qrLoading && qrError && (
+              <p className="text-xs font-bold text-rose-600">{qrError}</p>
+            )}
 
             {/* Instructions & Features */}
             <div className="space-y-1.5 pt-1">
@@ -184,7 +233,14 @@ export function TableQrGeneratorModal({
             </Button>
             <Button
               type="button"
-              onClick={handlePrint}
+              onClick={() => {
+                if (!qrImageUrl) {
+                  notify.error("ChÆ°a táº¡o xong mÃ£ QR.");
+                  return;
+                }
+                handlePrint();
+              }}
+              disabled={qrLoading || !qrImageUrl}
               className="gap-2 rounded-xl bg-cyan-500 text-slate-950 font-black hover:bg-cyan-400"
             >
               <Printer className="h-4 w-4" /> In mã QR bàn

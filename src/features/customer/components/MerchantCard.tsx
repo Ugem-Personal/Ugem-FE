@@ -97,16 +97,20 @@ export default function MerchantCard({
       merchant.featuredFoods?.some((f) => f.toLowerCase().includes("combo")),
   );
 
+  const campaignId = merchant.isSponsored
+    ? merchant.sponsoredCampaign?.id
+    : undefined;
+  const viewSource = merchant.isSponsored ? "Sponsored" : "Recommendation";
   const merchantUrl = `/customer/merchants/${merchant.id}?mode=${orderMode}${
     backTo ? `&backTo=${encodeURIComponent(backTo)}` : ""
-  }`;
+  }${campaignId ? `&campaignId=${encodeURIComponent(campaignId)}` : ""}`;
 
   if (compact) {
     return (
       <Link
         to={merchantUrl}
         onClick={() => {
-          incrementMerchantView(merchant.id, "Recommendation").catch(() => {});
+          incrementMerchantView(merchant.id, viewSource).catch(() => {});
         }}
         aria-label={`Xem chi tiết quán ${name}`}
         className={cn(
@@ -130,6 +134,11 @@ export default function MerchantCard({
               onToggleSuccess={onWishlistToggle}
             />
           </div>
+          {merchant.isSponsored && (
+            <span className="absolute bottom-1.5 left-1.5 rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-950 shadow-md">
+              Được tài trợ
+            </span>
+          )}
           {!openStatus.isOpen && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 p-1 text-center backdrop-blur-[0.5px]">
               <span className="rounded-md bg-rose-950/90 px-1.5 py-0.5 text-[10px] font-black text-rose-200">
@@ -190,7 +199,7 @@ export default function MerchantCard({
     <Link
       to={merchantUrl}
       onClick={() => {
-        incrementMerchantView(merchant.id, "Recommendation").catch(() => {});
+        incrementMerchantView(merchant.id, viewSource).catch(() => {});
       }}
       aria-label={`Xem chi tiết quán ${name}`}
       className={cn(
@@ -238,6 +247,12 @@ export default function MerchantCard({
           {selected && (
             <span className="rounded-lg bg-cyan-600/95 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md">
               Đang chọn
+            </span>
+          )}
+
+          {merchant.isSponsored && (
+            <span className="rounded-lg border border-amber-300/60 bg-amber-500/95 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-950 shadow-md backdrop-blur-md">
+              Được tài trợ
             </span>
           )}
 

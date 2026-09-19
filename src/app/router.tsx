@@ -79,26 +79,23 @@ const CustomerHomePage = lazy(
 const GuestExplorePage = lazy(
   () => import("@/features/customer/pages/GuestExplorePage"),
 );
-const CustomerOrderDetailPage = lazy(
-  () => import("@/features/customer/pages/CustomerOrderDetailPage"),
-);
-const CustomerOrdersPage = lazy(
-  () => import("@/features/customer/pages/CustomerOrdersPage"),
-);
 const CustomerProfilePage = lazy(
   () => import("@/features/customer/pages/CustomerProfilePage"),
 );
 const CustomerSafetyPage = lazy(
   () => import("@/features/customer/pages/CustomerSafetyPage"),
 );
+const CustomerCheckInPage = lazy(
+  () => import("@/features/customer/pages/CustomerCheckInPage"),
+);
+const CustomerReviewCreatePage = lazy(
+  () => import("@/features/customer/pages/CustomerReviewCreatePage"),
+);
 const MerchantDetailPage = lazy(
   () => import("@/features/customer/pages/MerchantDetailPage"),
 );
 const WishlistPage = lazy(
   () => import("@/features/customer/pages/WishlistPage"),
-);
-const ConfirmBillPage = lazy(
-  () => import("@/features/customer/pages/ConfirmBillPage"),
 );
 const MerchantApplicationStatusPage = lazyNamed(
   () => import("@/features/merchantPortal/pages/MerchantApplicationStatusPage"),
@@ -133,12 +130,6 @@ const MerchantGovernancePage = lazy(
 );
 const MerchantSupportPage = lazy(
   () => import("@/features/support/pages/MerchantSupportPage"),
-);
-const MerchantOrdersPage = lazy(
-  () => import("@/features/merchantPortal/pages/MerchantOrdersPage"),
-);
-const MerchantCreateOrderPage = lazy(
-  () => import("@/features/merchantPortal/pages/MerchantCreateOrderPage"),
 );
 const MerchantProfilePage = lazy(
   () => import("@/features/merchantPortal/pages/MerchantProfilePage"),
@@ -191,14 +182,6 @@ const routers = createBrowserRouter([
         element: <CheckInPage />,
       },
       {
-        path: "/orders/confirm",
-        element: (
-          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
-            <ConfirmBillPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "/unauthorized",
         element: <UnauthorizedPage />,
       },
@@ -227,6 +210,22 @@ const routers = createBrowserRouter([
         ),
       },
       {
+        path: "/customer/check-in",
+        element: (
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
+            <CustomerCheckInPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/customer/review/create",
+        element: (
+          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
+            <CustomerReviewCreatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/customer/merchants/:id",
         element: (
           <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
@@ -247,22 +246,6 @@ const routers = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
             <WishlistPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/customer/orders",
-        element: (
-          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
-            <CustomerOrdersPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/customer/orders/:id",
-        element: (
-          <ProtectedRoute allowedRoles={["Customer", "Reviewer"]}>
-            <CustomerOrderDetailPage />
           </ProtectedRoute>
         ),
       },
@@ -307,26 +290,10 @@ const routers = createBrowserRouter([
         ),
       },
       {
-        path: "/merchant/orders",
-        element: (
-          <ProtectedRoute allowedRoles={["Merchant"]}>
-            <MerchantOrdersPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "/merchant/check-in",
         element: (
           <ProtectedRoute allowedRoles={["Merchant"]}>
             <MerchantCheckInVerifyPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/merchant/create-order",
-        element: (
-          <ProtectedRoute allowedRoles={["Merchant"]}>
-            <MerchantCreateOrderPage />
           </ProtectedRoute>
         ),
       },

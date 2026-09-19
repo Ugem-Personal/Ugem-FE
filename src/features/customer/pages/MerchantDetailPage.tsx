@@ -11,7 +11,6 @@ import {
   Search,
   Utensils,
   Navigation,
-  ShoppingBag,
   CheckCircle2,
 } from "lucide-react";
 import {
@@ -35,28 +34,15 @@ import {
 
 import type {
   MerchantDetail,
-  MerchantFoodTopping,
-  MerchantMenuItem,
 } from "../types";
 
 import { getWishlist } from "../services/wishlistService";
-import { createOrder } from "../services/orderService";
 import { notify } from "@/shared/lib/notify";
-import { clearAuth, getCurrentUser } from "@/features/auth";
+import { getCurrentUser } from "@/features/auth";
 import { getMerchantOpenStatus } from "@/shared/utils/openingHours";
-import { BrandLogo, UserAccountMenu } from "@/shared/components";
+import { BrandLogo, ImageWithFallback, UserAccountMenu } from "@/shared/components";
 import { Button } from "@/shared/components/ui/button";
 import { WishlistButton } from "../components/WishlistButton";
-import { FoodCard } from "../components/FoodCard";
-import {
-  FoodOptionModal,
-  getEffectiveFoodToppings,
-} from "../components/FoodOptionModal";
-import { CartDrawer, type CartItem } from "../components/CartDrawer";
-import {
-  CheckoutDialog,
-  type CheckoutFormData,
-} from "../components/CheckoutDialog";
 
 import {
   reportMerchantIncident,
@@ -115,23 +101,6 @@ function formatPrice(price: number) {
   return `${price.toLocaleString("vi-VN")}đ`;
 }
 
-function buildOrderItemNotes(
-  notes: string | undefined,
-  toppings: MerchantFoodTopping[] | undefined,
-) {
-  const cleanedNotes = (notes ?? "").trim();
-  const toppingNames = (toppings ?? [])
-    .map((topping) => topping.name?.trim())
-    .filter(Boolean);
-
-  if (toppingNames.length === 0) {
-    return cleanedNotes;
-  }
-
-  const toppingNote = `Topping: ${toppingNames.join(", ")}`;
-  return [cleanedNotes, toppingNote].filter(Boolean).join(" | ");
-}
-
 function parseMerchantDescription(description?: string) {
   const lines = (description || "")
     .split(/\r?\n/)
@@ -180,55 +149,10 @@ function formatRating(value: number) {
   return value.toFixed(2);
 }
 
-function getCartQuantity(cart: CartItem[], foodId: string) {
-  return cart.find((item) => item.food.id === foodId)?.quantity ?? 0;
-}
-
-const AFFILIATE_REF_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-function getAffiliateRefStorageKey(merchantId: string) {
-  return `ugem_affiliate_ref_${merchantId}`;
-}
-
-function storeAffiliateRef(merchantId: string, linkCode: string) {
-  if (!merchantId || !linkCode) return;
-
-  window.localStorage.setItem(
-    getAffiliateRefStorageKey(merchantId),
-    JSON.stringify({
-      linkCode,
-      expiresAt: Date.now() + AFFILIATE_REF_TTL_MS,
-    }),
-  );
-}
-
-function getStoredAffiliateRef(merchantId: string) {
-  try {
-    const raw = window.localStorage.getItem(
-      getAffiliateRefStorageKey(merchantId),
-    );
-    if (!raw) return undefined;
-
-    const data = JSON.parse(raw) as {
-      linkCode?: string;
-      expiresAt?: number;
-    };
-
-    if (!data.linkCode || !data.expiresAt || data.expiresAt <= Date.now()) {
-      window.localStorage.removeItem(getAffiliateRefStorageKey(merchantId));
-      return undefined;
-    }
-
-    return data.linkCode;
-  } catch {
-    window.localStorage.removeItem(getAffiliateRefStorageKey(merchantId));
-    return undefined;
-  }
-}
-
 export default function MerchantDetailPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const campaignId = searchParams.get("campaignId") ?? undefined;
 
   const navigate = useNavigate();
   const safeBack = useSafeBack("/customer");
@@ -242,7 +166,6 @@ export default function MerchantDetailPage() {
     safeBack();
   };
   const currentUser = getCurrentUser();
-  const affiliateRef = searchParams.get("ref")?.trim() || undefined;
 
   const reviewSectionRef = useRef<HTMLElement | null>(null);
 
@@ -250,54 +173,11 @@ export default function MerchantDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const CART_STORAGE_KEY = id ? `ugem_cart_${id}` : null;
-  const CART_OPEN_STORAGE_KEY = id ? `ugem_cart_open_${id}` : null;
-  const CHECKOUT_STORAGE_KEY = id ? `ugem_checkout_${id}` : null;
-
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (!CART_STORAGE_KEY) return [];
-    try {
-      const saved = sessionStorage.getItem(CART_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [pendingFood, setPendingFood] = useState<MerchantMenuItem | null>(null);
-  const [pendingQuantity, setPendingQuantity] = useState(1);
-  const [pendingNotes, setPendingNotes] = useState("");
-  const [pendingToppingIds, setPendingToppingIds] = useState<string[]>([]);
-  const [pendingMode, setPendingMode] = useState<"add" | "edit">("add");
-
   const [foodSearchKeyword, setFoodSearchKeyword] = useState("");
   const [selectedFoodCategory, setSelectedFoodCategory] = useState("");
 
   const [showReviews, setShowReviews] = useState(false);
-  const [cartOpen, setCartOpen] = useState<boolean>(() => {
-    if (!CART_OPEN_STORAGE_KEY || !CART_STORAGE_KEY) return false;
-    try {
-      const savedCart = sessionStorage.getItem(CART_STORAGE_KEY);
-      const parsedCart = savedCart ? JSON.parse(savedCart) : [];
-      if (!Array.isArray(parsedCart) || parsedCart.length === 0) return false;
-      return sessionStorage.getItem(CART_OPEN_STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
-  const [checkoutOpen, setCheckoutOpen] = useState<boolean>(() => {
-    if (!CHECKOUT_STORAGE_KEY || !CART_STORAGE_KEY) return false;
-    try {
-      const savedCart = sessionStorage.getItem(CART_STORAGE_KEY);
-      const parsedCart = savedCart ? JSON.parse(savedCart) : [];
-      if (!Array.isArray(parsedCart) || parsedCart.length === 0) return false;
-      return sessionStorage.getItem(CHECKOUT_STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
   const [loading, setLoading] = useState(false);
-  const [ordering, setOrdering] = useState(false);
 
   const [showReportForm, setShowReportForm] = useState(false);
 
@@ -313,59 +193,6 @@ export default function MerchantDetailPage() {
   const [reportError, setReportError] = useState("");
 
   const [reportSuccess, setReportSuccess] = useState("");
-
-  useEffect(() => {
-    if (!CART_STORAGE_KEY) return;
-    try {
-      if (cart.length > 0) {
-        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-      } else {
-        sessionStorage.removeItem(CART_STORAGE_KEY);
-      }
-    } catch (e) {
-      console.error("Failed to save cart to sessionStorage", e);
-    }
-  }, [cart, CART_STORAGE_KEY]);
-
-  useEffect(() => {
-    if (!CART_OPEN_STORAGE_KEY) return;
-    try {
-      if (cartOpen && cart.length > 0) {
-        sessionStorage.setItem(CART_OPEN_STORAGE_KEY, "true");
-      } else {
-        sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
-      }
-    } catch (e) {
-      console.error("Failed to save cartOpen to sessionStorage", e);
-    }
-  }, [cartOpen, cart.length, CART_OPEN_STORAGE_KEY]);
-
-  useEffect(() => {
-    if (!CHECKOUT_STORAGE_KEY) return;
-    try {
-      if (checkoutOpen && cart.length > 0) {
-        sessionStorage.setItem(CHECKOUT_STORAGE_KEY, "true");
-      } else {
-        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
-      }
-    } catch (e) {
-      console.error("Failed to save checkout state to sessionStorage", e);
-    }
-  }, [checkoutOpen, cart.length, CHECKOUT_STORAGE_KEY]);
-
-  const total = useMemo(() => {
-    return cart.reduce((sum, item) => {
-      const toppingTotal = (item.toppings ?? []).reduce(
-        (subtotal, topping) => subtotal + (topping.price || 0),
-        0,
-      );
-      return sum + (item.food.price + toppingTotal) * item.quantity;
-    }, 0);
-  }, [cart]);
-
-  const cartItemCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cart]);
 
   const menuItems = useMemo(
     () => merchant?.menu || merchant?.foods || [],
@@ -456,183 +283,6 @@ export default function MerchantDetailPage() {
   }, [id, currentUser]);
 
   useEffect(() => {
-    if (!affiliateRef || !currentUser || currentUser.Role === "Customer") {
-      return;
-    }
-
-    const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-
-    clearAuth();
-    notify.error(
-      "Vui lòng đăng nhập bằng tài khoản Customer khác để đặt món qua link affiliate.",
-    );
-    navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`, {
-      replace: true,
-    });
-  }, [affiliateRef, currentUser, navigate]);
-
-  useEffect(() => {
-    if (!id || !affiliateRef || currentUser?.Role !== "Customer") return;
-
-    storeAffiliateRef(id, affiliateRef);
-  }, [affiliateRef, currentUser?.Role, id]);
-
-  function handleOpenCheckout() {
-    if (!merchant?.id || cart.length === 0) return;
-
-    const openStatus = getMerchantOpenStatus(merchant.openingHours);
-    if (!openStatus.isOpen) {
-      notify.error(
-        `Nhà hàng hiện đang đóng cửa (${merchant.openingHours || "Ngoài giờ phục vụ"}). Quán chưa thể nhận đơn lúc này.`,
-      );
-      return;
-    }
-
-    if (affiliateRef && currentUser?.Role !== "Customer") {
-      notify.error(
-        "Vui lòng đăng nhập bằng tài khoản Customer khác để đặt món qua link affiliate.",
-      );
-      return;
-    }
-
-    setCartOpen(false);
-    setCheckoutOpen(true);
-  }
-
-  async function handleCreateOrder(checkout: CheckoutFormData) {
-    if (!merchant?.id || cart.length === 0) return;
-
-    setOrdering(true);
-
-    try {
-      await createOrder({
-        name: checkout.recipientName,
-        deliveryAddress: checkout.deliveryAddress,
-        deliveryLatitude: checkout.deliveryLatitude,
-        deliveryLongitude: checkout.deliveryLongitude,
-        orderType: checkout.orderType,
-        paymentMethod: checkout.paymentMethod,
-        notes: "",
-        finalPrice: total,
-        affiliateLinkCode: affiliateRef || getStoredAffiliateRef(merchant.id),
-        campaignId: checkout.campaignId,
-        voucherCode: checkout.voucherCode,
-        pointsToRedeem: checkout.pointsToRedeem,
-        foods: cart.map((item) => ({
-          foodId: item.food.id,
-          quantity: item.quantity,
-          notes:
-            buildOrderItemNotes(item.notes ?? "", item.toppings) || undefined,
-          foodToppingIds: item.toppings?.map((topping) => topping.id),
-        })),
-      });
-
-      const promoInfo = checkout.campaignCode || checkout.voucherCode;
-      notify.success(
-        promoInfo
-          ? `Đặt món thành công và đã áp dụng mã ${promoInfo}.`
-          : "Đặt món thành công.",
-      );
-
-      if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
-      if (CART_OPEN_STORAGE_KEY)
-        sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
-      if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
-      setCart([]);
-      setCartOpen(false);
-      setCheckoutOpen(false);
-      navigate("/customer/orders");
-    } catch (error) {
-      console.error(error);
-      notify.errorApi(error, "Đặt món thất bại. Vui lòng thử lại.");
-    } finally {
-      setOrdering(false);
-    }
-  }
-
-  function addToCart(
-    food: MerchantMenuItem,
-    quantity: number = 1,
-    notes: string = "",
-    toppings: MerchantFoodTopping[] = [],
-  ) {
-    const nextQuantity = Math.max(1, Math.min(99, Math.floor(quantity || 1)));
-
-    setCart((prev) => {
-      const existed = prev.find((item) => item.food.id === food.id);
-
-      if (existed) {
-        return prev.map((item) =>
-          item.food.id === food.id
-            ? {
-                ...item,
-                quantity: Math.min(99, item.quantity + nextQuantity),
-                notes,
-                toppings,
-              }
-            : item,
-        );
-      }
-
-      return [
-        ...prev,
-        { food, quantity: nextQuantity, notes: notes.trim(), toppings },
-      ];
-    });
-  }
-
-  function updateCartItem(
-    foodId: string,
-    quantity: number,
-    notes: string,
-    toppings: MerchantFoodTopping[],
-  ) {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.food.id === foodId
-          ? {
-              ...item,
-              quantity: Math.max(1, Math.min(99, Math.floor(quantity || 1))),
-              notes: notes.trim(),
-              toppings,
-            }
-          : item,
-      ),
-    );
-  }
-
-  function incrementCartItem(foodId: string) {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.food.id === foodId
-          ? { ...item, quantity: Math.min(99, item.quantity + 1) }
-          : item,
-      ),
-    );
-  }
-
-  function decrementCartItem(foodId: string) {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.food.id === foodId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
-  }
-
-  function clearCart() {
-    if (CART_STORAGE_KEY) sessionStorage.removeItem(CART_STORAGE_KEY);
-    if (CART_OPEN_STORAGE_KEY) sessionStorage.removeItem(CART_OPEN_STORAGE_KEY);
-    if (CHECKOUT_STORAGE_KEY) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
-    setCart([]);
-    setCartOpen(false);
-    setCheckoutOpen(false);
-  }
-
-  useEffect(() => {
     if (!showReviews) return;
 
     reviewSectionRef.current?.scrollIntoView({
@@ -640,44 +290,6 @@ export default function MerchantDetailPage() {
       block: "start",
     });
   }, [showReviews]);
-
-  function openAddFoodModal(food: MerchantMenuItem) {
-    const existedItem = cart.find((item) => item.food.id === food.id);
-    if (existedItem) {
-      setPendingFood(food);
-      setPendingQuantity(existedItem.quantity);
-      setPendingNotes(existedItem.notes || "");
-      setPendingToppingIds((existedItem.toppings || []).map((t) => t.id));
-      setPendingMode("edit");
-    } else {
-      setPendingFood(food);
-      setPendingQuantity(1);
-      setPendingNotes("");
-      setPendingToppingIds([]);
-      setPendingMode("add");
-    }
-  }
-
-  function openEditFoodModal(cartItem: CartItem) {
-    setPendingFood(cartItem.food);
-    setPendingQuantity(cartItem.quantity);
-    setPendingNotes(cartItem.notes || "");
-    setPendingToppingIds((cartItem.toppings || []).map((t) => t.id));
-    setPendingMode("edit");
-    setCartOpen(false);
-  }
-
-  function removeFromCart(foodId: string) {
-    setCart((prev) => prev.filter((item) => item.food.id !== foodId));
-  }
-
-  function closeAddFoodModal() {
-    setPendingFood(null);
-    setPendingQuantity(1);
-    setPendingNotes("");
-    setPendingToppingIds([]);
-    setPendingMode("add");
-  }
 
   if (loading) {
     return (
@@ -786,11 +398,7 @@ export default function MerchantDetailPage() {
   };
 
   return (
-    <div
-      className={`relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300 px-4 pt-6 ${
-        cart.length > 0 ? "pb-28" : "pb-12"
-      }`}
-    >
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 pt-6 pb-12 font-sans text-slate-950 dark:text-slate-100 transition-colors duration-300">
       <header className="sticky top-0 z-40 -mx-4 -mt-6 mb-6 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
         <div className="mx-auto flex h-20 max-w-7xl 2xl:max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/customer" className="flex shrink-0 items-center gap-3">
@@ -806,16 +414,6 @@ export default function MerchantDetailPage() {
               <Link to="/customer/wishlist" aria-label="Quán yêu thích">
                 <Heart className="h-4 w-4 text-rose-500 dark:text-rose-400" />
                 <span className="hidden md:inline">Quán yêu thích</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              type="button"
-              className="h-10 sm:h-11 gap-1.5 sm:gap-2 rounded-xl bg-slate-900 px-3 sm:px-5 text-xs sm:text-sm font-black text-white dark:bg-cyan-500 dark:text-slate-950 shadow-md transition hover:bg-slate-800 dark:hover:bg-cyan-400 shrink-0"
-            >
-              <Link to="/customer/orders" aria-label="Đơn hàng của tôi">
-                <ShoppingBag className="h-4 w-4" />
-                <span className="hidden md:inline">Đơn hàng của tôi</span>
               </Link>
             </Button>
             <UserAccountMenu fallbackName="Customer" />
@@ -844,7 +442,10 @@ export default function MerchantDetailPage() {
         </div>
 
         {/* Merchant Hero Banner */}
-        <section className="relative overflow-hidden rounded-3xl border border-cyan-200/80 dark:border-white/10 bg-gradient-to-br from-white via-cyan-50/60 to-blue-50/40 dark:from-slate-950 dark:via-cyan-950 dark:to-slate-950 text-slate-900 dark:text-white shadow-2xl p-6 sm:p-8">
+        <section
+          data-campaign-id={campaignId}
+          className="relative overflow-hidden rounded-3xl border border-cyan-200/80 dark:border-white/10 bg-gradient-to-br from-white via-cyan-50/60 to-blue-50/40 dark:from-slate-950 dark:via-cyan-950 dark:to-slate-950 text-slate-900 dark:text-white shadow-2xl p-6 sm:p-8"
+        >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.12),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.25),transparent_50%)] pointer-events-none" />
 
           <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -981,6 +582,20 @@ export default function MerchantDetailPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const params = new URLSearchParams({
+                    merchantId: merchant.id,
+                  });
+                  if (campaignId) params.set("campaignId", campaignId);
+                  navigate(`/customer/check-in?${params.toString()}`);
+                }}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-5 text-xs font-black text-white shadow-lg shadow-emerald-600/20 active:scale-95 transition cursor-pointer"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Check-in tại quán
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   document
                     .getElementById("menu-section")
                     ?.scrollIntoView({ behavior: "smooth" });
@@ -1010,9 +625,8 @@ export default function MerchantDetailPage() {
                 {merchant.openingHours || "Ngoài giờ hoạt động"})
               </h4>
               <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed font-medium">
-                Quán hiện tại không nhận đơn đặt hàng trực tiếp. Bạn vẫn có thể
-                xem trước thực đơn bên dưới để chuẩn bị cho bữa ăn khi quán mở
-                cửa nhé!
+                Quán hiện đang đóng cửa. Bạn vẫn có thể xem trước thực đơn bên
+                dưới và ghé quán khi quán mở cửa nhé!
               </p>
             </div>
           </div>
@@ -1026,7 +640,7 @@ export default function MerchantDetailPage() {
                 Recommended Menu
               </span>
               <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
-                Thực đơn món ăn
+                Thực đơn tham khảo
               </h2>
             </div>
 
@@ -1099,25 +713,51 @@ export default function MerchantDetailPage() {
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 px-5 py-4 text-sm font-bold text-amber-900 dark:text-amber-300 shadow-2xs">
             <Utensils className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
-              Đang ở chế độ{" "}
-              <strong className="font-black text-amber-950 dark:text-amber-100">
-                Ăn tại quán
-              </strong>
-              : Bạn có thể chọn món vào giỏ để đặt trước tại bàn, hoặc gọi món
-              trực tiếp với nhân viên.
+              Đây là menu tham khảo để bạn khám phá quán trước khi ghé. Khi đến
+              nơi, hãy check-in để ghi nhận lượt ghé thăm của bạn.
             </span>
           </div>
 
           {filteredMenuItems.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
               {filteredMenuItems.map((food) => (
-                <FoodCard
+                <article
                   key={food.id}
-                  food={food}
-                  cartQuantity={getCartQuantity(cart, food.id)}
-                  isOfflineOrder={true}
-                  onOpenModal={openAddFoodModal}
-                />
+                  className="group relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-cyan-400 dark:hover:border-cyan-500/50 backdrop-blur-md"
+                >
+                  <div className="relative flex gap-4 sm:gap-5">
+                    <div className="relative h-28 w-28 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 shadow-inner">
+                      <ImageWithFallback
+                        src={food.imageUrl}
+                        alt={food.name}
+                        fallbackIcon={<Flame className="h-6 w-6 text-cyan-400" />}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      {food.isCombo && (
+                        <span className="absolute top-1.5 left-1.5 rounded-lg bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white shadow-xs">
+                          COMBO
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 flex-col justify-between">
+                      <div>
+                        <h3 className="line-clamp-2 text-base font-black text-slate-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                          {food.name}
+                        </h3>
+                        {food.description && (
+                          <p className="mt-1 line-clamp-3 text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+                            {food.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <p className="mt-3 text-base font-black tracking-tight text-cyan-600 dark:text-cyan-400 font-mono">
+                        {formatPrice(food.price)}
+                      </p>
+                    </div>
+                  </div>
+                </article>
               ))}
             </div>
           ) : (
@@ -1215,127 +855,6 @@ export default function MerchantDetailPage() {
           </section>
         )}
 
-        {/* Modal Topping Options */}
-        {pendingFood && (
-          <FoodOptionModal
-            food={pendingFood}
-            quantity={pendingQuantity}
-            notes={pendingNotes}
-            toppingIds={pendingToppingIds}
-            mode={pendingMode}
-            onQuantityChange={setPendingQuantity}
-            onNotesChange={setPendingNotes}
-            onToppingToggle={(toppingId, checked) => {
-              setPendingToppingIds((prev) =>
-                checked
-                  ? Array.from(new Set([...prev, toppingId]))
-                  : prev.filter((id) => id !== toppingId),
-              );
-            }}
-            onConfirm={() => {
-              const isEditing = pendingMode === "edit";
-              const availableToppings = getEffectiveFoodToppings(pendingFood);
-              const selectedToppings = availableToppings.filter((topping) =>
-                pendingToppingIds.includes(topping.id),
-              );
-              if (isEditing) {
-                updateCartItem(
-                  pendingFood.id,
-                  pendingQuantity,
-                  pendingNotes,
-                  selectedToppings,
-                );
-              } else {
-                addToCart(
-                  pendingFood,
-                  pendingQuantity,
-                  pendingNotes,
-                  selectedToppings,
-                );
-              }
-              closeAddFoodModal();
-              if (isEditing) {
-                setCartOpen(true);
-              }
-            }}
-            onClose={() => {
-              const isEditing = pendingMode === "edit";
-              closeAddFoodModal();
-              if (isEditing) {
-                setCartOpen(true);
-              }
-            }}
-          />
-        )}
-
-        {/* Cart Drawer */}
-        <CartDrawer
-          isOpen={cartOpen}
-          cart={cart}
-          total={total}
-          cartItemCount={cartItemCount}
-          ordering={ordering}
-          onClose={() => setCartOpen(false)}
-          onIncrement={incrementCartItem}
-          onDecrement={decrementCartItem}
-          onRemoveItem={removeFromCart}
-          onEditItem={openEditFoodModal}
-          onClearCart={clearCart}
-          onCreateOrder={handleOpenCheckout}
-        />
-
-        {merchant?.id ? (
-          <CheckoutDialog
-            open={checkoutOpen}
-            merchantId={merchant.id}
-            total={total}
-            merchantLatitude={merchant.latitude}
-            merchantLongitude={merchant.longitude}
-            defaultRecipientName={currentUser?.Name || ""}
-            defaultOrderType="Offline"
-            bankTransferEnabled={merchant.bankTransferEnabled === true}
-            submitting={ordering}
-            onOpenChange={(open) => {
-              setCheckoutOpen(open);
-              if (!open && cart.length > 0) setCartOpen(true);
-            }}
-            onConfirm={handleCreateOrder}
-          />
-        ) : null}
-
-        {/* Floating Bottom Cart Bar */}
-        {cart.length > 0 && !cartOpen && (
-          <div className="fixed inset-x-0 bottom-4 z-40 px-4">
-            <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur-xl flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 font-mono">
-                  {cartItemCount} món đã chọn
-                </span>
-                <p className="text-xl font-black text-cyan-400 font-mono">
-                  {formatPrice(total)}
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCartOpen(true)}
-                  className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white hover:bg-white/20 transition"
-                >
-                  Xem đơn
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenCheckout}
-                  disabled={ordering}
-                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md hover:from-cyan-600 hover:to-blue-700 transition disabled:opacity-50"
-                >
-                  {ordering ? "Đang đặt..." : "Đặt món"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

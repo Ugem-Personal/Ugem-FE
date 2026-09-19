@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Link2, LogOut, UserRound } from "lucide-react";
+import { Link } from "react-router-dom";
+import { LogOut, UserRound } from "lucide-react";
 
 import { clearAuth, getCurrentUser } from "@/features/auth";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,6 @@ export function UserAccountMenu({
   avatarUrl: avatarUrlOverride,
 }: UserAccountMenuProps) {
   const user = getCurrentUser();
-  const location = useLocation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const displayName =
     profile?.fullName || profile?.name || user?.Name || fallbackName;
@@ -48,8 +47,6 @@ export function UserAccountMenu({
         },
       ]
     : [];
-  const canUseAffiliate = user?.Role === "Reviewer";
-  const isAffiliatePage = location.pathname === "/affiliate-links";
   const initial = (displayName || email || "U").trim().charAt(0).toUpperCase();
   const avatarUrl =
     avatarUrlOverride || profile?.avatarUrl || user?.AvatarUrl || "";
@@ -197,21 +194,6 @@ export function UserAccountMenu({
           <Link to="/customer/profile">
             <UserRound className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             Profile
-          </Link>
-        </Button>
-      ) : null}
-
-      {canUseAffiliate && !isAffiliatePage ? (
-        <Button
-          asChild
-          type="button"
-          variant="outline"
-          size="sm"
-          className="hidden h-10 shrink-0 gap-1.5 rounded-xl border-slate-200 dark:border-white/10 text-xs font-black hover:border-cyan-400 dark:hover:border-cyan-500 lg:inline-flex"
-        >
-          <Link to="/affiliate-links">
-            <Link2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-            Affiliate
           </Link>
         </Button>
       ) : null}

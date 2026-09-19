@@ -33,7 +33,6 @@ type CheckInResult = {
   customerPhone?: string;
   customerCode: string;
   pointsAwarded: number;
-  newTotalPoints: number;
   rewardBenefit: string;
   checkedInAt: string;
   status: string;
@@ -167,22 +166,10 @@ export default function MerchantCheckInVerifyPage() {
   const loadHistory = async () => {
     setLoadingHistory(true);
     try {
-      let historyData: CheckInHistoryItem[] | null = null;
-      try {
-        const res = await api.get("/check-in/merchant/history");
-        if (res.data?.data) historyData = res.data.data;
-      } catch {
-        try {
-          const res2 = await api.get("/check-ins/merchant/history");
-          if (res2.data?.data) historyData = res2.data.data;
-        } catch {
-          // Handled below
-        }
-      }
-
-      if (historyData) {
-        setHistory(historyData);
-      }
+      const response = await api.get<{ data?: CheckInHistoryItem[] }>(
+        "/check-in/merchant/history",
+      );
+      setHistory(response.data.data ?? []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -206,62 +193,17 @@ export default function MerchantCheckInVerifyPage() {
 
     setSubmitting(true);
     try {
-      let resultData: CheckInResult | null = null;
-      let businessError: string | null = null;
-
-      try {
-        const res = await api.post("/check-in/merchant/verify-customer-code", {
+      const response = await api.post<{ data?: CheckInResult }>(
+        "/check-in/merchant/verify-customer-code",
+        {
           customerCode: code,
           ...(benefitToApply ? { rewardBenefit: benefitToApply } : {}),
-        });
-        if (res.data?.data) {
-          resultData = res.data.data;
-        }
-      } catch (err1: any) {
-        if (err1?.response?.status === 400) {
-          businessError =
-            err1?.response?.data?.message ||
-            "Chỉ được tích điểm sau khi khách đặt món và quán đã nhận đơn!";
-        } else {
-          try {
-            const res2 = await api.post(
-              "/check-ins/merchant/verify-customer-code",
-              {
-                customerCode: code,
-                ...(benefitToApply ? { rewardBenefit: benefitToApply } : {}),
-              },
-            );
-            if (res2.data?.data) {
-              resultData = res2.data.data;
-            }
-          } catch (err2: any) {
-            if (err2?.response?.status === 400) {
-              businessError =
-                err2?.response?.data?.message ||
-                "Chỉ được tích điểm sau khi khách đặt món và quán đã nhận đơn!";
-            }
-          }
-        }
-      }
+        },
+      );
+      const resultData = response.data.data;
 
-      if (businessError) {
-        notify.error(businessError);
-        return;
-      }
-
-      // If backend offline or 404 in demo mode, create valid mock verify result
       if (!resultData) {
-        resultData = {
-          checkInId: `chk-${Date.now().toString(36)}`,
-          customerName: "Khách hàng UGem",
-          customerPhone: "0987654321",
-          customerCode: code,
-          pointsAwarded: 10,
-          newTotalPoints: 160,
-          rewardBenefit: benefitToApply || "Không áp dụng ưu đãi (Chỉ tích điểm)",
-          checkedInAt: new Date().toISOString(),
-          status: "Verified",
-        };
+        throw new Error("BE không trả về kết quả check-in hợp lệ.");
       }
 
       setLastResult(resultData);
@@ -527,12 +469,6 @@ export default function MerchantCheckInVerifyPage() {
                         <span className="text-slate-500">Điểm thưởng tích:</span>
                         <span className="font-bold text-emerald-600 dark:text-emerald-400">
                           +{lastResult.pointsAwarded} điểm
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Tổng điểm mới của khách:</span>
-                        <span className="font-bold font-mono text-purple-600 dark:text-purple-400">
-                          {lastResult.newTotalPoints} pts
                         </span>
                       </div>
                       <div className="flex justify-between items-start pt-1">

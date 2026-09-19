@@ -125,17 +125,13 @@ export async function uploadImage(file: File) {
       size: file.size,
       type: file.type,
     });
-    for (const entry of Array.from(formData.entries())) {
-      const [k, v] = entry as [string, unknown];
-      if (v instanceof File) {
-        console.debug("media upload: formData entry", k, {
-          name: v.name,
-          size: v.size,
-          type: v.type,
-        });
-      } else {
-        console.debug("media upload: formData entry", k, v);
-      }
+    const formDataFile = formData.get("file");
+    if (formDataFile instanceof File) {
+      console.debug("media upload: formData entry", "file", {
+        name: formDataFile.name,
+        size: formDataFile.size,
+        type: formDataFile.type,
+      });
     }
 
     console.debug("media upload: hasToken", !!token);

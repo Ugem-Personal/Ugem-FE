@@ -8,6 +8,7 @@ import {
   DollarSign,
   Eye,
   Megaphone,
+  MessageSquareText,
   ReceiptText,
   RefreshCw,
   ShoppingBag,
@@ -22,7 +23,7 @@ import { MerchantSidebar } from "@/shared/layouts/Merchants/MerchantSidebar";
 import { notify } from "@/shared/lib/notify";
 import {
   getMerchantCampaignPerformance,
-  getMerchantAcquisitionAnalytics,
+  getMerchantAnalytics,
   getMerchantDashboardOverview,
   getMerchantOrderGrowthByYear,
   getMerchantRevenueByYear,
@@ -30,7 +31,7 @@ import {
   getMyMerchantStatistics,
   getMyMerchantViews,
   type MerchantCampaignPerformance,
-  type MerchantAcquisitionAnalytics,
+  type MerchantAnalytics,
   type MerchantDashboardOverview,
   type MerchantOrderGrowthByYear,
   type MerchantRevenueByYear,
@@ -72,8 +73,7 @@ export function MerchantViewStatisticsPage() {
   const [topFoods, setTopFoods] = useState<MerchantTopFoods | null>(null);
   const [campaigns, setCampaigns] =
     useState<MerchantCampaignPerformance | null>(null);
-  const [acquisition, setAcquisition] =
-    useState<MerchantAcquisitionAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<MerchantAnalytics | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,7 +98,7 @@ export function MerchantViewStatisticsPage() {
           growthData,
           foodData,
           campData,
-          acquisitionData,
+          analyticsData,
         ] = await Promise.all([
           getMyMerchantViews().catch(() => null),
           getMyMerchantStatistics().catch(() => null),
@@ -107,7 +107,7 @@ export function MerchantViewStatisticsPage() {
           getMerchantOrderGrowthByYear(selectedYear).catch(() => null),
           getMerchantTopFoods(5).catch(() => null),
           getMerchantCampaignPerformance(10).catch(() => null),
-          getMerchantAcquisitionAnalytics().catch(() => null),
+          getMerchantAnalytics().catch(() => null),
         ]);
 
         setViews(viewData);
@@ -117,7 +117,7 @@ export function MerchantViewStatisticsPage() {
         setOrderGrowth(growthData);
         setTopFoods(foodData);
         setCampaigns(campData);
-        setAcquisition(acquisitionData);
+        setAnalytics(analyticsData);
       } catch (loadError) {
         console.error(loadError);
         const message = getErrorMessage(loadError);
@@ -254,6 +254,72 @@ export function MerchantViewStatisticsPage() {
             </div>
           ) : (
             <>
+              {/* UFind Core KPI hierarchy. Legacy commerce cards remain below for compatibility. */}
+              <section className="mb-6 space-y-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                    UFind Core
+                  </p>
+                  <h2 className="text-lg font-black text-slate-950 dark:text-white">
+                    Verified Visit & contribution signals
+                  </h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                  <KpiCard icon={<Eye size={18} />} label="Verified Visits" value={formatNumber(analytics?.visits.verifiedVisits)} tone="cyan" hint="Valid physical visits" />
+                  <KpiCard icon={<Users size={18} />} label="Unique Visitors" value={formatNumber(analytics?.visits.uniqueVisitors)} tone="blue" hint="Distinct customers" />
+                  <KpiCard icon={<Users size={18} />} label="Repeat Visitors" value={formatNumber(analytics?.visits.repeatVisitors)} tone="violet" hint="Customers with repeat visits" />
+                  <KpiCard icon={<TrendingUp size={18} />} label="Repeat Visits" value={formatNumber(analytics?.visits.repeatVisits)} tone="indigo" hint="Verified visits from returners" />
+                  <KpiCard icon={<Megaphone size={18} />} label="Sponsored Campaign" value={formatNumber(analytics?.visits.campaignVerifiedVisits)} tone="amber" hint="Campaign-attributed visits" />
+                  <KpiCard icon={<Sparkles size={18} />} label="Organic / Direct" value={formatNumber(analytics?.visits.nonCampaignVerifiedVisits)} tone="emerald" hint="Non-campaign visits" />
+                </div>
+                <div className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                    <KpiCard icon={<MessageSquareText size={18} />} label="Reviews" value={formatNumber(analytics?.reviews.reviewCount)} tone="emerald" hint={`${formatNumber(analytics?.reviews.reviewConversionRate)}% conversion`} />
+                    <KpiCard icon={<BarChart3 size={18} />} label="Visit Conversion" value={`${formatNumber(analytics?.conversion.visitConversionRate)}%`} tone="blue" hint="Verified visits / views" />
+                  </div>
+                  <article className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="flex items-center gap-2 text-sm font-black text-slate-950 dark:text-white">
+                          <ReceiptText size={18} className="text-amber-600 dark:text-amber-400" />
+                          PPVV Billing Preview
+                        </h3>
+                        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                          Chỉ là dữ liệu xem trước; chưa tạo Payment hoặc phát sinh thu tiền.
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-amber-300 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                        {analytics?.billingPreview.billingStatus === "PreviewOnly" ? "Preview only" : "—"}
+                      </span>
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <MetricBox
+                        label="Billable Verified Visits"
+                        value={formatNumber(analytics?.billingPreview.billableVerifiedVisits)}
+                        description="Theo attribution hợp lệ từ BE"
+                        accent="cyan"
+                      />
+                      <MetricBox
+                        label="Rate / visit"
+                        value={analytics?.billingPreview.feePerVerifiedVisit == null ? "—" : `${formatNumber(analytics.billingPreview.feePerVerifiedVisit)} ${analytics.billingPreview.currency ?? ""}`.trim()}
+                        description="Đơn giá do BE trả về"
+                        accent="amber"
+                      />
+                      <MetricBox
+                        label="Estimated Amount"
+                        value={analytics?.billingPreview.estimatedAmount == null ? "—" : `${formatNumber(analytics.billingPreview.estimatedAmount)} ${analytics.billingPreview.currency ?? ""}`.trim()}
+                        description="Không phải hóa đơn thực tế"
+                        accent="violet"
+                      />
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                Legacy Commerce (optional)
+              </p>
+
               {/* Top KPI Cards Grid */}
               <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 <KpiCard
@@ -301,37 +367,6 @@ export function MerchantViewStatisticsPage() {
                   value={`${formatNumber(usRate)}%`}
                   tone="indigo"
                   hint="Underrated Score"
-                />
-              </section>
-
-              <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard
-                  icon={<Eye size={18} />}
-                  label="Verified Visits"
-                  value={formatNumber(acquisition?.verifiedVisits)}
-                  tone="cyan"
-                  hint="Check-in đã xác minh"
-                />
-                <KpiCard
-                  icon={<Users size={18} />}
-                  label="Repeat Visitors"
-                  value={formatNumber(acquisition?.repeatVisitors)}
-                  tone="blue"
-                  hint="Khách quay lại"
-                />
-                <KpiCard
-                  icon={<TrendingUp size={18} />}
-                  label="Acquisition Events"
-                  value={formatNumber(acquisition?.acquisitionEvents)}
-                  tone="emerald"
-                  hint="Giá trị UGem tạo ra"
-                />
-                <KpiCard
-                  icon={<BarChart3 size={18} />}
-                  label="Visit Conversion"
-                  value={`${((acquisition?.conversionRate ?? 0) * 100).toFixed(1)}%`}
-                  tone="amber"
-                  hint="Verified visits / views"
                 />
               </section>
 
@@ -616,6 +651,53 @@ export function MerchantViewStatisticsPage() {
                 )}
               </section>
 
+              {/* Core campaign attribution table */}
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                UFind Core · Campaign Attribution
+              </p>
+              <section className="mb-6 overflow-hidden rounded-3xl border border-cyan-200/70 bg-cyan-50/30 dark:border-cyan-900/50 dark:bg-cyan-950/10 shadow-xl">
+                <div className="border-b border-cyan-100 dark:border-cyan-900/40 p-6">
+                  <h2 className="text-base font-black text-slate-950 dark:text-white">
+                    Campaign Verified Visit Attribution
+                  </h2>
+                  <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Core campaign metrics use valid MerchantAcquisitionEvent records. Billing is preview-only.
+                  </p>
+                </div>
+                {campaigns?.items && campaigns.items.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-white/70 dark:bg-slate-900/50 font-black uppercase text-slate-400 dark:text-slate-500">
+                        <tr>
+                          <th className="px-6 py-3">Campaign</th>
+                          <th className="px-6 py-3 text-right">Verified Visits</th>
+                          <th className="px-6 py-3 text-right">Unique Visitors</th>
+                          <th className="px-6 py-3 text-right">Repeat Visits</th>
+                          <th className="px-6 py-3 text-right">PPVV Preview</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-cyan-100 dark:divide-cyan-900/30">
+                        {campaigns.items.map((camp) => (
+                          <tr key={`core-${camp.campaignId}`}>
+                            <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{camp.name}</td>
+                            <td className="px-6 py-4 text-right font-black text-cyan-700 dark:text-cyan-300">{formatNumber(camp.verifiedVisits)}</td>
+                            <td className="px-6 py-4 text-right font-bold text-slate-700 dark:text-slate-300">{formatNumber(camp.uniqueVisitors)}</td>
+                            <td className="px-6 py-4 text-right font-bold text-slate-700 dark:text-slate-300">{formatNumber(camp.repeatVisits)}</td>
+                            <td className="px-6 py-4 text-right font-black text-amber-700 dark:text-amber-300">{formatCurrency(camp.billingPreview?.estimatedAmount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs font-medium text-slate-400">No campaign attribution data yet.</div>
+                )}
+              </section>
+
+              {/* Legacy Order campaign metrics remain available below for compatibility. */}
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                Legacy Commerce · Order Campaign Metrics
+              </p>
               {/* Campaign Performance Table */}
               <section className="overflow-hidden rounded-3xl border border-white/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 shadow-xl backdrop-blur-xl">
                 <div className="border-b border-slate-100 dark:border-slate-800 p-6 flex items-center justify-between gap-4">

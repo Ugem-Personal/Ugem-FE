@@ -11,7 +11,6 @@ import {
   Info,
   Lock,
   Sparkles,
-  Zap,
   CheckCircle2,
   Building2,
   Clock,
@@ -108,7 +107,7 @@ export default function MerchantProfilePage() {
                   Xin chào, {profile.displayName}! 👋
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-                  Chào mừng bạn đến với Cổng Quản lý Chủ quán UFind. Hãy cập nhật đầy đủ thông tin cửa hàng để sẵn sàng đón nhận hàng ngàn đơn hàng mỗi ngày.
+                  Chào mừng bạn đến với Cổng Quản lý Chủ quán UFind. Hãy cập nhật đầy đủ thông tin cửa hàng để sẵn sàng đón nhận thêm nhiều lượt ghé xác minh.
                 </p>
               </div>
 
@@ -118,12 +117,6 @@ export default function MerchantProfilePage() {
                   className="inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 text-xs font-black text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-blue-500 transition active:scale-95"
                 >
                   <Store className="h-4 w-4" /> Quản lý Nhà hàng
-                </Link>
-                <Link
-                  to="/merchant/create-order"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 text-xs font-black text-white backdrop-blur-md hover:bg-white/20 transition active:scale-95"
-                >
-                  <Zap className="h-4 w-4 text-amber-400" /> Tạo đơn nhanh
                 </Link>
               </div>
             </div>

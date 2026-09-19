@@ -31,6 +31,17 @@ export type MerchantMenuItem = {
   }[];
 };
 
+export type SponsoredCampaign = {
+  id: string;
+  name: string;
+  description?: string | null;
+  code?: string | null;
+  discountType?: string | null;
+  discountValue?: number | null;
+  startAt?: string;
+  endAt?: string;
+};
+
 export type Merchant = {
   id: string;
   name?: string;
@@ -68,7 +79,16 @@ export type Merchant = {
   featuredFoods?: string[];
   preferenceScore?: number;
   recommendationScore?: number;
+  discoveryType?: "Organic" | "Sponsored";
+  isSponsored?: boolean;
+  sponsoredCampaign?: SponsoredCampaign;
   menu?: MerchantMenuItem[];
+};
+
+export type SponsoredMerchant = Merchant & {
+  discoveryType: "Sponsored";
+  isSponsored: true;
+  sponsoredCampaign: SponsoredCampaign;
 };
 
 export type MerchantDetail = Merchant & {
@@ -83,6 +103,10 @@ export type CustomerProfile = {
   fullName?: string;
   avatarUrl?: string | null;
   customerCode?: string;
+  reviewerPoints?: number | null;
+  reviewerRank?: string | null;
+  gemPoints?: number | null;
+  contributionRank?: string | null;
 };
 
 export type CustomerOrderSummary = {

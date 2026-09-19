@@ -3,14 +3,12 @@ import { SidebarToggle } from "@/shared/components/SidebarToggle";
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
-  ClipboardPlus,
   Home,
   Megaphone,
   Store,
   Timer,
   Sparkles,
   Zap,
-  ShoppingBag,
   UtensilsCrossed,
   LifeBuoy,
   QrCode,
@@ -47,25 +45,12 @@ const merchantMenuItems: MerchantNavItem[] = [
     path: "/merchant/foods",
   },
   {
-    label: "Quản lý đơn hàng",
-    icon: ShoppingBag,
-    path: "/merchant/orders",
-  },
-  {
     label: "Check-in khách hàng",
     icon: QrCode,
     path: "/merchant/check-in",
     badge: "HOT",
     badgeColor:
       "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
-  },
-  {
-    label: "Tạo đơn tại quán",
-    icon: ClipboardPlus,
-    path: "/merchant/create-order",
-    badge: "POS",
-    badgeColor:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   },
   {
     label: "Trạng thái xét duyệt",
@@ -113,13 +98,21 @@ const customerMerchantMenuItems: MerchantNavItem[] = [
   },
 ];
 
+// Legacy commerce routes remain available for backward compatibility but are
+// intentionally removed from the primary UFind merchant journey.
+const coreMerchantMenuItems = merchantMenuItems.map((item) =>
+  item.path === "/merchant/view-statistics"
+    ? { ...item, label: "Merchant Analytics", badge: undefined }
+    : item,
+);
+
 export function MerchantSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const user = getCurrentUser();
   const visibleMenuItems =
     user?.Role === "Customer" || user?.Role === "Reviewer"
       ? customerMerchantMenuItems
-      : merchantMenuItems;
+      : coreMerchantMenuItems;
 
   return (
     <aside className={cn("sticky top-0 z-20 hidden h-dvh shrink-0 flex-col justify-between border-r border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 px-3.5 py-5 text-slate-900 dark:text-white backdrop-blur-2xl transition-all duration-300 lg:flex shadow-xl shadow-slate-950/5", collapsed ? "w-[80px]" : "w-[270px]")}>

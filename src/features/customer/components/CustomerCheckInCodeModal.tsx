@@ -24,8 +24,11 @@ type CustomerCodeData = {
   qrDataUrl: string;
   fullName: string;
   phoneNumber?: string;
-  reviewerPoints: number;
-  reviewerRank: string;
+  gemPoints?: number;
+  contributionRank?: string;
+  /** @deprecated Legacy aliases retained for older API deployments. */
+  reviewerPoints?: number;
+  reviewerRank?: string;
   activeBenefits: string[];
 };
 
@@ -86,13 +89,9 @@ export default function CustomerCheckInCodeModal({ open, onClose, order }: Props
           qrDataUrl: fallbackQr,
           fullName: fallbackName,
           phoneNumber: "0987654321",
-          reviewerPoints: 150,
-          reviewerRank: "Bạc",
           activeBenefits: [
-            "Giảm 5% cho hóa đơn tiếp theo tại quán",
-            "Tặng 1 ly Coca / Nước ngọt miễn phí khi check-in",
-            "Tự động cộng +10 điểm thưởng vào ví UGem",
-            "Đánh giá quán khi checkout: nhận thêm +20 điểm thưởng!",
+            "Check-in tại quán để ghi nhận Verified Visit",
+            "Viết đánh giá sau khi ghé quán",
           ],
         };
 
@@ -263,7 +262,7 @@ export default function CustomerCheckInCodeModal({ open, onClose, order }: Props
                       Điểm tích lũy
                     </div>
                     <div className="font-mono text-sm font-black">
-                      {data.reviewerPoints} pts
+                      {data.gemPoints ?? 0} Gem Points
                     </div>
                   </div>
                 </div>
@@ -275,7 +274,7 @@ export default function CustomerCheckInCodeModal({ open, onClose, order }: Props
                       Hạng thẻ
                     </div>
                     <div className="text-sm font-black truncate">
-                      {data.reviewerRank || "Đồng"}
+                      {data.contributionRank ?? "—"}
                     </div>
                   </div>
                 </div>
@@ -285,24 +284,24 @@ export default function CustomerCheckInCodeModal({ open, onClose, order }: Props
               <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 p-3 text-xs text-slate-700 dark:text-slate-300 space-y-2">
                 <div className="font-bold flex items-center gap-1.5 text-cyan-700 dark:text-cyan-400">
                   <Gift className="h-4 w-4" />
-                  Quyền lợi khi Check-in tại quán:
+                  Đóng góp UFind:
                 </div>
                 <ul className="space-y-1.5 text-slate-600 dark:text-slate-400 pl-1 text-[11px]">
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold">✓</span>
-                    <span><strong>Giảm 5%</strong> cho hóa đơn tiếp theo tại quán.</span>
+                    <span>Ghi nhận <strong>Verified Visit</strong> sau khi check-in hợp lệ.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold">✓</span>
-                    <span>Tặng thêm <strong>1 ly Coca / Nước ngọt</strong> miễn phí.</span>
+                    <span>Viết <strong>Verified Review</strong> sau lượt ghé quán.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold">✓</span>
-                    <span>Tự động cộng <strong>+10 điểm thưởng</strong> vào ví UGem.</span>
+                    <span>BE cập nhật <strong>Gem Points</strong> và Contribution Rank.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-500 font-bold">★</span>
-                    <span>Đánh giá quán khi checkout: nhận thêm <strong>+20 điểm thưởng</strong>!</span>
+                    <span>Review có hình ảnh là đóng góp thêm cho cộng đồng.</span>
                   </li>
                 </ul>
               </div>

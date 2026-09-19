@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ClipboardPlus, Home, Megaphone, Menu, Store, Timer, X, Sparkles, ShieldAlert } from "lucide-react";
+import { BarChart3, Home, Megaphone, Menu, Store, Timer, X, Sparkles, ShieldAlert } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { getCurrentUser } from "@/features/auth";
@@ -9,7 +9,6 @@ import { UserAccountMenu } from "@/shared/components";
 const merchantItems = [
   ["Hồ sơ quán", "/merchant", Home],
   ["Nhà hàng của bạn", "/merchant/restaurant", Store],
-  ["Tạo đơn tại quán", "/merchant/create-order", ClipboardPlus],
   ["Trạng thái xét duyệt", "/merchant/application/status", Timer],
   ["Chiến dịch ưu đãi", "/merchant/campaigns", Megaphone],
   ["Thống kê lượt xem", "/merchant/view-statistics", BarChart3],

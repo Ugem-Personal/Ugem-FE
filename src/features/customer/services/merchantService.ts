@@ -1,6 +1,10 @@
 import { api } from "@/lib/axios";
 import { getCurrentUser } from "@/features/auth";
-import type { Merchant, MerchantDetail } from "../types";
+import type {
+  Merchant,
+  MerchantDetail,
+  SponsoredMerchant,
+} from "../types";
 import { getRawUnderratedScore } from "../utils/underratedScore";
 
 type ApiResponse<T> = {
@@ -16,10 +20,12 @@ type PageResult<T> = {
   pageIndex: number;
 };
 
-type MerchantListResponse = Merchant[] | PageResult<Merchant>;
-type MerchantListApiPayload =
-  | MerchantListResponse
-  | ApiResponse<MerchantListResponse>;
+type MerchantListResponse<T extends Merchant = Merchant> =
+  | T[]
+  | PageResult<T>;
+type MerchantListApiPayload<T extends Merchant = Merchant> =
+  | MerchantListResponse<T>
+  | ApiResponse<MerchantListResponse<T>>;
 function unwrapApiData<T>(payload: T | ApiResponse<T>): T {
   if (
     payload &&
@@ -33,7 +39,9 @@ function unwrapApiData<T>(payload: T | ApiResponse<T>): T {
   return payload as T;
 }
 
-function unwrapMerchantList(payload: MerchantListApiPayload) {
+function unwrapMerchantList<T extends Merchant>(
+  payload: MerchantListApiPayload<T>,
+) {
   const data = unwrapApiData(payload);
 
   if (Array.isArray(data)) {
@@ -193,6 +201,49 @@ export async function getNearbyMerchants(params: {
         !isMerchantClosedOrHoliday(merchant) &&
         merchantMatchesKeyword(merchant, params.keyword ?? ""),
     );
+}
+
+export type SponsoredMerchantQuery = {
+  latitude?: number;
+  longitude?: number;
+  keyword?: string;
+  categoryId?: string;
+  priceRange?: string;
+  restaurantType?: string;
+  mainDishType?: string;
+  radiusKm?: number;
+  pageIndex?: number;
+  pageSize?: number;
+};
+
+export async function getSponsoredMerchants(
+  params: SponsoredMerchantQuery = {},
+): Promise<SponsoredMerchant[]> {
+  const res = await api.request<
+    MerchantListApiPayload<SponsoredMerchant>
+  >({
+    method: "get",
+    url: "/merchants/sponsored",
+    params: {
+      search: params.keyword,
+      categoryId: params.categoryId,
+      priceRange: params.priceRange,
+      restaurantType: params.restaurantType,
+      mainDishType: params.mainDishType,
+      pageIndex: params.pageIndex ?? 1,
+      pageSize: params.pageSize ?? 10,
+      latitude: params.latitude,
+      longitude: params.longitude,
+      radiusKm: params.radiusKm,
+    },
+  });
+
+  return unwrapMerchantList(res.data).filter(
+    (merchant): merchant is SponsoredMerchant =>
+      merchant.isSponsored === true &&
+      merchant.discoveryType === "Sponsored" &&
+      Boolean(merchant.sponsoredCampaign?.id),
+  );
 }
 
 export async function searchMerchants(params?: {
