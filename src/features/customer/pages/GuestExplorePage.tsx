@@ -387,6 +387,9 @@ export default function GuestExplorePage() {
   const [discoveryOptionsError, setDiscoveryOptionsError] = useState("");
   const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
   const [hiddenGemsOnly, setHiddenGemsOnly] = useState(false);
+  const [activePrimaryNav, setActivePrimaryNav] = useState<
+    "explore" | "nearby" | "hidden-gems"
+  >("explore");
   const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
@@ -419,6 +422,28 @@ export default function GuestExplorePage() {
   const autoLocationRequestedRef = useRef(false);
   const locationSelectionVersionRef = useRef(0);
   const detailRequestVersionRef = useRef(0);
+
+  useEffect(() => {
+    const syncNavigationFromHash = () => {
+      if (window.location.hash === "#hidden-gems") {
+        setActivePrimaryNav("hidden-gems");
+        setHiddenGemsOnly(true);
+        setSelectedCuisineTab("all");
+        setSelectedMainDishType("");
+      } else if (window.location.hash === "#nearby") {
+        setActivePrimaryNav("nearby");
+      } else if (window.location.hash === "#explore") {
+        setActivePrimaryNav("explore");
+        setHiddenGemsOnly(false);
+        setSelectedCuisineTab("all");
+        setSelectedMainDishType("");
+      }
+    };
+
+    syncNavigationFromHash();
+    window.addEventListener("hashchange", syncNavigationFromHash);
+    return () => window.removeEventListener("hashchange", syncNavigationFromHash);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -924,12 +949,47 @@ export default function GuestExplorePage() {
       <header className="guest-nav">
         <div className="guest-shell guest-nav-inner">
           <Link to="/explore" className="guest-brand" aria-label="UFind — Khám phá quán ăn"><img src={ufindLogo} alt="UFind" /></Link>
-          <nav className="guest-primary-nav" aria-label="Điều hướng chính"><a href="#discover">Khám phá</a><a href="#nearby">Gần bạn</a><a href="#hidden-gems">Hidden Gems</a></nav>
+          <nav className="guest-primary-nav" aria-label="Điều hướng chính">
+            <a
+              href="#explore"
+              className={activePrimaryNav === "explore" ? "is-active" : undefined}
+              aria-current={activePrimaryNav === "explore" ? "location" : undefined}
+              onClick={() => {
+                setActivePrimaryNav("explore");
+                setHiddenGemsOnly(false);
+                setSelectedCuisineTab("all");
+                setSelectedMainDishType("");
+              }}
+            >
+              Khám phá
+            </a>
+            <a
+              href="#nearby"
+              className={activePrimaryNav === "nearby" ? "is-active" : undefined}
+              aria-current={activePrimaryNav === "nearby" ? "location" : undefined}
+              onClick={() => setActivePrimaryNav("nearby")}
+            >
+              Gần bạn
+            </a>
+            <a
+              href="#hidden-gems"
+              className={activePrimaryNav === "hidden-gems" ? "is-active" : undefined}
+              aria-current={activePrimaryNav === "hidden-gems" ? "location" : undefined}
+              onClick={() => {
+                setActivePrimaryNav("hidden-gems");
+                setHiddenGemsOnly(true);
+                setSelectedCuisineTab("all");
+                setSelectedMainDishType("");
+              }}
+            >
+              Hidden Gems
+            </a>
+          </nav>
           <div className="guest-account-nav"><Link to="/login" className="guest-login">Đăng nhập</Link><Link to="/register" className="guest-register">Đăng ký</Link></div>
         </div>
       </header>
 
-      <section className="guest-hero">
+      <section className="guest-hero" id="explore">
         <div className="guest-shell guest-hero-grid">
           <div className="guest-hero-copy">
             <span className="guest-hero-badge"><Sparkles size={16} /> Khám phá quán ngon theo vị trí của bạn</span>
@@ -984,7 +1044,7 @@ export default function GuestExplorePage() {
       </section>
 
       <div className="guest-shell guest-content">
-        <div className="guest-category-row" id="hidden-gems" role="group" aria-label="Khám phá theo món ăn">
+        <div className="guest-category-row" role="group" aria-label="Khám phá theo món ăn">
           <button
             type="button"
             onClick={() => {
@@ -1056,7 +1116,7 @@ export default function GuestExplorePage() {
           </div>
         ) : null}
 
-        <section className="guest-discovery" id="discover" aria-labelledby="guest-discovery-heading">
+        <section className="guest-discovery" id="hidden-gems" aria-labelledby="guest-discovery-heading">
           <div className="guest-section-heading">
             <div><p className="guest-eyebrow">UFind Discovery</p><h2 id="guest-discovery-heading">Hidden Gems được cộng đồng yêu thích</h2><p>Địa điểm chất lượng, được chọn lọc từ trải nghiệm thực tế.</p></div>
             <div className="guest-section-actions"><span aria-live="polite">{loading ? "Đang tìm địa điểm..." : displayedMerchants.length + " địa điểm"}</span><a href="#nearby">Xem tất cả <ArrowRight size={15} /></a></div>
