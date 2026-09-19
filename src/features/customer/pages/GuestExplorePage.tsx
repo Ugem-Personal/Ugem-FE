@@ -72,8 +72,8 @@ const EMPTY_DISCOVERY_OPTIONS: DiscoveryOptions = {
   foodCategories: [],
 };
 
-const MASCOT_LOOP_CROSSFADE_SECONDS = 0.45;
-const MASCOT_LOOP_CROSSFADE_MS = MASCOT_LOOP_CROSSFADE_SECONDS * 1000;
+const MASCOT_LOOP_CROSSFADE_SECONDS = 0.8;
+const MASCOT_LOOP_CROSSFADE_MS = 480;
 
 function GuestMascotVideo() {
   const videosRef = useRef<Array<HTMLVideoElement | null>>([null, null]);
@@ -93,7 +93,7 @@ function GuestMascotVideo() {
     [],
   );
 
-  function blendIntoNextGreeting(index: number) {
+  function blendIntoNextGreeting(index: number, force = false) {
     if (index !== activeIndexRef.current || transitioningRef.current) return;
 
     const currentVideo = videosRef.current[index];
@@ -104,7 +104,7 @@ function GuestMascotVideo() {
     }
 
     const remaining = currentVideo.duration - currentVideo.currentTime;
-    if (remaining <= 0 || remaining > MASCOT_LOOP_CROSSFADE_SECONDS) return;
+    if (!force && remaining > MASCOT_LOOP_CROSSFADE_SECONDS) return;
 
     transitioningRef.current = true;
     setIncomingIndex(nextIndex);
@@ -162,6 +162,7 @@ function GuestMascotVideo() {
             preload="auto"
             aria-hidden="true"
             onTimeUpdate={() => blendIntoNextGreeting(index)}
+            onEnded={() => blendIntoNextGreeting(index, true)}
           >
             <source src="/videos/ugem-greeting.mp4" type="video/mp4" />
           </video>
