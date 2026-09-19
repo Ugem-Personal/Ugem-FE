@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ArrowRight,
@@ -71,6 +71,105 @@ const EMPTY_DISCOVERY_OPTIONS: DiscoveryOptions = {
   mainDishTypes: [],
   foodCategories: [],
 };
+
+const MASCOT_LOOP_CROSSFADE_SECONDS = 0.45;
+const MASCOT_LOOP_CROSSFADE_MS = MASCOT_LOOP_CROSSFADE_SECONDS * 1000;
+
+function GuestMascotVideo() {
+  const videosRef = useRef<Array<HTMLVideoElement | null>>([null, null]);
+  const activeIndexRef = useRef(0);
+  const transitioningRef = useRef(false);
+  const transitionTimerRef = useRef<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
+  const [crossfading, setCrossfading] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (transitionTimerRef.current !== null) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  function blendIntoNextGreeting(index: number) {
+    if (index !== activeIndexRef.current || transitioningRef.current) return;
+
+    const currentVideo = videosRef.current[index];
+    const nextIndex = 1 - index;
+    const nextVideo = videosRef.current[nextIndex];
+    if (!currentVideo || !nextVideo || !Number.isFinite(currentVideo.duration)) {
+      return;
+    }
+
+    const remaining = currentVideo.duration - currentVideo.currentTime;
+    if (remaining <= 0 || remaining > MASCOT_LOOP_CROSSFADE_SECONDS) return;
+
+    transitioningRef.current = true;
+    setIncomingIndex(nextIndex);
+    nextVideo.currentTime = 0;
+
+    void nextVideo
+      .play()
+      .then(() => {
+        window.requestAnimationFrame(() => setCrossfading(true));
+        transitionTimerRef.current = window.setTimeout(() => {
+          currentVideo.pause();
+          currentVideo.currentTime = 0;
+          activeIndexRef.current = nextIndex;
+          setActiveIndex(nextIndex);
+          setIncomingIndex(null);
+          setCrossfading(false);
+          transitioningRef.current = false;
+        }, MASCOT_LOOP_CROSSFADE_MS);
+      })
+      .catch(() => {
+        setIncomingIndex(null);
+        setCrossfading(false);
+        transitioningRef.current = false;
+        currentVideo.loop = true;
+      });
+  }
+
+  return (
+    <div
+      className="guest-mascot-video-wrap"
+      role="img"
+      aria-label="Gem, chú sóc trợ lý khám phá UGem"
+    >
+      {[0, 1].map((index) => {
+        const classes = ["guest-mascot-video"];
+        if (index === activeIndex) {
+          classes.push("is-current");
+          if (crossfading) classes.push("is-fading-out");
+        }
+        if (index === incomingIndex) {
+          classes.push("is-incoming");
+          if (crossfading) classes.push("is-fading-in");
+        }
+
+        return (
+          <video
+            key={index}
+            ref={(element) => {
+              videosRef.current[index] = element;
+            }}
+            className={classes.join(" ")}
+            autoPlay={index === 0}
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            onTimeUpdate={() => blendIntoNextGreeting(index)}
+          >
+            <source src="/videos/ugem-greeting.mp4" type="video/mp4" />
+          </video>
+        );
+      })}
+    </div>
+  );
+}
 
 function getCuisineLabel(value: string) {
   if (/cơm/i.test(value)) return "Cơm";
@@ -430,25 +529,6 @@ export default function GuestExplorePage() {
     setRequestVersion((value) => value + 1);
   }
 
-  function handleAiDiscover() {
-    setKeyword("");
-    setActiveKeyword("");
-    setHiddenGemsOnly(true);
-    setSelectedCuisineTab("all");
-    setSelectedMainDishType("");
-    setSortBy("distance");
-    setPriceRange("");
-    setRestaurantFilter("");
-    setRequestVersion((value) => value + 1);
-
-    document.getElementById("discover")?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-      block: "start",
-    });
-  }
-
   function chooseCuisineTab(mainDishType: string) {
     if (mainDishType === selectedMainDishType && !hiddenGemsOnly) return;
     setHiddenGemsOnly(false);
@@ -719,40 +799,8 @@ export default function GuestExplorePage() {
             ) : null}
           </div>
 
-          <div className="guest-hero-mascot" aria-label="Gem, trợ lý khám phá UGem">
-            <div className="guest-mascot-video-wrap">
-              <video
-                className="guest-mascot-video"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-label="Gem - trợ lý khám phá UGem"
-              >
-                <source src="/videos/ugem-greeting.mp4" type="video/mp4" />
-              </video>
-            </div>
-
-            <div className="guest-mascot-message">
-              <span className="guest-mascot-status">
-                <Sparkles size={13} />
-                UGem AI
-              </span>
-
-              <strong>Chào bạn! Mình là Gem 👋</strong>
-
-              <p>Để mình giúp bạn tìm một Hidden Gem hợp gu nhé.</p>
-
-              <button
-                type="button"
-                className="guest-ai-discover"
-                onClick={handleAiDiscover}
-              >
-                <Sparkles size={16} />
-                Khám phá bằng AI
-              </button>
-            </div>
+          <div className="guest-hero-mascot">
+            <GuestMascotVideo />
           </div>
         </div>
       </section>

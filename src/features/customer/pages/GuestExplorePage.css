@@ -450,80 +450,46 @@
 .guest-mascot-video-wrap {
   position: relative;
   width: min(100%, 390px);
-  height: 290px;
-  overflow: hidden;
-  border-radius: 32px;
-  background: #f4f7ef;
-  box-shadow: 0 18px 45px rgba(31, 49, 37, 0.14);
+  height: 310px;
+  overflow: visible;
+  background: transparent;
 }
 
 .guest-mascot-video {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 450ms ease;
+  -webkit-mask-image: radial-gradient(
+    ellipse 41% 66% at 52% 57%,
+    #000 76%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 41% 66% at 52% 57%,
+    #000 76%,
+    transparent 100%
+  );
 }
 
-.guest-mascot-message {
-  position: absolute;
-  z-index: 2;
-  right: -10px;
-  bottom: 4px;
-  width: 225px;
-  padding: 14px 15px;
-  border: 1px solid rgba(7, 91, 67, 0.12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 16px 40px rgba(31, 49, 37, 0.14);
-  backdrop-filter: blur(14px);
+.guest-mascot-video.is-current {
+  opacity: 1;
 }
 
-.guest-mascot-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 7px;
-  color: var(--guest-green);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.guest-mascot-video.is-current.is-fading-out {
+  opacity: 0;
 }
 
-.guest-mascot-message strong {
-  display: block;
-  color: var(--guest-ink);
-  font-size: 14px;
+.guest-mascot-video.is-incoming {
+  opacity: 0;
 }
 
-.guest-mascot-message p {
-  margin: 5px 0 10px;
-  color: var(--guest-muted);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.guest-ai-discover {
-  display: flex;
-  width: 100%;
-  min-height: 35px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--guest-green);
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.guest-ai-discover:hover {
-  background: var(--guest-green-dark);
-  box-shadow: 0 7px 18px rgba(7, 91, 67, 0.2);
-  transform: translateY(-1px);
+.guest-mascot-video.is-incoming.is-fading-in {
+  opacity: 1;
 }
 
 .guest-content {
@@ -1495,19 +1461,6 @@
   background: #1b2921;
 }
 
-.dark .guest-mascot-message {
-  border-color: rgba(115, 214, 167, 0.2);
-  background: rgba(27, 41, 33, 0.94);
-}
-
-.dark .guest-mascot-status {
-  color: #73d6a7;
-}
-
-.dark .guest-mascot-message p {
-  color: #bdc7c0;
-}
-
 @media (max-width: 700px) {
   .guest-hero-mascot {
     width: min(100%, 420px);
@@ -1517,13 +1470,7 @@
 
   .guest-mascot-video-wrap {
     width: 100%;
-    height: 260px;
-  }
-
-  .guest-mascot-message {
-    right: 10px;
-    bottom: 0;
-    width: 205px;
+    height: 300px;
   }
 }
 
