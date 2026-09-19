@@ -388,10 +388,16 @@ export default function GuestExplorePage() {
   );
   const [discoveryOptionsError, setDiscoveryOptionsError] = useState("");
   const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
-  const [hiddenGemsOnly, setHiddenGemsOnly] = useState(false);
+  const [hiddenGemsOnly, setHiddenGemsOnly] = useState(
+    () => window.location.hash !== "#explore",
+  );
   const [activePrimaryNav, setActivePrimaryNav] = useState<
     "explore" | "nearby" | "hidden-gems"
-  >("explore");
+  >(() => {
+    if (window.location.hash === "#explore") return "explore";
+    if (window.location.hash === "#nearby") return "nearby";
+    return "hidden-gems";
+  });
   const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
@@ -684,6 +690,9 @@ export default function GuestExplorePage() {
       setLocationError("Hãy bật GPS hoặc chọn khu vực trước khi tìm quán.");
       return;
     }
+    setHiddenGemsOnly(true);
+    setActivePrimaryNav("hidden-gems");
+    window.history.replaceState(window.history.state, "", "#hidden-gems");
     setActiveKeyword(keyword.trim());
     setRequestVersion((value) => value + 1);
   }
