@@ -8,7 +8,7 @@
   --guest-mint: #e8f3e7;
   --guest-gold: #eba51a;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: clip;
   background: var(--guest-paper);
   color: var(--guest-ink);
   font-family: "Space Grotesk", sans-serif;
@@ -52,8 +52,9 @@
 }
 
 .guest-nav {
-  position: relative;
-  z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 30;
   height: 64px;
   border-bottom: 1px solid rgba(23, 33, 31, 0.08);
   background: rgba(251, 251, 248, 0.94);
@@ -315,11 +316,10 @@
 }
 
 .guest-location-editor {
-  position: absolute;
+  position: relative;
   z-index: 8;
-  top: calc(100% + 7px);
-  left: 0;
   width: min(100%, 580px);
+  margin-top: 7px;
   padding: 13px;
   border: 1px solid var(--guest-line);
   border-radius: 14px;
