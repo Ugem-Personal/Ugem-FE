@@ -807,11 +807,12 @@
 }
 
 .guest-merchant-info > strong {
-  overflow: hidden;
+  min-width: 0;
   color: #1f2824;
   font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .guest-merchant-info > span:not(.guest-rating) {

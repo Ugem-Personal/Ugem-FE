@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ArrowRight,
+  BadgeCheck,
   ChevronDown,
   LoaderCircle,
   Map,
@@ -36,6 +37,7 @@ import type {
   SponsoredMerchant,
 } from "../types";
 import { getDisplayUnderratedScore } from "../utils/underratedScore";
+import { getReviewsByMerchantId, type Review } from "@/features/review/services";
 import "./GuestExplorePage.css";
 import {
   type GeocodeResult,
@@ -390,10 +392,14 @@ export default function GuestExplorePage() {
   const [error, setError] = useState("");
   const [detail, setDetail] = useState<MerchantDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailReviews, setDetailReviews] = useState<Review[]>([]);
+  const [detailReviewsLoading, setDetailReviewsLoading] = useState(false);
+  const [detailReviewsError, setDetailReviewsError] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const autoLocationRequestedRef = useRef(false);
   const locationSelectionVersionRef = useRef(0);
+  const detailRequestVersionRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -528,7 +534,7 @@ export default function GuestExplorePage() {
 
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDetail(null);
+      if (event.key === "Escape") closeMerchantDetail();
     };
 
     document.body.style.overflow = "hidden";
@@ -770,11 +776,31 @@ export default function GuestExplorePage() {
     );
   }
 
+  function closeMerchantDetail() {
+    detailRequestVersionRef.current += 1;
+    setDetail(null);
+    setDetailLoading(false);
+    setDetailReviews([]);
+    setDetailReviewsLoading(false);
+    setDetailReviewsError(false);
+  }
+
   async function openMerchant(merchant: Merchant) {
+    const requestVersion = ++detailRequestVersionRef.current;
     setDetailLoading(true);
+    setDetailReviewsLoading(true);
+    setDetailReviews([]);
+    setDetailReviewsError(false);
     setDetail({ ...merchant, foods: merchant.menu ?? [] });
-    try {
-      const detailResult = await getMerchantDetail(merchant.id);
+    const [merchantResult, reviewsResult] = await Promise.allSettled([
+      getMerchantDetail(merchant.id),
+      getReviewsByMerchantId(merchant.id),
+    ]);
+
+    if (requestVersion !== detailRequestVersionRef.current) return;
+
+    if (merchantResult.status === "fulfilled") {
+      const detailResult = merchantResult.value;
       setDetail(
         merchant.isSponsored && merchant.sponsoredCampaign
           ? {
@@ -785,11 +811,12 @@ export default function GuestExplorePage() {
             }
           : detailResult,
       );
-    } catch {
-      // Keep public summary visible
-    } finally {
-      setDetailLoading(false);
     }
+
+    setDetailReviews(reviewsResult.status === "fulfilled" ? reviewsResult.value : []);
+    setDetailReviewsError(reviewsResult.status === "rejected");
+    setDetailLoading(false);
+    setDetailReviewsLoading(false);
   }
 
   function renderSponsoredSection() {
@@ -1089,126 +1116,224 @@ export default function GuestExplorePage() {
       {/* Detail Modal */}
       {detail ? (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 dark:bg-slate-950/80 p-4 backdrop-blur-xl transition-opacity"
+          className="fixed inset-0 z-50 grid place-items-center bg-[#17231E]/55 p-3 backdrop-blur-[3px]"
           role="presentation"
-          onMouseDown={() => setDetail(null)}
+          onMouseDown={closeMerchantDetail}
         >
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="guest-merchant-title"
             onMouseDown={(event) => event.stopPropagation()}
-            className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200/80 dark:border-white/10 sm:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300"
+            className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[28px] border border-black/[0.06] bg-[#FCFCF9] p-5 text-[#17231E] shadow-[0_30px_100px_rgba(0,0,0,.22)] sm:p-8"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />{" "}
-                  Thông tin công khai
-                </span>
-                <h2
-                  id="guest-merchant-title"
-                  className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl"
-                >
-                  {detail.name || "Quán trên UFind"}
-                </h2>
-              </div>
-              <button
-                onClick={() => setDetail(null)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-white"
-                aria-label="Đóng"
+            <button
+              type="button"
+              onClick={closeMerchantDetail}
+              className="absolute right-5 top-5 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[#56615B] shadow-sm backdrop-blur transition hover:bg-white hover:text-[#17231E]"
+              aria-label="Đóng"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="space-y-4 pr-12 sm:pr-14">
+              {(() => {
+                const score = getDisplayUnderratedScore(detail);
+                return score !== null && score.percent >= 80 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F6F3D8] px-3 py-1.5 text-[11px] font-extrabold text-[#59621D]">
+                    <Sparkles className="h-3.5 w-3.5 text-[#B28A00]" />
+                    Hidden Gem
+                  </span>
+                ) : null;
+              })()}
+              <h2
+                id="guest-merchant-title"
+                className="break-words text-2xl font-black tracking-tight text-[#17231E] sm:text-3xl"
               >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {detail.address ? (
-              <p className="mt-4 flex gap-2 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                <MapPin className="h-4 w-4 shrink-0 text-cyan-500 dark:text-cyan-400 mt-0.5" />
-                {cleanAddress(detail.address)}
-              </p>
-            ) : null}
-
-            {detail.description ? (
-              <p className="mt-4 whitespace-pre-line text-xs font-medium leading-relaxed text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200/80 dark:border-white/5">
-                {detail.description}
-              </p>
-            ) : null}
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-black text-slate-950 dark:text-white">
-                  Thực đơn công khai
-                </h3>
-                {detailLoading ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin text-cyan-500 dark:text-cyan-400" />
+                {detail.name || "Quán trên UFind"}
+              </h2>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#68736D]">
+                {typeof detail.rating === "number" ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Star className="h-4 w-4 fill-[#D6A900] text-[#D6A900]" />
+                    <strong className="text-[#26322C]">{detail.rating.toFixed(1)}</strong>
+                    {typeof detail.reviewCount === "number" ? (
+                      <span>· {detail.reviewCount} đánh giá</span>
+                    ) : null}
+                  </span>
+                ) : null}
+                {typeof detail.checkInCount === "number" ? (
+                  <span className="font-semibold">✓ {detail.checkInCount} lượt ghé</span>
+                ) : null}
+                {typeof detail.distance === "number" ? (
+                  <span className="font-semibold">{formatDistance(detail.distance)} từ bạn</span>
                 ) : null}
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {(detail.foods ?? detail.menu ?? []).slice(0, 6).map((food) => {
-                  const isCombo = food.isCombo;
-                  const origPrice = Number(food.originalPrice || 0);
-                  const price = Number(food.price || 0);
-                  const discountPct =
-                    isCombo && origPrice > price
-                      ? Math.round(((origPrice - price) / origPrice) * 100)
-                      : 0;
-
-                  return (
-                    <div
-                      key={food.id}
-                      className="rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60 p-4"
-                    >
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {isCombo && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[9px] uppercase tracking-wider">
-                            Combo
-                          </span>
-                        )}
-                        {food.servingSize && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
-                            👥 {food.servingSize}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-bold text-xs text-slate-950 dark:text-white mt-1">
-                        {food.name}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono font-black text-cyan-600 dark:text-cyan-400">
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(food.price)}
-                        </span>
-                        {discountPct > 0 && (
-                          <>
-                            <span className="text-[10px] font-mono text-slate-400 line-through">
-                              {new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              }).format(origPrice)}
-                            </span>
-                            <span className="px-1 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 font-black text-[9px]">
-                              -{discountPct}%
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {detail.address ? (
+                <p className="flex items-start gap-2 break-words text-sm leading-6 text-[#66716B]">
+                  <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#176642]" />
+                  <span>{cleanAddress(detail.address)}</span>
+                </p>
+              ) : null}
+              {detail.description ? (
+                <p className="max-w-2xl whitespace-pre-line text-sm leading-6 text-[#68736D]">
+                  {detail.description}
+                </p>
+              ) : null}
             </div>
 
-            <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-cyan-900 via-slate-900 to-indigo-950 p-6 text-white sm:flex-row sm:items-center sm:justify-between border border-cyan-500/20 shadow-xl">
-              <div>
-                <p className="text-sm font-black">
-                  Đặt món & Trải nghiệm đầy đủ?
-                </p>
-                <p className="mt-0.5 text-xs text-slate-300">
-                  Đăng nhập tài khoản UFind để bắt đầu ngay.
-                </p>
+            <section className="mt-7" aria-labelledby="guest-featured-foods-title">
+              <div className="mb-4 flex items-end justify-between gap-4">
+                <div>
+                  <h3 id="guest-featured-foods-title" className="text-xl font-black tracking-tight text-[#17231E]">
+                    Món nổi bật
+                  </h3>
+                  <p className="mt-1 text-xs text-[#7A847F]">
+                    Tham khảo một số món hiện có tại quán.
+                  </p>
+                </div>
+                {detailLoading ? <LoaderCircle className="mb-1 h-4 w-4 animate-spin text-[#176642]" /> : null}
+              </div>
+              {(detail.foods ?? detail.menu ?? []).length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {(detail.foods ?? detail.menu ?? []).slice(0, 6).map((food) => {
+                    const originalPrice = Number(food.originalPrice || 0);
+                    const price = Number(food.price || 0);
+                    const discountPercent =
+                      food.isCombo && originalPrice > price
+                        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+                        : 0;
+
+                    return (
+                      <article
+                        key={food.id}
+                        className="group overflow-hidden rounded-[16px] border border-black/[0.06] bg-white transition hover:border-emerald-900/15 hover:shadow-sm"
+                      >
+                        {food.imageUrl ? (
+                          <div className="aspect-[16/9] overflow-hidden bg-[#EEF0EA]">
+                            <img
+                              src={food.imageUrl}
+                              alt={food.name}
+                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : null}
+                        <div className="p-4">
+                          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                            {food.isCombo ? (
+                              <span className="rounded-full bg-[#F6F3D8] px-2 py-0.5 text-[10px] font-bold text-[#59621D]">Combo</span>
+                            ) : null}
+                            {food.servingSize ? (
+                              <span className="text-[10px] font-semibold text-[#7A847F]">{food.servingSize}</span>
+                            ) : null}
+                          </div>
+                          <p className="line-clamp-2 text-sm font-extrabold text-[#202B25]">{food.name}</p>
+                          {food.price != null ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <p className="text-sm font-bold text-[#176642]">
+                                {Number(food.price).toLocaleString("vi-VN")}đ
+                              </p>
+                              {discountPercent > 0 ? (
+                                <>
+                                  <span className="text-xs text-[#98A09B] line-through">
+                                    {originalPrice.toLocaleString("vi-VN")}đ
+                                  </span>
+                                  <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">
+                                    -{discountPercent}%
+                                  </span>
+                                </>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : detailLoading ? (
+                <div className="rounded-[16px] border border-dashed border-black/[0.08] px-5 py-8 text-center text-sm text-[#7A847F]">
+                  Đang tải món từ quán…
+                </div>
+              ) : (
+                <div className="rounded-[16px] border border-dashed border-black/[0.08] px-5 py-8 text-center text-sm text-[#7A847F]">
+                  Quán chưa cập nhật món nổi bật.
+                </div>
+              )}
+            </section>
+
+            <section className="mt-8 border-t border-black/[0.06] pt-7" aria-labelledby="guest-community-reviews-title">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 id="guest-community-reviews-title" className="text-xl font-black tracking-tight text-[#17231E]">
+                    Review từ cộng đồng
+                  </h3>
+                  <p className="mt-1 text-xs text-[#7A847F]">
+                    Trải nghiệm được chia sẻ bởi khách đã ghé quán.
+                  </p>
+                </div>
+                <div className="hidden items-center gap-1.5 rounded-full bg-[#EAF3EB] px-3 py-1.5 text-xs font-bold text-[#176642] sm:flex">
+                  <BadgeCheck className="h-4 w-4" />
+                  Verified Visit
+                </div>
+              </div>
+
+              {detailReviewsLoading ? (
+                <div className="mt-4 flex items-center justify-center gap-2 rounded-[16px] bg-[#F7F8F4] px-5 py-6 text-sm font-semibold text-[#58645E]">
+                  <LoaderCircle className="h-4 w-4 animate-spin" /> Đang tải review…
+                </div>
+              ) : detailReviews.length > 0 ? (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {detailReviews.slice(0, 4).map((review) => (
+                    <article key={review.reviewId} className="rounded-[16px] border border-black/[0.06] bg-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          {review.customerAvatarUrl ? (
+                            <img src={review.customerAvatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                          ) : (
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EAF3EB] text-xs font-bold text-[#176642]">
+                              {(review.customerName || "U").trim().charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-[#26322C]">{review.customerName || "Khách hàng UFind"}</p>
+                            {review.createdAt ? (
+                              <p className="text-[11px] text-[#89928D]">{new Date(review.createdAt).toLocaleDateString("vi-VN")}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                        {review.isVerifiedDiner ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EAF3EB] px-2 py-1 text-[10px] font-bold text-[#176642]">
+                            <BadgeCheck className="h-3 w-3" /> Đã ghé
+                          </span>
+                        ) : null}
+                      </div>
+                      {typeof review.rating === "number" ? (
+                        <p className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#26322C]">
+                          <Star className="h-3.5 w-3.5 fill-[#D6A900] text-[#D6A900]" /> {review.rating.toFixed(1)}
+                        </p>
+                      ) : null}
+                      {review.content ? <p className="mt-2 text-sm leading-6 text-[#58645E]">{review.content}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 rounded-[16px] bg-[#F7F8F4] px-5 py-6 text-center">
+                  <p className="text-sm font-semibold text-[#58645E]">
+                    {detailReviewsError
+                      ? "Chưa tải được review. Vui lòng thử lại sau."
+                      : "Chưa có review để hiển thị."}
+                  </p>
+                </div>
+              )}
+            </section>
+
+            <div className="mt-8 flex flex-col gap-3 border-t border-black/[0.06] pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#53615A]">
+                <MapPin className="h-4 w-4 text-[#176642]" />
+                {typeof detail.distance === "number"
+                  ? `${formatDistance(detail.distance)} từ bạn`
+                  : "Khoảng cách chưa có dữ liệu"}
               </div>
               <Link
                 to={`/login?returnUrl=${encodeURIComponent(
@@ -1218,9 +1343,9 @@ export default function GuestExplorePage() {
                       : ""
                   }`,
                 )}`}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 text-xs font-black text-slate-950 transition hover:bg-cyan-400 active:scale-95"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#176642] px-5 text-sm font-bold text-white transition hover:bg-[#105334] active:scale-[0.98]"
               >
-                Đăng nhập <ArrowRight className="h-4 w-4" />
+                Đăng nhập để lưu <Heart className="h-4 w-4" />
               </Link>
             </div>
           </section>
