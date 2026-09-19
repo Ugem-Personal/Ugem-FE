@@ -993,7 +993,7 @@ export default function GuestExplorePage() {
         <div className="guest-shell guest-hero-grid">
           <div className="guest-hero-copy">
             <span className="guest-hero-badge"><Sparkles size={16} /> Khám phá quán ngon theo vị trí của bạn</span>
-            <h1>Quán ngon đôi khi nằm ở <span>những góc phố ít người để ý.</span></h1>
+            <h1>Quán ngon đôi khi nằm ở <span>những góc phố ít người để&nbsp;ý.</span></h1>
             <p>Tìm địa điểm hợp gu qua đánh giá và trải nghiệm thật từ cộng đồng UFind.</p>
             <form onSubmit={handleSearch} className="guest-search">
               <div className="guest-search-input">

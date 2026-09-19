@@ -1430,6 +1430,14 @@
   .guest-hero-grid {
     min-height: 420px;
   }
+
+  .guest-hero-copy h1 {
+    font-size: clamp(39px, 4.2vw, 52px);
+  }
+
+  .guest-mascot-video-wrap {
+    margin-left: -28px;
+  }
 }
 
 @media (max-width: 900px) {
