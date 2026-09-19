@@ -1143,18 +1143,8 @@ export default function GuestExplorePage() {
             hiddenGemsOnly ? (
               <div className="guest-empty guest-empty-gems">
                 <div className="guest-empty-gem-icon"><Sparkles size={24} /></div>
-                <strong>{merchants.length > 0 ? "Chưa tìm thấy Hidden Gem quanh bạn" : "Khu vực này chưa có Hidden Gem"}</strong>
-                <span>UFind đã kiểm tra {merchants.length} quán gần vị trí của bạn.</span>
-                <div className="guest-gem-guide" aria-label="Tiêu chí Hidden Gem">
-                  <div className="guest-gem-guide-item">
-                    <div className="guest-gem-guide-icon guest-gem-guide-quality"><Star size={17} fill="currentColor" /></div>
-                    <div><strong>Chất lượng tốt</strong><span>Rating từ 4.5, có review và lượt ghé xác thực.</span></div>
-                  </div>
-                  <div className="guest-gem-guide-item">
-                    <div className="guest-gem-guide-icon guest-gem-guide-exposure"><Compass size={17} /></div>
-                    <div><strong>Ít được khám phá</strong><span>Ít lượt xem, lượt ghé và lượt lưu hơn các quán tương tự.</span></div>
-                  </div>
-                </div>
+                <strong>Chưa có Hidden Gem gần bạn</strong>
+                <span>Hãy thử đổi khu vực để khám phá thêm những quán được yêu thích.</span>
                 <div className="guest-empty-actions">
                   {merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
                   <button type="button" className="guest-empty-secondary" onClick={() => setEditingLocation(true)}>Đổi khu vực</button>

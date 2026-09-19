@@ -921,11 +921,11 @@
 }
 
 .guest-empty-gems {
-  min-height: 274px;
-  align-items: stretch;
+  min-height: 190px;
+  align-items: center;
   padding: 24px 28px;
   background: linear-gradient(135deg, #fbfdf9 0%, #f0f7ef 100%);
-  text-align: left;
+  text-align: center;
 }
 
 .guest-empty-gem-icon {
@@ -999,6 +999,7 @@
   flex-wrap: wrap;
   gap: 9px;
   margin-top: 3px;
+  justify-content: center;
 }
 
 .guest-empty-secondary {
