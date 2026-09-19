@@ -223,6 +223,58 @@ function getCuisineEmoji(value: string) {
   return "🍽️";
 }
 
+function normalizeCuisineText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLocaleLowerCase("vi-VN");
+}
+
+function getCuisineSearchTerms(category: string) {
+  const label = normalizeCuisineText(getCuisineLabel(category));
+  const aliases: Record<string, string[]> = {
+    com: ["com"],
+    "bun, pho": ["bun", "pho", "mi", "mien", "hu tieu"],
+    "banh mi": ["banh mi", "xoi", "burger", "hamburger", "sandwich"],
+    "an vat": ["an vat", "trang mieng", "che", "banh trang", "kem", "snack"],
+    "do uong": ["do uong", "tra sua", "ca phe", "cafe", "coffee", "sinh to", "nuoc ep"],
+    "lau, nuong": ["lau", "nuong", "bbq", "barbecue"],
+    "mon chay": ["chay", "thuc duong", "vegetarian"],
+    "mon viet": ["mon viet", "dac san", "mam com"],
+    "han, nhat": ["han", "nhat", "thai", "korean", "japanese", "sushi", "ramen"],
+    "mon au": ["mon au", "pizza", "pasta", "steak", "burger"],
+  };
+  const examples = category.match(/\(([^)]*)\)/)?.[1]
+    .split(/[,;|/&]|\bvà\b/i)
+    .map((term) => normalizeCuisineText(term.trim())) ?? [];
+  const base = normalizeCuisineText(category.replace(/\s*\([^)]*\)/g, "").trim());
+
+  return Array.from(new Set([...(aliases[label] ?? [base]), ...examples, base]))
+    .filter((term) => term.length >= 2);
+}
+
+function matchesCuisineCategory(merchant: Merchant, category: string) {
+  const menuText = [
+    merchant.mainDishType,
+    merchant.description,
+    ...(merchant.featuredFoods ?? []),
+    ...(merchant.menu ?? []).flatMap((food) => [
+      food.name,
+      food.description,
+      ...(food.categoryDetail ?? []),
+    ]),
+  ]
+    .filter(Boolean)
+    .map((value) => normalizeCuisineText(value ?? ""))
+    .join(" | ");
+
+  return getCuisineSearchTerms(category).some((term) => {
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|[^a-z0-9])${escapedTerm}(?:$|[^a-z0-9])`).test(menuText);
+  });
+}
+
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
   "from-amber-600 via-orange-600 to-rose-700",
@@ -427,7 +479,6 @@ export default function GuestExplorePage() {
       keyword: activeKeyword || undefined,
       priceRange: priceRange || undefined,
       restaurantType: restaurantFilter || undefined,
-      mainDishType: selectedMainDishType || undefined,
       radiusKm: 15,
     };
 
@@ -470,7 +521,6 @@ export default function GuestExplorePage() {
     priceRange,
     requestVersion,
     restaurantFilter,
-    selectedMainDishType,
   ]);
 
   useEffect(() => {
@@ -500,6 +550,11 @@ export default function GuestExplorePage() {
     }
     if (selectedCuisineTab === "combo") {
       list = list.filter((m) => m.menu?.some((food) => food.isCombo));
+    }
+    if (selectedMainDishType) {
+      list = list.filter((merchant) =>
+        matchesCuisineCategory(merchant, selectedMainDishType),
+      );
     }
 
     return [...list].sort((a, b) => {
@@ -531,7 +586,7 @@ export default function GuestExplorePage() {
       }
       return 0;
     });
-  }, [hiddenGemsOnly, merchants, selectedCuisineTab, sortBy]);
+  }, [hiddenGemsOnly, merchants, selectedCuisineTab, selectedMainDishType, sortBy]);
 
   const hasActiveFilters = Boolean(
     hiddenGemsOnly ||
@@ -949,7 +1004,7 @@ export default function GuestExplorePage() {
           ) : error ? (
             <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
           ) : displayedMerchants.length === 0 ? (
-            <div className="guest-empty"><Compass size={25} /><strong>{hiddenGemsOnly ? "Chưa tìm thấy Hidden Gem phù hợp" : "Chưa tìm thấy quán phù hợp"}</strong><span>Thử đổi nhóm món, từ khóa hoặc khu vực khám phá.</span></div>
+            <div className="guest-empty"><Compass size={25} /><strong>{hiddenGemsOnly ? "Chưa tìm thấy Hidden Gem phù hợp" : selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong><span>{selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span></div>
           ) : (
             <div className="guest-merchant-grid">
               {displayedMerchants.slice(0, 5).map((merchant, index) => (
