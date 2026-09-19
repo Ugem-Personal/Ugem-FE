@@ -1057,18 +1057,6 @@ export default function GuestExplorePage() {
           >
             Tất cả quán
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setHiddenGemsOnly(true);
-              setSelectedCuisineTab("all");
-              setSelectedMainDishType("");
-            }}
-            aria-pressed={hiddenGemsOnly}
-            className={hiddenGemsOnly ? "guest-category is-active" : "guest-category"}
-          >
-            💎 Hidden Gems
-          </button>
           {mainDishFilterOptions.slice(0, 6).map((mainDishType) => {
             const isSelected = !hiddenGemsOnly && selectedCuisineTab === mainDishType;
             return <button key={mainDishType} type="button" onClick={() => chooseCuisineTab(mainDishType)} aria-pressed={isSelected} className={isSelected ? "guest-category is-active" : "guest-category"}>{getCuisineEmoji(mainDishType)} {getCuisineLabel(mainDishType)}</button>;
