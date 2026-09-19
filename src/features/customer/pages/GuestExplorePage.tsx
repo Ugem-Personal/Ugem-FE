@@ -22,7 +22,6 @@ import { Link } from "react-router-dom";
 import { ModeToggle } from "@/shared/components";
 import ufindLogo from "@/assets/ufind-logo.png";
 import {
-  DEFAULT_DISCOVERY_OPTIONS,
   getDiscoveryOptions,
 } from "@/shared/services/categoryService";
 import type { DiscoveryOptions } from "@/shared/types";
@@ -45,6 +44,7 @@ import {
   searchGeocodeAddress,
 } from "@/shared/services/vietmapService";
 import VietMapLocationPickerModal from "../components/VietMapLocationPickerModal";
+import NearbyMerchantsMap from "../components/NearbyMerchantsMap";
 
 type Coords = { latitude: number; longitude: number };
 type LocationMode = "current" | "custom";
@@ -54,20 +54,42 @@ const DEFAULT_COORDS: Coords = {
   longitude: 106.660172,
 };
 
-const CUISINE_QUICK_TABS = [
-  { id: "all", label: "Tất cả món", query: "" },
-  { id: "combo", label: "🔥 Combo Tiết Kiệm", query: "", isCombo: true },
-  { id: "com", label: "🍛 Cơm", query: "Cơm" },
-  { id: "bun-pho", label: "🍜 Bún, Phở, Mì", query: "Bún, Phở" },
-  { id: "banh-mi", label: "🥖 Bánh mì & Fastfood", query: "Bánh mì" },
-  { id: "tra-sua", label: "🧋 Trà sữa & Cà phê", query: "Trà sữa" },
-  { id: "lau-nuong", label: "🍲 Lẩu & Đồ nướng", query: "Lẩu & Đồ nướng" },
-  { id: "chay", label: "🥗 Món Chay", query: "Món Chay" },
-  { id: "an-vat", label: "🍢 Ăn vặt", query: "Đồ ăn vặt" },
-  { id: "mon-viet", label: "🥢 Món Việt truyền thống", query: "Món Việt" },
-  { id: "han-nhat-thai", label: "🍣 Món Hàn / Nhật / Thái", query: "Món Hàn" },
-  { id: "mon-au", label: "🍕 Món Âu", query: "Món Âu" },
-];
+const EMPTY_DISCOVERY_OPTIONS: DiscoveryOptions = {
+  restaurantTypes: [],
+  priceRanges: [],
+  mainDishTypes: [],
+  foodCategories: [],
+};
+
+function getCuisineLabel(value: string) {
+  if (/cơm/i.test(value)) return "Cơm";
+  if (/bún|phở|mì|hủ tiếu/i.test(value)) return "Bún, Phở";
+  if (/bánh mì/i.test(value)) return "Bánh mì";
+  if (/ăn vặt|tráng miệng/i.test(value)) return "Ăn vặt";
+  if (/trà sữa|cà phê|đồ uống/i.test(value)) return "Đồ uống";
+  if (/lẩu|nướng/i.test(value)) return "Lẩu, nướng";
+  if (/món chay|thực dưỡng/i.test(value)) return "Món chay";
+  if (/món việt/i.test(value)) return "Món Việt";
+  if (/hàn|nhật|thái/i.test(value)) return "Hàn, Nhật";
+  if (/món âu/i.test(value)) return "Món Âu";
+
+  const label = value.replace(/\s*\([^)]*\)/g, "").trim();
+  return label.length > 16 ? `${label.slice(0, 15).trimEnd()}…` : label;
+}
+
+function getCuisineEmoji(value: string) {
+  if (/cơm/i.test(value)) return "🍛";
+  if (/bún|phở|mì|hủ tiếu/i.test(value)) return "🍜";
+  if (/bánh mì/i.test(value)) return "🥖";
+  if (/ăn vặt|tráng miệng/i.test(value)) return "🍢";
+  if (/trà sữa|cà phê|đồ uống/i.test(value)) return "☕";
+  if (/lẩu|nướng/i.test(value)) return "🍲";
+  if (/món chay|thực dưỡng/i.test(value)) return "🥗";
+  if (/món việt/i.test(value)) return "🥢";
+  if (/hàn|nhật|thái/i.test(value)) return "🍣";
+  if (/món âu/i.test(value)) return "🍕";
+  return "🍽️";
+}
 
 // Warm food & gem themed gradient palettes for missing photos
 const RICH_FOOD_GRADIENTS = [
@@ -153,10 +175,13 @@ export default function GuestExplorePage() {
     SponsoredMerchant[]
   >([]);
   const [sponsoredLoading, setSponsoredLoading] = useState(true);
+  const [sponsoredError, setSponsoredError] = useState("");
   const [discoveryOptions, setDiscoveryOptions] = useState<DiscoveryOptions>(
-    DEFAULT_DISCOVERY_OPTIONS,
+    EMPTY_DISCOVERY_OPTIONS,
   );
+  const [discoveryOptionsError, setDiscoveryOptionsError] = useState("");
   const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
+  const [hiddenGemsOnly, setHiddenGemsOnly] = useState(true);
   const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
@@ -167,6 +192,7 @@ export default function GuestExplorePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<
     GeocodeResult[]
   >([]);
+  const [locationSuggestionError, setLocationSuggestionError] = useState("");
   const [locationSuggesting, setLocationSuggesting] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationBusy, setLocationBusy] = useState(false);
@@ -189,8 +215,14 @@ export default function GuestExplorePage() {
       .then((options) => {
         if (!active) return;
         setDiscoveryOptions(options);
+        setDiscoveryOptionsError("");
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!active) return;
+        setDiscoveryOptionsError(
+          "Chưa tải được bộ lọc từ máy chủ. Bạn vẫn có thể tìm quán bằng ô tìm kiếm.",
+        );
+      });
     return () => {
       active = false;
     };
@@ -198,20 +230,32 @@ export default function GuestExplorePage() {
 
   useEffect(() => {
     const query = locationInput.trim();
-    if (!editingLocation || query.length < 2) return;
+    if (!editingLocation || query.length < 2) {
+      setLocationSuggestionError("");
+      return;
+    }
 
     let active = true;
     const timer = window.setTimeout(() => {
       setLocationSuggesting(true);
+      setLocationSuggestionError("");
       void searchGeocodeAddress(query, {
         proximity: null,
         size: 6,
       })
         .then((results) => {
-          if (active) setLocationSuggestions(results.slice(0, 6));
+          if (active) {
+            setLocationSuggestions(results.slice(0, 6));
+            setLocationSuggestionError("");
+          }
         })
         .catch(() => {
-          if (active) setLocationSuggestions([]);
+          if (active) {
+            setLocationSuggestions([]);
+            setLocationSuggestionError(
+              "Không tải được gợi ý địa chỉ. Kiểm tra cấu hình VietMap hoặc nhập địa chỉ đầy đủ rồi áp dụng.",
+            );
+          }
         })
         .finally(() => {
           if (active) setLocationSuggesting(false);
@@ -226,6 +270,10 @@ export default function GuestExplorePage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
+    setSponsoredLoading(true);
+    setSponsoredError("");
 
     const query = {
       latitude: coords.latitude,
@@ -255,6 +303,9 @@ export default function GuestExplorePage() {
           sponsoredResult.status === "fulfilled" ? sponsoredResult.value : [],
         );
         if (sponsoredResult.status === "rejected") {
+          setSponsoredError(
+            "Chưa tải được địa điểm tài trợ từ máy chủ. Vui lòng thử lại sau.",
+          );
           console.error("Sponsored discovery unavailable", sponsoredResult.reason);
         }
       })
@@ -296,7 +347,7 @@ export default function GuestExplorePage() {
 
   const displayedMerchants = useMemo(() => {
     let list = merchants;
-    if (selectedCuisineTab === "all") {
+    if (hiddenGemsOnly) {
       list = list.filter((merchant) => {
         const score = getDisplayUnderratedScore(merchant);
         return score !== null && score.percent >= 80;
@@ -335,7 +386,7 @@ export default function GuestExplorePage() {
       }
       return 0;
     });
-  }, [merchants, selectedCuisineTab, sortBy]);
+  }, [hiddenGemsOnly, merchants, selectedCuisineTab, sortBy]);
 
   const hasActiveFilters = Boolean(
     activeKeyword ||
@@ -348,30 +399,30 @@ export default function GuestExplorePage() {
 
   function handleSearch(event: FormEvent) {
     event.preventDefault();
-    setLoading(true);
-    setError("");
+    setHiddenGemsOnly(false);
+    setSelectedCuisineTab("all");
+    setSelectedMainDishType("");
     setActiveKeyword(keyword.trim());
     setRequestVersion((value) => value + 1);
   }
 
-  function chooseCuisineTab(tab: (typeof CUISINE_QUICK_TABS)[number]) {
-    if (tab.id === selectedCuisineTab) return;
-    setLoading(true);
-    setError("");
-    setSelectedCuisineTab(tab.id);
-    setSelectedMainDishType(tab.query || "");
+  function chooseCuisineTab(mainDishType: string) {
+    if (mainDishType === selectedMainDishType && !hiddenGemsOnly) return;
+    setHiddenGemsOnly(false);
+    setSelectedCuisineTab(mainDishType);
+    setSelectedMainDishType(mainDishType);
   }
 
   function resetDiscoveryFilters() {
-    setLoading(true);
-    setError("");
     setKeyword("");
     setActiveKeyword("");
+    setHiddenGemsOnly(false);
     setSelectedCuisineTab("all");
     setSelectedMainDishType("");
     setSortBy("distance");
     setPriceRange("");
     setRestaurantFilter("");
+    setRequestVersion((value) => value + 1);
   }
 
   function applyLocation(
@@ -379,13 +430,12 @@ export default function GuestExplorePage() {
     nextLabel: string,
     nextMode: LocationMode = "custom",
   ) {
-    setLoading(true);
-    setError("");
     setLocationError("");
     setLocationSuggestions([]);
     setCoords(nextCoords);
     setLocationMode(nextMode);
     setLocationLabel(cleanAddress(nextLabel) || "Vị trí đã chọn");
+    setRequestVersion((value) => value + 1);
     setEditingLocation(false);
   }
 
@@ -432,6 +482,7 @@ export default function GuestExplorePage() {
 
     setLocationBusy(true);
     setLocationError("");
+    setLocationSuggestionError("");
     try {
       const first =
         locationSuggestions[0] ??
@@ -451,7 +502,9 @@ export default function GuestExplorePage() {
         first.display || first.address || query,
       );
     } catch {
-      setLocationError("Chưa thể tìm địa điểm. Vui lòng thử lại.");
+      setLocationError(
+        "Không thể tra cứu địa chỉ. Kiểm tra VietMap Service key hoặc chọn vị trí trên bản đồ.",
+      );
     } finally {
       setLocationBusy(false);
     }
@@ -507,6 +560,10 @@ export default function GuestExplorePage() {
       );
     }
 
+    if (sponsoredError) {
+      return <p className="guest-sponsored-error" role="status">{sponsoredError}</p>;
+    }
+
     if (sponsoredMerchants.length === 0) return null;
 
     return (
@@ -532,10 +589,10 @@ export default function GuestExplorePage() {
                   <Sparkles size={11} /> Được tài trợ
                 </span>
                 <h3>
-                  {merchant.name || "Quán trên UFind"}
+                  {merchant.name || "Chưa cập nhật tên quán"}
                 </h3>
-                <p>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$$"}</p>
-                <span className="guest-sponsored-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span>
+                <p>{merchant.restaurantType || merchant.mainDishType || "Chưa cập nhật"}{merchant.priceRange ? ` · ${merchant.priceRange}` : ""}</p>
+                <span className="guest-sponsored-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Chưa có đánh giá"}{typeof merchant.reviewCount === "number" ? <> <i /> {merchant.reviewCount} đánh giá</> : null}</span>
               </div>
               <span className="guest-sponsored-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</span>
             </button>
@@ -578,7 +635,7 @@ export default function GuestExplorePage() {
                 <form onSubmit={applyManualLocation} className="guest-location-form">
                   <label>
                     <span className="sr-only">Khu vực muốn tìm</span>
-                    <input value={locationInput} onChange={(event) => { setLocationInput(event.target.value); setLocationSuggestions([]); setLocationSuggesting(false); setLocationError(""); }} placeholder="Nhập phường, quận hoặc thành phố..." autoComplete="off" aria-autocomplete="list" aria-expanded={locationSuggestions.length > 0} aria-controls="guest-location-suggestions" />
+                    <input value={locationInput} onChange={(event) => { setLocationInput(event.target.value); setLocationSuggestions([]); setLocationSuggesting(false); setLocationError(""); setLocationSuggestionError(""); }} placeholder="Nhập phường, quận hoặc thành phố..." autoComplete="off" aria-autocomplete="list" aria-expanded={locationSuggestions.length > 0} aria-controls="guest-location-suggestions" aria-invalid={Boolean(locationError || locationSuggestionError)} />
                     {locationSuggesting ? <LoaderCircle className="animate-spin" size={17} /> : null}
                   </label>
                   <button type="submit" disabled={locationBusy || !locationInput.trim()}>{locationBusy ? "Đang tìm..." : "Áp dụng"}</button>
@@ -592,11 +649,12 @@ export default function GuestExplorePage() {
                     ))}
                   </div>
                 ) : null}
+                {locationSuggestionError ? <p className="guest-location-error" role="alert">{locationSuggestionError}</p> : null}
                 <div className="guest-location-actions">
                   <button type="button" onClick={useCurrentLocation} disabled={locationBusy}><Navigation size={15} /> Dùng vị trí hiện tại</button>
                   <button type="button" onClick={() => setShowMapPicker(true)}><Map size={15} /> Chọn trên bản đồ</button>
-                  {locationError ? <span role="alert">{locationError}</span> : null}
                 </div>
+                {locationError ? <p className="guest-location-error" role="alert">{locationError}</p> : null}
               </div>
             ) : null}
           </div>
@@ -604,7 +662,7 @@ export default function GuestExplorePage() {
           <div className="guest-hero-art" aria-label="Không gian quán ăn và món ngon">
             <div className="guest-hero-photo">
               <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=88" alt="Không gian ấm cúng tại một nhà hàng địa phương" fetchPriority="high" />
-              <span className="guest-photo-sign">Tiệm Ăn<br />Nhà Mộc</span>
+              <span className="guest-photo-sign">UFind<br />LOCAL FINDS</span>
             </div>
             <div className="guest-note">Small places<br /><strong>Big stories</strong></div>
             <div className="guest-food-polaroid"><img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=720&q=85" alt="Tô mì nóng với rau thơm" /></div>
@@ -616,10 +674,21 @@ export default function GuestExplorePage() {
 
       <div className="guest-shell guest-content">
         <div className="guest-category-row" id="hidden-gems" role="group" aria-label="Khám phá theo món ăn">
-          {CUISINE_QUICK_TABS.filter((tab) => ["all", "bun-pho", "com", "tra-sua", "an-vat", "lau-nuong", "mon-viet"].includes(tab.id)).map((tab) => {
-            const isSelected = selectedCuisineTab === tab.id;
-            const label = tab.id === "all" ? "💎 Hidden Gems" : tab.label;
-            return <button key={tab.id} type="button" onClick={() => chooseCuisineTab(tab)} aria-pressed={isSelected} className={isSelected ? "guest-category is-active" : "guest-category"}>{label}</button>;
+          <button
+            type="button"
+            onClick={() => {
+              setHiddenGemsOnly(true);
+              setSelectedCuisineTab("all");
+              setSelectedMainDishType("");
+            }}
+            aria-pressed={hiddenGemsOnly}
+            className={hiddenGemsOnly ? "guest-category is-active" : "guest-category"}
+          >
+            💎 Hidden Gems
+          </button>
+          {(discoveryOptions.mainDishTypes ?? []).slice(0, 6).map((mainDishType) => {
+            const isSelected = !hiddenGemsOnly && selectedCuisineTab === mainDishType;
+            return <button key={mainDishType} type="button" onClick={() => chooseCuisineTab(mainDishType)} aria-pressed={isSelected} className={isSelected ? "guest-category is-active" : "guest-category"}>{getCuisineEmoji(mainDishType)} {getCuisineLabel(mainDishType)}</button>;
           })}
           <button type="button" className={filtersExpanded ? "guest-category is-active" : "guest-category"} onClick={() => setFiltersExpanded((value) => !value)} aria-expanded={filtersExpanded}>Khác <ChevronDown size={14} /></button>
           <button type="button" className="guest-filter-button" onClick={() => setFiltersExpanded((value) => !value)} aria-expanded={filtersExpanded} aria-label="Mở bộ lọc tìm kiếm"><Tag size={15} /> Lọc</button>
@@ -628,13 +697,38 @@ export default function GuestExplorePage() {
         {filtersExpanded ? (
           <div className="guest-filter-panel">
             <div className="guest-more-categories">
-              {CUISINE_QUICK_TABS.filter((tab) => !["all", "bun-pho", "com", "tra-sua", "an-vat", "lau-nuong", "mon-viet"].includes(tab.id)).map((tab) => (
-                <button key={tab.id} type="button" onClick={() => chooseCuisineTab(tab)} aria-pressed={selectedCuisineTab === tab.id} className={selectedCuisineTab === tab.id ? "guest-category is-active" : "guest-category"}>{tab.label}</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setHiddenGemsOnly(false);
+                  setSelectedCuisineTab("all");
+                  setSelectedMainDishType("");
+                }}
+                aria-pressed={!hiddenGemsOnly && selectedCuisineTab === "all"}
+                className={!hiddenGemsOnly && selectedCuisineTab === "all" ? "guest-category is-active" : "guest-category"}
+              >
+                Tất cả món
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setHiddenGemsOnly(false);
+                  setSelectedCuisineTab("combo");
+                  setSelectedMainDishType("");
+                }}
+                aria-pressed={!hiddenGemsOnly && selectedCuisineTab === "combo"}
+                className={!hiddenGemsOnly && selectedCuisineTab === "combo" ? "guest-category is-active" : "guest-category"}
+              >
+                🔥 Combo tiết kiệm
+              </button>
+              {(discoveryOptions.mainDishTypes ?? []).slice(6).map((mainDishType) => (
+                <button key={mainDishType} type="button" onClick={() => chooseCuisineTab(mainDishType)} aria-pressed={!hiddenGemsOnly && selectedCuisineTab === mainDishType} className={!hiddenGemsOnly && selectedCuisineTab === mainDishType ? "guest-category is-active" : "guest-category"}>{getCuisineEmoji(mainDishType)} {getCuisineLabel(mainDishType)}</button>
               ))}
             </div>
             <label><span>Sắp xếp</span><select value={sortBy} onChange={(event) => setSortBy(event.target.value as typeof sortBy)}><option value="distance">Gần bạn nhất</option><option value="rating">Đánh giá cao nhất</option><option value="reviews">Nhiều đánh giá nhất</option><option value="combo">Có combo ưu đãi</option></select></label>
-            <label><span>Mức giá</span><select value={priceRange} onChange={(event) => { setLoading(true); setPriceRange(event.target.value); }}><option value="">Tất cả mức giá</option>{discoveryOptions.priceRanges.map((price) => <option key={price} value={price}>{price}</option>)}</select></label>
-            <label><span>Loại hình quán</span><select value={restaurantFilter} onChange={(event) => { setLoading(true); setRestaurantFilter(event.target.value); }}><option value="">Tất cả loại hình</option>{discoveryOptions.restaurantTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+            <label><span>Mức giá</span><select value={priceRange} onChange={(event) => setPriceRange(event.target.value)}><option value="">Tất cả mức giá</option>{discoveryOptions.priceRanges.map((price) => <option key={price} value={price}>{price}</option>)}</select></label>
+            <label><span>Loại hình quán</span><select value={restaurantFilter} onChange={(event) => setRestaurantFilter(event.target.value)}><option value="">Tất cả loại hình</option>{discoveryOptions.restaurantTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+            {discoveryOptionsError ? <p className="guest-filter-error" role="status">{discoveryOptionsError}</p> : null}
             {hasActiveFilters ? <button type="button" className="guest-reset-filters" onClick={resetDiscoveryFilters}><RotateCcw size={14} /> Xóa bộ lọc</button> : null}
           </div>
         ) : null}
@@ -650,7 +744,7 @@ export default function GuestExplorePage() {
           ) : error ? (
             <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
           ) : displayedMerchants.length === 0 ? (
-            <div className="guest-empty"><Compass size={25} /><strong>Chưa tìm thấy Hidden Gem phù hợp</strong><span>Thử một nhóm món khác hoặc đổi khu vực khám phá.</span></div>
+            <div className="guest-empty"><Compass size={25} /><strong>{hiddenGemsOnly ? "Chưa tìm thấy Hidden Gem phù hợp" : "Chưa tìm thấy quán phù hợp"}</strong><span>Thử đổi nhóm món, từ khóa hoặc khu vực khám phá.</span></div>
           ) : (
             <div className="guest-merchant-grid">
               {displayedMerchants.slice(0, 5).map((merchant, index) => (
@@ -658,7 +752,7 @@ export default function GuestExplorePage() {
                   <span className="guest-card-heart" aria-hidden="true"><Heart size={17} /></span>
                   <MerchantVisual merchant={merchant} index={index} />
                   <span className="guest-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</span>
-                  <span className="guest-merchant-info"><strong>{merchant.name || "Quán trên UFind"}</strong><span>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$"}</span><span className="guest-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span></span>
+                  <span className="guest-merchant-info"><strong>{merchant.name || "Chưa cập nhật tên quán"}</strong><span>{merchant.restaurantType || merchant.mainDishType || "Chưa cập nhật"}{merchant.priceRange ? ` · ${merchant.priceRange}` : ""}</span><span className="guest-rating"><Star size={14} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Chưa có đánh giá"}{typeof merchant.reviewCount === "number" ? <> <i /> {merchant.reviewCount} đánh giá</> : null}</span></span>
                 </button>
               ))}
             </div>
@@ -672,22 +766,17 @@ export default function GuestExplorePage() {
             <button type="button" onClick={() => setShowMapPicker(true)}>Xem bản đồ lớn <ArrowRight size={15} /></button>
           </div>
           <div className="guest-nearby-body">
-            <div className="guest-map-canvas" role="img" aria-label={"Bản đồ khám phá quanh " + locationLabel}>
-              <div className="guest-map-art" aria-hidden="true">
-                <span className="guest-map-water" />
-                <span className="guest-map-road guest-road-main" />
-                <span className="guest-map-road guest-road-cross" />
-                <span className="guest-map-road guest-road-side" />
-                <span className="guest-map-road guest-road-ring" />
-                <span className="guest-map-neighborhood guest-neighborhood-city">HỒ CHÍ MINH</span>
-                <span className="guest-map-neighborhood guest-neighborhood-one">QUẬN 3</span>
-                <span className="guest-map-neighborhood guest-neighborhood-two">BÌNH THẠNH</span>
-                <span className="guest-map-pin guest-pin-one"><MapPin size={19} fill="currentColor" /></span>
-                <span className="guest-map-pin guest-pin-two"><MapPin size={22} fill="currentColor" /></span>
-                <span className="guest-map-pin guest-pin-three"><MapPin size={19} fill="currentColor" /></span>
-                <span className="guest-map-user-dot" />
-                {merchants[0] ? <span className="guest-map-popover"><span className="guest-map-popover-dot" />{merchants[0].name || "Quán gần bạn"}<small>{typeof merchants[0].distance === "number" ? formatDistance(merchants[0].distance) : "Gần bạn"}</small></span> : null}
-              </div>
+            <div className="guest-map-canvas">
+              <NearbyMerchantsMap
+                center={coords}
+                merchants={merchants}
+                selectedMerchantId={selectedMerchantId}
+                onSelectMerchantId={(id) => {
+                  setSelectedMerchantId(id);
+                  const merchant = merchants.find((item) => item.id === id);
+                  if (merchant) void openMerchant(merchant);
+                }}
+              />
               <span className="guest-map-current"><span />{locationLabel}</span>
             </div>
             <div className="guest-map-list">
@@ -696,12 +785,12 @@ export default function GuestExplorePage() {
                 return (
                   <button key={merchant.id} type="button" className={selectedMerchantId === merchant.id ? "guest-map-item is-selected" : "guest-map-item"} onClick={() => { setSelectedMerchantId(merchant.id); void openMerchant(merchant); }}>
                     <span className="guest-map-thumb">{thumb ? <img src={thumb} alt="" /> : <Store size={18} />}</span>
-                    <span className="guest-map-copy"><strong>{merchant.name || "Quán trên UFind"}</strong><small>{merchant.restaurantType || merchant.mainDishType || "Ẩm thực địa phương"} · {merchant.priceRange || "$"}</small><span className="guest-rating"><Star size={13} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Mới"} <i /> {merchant.reviewCount ?? 0} đánh giá</span></span>
+                    <span className="guest-map-copy"><strong>{merchant.name || "Chưa cập nhật tên quán"}</strong><small>{merchant.restaurantType || merchant.mainDishType || "Chưa cập nhật"}{merchant.priceRange ? ` · ${merchant.priceRange}` : ""}</small><span className="guest-rating"><Star size={13} fill="currentColor" /> {merchant.rating?.toFixed(1) ?? "Chưa có đánh giá"}{typeof merchant.reviewCount === "number" ? <> <i /> {merchant.reviewCount} đánh giá</> : null}</span></span>
                     <small className="guest-map-distance">{typeof merchant.distance === "number" ? formatDistance(merchant.distance) : ""}</small>
                   </button>
                 );
               })}
-              {!displayedMerchants.length && !merchants.length ? <div className="guest-map-empty">Các quán gần bạn sẽ hiện ở đây.</div> : null}
+              {!displayedMerchants.length && !merchants.length ? <div className="guest-map-empty">{error ? "Không có dữ liệu quán để hiển thị trên bản đồ." : "Chưa có quán phù hợp để hiển thị trên bản đồ."}</div> : null}
             </div>
           </div>
         </section>
@@ -715,7 +804,11 @@ export default function GuestExplorePage() {
           </div>
         </section>
 
-        <section className="guest-sponsored" aria-label="Địa điểm được tài trợ">{renderSponsoredSection()}</section>
+        {sponsoredLoading || sponsoredError || sponsoredMerchants.length > 0 ? (
+          <section className="guest-sponsored" aria-label="Địa điểm được tài trợ">
+            {renderSponsoredSection()}
+          </section>
+        ) : null}
 
         <section className="guest-signup-cta">
           <div><p className="guest-eyebrow">UFind community</p><h2>Tìm được quán đáng thử rồi?</h2><p>Tạo tài khoản để lưu lại, chia sẻ trải nghiệm và khám phá thêm nhiều Hidden Gems khác.</p></div>
