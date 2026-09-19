@@ -195,7 +195,6 @@ export default function NearbyMerchantsMap({
         }}
         routeCoordinates={routeCoordinates}
         routeColor="#e11d48"
-        fitToMarkers
         onLocateClick={onLocateCustomer}
         locateLoading={locateLoading}
         editableUserMarker={editableUserMarker}

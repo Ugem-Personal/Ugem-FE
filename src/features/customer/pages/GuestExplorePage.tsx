@@ -54,6 +54,17 @@ const DEFAULT_COORDS: Coords = {
   longitude: 106.660172,
 };
 
+function isValidVietnamCoords({ latitude, longitude }: Coords) {
+  return (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= 8 &&
+    latitude <= 24 &&
+    longitude >= 102 &&
+    longitude <= 110
+  );
+}
+
 const EMPTY_DISCOVERY_OPTIONS: DiscoveryOptions = {
   restaurantTypes: [],
   priceRanges: [],
@@ -181,13 +192,13 @@ export default function GuestExplorePage() {
   );
   const [discoveryOptionsError, setDiscoveryOptionsError] = useState("");
   const [selectedCuisineTab, setSelectedCuisineTab] = useState("all");
-  const [hiddenGemsOnly, setHiddenGemsOnly] = useState(true);
+  const [hiddenGemsOnly, setHiddenGemsOnly] = useState(false);
   const [selectedMainDishType, setSelectedMainDishType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [activeKeyword, setActiveKeyword] = useState("");
   const [coords, setCoords] = useState<Coords>(DEFAULT_COORDS);
   const [locationMode, setLocationMode] = useState<LocationMode>("custom");
-  const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh");
+  const [locationLabel, setLocationLabel] = useState("TP. Hồ Chí Minh (mặc định)");
   const [locationInput, setLocationInput] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState<
     GeocodeResult[]
@@ -240,7 +251,7 @@ export default function GuestExplorePage() {
       setLocationSuggesting(true);
       setLocationSuggestionError("");
       void searchGeocodeAddress(query, {
-        proximity: null,
+        proximity: { lat: coords.latitude, lng: coords.longitude },
         size: 6,
       })
         .then((results) => {
@@ -266,7 +277,7 @@ export default function GuestExplorePage() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [editingLocation, locationInput]);
+  }, [coords.latitude, coords.longitude, editingLocation, locationInput]);
 
   useEffect(() => {
     let active = true;
@@ -389,6 +400,7 @@ export default function GuestExplorePage() {
   }, [hiddenGemsOnly, merchants, selectedCuisineTab, sortBy]);
 
   const hasActiveFilters = Boolean(
+    hiddenGemsOnly ||
     activeKeyword ||
     selectedMainDishType ||
     selectedCuisineTab === "combo" ||
@@ -442,13 +454,20 @@ export default function GuestExplorePage() {
     nextLabel: string,
     nextMode: LocationMode = "custom",
   ) {
+    if (!isValidVietnamCoords(nextCoords)) {
+      setLocationError("Vị trí phải nằm trong Việt Nam. Hãy chọn lại địa điểm.");
+      return false;
+    }
+
     setLocationError("");
+    setLocationSuggestionError("");
     setLocationSuggestions([]);
     setCoords(nextCoords);
     setLocationMode(nextMode);
     setLocationLabel(cleanAddress(nextLabel) || "Vị trí đã chọn");
     setRequestVersion((value) => value + 1);
     setEditingLocation(false);
+    return true;
   }
 
   async function useCurrentLocation() {
@@ -496,18 +515,28 @@ export default function GuestExplorePage() {
     setLocationError("");
     setLocationSuggestionError("");
     try {
-      const first =
-        locationSuggestions[0] ??
-        (
-          await searchGeocodeAddress(query, {
-            proximity: null,
+      const candidates = locationSuggestions.length
+        ? locationSuggestions
+        : await searchGeocodeAddress(query, {
+            proximity: { lat: coords.latitude, lng: coords.longitude },
             size: 5,
-          })
-        )[0];
-      if (!first) {
+          });
+      const validCandidates = candidates.filter((result) =>
+        isValidVietnamCoords({ latitude: result.lat, longitude: result.lng }),
+      );
+
+      if (!validCandidates.length) {
         setLocationError("Không tìm thấy địa điểm này. Hãy nhập cụ thể hơn.");
         return;
       }
+
+      if (validCandidates.length > 1) {
+        setLocationSuggestions(validCandidates.slice(0, 6));
+        setLocationSuggestionError("Có nhiều địa điểm phù hợp. Hãy chọn đúng khu vực trong danh sách gợi ý.");
+        return;
+      }
+
+      const [first] = validCandidates;
 
       applyLocation(
         { latitude: first.lat, longitude: first.lng },
@@ -627,13 +656,13 @@ export default function GuestExplorePage() {
       <section className="guest-hero">
         <div className="guest-shell guest-hero-grid">
           <div className="guest-hero-copy">
-            <span className="guest-hero-badge"><Sparkles size={14} /> Khám phá những Hidden Gems quanh bạn</span>
+            <span className="guest-hero-badge"><Sparkles size={14} /> Khám phá quán ngon quanh bạn</span>
             <h1>Những quán ngon <span>không phải lúc nào</span> cũng nằm ở nơi đông người nhất.</h1>
             <p>Khám phá những địa điểm chất lượng nhưng chưa được nhiều người biết đến, dựa trên trải nghiệm thực tế từ cộng đồng UFind.</p>
             <form onSubmit={handleSearch} className="guest-search">
               <div className="guest-search-input">
                 <Search size={19} aria-hidden="true" />
-                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm món ăn, tên quán hoặc khu vực..." aria-label="Tìm món ăn, tên quán hoặc khu vực" />
+                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm món ăn hoặc tên quán..." aria-label="Tìm món ăn hoặc tên quán" />
                 {keyword ? <button type="button" onClick={() => setKeyword("")} aria-label="Xóa từ khóa"><X size={16} /></button> : null}
               </div>
               <button type="button" className="guest-search-location" onClick={() => setEditingLocation((value) => !value)} aria-expanded={editingLocation} title={locationMode === "current" ? "Đang dùng vị trí hiện tại — nhấn để thay đổi" : "Thay đổi khu vực tìm kiếm"}>
@@ -686,6 +715,18 @@ export default function GuestExplorePage() {
 
       <div className="guest-shell guest-content">
         <div className="guest-category-row" id="hidden-gems" role="group" aria-label="Khám phá theo món ăn">
+          <button
+            type="button"
+            onClick={() => {
+              setHiddenGemsOnly(false);
+              setSelectedCuisineTab("all");
+              setSelectedMainDishType("");
+            }}
+            aria-pressed={!hiddenGemsOnly && selectedCuisineTab === "all"}
+            className={!hiddenGemsOnly && selectedCuisineTab === "all" ? "guest-category is-active" : "guest-category"}
+          >
+            Tất cả quán
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -781,7 +822,7 @@ export default function GuestExplorePage() {
             <div className="guest-map-canvas">
               <NearbyMerchantsMap
                 center={coords}
-                merchants={merchants}
+                merchants={displayedMerchants}
                 selectedMerchantId={selectedMerchantId}
                 onSelectMerchantId={(id) => {
                   setSelectedMerchantId(id);
@@ -792,7 +833,7 @@ export default function GuestExplorePage() {
               <span className="guest-map-current"><span />{locationLabel}</span>
             </div>
             <div className="guest-map-list">
-              {(displayedMerchants.length ? displayedMerchants : merchants).slice(0, 3).map((merchant) => {
+              {displayedMerchants.slice(0, 3).map((merchant) => {
                 const thumb = merchant.menu?.find((item) => item.imageUrl?.trim())?.imageUrl || merchant.logoUrl;
                 return (
                   <button key={merchant.id} type="button" className={selectedMerchantId === merchant.id ? "guest-map-item is-selected" : "guest-map-item"} onClick={() => { setSelectedMerchantId(merchant.id); void openMerchant(merchant); }}>
@@ -802,7 +843,7 @@ export default function GuestExplorePage() {
                   </button>
                 );
               })}
-              {!displayedMerchants.length && !merchants.length ? <div className="guest-map-empty">{error ? "Không có dữ liệu quán để hiển thị trên bản đồ." : "Chưa có quán phù hợp để hiển thị trên bản đồ."}</div> : null}
+              {!displayedMerchants.length ? <div className="guest-map-empty">{error ? "Không có dữ liệu quán để hiển thị trên bản đồ." : "Không có quán phù hợp với bộ lọc hiện tại."}</div> : null}
             </div>
           </div>
         </section>
