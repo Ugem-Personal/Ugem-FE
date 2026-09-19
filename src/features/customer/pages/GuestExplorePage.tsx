@@ -185,7 +185,7 @@ function GuestMascotVideo() {
             muted
             playsInline
             loop
-            preload="auto"
+            preload={index === activeIndex || index === incomingIndex ? "auto" : "none"}
             aria-hidden="true"
             onTimeUpdate={() => blendIntoNextGreeting(index)}
             onEnded={() => blendIntoNextGreeting(index, true)}

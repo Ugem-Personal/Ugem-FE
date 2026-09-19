@@ -695,7 +695,7 @@
   align-items: center;
   gap: 5px;
   color: var(--guest-green);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -1077,25 +1077,25 @@
 }
 
 .guest-map-copy strong {
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .guest-map-copy small {
   color: var(--guest-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
 .guest-map-copy .guest-rating {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .guest-map-distance {
   align-self: flex-start;
   margin-top: 3px;
   color: var(--guest-muted);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -1173,7 +1173,7 @@
 }
 
 .guest-how h2 {
-  font-size: 21px;
+  font-size: 24px;
 }
 
 .guest-how-steps {
@@ -1215,14 +1215,14 @@
 }
 
 .guest-how-steps strong {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .guest-how-steps p {
   margin-top: 2px;
   color: #606a64;
-  font-size: 10px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .guest-how-arrow {
@@ -1251,12 +1251,13 @@
 
 .guest-sponsored-eyebrow {
   color: #a85a0a;
+  font-size: 12px;
 }
 
 .guest-sponsored-title-row h2 {
   margin-top: 1px;
   color: #9b4c0e;
-  font-size: 20px;
+  font-size: 23px;
 }
 
 .guest-sponsored-grid {
@@ -1308,7 +1309,7 @@
   border-radius: 999px;
   background: #fff1c4;
   color: #855212;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -1316,7 +1317,7 @@
   overflow: hidden;
   color: #26312b;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
   text-overflow: ellipsis;
@@ -1324,11 +1325,13 @@
 }
 
 .guest-sponsored-copy > p {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--guest-muted);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .guest-sponsored-rating {
@@ -1336,7 +1339,7 @@
   align-items: center;
   gap: 4px;
   color: #3b4740;
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -1355,7 +1358,7 @@
   align-self: end;
   padding-bottom: 7px;
   color: var(--guest-muted);
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -1784,7 +1787,7 @@
   }
 
   .guest-how h2 {
-    font-size: 19px;
+    font-size: 22px;
   }
 
   .guest-how-steps {
