@@ -292,6 +292,25 @@ function formatDistance(distance: number) {
   return `${Math.round(distance)} km`;
 }
 
+function getDistanceInKilometers(from: Coords | null, to: Coords) {
+  if (!from || !isValidVietnamCoords(from) || !isValidVietnamCoords(to)) {
+    return undefined;
+  }
+
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latitudeDelta = toRadians(to.latitude - from.latitude);
+  const longitudeDelta = toRadians(to.longitude - from.longitude);
+  const fromLatitude = toRadians(from.latitude);
+  const toLatitude = toRadians(to.latitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(fromLatitude) *
+      Math.cos(toLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
+
+  return 6371 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
 function MerchantVisual({
   merchant,
   index,
@@ -801,15 +820,34 @@ export default function GuestExplorePage() {
 
     if (merchantResult.status === "fulfilled") {
       const detailResult = merchantResult.value;
+      const knownDistance = [detailResult.distance, merchant.distance].find(
+        (distance): distance is number =>
+          typeof distance === "number" && Number.isFinite(distance) && distance >= 0,
+      );
+      const merchantLatitude = Number(
+        detailResult.latitude ?? detailResult.lat ?? merchant.latitude ?? merchant.lat,
+      );
+      const merchantLongitude = Number(
+        detailResult.longitude ?? detailResult.lng ?? merchant.longitude ?? merchant.lng,
+      );
+      const calculatedDistance = getDistanceInKilometers(coords, {
+        latitude: merchantLatitude,
+        longitude: merchantLongitude,
+      });
+      const detailWithSummary = {
+        ...merchant,
+        ...detailResult,
+        distance: knownDistance ?? calculatedDistance,
+      };
       setDetail(
         merchant.isSponsored && merchant.sponsoredCampaign
           ? {
-              ...detailResult,
+              ...detailWithSummary,
               discoveryType: "Sponsored",
               isSponsored: true,
               sponsoredCampaign: merchant.sponsoredCampaign,
             }
-          : detailResult,
+          : detailWithSummary,
       );
     }
 
@@ -1333,7 +1371,7 @@ export default function GuestExplorePage() {
                 <MapPin className="h-4 w-4 text-[#176642]" />
                 {typeof detail.distance === "number"
                   ? `${formatDistance(detail.distance)} từ bạn`
-                  : "Khoảng cách chưa có dữ liệu"}
+                  : "Chưa xác định được khoảng cách"}
               </div>
               <Link
                 to={`/login?returnUrl=${encodeURIComponent(
