@@ -38,6 +38,19 @@
   outline-offset: 2px;
 }
 
+.guest-page :is(a, button) {
+  transition: transform 150ms ease, box-shadow 180ms ease, color 150ms ease,
+    background-color 150ms ease, border-color 150ms ease;
+}
+
+.guest-page :is(a, button):active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+}
+
+.guest-page button:disabled {
+  cursor: not-allowed;
+}
+
 .guest-nav {
   position: relative;
   z-index: 10;

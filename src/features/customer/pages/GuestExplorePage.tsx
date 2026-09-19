@@ -396,6 +396,18 @@ export default function GuestExplorePage() {
     restaurantFilter ||
     sortBy !== "distance",
   );
+  const mainDishFilterOptions = useMemo(
+    () =>
+      [
+        ...new globalThis.Map(
+          (discoveryOptions.mainDishTypes ?? []).map((value) => [
+            getCuisineLabel(value).toLocaleLowerCase(),
+            value,
+          ] as const),
+        ).values(),
+      ],
+    [discoveryOptions.mainDishTypes],
+  );
 
   function handleSearch(event: FormEvent) {
     event.preventDefault();
@@ -686,7 +698,7 @@ export default function GuestExplorePage() {
           >
             💎 Hidden Gems
           </button>
-          {(discoveryOptions.mainDishTypes ?? []).slice(0, 6).map((mainDishType) => {
+          {mainDishFilterOptions.slice(0, 6).map((mainDishType) => {
             const isSelected = !hiddenGemsOnly && selectedCuisineTab === mainDishType;
             return <button key={mainDishType} type="button" onClick={() => chooseCuisineTab(mainDishType)} aria-pressed={isSelected} className={isSelected ? "guest-category is-active" : "guest-category"}>{getCuisineEmoji(mainDishType)} {getCuisineLabel(mainDishType)}</button>;
           })}
@@ -721,7 +733,7 @@ export default function GuestExplorePage() {
               >
                 🔥 Combo tiết kiệm
               </button>
-              {(discoveryOptions.mainDishTypes ?? []).slice(6).map((mainDishType) => (
+              {mainDishFilterOptions.slice(6).map((mainDishType) => (
                 <button key={mainDishType} type="button" onClick={() => chooseCuisineTab(mainDishType)} aria-pressed={!hiddenGemsOnly && selectedCuisineTab === mainDishType} className={!hiddenGemsOnly && selectedCuisineTab === mainDishType ? "guest-category is-active" : "guest-category"}>{getCuisineEmoji(mainDishType)} {getCuisineLabel(mainDishType)}</button>
               ))}
             </div>
