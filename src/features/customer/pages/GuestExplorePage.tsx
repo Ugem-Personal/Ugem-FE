@@ -510,6 +510,7 @@ export default function GuestExplorePage() {
 
   useEffect(() => {
     let active = true;
+    let retryTimer: number | null = null;
     setLoading(true);
     setError("");
     setSponsoredLoading(true);
@@ -534,38 +535,55 @@ export default function GuestExplorePage() {
       radiusKm: 15,
     };
 
-    Promise.allSettled([getNearbyMerchants(query), getSponsoredMerchants(query)])
-      .then(([organicResult, sponsoredResult]) => {
+    void (async () => {
+      try {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            const results = await getNearbyMerchants(query);
+            if (!active) return;
+            setMerchants(results);
+            setError("");
+            return;
+          } catch {
+            if (!active) return;
+            if (attempt === 1) {
+              setMerchants([]);
+              setError(
+                "Chưa tải được danh sách quán. Hãy kiểm tra kết nối dịch vụ backend.",
+              );
+            } else {
+              await new Promise<void>((resolve) => {
+                retryTimer = window.setTimeout(resolve, 1200);
+              });
+            }
+          }
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    void getSponsoredMerchants(query)
+      .then((results) => {
         if (!active) return;
-
-        if (organicResult.status === "fulfilled") {
-          setMerchants(organicResult.value);
-          setError("");
-        } else {
-          setMerchants([]);
-          setError(
-            "Chưa tải được danh sách quán. Hãy kiểm tra kết nối dịch vụ backend.",
-          );
-        }
-
-        setSponsoredMerchants(
-          sponsoredResult.status === "fulfilled" ? sponsoredResult.value : [],
+        setSponsoredMerchants(results);
+        setSponsoredError("");
+      })
+      .catch((reason) => {
+        if (!active) return;
+        setSponsoredMerchants([]);
+        setSponsoredError(
+          "Chưa tải được địa điểm tài trợ từ máy chủ. Vui lòng thử lại sau.",
         );
-        if (sponsoredResult.status === "rejected") {
-          setSponsoredError(
-            "Chưa tải được địa điểm tài trợ từ máy chủ. Vui lòng thử lại sau.",
-          );
-          console.error("Sponsored discovery unavailable", sponsoredResult.reason);
-        }
+        console.error("Sponsored discovery unavailable", reason);
       })
       .finally(() => {
-        if (!active) return;
-        setLoading(false);
-        setSponsoredLoading(false);
+        if (active) setSponsoredLoading(false);
       });
 
     return () => {
       active = false;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
     };
   }, [
     activeKeyword,
@@ -666,9 +684,6 @@ export default function GuestExplorePage() {
       setLocationError("Hãy bật GPS hoặc chọn khu vực trước khi tìm quán.");
       return;
     }
-    setHiddenGemsOnly(false);
-    setSelectedCuisineTab("all");
-    setSelectedMainDishType("");
     setActiveKeyword(keyword.trim());
     setRequestVersion((value) => value + 1);
   }
