@@ -48,8 +48,18 @@ function getMerchantScale(percent: number | null) {
   return 1.05 + (percent / 100) * 0.35;
 }
 
-function shouldUseFlame(percent: number | null) {
-  return percent !== null && percent >= 80;
+function hasStrongCommunityReviews(merchant: Merchant) {
+  return (
+    typeof merchant.rating === "number" &&
+    Number.isFinite(merchant.rating) &&
+    merchant.rating >= 4.5 &&
+    typeof merchant.reviewCount === "number" &&
+    merchant.reviewCount >= 3
+  );
+}
+
+function shouldUseFlame(merchant: Merchant, percent: number | null) {
+  return (percent !== null && percent >= 80) || hasStrongCommunityReviews(merchant);
 }
 
 function extractDescriptionField(
@@ -91,15 +101,24 @@ function getMerchantPopupHtml(merchant: Merchant) {
   const ratingText = formatRating(merchant.rating);
   const cuisine = escapeHtml(getMerchantCuisineLabel(merchant));
   const underratedScore = getDisplayUnderratedScore(merchant);
+  const hasStrongReviews = hasStrongCommunityReviews(merchant);
+  const reviewCountText =
+    typeof merchant.reviewCount === "number" && Number.isFinite(merchant.reviewCount)
+      ? ` · ${merchant.reviewCount} đánh giá`
+      : "";
   const underratedHtml =
     underratedScore !== null
       ? `<div style="margin-top:4px;color:#047857;font-size:12px;font-weight:800">US: ${underratedScore.score.toFixed(2)}/1.00</div>`
       : "";
+  const popularHtml = hasStrongReviews
+    ? '<div style="margin-top:4px;color:#c2410c;font-size:12px;font-weight:800">🔥 Đánh giá nổi bật</div>'
+    : "";
 
   return `
     <div style="min-width:180px;max-width:220px;padding:2px 0">
       <div style="font-weight:800;font-size:14px;line-height:1.3;color:#0f172a">${name}</div>
-      <div style="margin-top:4px;color:#0f766e;font-size:12px;font-weight:700">Review: ${ratingText}</div>
+      <div style="margin-top:4px;color:#0f766e;font-size:12px;font-weight:700">Review: ${ratingText}${reviewCountText}</div>
+      ${popularHtml}
       ${underratedHtml}
       <div style="margin-top:4px;color:#475569;font-size:12px"><strong>Loại món:</strong> ${cuisine}</div>
     </div>
@@ -171,7 +190,7 @@ export default function NearbyMerchantsMap({
           lng: coords.lng,
           type: "restaurant" as const,
           scale: getMerchantScale(underratedPercent),
-          flame: shouldUseFlame(underratedPercent),
+          flame: shouldUseFlame(merchant, underratedPercent),
           popupHtml: getMerchantPopupHtml(merchant),
         },
       ];
