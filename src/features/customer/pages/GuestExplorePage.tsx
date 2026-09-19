@@ -36,7 +36,7 @@ import type {
   MerchantDetail,
   SponsoredMerchant,
 } from "../types";
-import { getDisplayUnderratedScore } from "../utils/underratedScore";
+import { isMerchantHiddenGem } from "../utils/underratedScore";
 import { getReviewsByMerchantId, type Review } from "@/features/review/services";
 import "./GuestExplorePage.css";
 import {
@@ -327,8 +327,7 @@ function MerchantVisual({
     ?.imageUrl?.trim();
   const image = menuImage || logoImage;
   const [failedImage, setFailedImage] = useState(false);
-  const underratedScore = getDisplayUnderratedScore(merchant);
-  const isHiddenGem = underratedScore !== null && underratedScore.percent >= 80;
+  const isHiddenGem = isMerchantHiddenGem(merchant);
 
   const initials = useMemo(() => {
     const parts = (merchant.name || "").trim().split(/\s+/).filter(Boolean);
@@ -596,10 +595,7 @@ export default function GuestExplorePage() {
   const displayedMerchants = useMemo(() => {
     let list = merchants;
     if (hiddenGemsOnly) {
-      list = list.filter((merchant) => {
-        const score = getDisplayUnderratedScore(merchant);
-        return score !== null && score.percent >= 80;
-      });
+      list = list.filter(isMerchantHiddenGem);
     }
     if (selectedCuisineTab === "combo") {
       list = list.filter((m) => m.menu?.some((food) => food.isCombo));
@@ -1120,7 +1116,12 @@ export default function GuestExplorePage() {
           ) : error ? (
             <div className="guest-empty" role="alert"><Store size={24} /><strong>Chưa tải được danh sách quán</strong><span>{error}</span></div>
           ) : displayedMerchants.length === 0 ? (
-            <div className="guest-empty"><Compass size={25} /><strong>{hiddenGemsOnly ? "Chưa tìm thấy Hidden Gem phù hợp" : selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong><span>{selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span></div>
+            <div className="guest-empty">
+              <Compass size={25} />
+              <strong>{hiddenGemsOnly ? "Chưa có Hidden Gem phù hợp quanh bạn" : selectedMainDishType ? `Chưa tìm thấy quán có món ${getCuisineLabel(selectedMainDishType)}` : "Chưa tìm thấy quán phù hợp"}</strong>
+              <span>{hiddenGemsOnly ? merchants.length ? `Danh sách đã tự tải ${merchants.length} quán quanh bạn, nhưng chưa có quán nào được phân loại là Hidden Gem.` : "Chưa có quán nào trong kết quả tìm kiếm hiện tại được phân loại là Hidden Gem." : selectedMainDishType ? "Bộ lọc đang dò trong loại món và thực đơn của quán, không dựa vào tên quán." : "Thử đổi nhóm món, từ khóa hoặc khu vực khám phá."}</span>
+              {hiddenGemsOnly && merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
+            </div>
           ) : (
             <div className="guest-merchant-grid">
               {displayedMerchants.slice(0, 5).map((merchant, index) => (
@@ -1227,8 +1228,7 @@ export default function GuestExplorePage() {
 
             <div className="space-y-4 pr-12 sm:pr-14">
               {(() => {
-                const score = getDisplayUnderratedScore(detail);
-                return score !== null && score.percent >= 80 ? (
+                return isMerchantHiddenGem(detail) ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F6F3D8] px-3 py-1.5 text-[11px] font-extrabold text-[#59621D]">
                     <Sparkles className="h-3.5 w-3.5 text-[#B28A00]" />
                     Hidden Gem

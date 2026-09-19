@@ -1077,19 +1077,25 @@
 }
 
 .guest-map-copy strong {
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .guest-map-copy small {
   color: var(--guest-muted);
-  font-size: 9px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.guest-map-copy .guest-rating {
+  font-size: 12px;
 }
 
 .guest-map-distance {
   align-self: flex-start;
   margin-top: 3px;
   color: var(--guest-muted);
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -1097,8 +1103,30 @@
   display: grid;
   flex: 1;
   place-items: center;
+  padding: 16px;
   color: var(--guest-muted);
-  font-size: 11px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.guest-empty-action {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  margin-top: 5px;
+  padding: 0 15px;
+  border-radius: 10px;
+  background: var(--guest-green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.guest-empty-action:hover {
+  background: var(--guest-green-dark);
+  transform: translateY(-1px);
 }
 
 .guest-map-no-location {

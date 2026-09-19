@@ -64,6 +64,7 @@ export type Merchant = {
   underratedScore?: number;
   strengthIndex?: number;
   isUnderrated?: boolean;
+  gemStatus?: "HiddenGem" | "RisingGem" | "HallOfFame" | null;
   distance?: number;
   latitude?: number;
   longitude?: number;
