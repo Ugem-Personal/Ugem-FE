@@ -164,7 +164,7 @@ function GuestMascotVideo() {
             onTimeUpdate={() => blendIntoNextGreeting(index)}
             onEnded={() => blendIntoNextGreeting(index, true)}
           >
-            <source src="/videos/ugem-greeting.mp4" type="video/mp4" />
+            <source src="/videos/greeting2.mp4" type="video/mp4" />
           </video>
         );
       })}

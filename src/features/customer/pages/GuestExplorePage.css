@@ -495,14 +495,14 @@
 
 .dark .guest-hero-mascot::before {
   position: absolute;
-  inset: -8%;
+  inset: 0 5%;
   z-index: 0;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at 58% 54%,
-    rgba(239, 244, 233, 0.98) 0%,
-    rgba(198, 216, 193, 0.88) 48%,
-    transparent 76%
+    rgba(185, 203, 179, 0.94) 0%,
+    rgba(112, 139, 108, 0.8) 48%,
+    transparent 74%
   );
   content: "";
 }
