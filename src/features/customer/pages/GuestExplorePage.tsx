@@ -113,7 +113,9 @@ function GuestMascotVideo() {
 
     transitioningRef.current = true;
     setIncomingIndex(nextIndex);
-    nextVideo.currentTime = 0;
+    if (nextVideo.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      nextVideo.currentTime = 0;
+    }
 
     void nextVideo
       .play()
@@ -182,6 +184,7 @@ function GuestMascotVideo() {
             autoPlay={index === 0}
             muted
             playsInline
+            loop
             preload="auto"
             aria-hidden="true"
             onTimeUpdate={() => blendIntoNextGreeting(index)}
