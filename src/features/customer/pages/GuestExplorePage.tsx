@@ -1301,22 +1301,20 @@ export default function GuestExplorePage() {
                   <div className="guest-gem-explanation-heading">
                     <div className="guest-gem-explanation-icon"><Sparkles size={17} /></div>
                     <div>
-                      <h3 id="guest-gem-explanation-title">Vì sao là Hidden Gem?</h3>
-                      <p>Quán có chất lượng tốt nhưng vẫn còn ít người khám phá trong khu vực.</p>
+                      <h3 id="guest-gem-explanation-title">Vì sao nên thử quán này?</h3>
+                      <p>Được những người đã ghé đánh giá tốt, nhưng vẫn còn ít người biết đến quanh đây.</p>
                     </div>
                   </div>
                   <div className="guest-gem-signal-grid">
                     <div className="guest-gem-signal-card">
-                      <strong>Chất lượng tốt</strong>
-                      <span>⭐ {detail.gemSignals?.rating?.toFixed(1) ?? detail.rating?.toFixed(1) ?? "—"} rating</span>
-                      <span>✓ {detail.gemSignals?.verifiedReviews ?? detail.reviewCount ?? 0} review xác thực</span>
-                      <span>✓ {detail.gemSignals?.verifiedVisits ?? detail.checkInCount ?? 0} lượt ghé xác thực</span>
+                      <strong>Được cộng đồng đánh giá tốt</strong>
+                      <span>⭐ {detail.gemSignals?.rating?.toFixed(1) ?? detail.rating?.toFixed(1) ?? "—"}/5 từ người đã trải nghiệm</span>
+                      <span>✓ Có lượt ghé và đánh giá thực tế</span>
                     </div>
                     <div className="guest-gem-signal-card">
-                      <strong>Ít được khám phá</strong>
-                      <span>{typeof detail.gemSignals?.exposureScore === "number" && detail.gemSignals.exposureScore > 0 ? `Điểm phổ biến ${detail.gemSignals.exposureScore.toFixed(1)}` : "Dữ liệu phổ biến đang được cập nhật"}</span>
-                      <span>Được chọn từ tín hiệu tự nhiên trong 90 ngày</span>
-                      {detail.gemSignals?.lastRebalancedAt ? <span>Cập nhật {new Date(detail.gemSignals.lastRebalancedAt).toLocaleDateString("vi-VN")}</span> : null}
+                      <strong>Một lựa chọn đáng khám phá</strong>
+                      <span>Quán chưa được nhiều người biết đến trong khu vực.</span>
+                      <span>Phù hợp nếu bạn muốn tìm một địa điểm mới.</span>
                     </div>
                   </div>
                 </section>
