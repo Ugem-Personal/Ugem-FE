@@ -1176,6 +1176,7 @@ export default function GuestExplorePage() {
                   <NearbyMerchantsMap
                     center={coords}
                     merchants={displayedMerchants}
+                    fitToMarkers={hiddenGemsOnly}
                     selectedMerchantId={selectedMerchantId}
                     onSelectMerchantId={(id) => {
                       setSelectedMerchantId(id);

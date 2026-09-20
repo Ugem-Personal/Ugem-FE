@@ -17,6 +17,7 @@ type Props = Readonly<{
   merchants: Merchant[];
   selectedMerchantId?: string | null;
   onSelectMerchantId?: (id: string) => void;
+  fitToMarkers?: boolean;
   /** Toa do route [lng, lat][] de ve duong di */
   routeCoordinates?: [number, number][];
   onLocateCustomer?: () => void;
@@ -162,6 +163,7 @@ export default function NearbyMerchantsMap({
   merchants,
   selectedMerchantId,
   onSelectMerchantId,
+  fitToMarkers = false,
   routeCoordinates,
   onLocateCustomer,
   locateLoading,
@@ -210,6 +212,7 @@ export default function NearbyMerchantsMap({
         zoom={14}
         styleName="lm"
         markers={markers}
+        fitToMarkers={fitToMarkers}
         selectedMarkerId={selectedMerchantId}
         onMarkerClick={(markerId) => {
           if (markerId !== USER_MARKER_ID) {
