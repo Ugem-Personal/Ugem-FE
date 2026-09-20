@@ -68,13 +68,7 @@ export function getDisplayUnderratedScore(
 }
 
 export function isMerchantHiddenGem(merchant?: Merchant | null) {
-  if (!merchant) return false;
-  return (
-    merchant.gemStatus === "HiddenGem" &&
-    typeof merchant.rating === "number" &&
-    Number.isFinite(merchant.rating) &&
-    merchant.rating >= 4.5 &&
-    typeof merchant.reviewCount === "number" &&
-    merchant.reviewCount >= 3
-  );
+  // The backend owns Hidden Gem eligibility. Keeping the frontend as a
+  // presentation filter prevents the two layers from drifting apart.
+  return merchant?.gemStatus === "HiddenGem";
 }

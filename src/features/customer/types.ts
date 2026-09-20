@@ -50,6 +50,7 @@ export type GemSignals = {
   verifiedReviews?: number;
   verifiedVisits?: number;
   exposureWindowDays?: number;
+  lastRebalancedAt?: string | null;
 };
 
 export type Merchant = {

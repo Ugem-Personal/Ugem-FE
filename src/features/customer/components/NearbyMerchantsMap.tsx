@@ -5,7 +5,10 @@
 import { useMemo } from "react";
 import VietMapGL, { type MapMarker } from "@/shared/components/VietMapGL";
 import type { Merchant } from "../types";
-import { getDisplayUnderratedScore } from "../utils/underratedScore";
+import {
+  getDisplayUnderratedScore,
+  isMerchantHiddenGem,
+} from "../utils/underratedScore";
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -58,8 +61,8 @@ function hasStrongCommunityReviews(merchant: Merchant) {
   );
 }
 
-function shouldUseFlame(merchant: Merchant, percent: number | null) {
-  return (percent !== null && percent >= 80) || hasStrongCommunityReviews(merchant);
+function shouldUseFlame(merchant: Merchant) {
+  return isMerchantHiddenGem(merchant);
 }
 
 function extractDescriptionField(
@@ -190,7 +193,7 @@ export default function NearbyMerchantsMap({
           lng: coords.lng,
           type: "restaurant" as const,
           scale: getMerchantScale(underratedPercent),
-          flame: shouldUseFlame(merchant, underratedPercent),
+           flame: shouldUseFlame(merchant),
           popupHtml: getMerchantPopupHtml(merchant),
         },
       ];

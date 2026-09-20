@@ -1140,13 +1140,7 @@ export default function GuestExplorePage() {
           ) : displayedMerchants.length === 0 ? (
             hiddenGemsOnly ? (
               <div className="guest-empty guest-empty-gems">
-                <div className="guest-empty-gem-icon"><Sparkles size={24} /></div>
-                <strong>Chưa có Hidden Gem gần bạn</strong>
-                <span>Hãy thử đổi khu vực để khám phá thêm những quán được yêu thích.</span>
-                <div className="guest-empty-actions">
-                  {merchants.length > 0 ? <a className="guest-empty-action" href="#explore" onClick={() => { setHiddenGemsOnly(false); setActivePrimaryNav("explore"); }}>Xem tất cả quán quanh bạn</a> : null}
-                  <button type="button" className="guest-empty-secondary" onClick={() => setEditingLocation(true)}>Đổi khu vực</button>
-                </div>
+                <strong>Chưa có Hidden Gem tại {locationLabel}</strong>
               </div>
             ) : (
               <div className="guest-empty">
@@ -1322,6 +1316,7 @@ export default function GuestExplorePage() {
                       <strong>Ít được khám phá</strong>
                       <span>{typeof detail.gemSignals?.exposureScore === "number" && detail.gemSignals.exposureScore > 0 ? `Điểm phổ biến ${detail.gemSignals.exposureScore.toFixed(1)}` : "Dữ liệu phổ biến đang được cập nhật"}</span>
                       <span>Được chọn từ tín hiệu tự nhiên trong 90 ngày</span>
+                      {detail.gemSignals?.lastRebalancedAt ? <span>Cập nhật {new Date(detail.gemSignals.lastRebalancedAt).toLocaleDateString("vi-VN")}</span> : null}
                     </div>
                   </div>
                 </section>
