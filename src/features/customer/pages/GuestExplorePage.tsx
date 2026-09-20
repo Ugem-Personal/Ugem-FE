@@ -7,7 +7,6 @@ import {
   LoaderCircle,
   Map,
   MapPin,
-  Navigation,
   Search,
   RotateCcw,
   Sparkles,
@@ -1052,7 +1051,6 @@ export default function GuestExplorePage() {
                 ) : null}
                 {locationSuggestionError ? <p className="guest-location-error" role="alert">{locationSuggestionError}</p> : null}
                 <div className="guest-location-actions">
-                  <button type="button" onClick={requestCurrentLocation} disabled={locationBusy}><Navigation size={15} /> Dùng vị trí GPS</button>
                   <button type="button" onClick={() => setShowMapPicker(true)}><Map size={15} /> Chọn trên bản đồ</button>
                 </div>
                 {locationError ? <p className="guest-location-error" role="alert">{locationError}</p> : null}
