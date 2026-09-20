@@ -208,6 +208,7 @@ export default function NearbyMerchantsMap({
         centerLng={center.longitude}
         centerLat={center.latitude}
         zoom={14}
+        styleName="lm"
         markers={markers}
         selectedMarkerId={selectedMerchantId}
         onMarkerClick={(markerId) => {
