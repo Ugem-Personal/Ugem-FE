@@ -433,20 +433,23 @@
 
 .guest-location-suggestions {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   max-height: 220px;
   overflow-y: auto;
   margin-top: 7px;
+  padding-top: 5px;
+  border-top: 1px solid #edf0ec;
 }
 
 .guest-location-suggestions button {
   display: flex;
-  min-height: 45px;
+  width: 100%;
+  min-height: 64px;
   align-items: flex-start;
-  gap: 8px;
-  padding: 8px;
-  border: 0;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background: transparent;
   color: var(--guest-ink);
   cursor: pointer;
@@ -455,20 +458,38 @@
 
 .guest-location-suggestions button:hover {
   background: #f3f6f1;
+  border-color: #e1e9e2;
 }
 
 .guest-location-suggestions button > span {
+  min-width: 0;
   display: grid;
-  gap: 3px;
+  gap: 4px;
 }
 
 .guest-location-suggestions strong {
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .guest-location-suggestions small {
   color: var(--guest-muted);
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.guest-location-suggestions svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--guest-green);
+}
+
+.guest-location-suggestions button:focus-visible {
+  outline: 3px solid rgba(87, 148, 105, 0.2);
+  outline-offset: 1px;
 }
 
 .guest-hero-mascot {
